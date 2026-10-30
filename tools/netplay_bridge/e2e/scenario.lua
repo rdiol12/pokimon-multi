@@ -1,5 +1,5 @@
 -- Two players meet in Oldale Town. Player 1 changes into Red in the Style
--- menu and player 2 sees it. They battle (player 1 forfeits), trade their
+-- menu and player 2 sees it; player 1 sends an emote and a quick phrase. They battle (player 1 forfeits), trade their
 -- lead Pokémon, then make a deal: player 2 gives both its Pokémon for player
 -- 1's lead Pokémon and ¥1,000. Last, player 2 opens the PvP ladder and finds
 -- itself in first place.
@@ -65,6 +65,31 @@ D.run(function()
             return still >= 90
         end)
         D.shot("sees-red")
+    end
+
+    -- Emotes: player 1 sends LOVE, then the phrase GG!; player 2 sees both.
+    if INSTANCE == 1 then
+        D.wait(30)
+        D.press(K.L, 30)
+        D.press(K.RIGHT, 20) -- LOVE
+        D.shot("emote-menu")
+        D.press(K.A, 16)
+        D.shot("emote-love")
+        D.wait(120)
+        D.press(K.L, 30)
+        D.press(K.RIGHT, 12)
+        for _ = 1, 4 do D.press(K.DOWN, 12) end -- GG!
+        D.press(K.A, 20)
+        D.shot("chat-gg")
+        D.wait(200)
+    else
+        D.waitFor("an emote", 900, function() return D.mb8(0x0C9) == 6 and D.mb8(0x0CE) == 1 end)
+        D.wait(16) -- the bubble has bounced into place
+        D.shot("sees-love")
+        D.waitFor("a phrase", 900, function() return D.mb8(0x0C9) == 6 and D.mb8(0x0CE) == 9 end)
+        D.wait(20)
+        D.shot("sees-gg")
+        D.wait(150)
     end
 
     -- Battle -------------------------------------------------------------

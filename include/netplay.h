@@ -39,6 +39,7 @@ enum NetplayRequestType
     NETPLAY_REQ_LEAVE,
     NETPLAY_REQ_DEAL,
     NETPLAY_REQ_LADDER,
+    NETPLAY_REQ_EMOTE,
 };
 
 enum NetplayEventType
@@ -49,6 +50,7 @@ enum NetplayEventType
     NETPLAY_EV_DECLINED,
     NETPLAY_EV_ENDED,
     NETPLAY_EV_PENDING,
+    NETPLAY_EV_EMOTE, // peerId did emote `kind`
 };
 
 enum NetplayResult
@@ -189,5 +191,6 @@ void Netplay_LinkTransfer(void);
 void Netplay_JoinOnline(void);
 bool32 Netplay_HasJoined(void);
 void ShowNetplayLadder(void);
+bool32 Netplay_TryOpenEmoteMenu(void);
 
 #endif // GUARD_NETPLAY_H

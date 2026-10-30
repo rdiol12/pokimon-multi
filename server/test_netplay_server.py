@@ -69,6 +69,24 @@ class ServerTest(unittest.IsolatedAsyncioTestCase):
         await a.send("POS 0 9 7 5 1 0 100")
         await b.expect_silence()
 
+    async def test_emote_goes_to_players_on_the_map(self):
+        a = await self.connect("Ash")
+        b = await self.connect("Misty")
+        c = await self.connect("Brock", map_key=(1, 2))
+        await a.recv()
+        await b.recv()
+        await a.send("EMOTE 9")
+        self.assertEqual(await b.recv(), f"EMOTE {a.id} 9")
+        await a.expect_silence()
+        await c.expect_silence()
+        for _ in range(3):
+            await a.send("EMOTE 3")
+            self.assertEqual(await b.recv(), f"EMOTE {a.id} 3")
+        await a.send("EMOTE 3")  # a fifth at once is dropped
+        await b.expect_silence()
+        await a.send("EMOTE 99")
+        self.assertTrue((await a.recv()).startswith("ERR"))
+
     async def test_disconnect_broadcasts_gone(self):
         a = await self.connect("Ash")
         b = await self.connect("Misty")

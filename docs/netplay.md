@@ -44,7 +44,11 @@ this).
 
 In game, START → **STYLE** picks the trainer's look (Brendan, May, Red or
 Leaf; saved, and seen by other players), and START → **LADDER** (online only)
-shows the PvP ladder: the top 10 by rating and your own rank.
+shows the PvP ladder: the top 10 by rating and your own rank. **L** opens the
+emote menu: eight emotes that pop up above your head (happy, love, music,
+wow, huh, angry, sad, hmm) and six quick phrases (HI!, GG!, BATTLE?, TRADE?,
+THANKS!, BYE!) that show in a box with your name. Everyone on the same map
+sees them.
 
 ## Releases
 
@@ -126,6 +130,7 @@ most once per frame; the bridge acts once per new `seq`.
 | 6 | leave or cancel a session | session id |
 | 7 | offer a deal (buy/sell) | target id |
 | 8 | fetch the PvP ladder | — |
+| 9 | emote | arg: emote (0–7 icons, 8–13 phrases) |
 
 **Ladder (bridge → ROM):** u8 seq (bumped when a new ladder is in place),
 u8 count, u16 my rank (0 = no rated battles yet), my entry, then 10 entries.
@@ -143,6 +148,7 @@ bridge writes a new event only after the ROM has acked the previous one.
 | 3 | our invite was declined (or the player was busy or gone) |
 | 4 | session ended (peer left, canceled, or disconnected) |
 | 5 | our invite was sent; this is its session id |
+| 6 | a player on our map emoted: peer id, kind = emote |
 
 **Link rings:** a packet is 20 bytes: u8 kind (1 data, 2 handshake,
 3 handshake ack, 4 deal offer chunk, 5 deal answer, 6 deal commit), u8 and
@@ -207,6 +213,7 @@ RESULT <session id> <win|loss|draw>
 QUIT <session id>                   (leave a session, or cancel an invite)
 BOARD
 MYRANK
+EMOTE <emote 0-31>                  (to everyone else on the map; bursts of more than 4 are dropped)
 ```
 
 Server → client:
@@ -221,6 +228,7 @@ START <session id> <battle|trade|deal> <peer id> <0 host|1 guest>
 DECLINED <session id>
 ENDED <session id>
 LINK <session id> <hex>
+EMOTE <player id> <emote>
 RANK <position> <name> <rating> <wins> <losses> <draws>
 BOARDEND
 MYRANK <rank, 0 if unranked> <rating> <wins> <losses> <draws>

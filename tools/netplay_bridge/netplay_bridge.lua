@@ -46,8 +46,8 @@ local NAME_LENGTH = 8
 
 local STATE_OFFLINE, STATE_CONNECTING, STATE_ONLINE = 0, 1, 2
 
-local REQ_CHALLENGE, REQ_TRADE, REQ_ACCEPT, REQ_DECLINE, REQ_RESULT, REQ_LEAVE, REQ_DEAL, REQ_LADDER = 1, 2, 3, 4, 5, 6, 7, 8
-local EV_INVITE, EV_START, EV_DECLINED, EV_ENDED, EV_PENDING = 1, 2, 3, 4, 5
+local REQ_CHALLENGE, REQ_TRADE, REQ_ACCEPT, REQ_DECLINE, REQ_RESULT, REQ_LEAVE, REQ_DEAL, REQ_LADDER, REQ_EMOTE = 1, 2, 3, 4, 5, 6, 7, 8, 9
+local EV_INVITE, EV_START, EV_DECLINED, EV_ENDED, EV_PENDING, EV_EMOTE = 1, 2, 3, 4, 5, 6
 local KIND_IDS = { battle = 1, trade = 2, deal = 3 }
 local RESULTS = { "win", "loss", "draw" }
 
@@ -231,6 +231,8 @@ function Bridge:handleLine(line)
             local bytes = hex:gsub("%x%x", function(h) return string.char(tonumber(h, 16)) end)
             table.insert(self.rxQueue, bytes)
         end
+    elseif cmd == "EMOTE" then
+        self:queueEvent(EV_EMOTE, tonumber(args[2]), 0, tonumber(args[3]))
     elseif cmd == "RANK" and self.ladder then
         table.insert(self.ladder, {
             name = args[3], rating = tonumber(args[4]),
@@ -352,6 +354,8 @@ function Bridge:handleRequest()
         self.net.send("DECLINE " .. sid)
     elseif type == REQ_RESULT and RESULTS[arg] then
         self.net.send("RESULT " .. sid .. " " .. RESULTS[arg])
+    elseif type == REQ_EMOTE then
+        self.net.send("EMOTE " .. arg)
     elseif type == REQ_LADDER then
         self.ladder = {}
         self.net.send("BOARD")
