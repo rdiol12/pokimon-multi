@@ -24,6 +24,7 @@
 #include "load_save.h"
 #include "main.h"
 #include "menu.h"
+#include "netplay.h"
 #include "new_game.h"
 #include "option_menu.h"
 #include "overworld.h"
@@ -71,6 +72,7 @@ enum
     MENU_ACTION_DEBUG,
     MENU_ACTION_DEXNAV,
     MENU_ACTION_STYLE,
+    MENU_ACTION_LADDER,
 };
 
 // Save status
@@ -114,6 +116,7 @@ static bool8 StartMenuBattlePyramidBagCallback(void);
 static bool8 StartMenuDebugCallback(void);
 static bool8 StartMenuDexNavCallback(void);
 static bool8 StartMenuStyleCallback(void);
+static bool8 StartMenuLadderCallback(void);
 
 // Menu callbacks
 static bool8 SaveStartCallback(void);
@@ -192,6 +195,7 @@ static const struct WindowTemplate sWindowTemplate_PyramidPeak = {
 
 static const u8 sText_MenuDebug[] = _("DEBUG");
 static const u8 sText_MenuStyle[] = _("STYLE");
+static const u8 sText_MenuLadder[] = _("LADDER");
 
 static const struct MenuAction sStartMenuItems[] =
 {
@@ -211,6 +215,7 @@ static const struct MenuAction sStartMenuItems[] =
     [MENU_ACTION_DEBUG]           = {sText_MenuDebug,   {.u8_void = StartMenuDebugCallback}},
     [MENU_ACTION_DEXNAV]          = {gText_MenuDexNav,  {.u8_void = StartMenuDexNavCallback}},
     [MENU_ACTION_STYLE]           = {sText_MenuStyle,   {.u8_void = StartMenuStyleCallback}},
+    [MENU_ACTION_LADDER]          = {sText_MenuLadder,  {.u8_void = StartMenuLadderCallback}},
 };
 
 static const struct BgTemplate sBgTemplates_LinkBattleSave[] =
@@ -345,6 +350,8 @@ static void BuildNormalStartMenu(void)
 
     AddStartMenuAction(MENU_ACTION_PLAYER);
     AddStartMenuAction(MENU_ACTION_STYLE);
+    if (Netplay_HasJoined())
+        AddStartMenuAction(MENU_ACTION_LADDER);
     AddStartMenuAction(MENU_ACTION_SAVE);
     AddStartMenuAction(MENU_ACTION_OPTION);
     // The window fits eight entries; B closes the menu too.
@@ -663,6 +670,8 @@ static bool8 HandleStartMenuInput(void)
         if (gMenuCallback != StartMenuSaveCallback
             && gMenuCallback != StartMenuExitCallback
             && gMenuCallback != StartMenuDebugCallback
+            && gMenuCallback != StartMenuStyleCallback
+            && gMenuCallback != StartMenuLadderCallback
             && gMenuCallback != StartMenuSafariZoneRetireCallback
             && gMenuCallback != StartMenuBattlePyramidRetireCallback)
         {
@@ -826,6 +835,14 @@ static bool8 StartMenuStyleCallback(void)
     RemoveExtraStartMenuWindows();
     HideStartMenuDebug(); // Keeps the player frozen while the Style menu is open
     ShowPlayerStyleMenu();
+    return TRUE;
+}
+
+static bool8 StartMenuLadderCallback(void)
+{
+    RemoveExtraStartMenuWindows();
+    HideStartMenuDebug();
+    ShowNetplayLadder();
     return TRUE;
 }
 

@@ -2,8 +2,10 @@
 #include "netplay.h"
 #include "battle.h"
 #include "battle_setup.h"
+#include "config/netplay.h"
 #include "cable_club.h"
 #include "event_data.h"
+#include "event_object_lock.h"
 #include "event_object_movement.h"
 #include "field_player_avatar.h"
 #include "field_screen_effect.h"
@@ -119,6 +121,8 @@ void Netplay_Init(void)
     memcpy(gNetplayMailbox.magic, magic, sizeof(magic));
     gNetplayMailbox.version = NETPLAY_MAILBOX_VERSION;
     gNetplayMailbox.name[0] = EOS; // the bridge waits for a name before connecting
+    memcpy(gNetplayMailbox.serverHost, NETPLAY_SERVER_HOST, min(sizeof(NETPLAY_SERVER_HOST), NETPLAY_HOST_LENGTH - 1));
+    gNetplayMailbox.serverPort = NETPLAY_SERVER_PORT;
     sSession = (struct NetplaySession){0};
     sInvite = (struct NetplayInvite){0};
     sLink = (struct NetplayLinkState){0};
@@ -131,6 +135,17 @@ void Netplay_Init(void)
 static bool32 IsOnline(void)
 {
     return gNetplayMailbox.bridgeState == NETPLAY_ONLINE;
+}
+
+// JOIN ONLINE on the title menu: lets the bridge connect to the server.
+void Netplay_JoinOnline(void)
+{
+    gNetplayMailbox.joinOnline = TRUE;
+}
+
+bool32 Netplay_HasJoined(void)
+{
+    return gNetplayMailbox.joinOnline;
 }
 
 // Requests ---------------------------------------------------------------
@@ -719,7 +734,7 @@ static void Task_Linkup(u8 taskId)
 
 static void CB2_TestNewGame(void)
 {
-    u8 n = gNetplayMailbox.filler[0] & 0xF;
+    u8 n = gNetplayMailbox.testBoot & 0xF;
     u8 name[] = _("TEST0");
 
     NewGameInitData();
@@ -745,8 +760,9 @@ static void CB2_TestNewGame(void)
 
 bool32 Netplay_TryTestBoot(u8 taskId)
 {
-    if ((gNetplayMailbox.filler[0] & 0xF0) != NETPLAY_TEST_BOOT_MAGIC)
+    if ((gNetplayMailbox.testBoot & 0xF0) != NETPLAY_TEST_BOOT_MAGIC)
         return FALSE;
+    Netplay_JoinOnline();
     DestroyTask(taskId);
     SetMainCallback2(CB2_TestNewGame);
     return TRUE;
@@ -1582,3 +1598,171 @@ void Netplay_DealEnd(void)
 {
     Netplay_EndSession();
 }
+
+// Ladder -------------------------------------------------------------------
+//
+// START > LADDER while online: the server's PvP ladder (top 10 by rating)
+// and the player's own rank.
+
+#define LADDER_LINE_HEIGHT 11
+#define LADDER_TIMEOUT     (5 * 60)
+
+#define tState     data[0]
+#define tWindowId  data[1]
+#define tSeq       data[2]
+#define tTimer     data[3]
+
+enum
+{
+    LADDER_STATE_WAIT,
+    LADDER_STATE_SHOWN,
+};
+
+static const struct WindowTemplate sLadderWindowTemplate =
+{
+    .bg = 0,
+    .tilemapLeft = 1,
+    .tilemapTop = 1,
+    .width = 28,
+    .height = 17,
+    .paletteNum = 15,
+    .baseBlock = 0x008,
+};
+
+static void Task_Ladder(u8 taskId);
+
+static u8 *BufferLadderName(u8 *dest, const u8 *name)
+{
+    u32 i;
+
+    for (i = 0; i < NETPLAY_NAME_LENGTH && name[i] != EOS; i++)
+        *dest++ = name[i];
+    *dest = EOS;
+    return dest;
+}
+
+static u8 *BufferLadderRecord(u8 *dest, const struct NetplayLadderEntry *entry)
+{
+    dest = ConvertIntToDecimalStringN(dest, entry->wins, STR_CONV_MODE_LEFT_ALIGN, 4);
+    *dest++ = CHAR_HYPHEN;
+    dest = ConvertIntToDecimalStringN(dest, entry->losses, STR_CONV_MODE_LEFT_ALIGN, 4);
+    *dest++ = CHAR_HYPHEN;
+    return ConvertIntToDecimalStringN(dest, entry->draws, STR_CONV_MODE_LEFT_ALIGN, 4);
+}
+
+// Columns: rank, name, rating, wins-losses-draws.
+static void PrintLadderRow(u8 windowId, u32 y, u32 rank, const struct NetplayLadderEntry *entry)
+{
+    u8 *str;
+
+    if (rank != 0)
+    {
+        str = ConvertIntToDecimalStringN(gStringVar4, rank, STR_CONV_MODE_LEFT_ALIGN, 4);
+        *str++ = CHAR_PERIOD;
+        *str = EOS;
+    }
+    else
+    {
+        StringCopy(gStringVar4, COMPOUND_STRING("-"));
+    }
+    AddTextPrinterParameterized(windowId, FONT_SMALL, gStringVar4, 6, y, TEXT_SKIP_DRAW, NULL);
+    BufferLadderName(gStringVar4, entry->name);
+    AddTextPrinterParameterized(windowId, FONT_SMALL, gStringVar4, 30, y, TEXT_SKIP_DRAW, NULL);
+    ConvertIntToDecimalStringN(gStringVar4, entry->rating, STR_CONV_MODE_LEFT_ALIGN, 5);
+    AddTextPrinterParameterized(windowId, FONT_SMALL, gStringVar4, 110, y, TEXT_SKIP_DRAW, NULL);
+    BufferLadderRecord(gStringVar4, entry);
+    AddTextPrinterParameterized(windowId, FONT_SMALL, gStringVar4, 160, y, TEXT_SKIP_DRAW, NULL);
+}
+
+static void DrawLadder(u8 windowId, const u8 *message)
+{
+    const struct NetplayLadder *ladder = &gNetplayMailbox.ladder;
+    s32 i;
+
+    // Drawn bottom-up: lines are closer together than the font's box.
+    FillWindowPixelBuffer(windowId, PIXEL_FILL(1));
+    if (message != NULL)
+    {
+        AddTextPrinterParameterized(windowId, FONT_NORMAL, message, 6, LADDER_LINE_HEIGHT * 2, TEXT_SKIP_DRAW, NULL);
+    }
+    else
+    {
+        u32 bottom = LADDER_LINE_HEIGHT * (NETPLAY_LADDER_SIZE + 1) + 2;
+
+        if (ladder->myRank != 0)
+            PrintLadderRow(windowId, bottom, ladder->myRank, &ladder->me);
+        else
+            AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("You: no rated battles yet"), 30, bottom, TEXT_SKIP_DRAW, NULL);
+        for (i = ladder->count - 1; i >= 0; i--)
+            PrintLadderRow(windowId, LADDER_LINE_HEIGHT * (i + 1), i + 1, &ladder->top[i]);
+        if (ladder->count == 0)
+            AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("No rated battles yet."), 30, LADDER_LINE_HEIGHT + 2, TEXT_SKIP_DRAW, NULL);
+        AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("PvP LADDER"), 30, 0, TEXT_SKIP_DRAW, NULL);
+        AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("RATING"), 110, 0, TEXT_SKIP_DRAW, NULL);
+        AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("W-L-D"), 160, 0, TEXT_SKIP_DRAW, NULL);
+    }
+    CopyWindowToVram(windowId, COPYWIN_FULL);
+}
+
+void ShowNetplayLadder(void)
+{
+    u8 taskId = CreateTask(Task_Ladder, 80);
+    struct Task *task = &gTasks[taskId];
+
+    task->tWindowId = AddWindow(&sLadderWindowTemplate);
+    task->tSeq = gNetplayMailbox.ladder.seq;
+    task->tTimer = 0;
+    DrawStdWindowFrame(task->tWindowId, FALSE);
+    PutWindowTilemap(task->tWindowId);
+    if (IsOnline())
+    {
+        QueueRequest(NETPLAY_REQ_LADDER, 0, 0, 0);
+        task->tState = LADDER_STATE_WAIT;
+        DrawLadder(task->tWindowId, COMPOUND_STRING("Loading the ladder…"));
+    }
+    else
+    {
+        task->tState = LADDER_STATE_SHOWN;
+        DrawLadder(task->tWindowId, COMPOUND_STRING("Not online. Pick JOIN ONLINE\non the title menu to play online."));
+    }
+    ScheduleBgCopyTilemapToVram(0);
+}
+
+static void Task_Ladder(u8 taskId)
+{
+    struct Task *task = &gTasks[taskId];
+
+    switch (task->tState)
+    {
+    case LADDER_STATE_WAIT:
+        if (gNetplayMailbox.ladder.seq != (u8)task->tSeq)
+        {
+            DrawLadder(task->tWindowId, NULL);
+            task->tState = LADDER_STATE_SHOWN;
+        }
+        else if (++task->tTimer > LADDER_TIMEOUT || !IsOnline())
+        {
+            DrawLadder(task->tWindowId, COMPOUND_STRING("The server didn't answer."));
+            task->tState = LADDER_STATE_SHOWN;
+        }
+        // fallthrough
+    case LADDER_STATE_SHOWN:
+        if (JOY_NEW(A_BUTTON | B_BUTTON))
+        {
+            PlaySE(SE_SELECT);
+            ClearStdWindowAndFrameToTransparent(task->tWindowId, FALSE);
+            ClearWindowTilemap(task->tWindowId);
+            RemoveWindow(task->tWindowId);
+            ScheduleBgCopyTilemapToVram(0);
+            DestroyTask(taskId);
+            ScriptUnfreezeObjectEvents();
+            UnlockPlayerFieldControls();
+        }
+        break;
+    }
+}
+
+#undef tState
+#undef tWindowId
+#undef tSeq
+#undef tTimer

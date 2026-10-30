@@ -1,10 +1,27 @@
-name: CI
+name: Build game
 
+# Runs only when started by hand: Actions > Build game > Run workflow. Each
+# run builds the ROM and publishes a GitHub release with a BPS patch for
+# Pokémon Emerald (USA) and the mGBA bridge script. The ROM itself is never
+# published.
 on:
-  push:
-    branches:
-      - main
-  pull_request:
+  workflow_dispatch:
+    inputs:
+      server_host:
+        description: "Server JOIN ONLINE connects to (blank: keep include/config/netplay.h)"
+        required: false
+        default: ""
+      server_port:
+        description: "Server game port"
+        required: false
+        default: "7777"
+      version:
+        description: "Release name, e.g. v0.3 (each run publishes a GitHub release)"
+        required: true
+      run_tests:
+        description: "Also run the test suite (slow)"
+        type: boolean
+        default: false
 
 env:
   GAME_REVISION: 0
@@ -16,6 +33,8 @@ env:
 jobs:
   build-emerald:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -45,52 +64,55 @@ jobs:
             tools/wav2agb/wav2agb
           key: tools-${{ runner.os }}-${{ hashFiles('tools/*/Makefile', 'tools/**/*.c', 'tools/**/*.cpp', 'tools/**/*.h') }}
 
+      - name: Set the server address
+        if: ${{ inputs.server_host != '' }}
+        env:
+          SERVER_HOST: ${{ inputs.server_host }}
+          SERVER_PORT: ${{ inputs.server_port }}
+        run: |
+          python3 - <<'PY'
+          import os, re
+          host, port = os.environ["SERVER_HOST"], os.environ["SERVER_PORT"]
+          if not re.fullmatch(r"[A-Za-z0-9.-]{1,39}", host) or not port.isdigit():
+              raise SystemExit("server_host must be a host name or IP, server_port a number")
+          path = "include/config/netplay.h"
+          text = open(path).read()
+          text = re.sub(r'#define NETPLAY_SERVER_HOST ".*"', f'#define NETPLAY_SERVER_HOST "{host}"', text)
+          text = re.sub(r"#define NETPLAY_SERVER_PORT \d+", f"#define NETPLAY_SERVER_PORT {port}", text)
+          open(path, "w").write(text)
+          PY
+          grep NETPLAY_SERVER include/config/netplay.h
+
       - name: ROM (Emerald)
         env:
           GAME_VERSION: EMERALD
         run: make -j$(nproc) -O all
 
-      - name: Upload ROM
-        uses: actions/upload-artifact@v4
-        with:
-          name: pokeemerald
-          path: pokeemerald.gba
-
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install binutils
+      - name: Build the original Emerald to patch against
         run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends binutils-arm-none-eabi gcc-arm-none-eabi libnewlib-arm-none-eabi libpng-dev python3
+          git clone --depth 1 https://github.com/pret/agbcc ../agbcc
+          git clone --depth 1 https://github.com/pret/pokeemerald ../pokeemerald
+          (cd ../agbcc && ./build.sh && ./install.sh ../pokeemerald)
+          make -C ../pokeemerald -j$(nproc)
+          echo "f3ae088181bf583e55daf962a92bb46f4f1d07b7  ../pokeemerald/pokeemerald.gba" | sha1sum -c -
 
-      - name: Cache build tools
-        uses: actions/cache@v4
-        with:
-          path: |
-            tools/bin2c/bin2c
-            tools/gbafix/gbafix
-            tools/gbagfx/gbagfx
-            tools/jsonproc/jsonproc
-            tools/mapjson/mapjson
-            tools/mid2agb/mid2agb
-            tools/preproc/preproc
-            tools/ramscrgen/ramscrgen
-            tools/rsfont/rsfont
-            tools/scaninc/scaninc
-            tools/trainerproc/trainerproc
-            tools/compresSmol/compresSmol
-            tools/compresSmol/compresSmolTilemap
-            tools/wav2agb/wav2agb
-            tools/patchelf/patchelf
-            tools/mgba-rom-test-hydra/mgba-rom-test-hydra
-          key: tools-check-${{ runner.os }}-${{ hashFiles('tools/*/Makefile', 'tools/**/*.c', 'tools/**/*.cpp', 'tools/**/*.h') }}
-
-      - name: Test
+      - name: Publish release
         env:
-          GAME_VERSION: EMERALD
-          TEST: 1
-        run: make -j$(nproc) check
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+          SERVER: ${{ inputs.server_host }}
+        run: |
+          mkdir -p release
+          python3 tools/make_bps.py ../pokeemerald/pokeemerald.gba pokeemerald.gba "release/pokimon-multi-$VERSION.bps"
+          cp tools/netplay_bridge/netplay_bridge.lua release/
+          cat > release/notes.md <<EOF
+          1. Patch your own Pokémon Emerald (USA) ROM with \`pokimon-multi-$VERSION.bps\`,
+             for example on https://www.marcrobledo.com/RomPatcher.js/ or with Flips.
+          2. Open the patched ROM in mGBA 0.10 or newer.
+          3. Tools > Scripting... > File > Load script, and pick \`netplay_bridge.lua\`.
+          4. Pick JOIN ONLINE on the title menu.
+
+          Server: ${SERVER:-as set in include/config/netplay.h}
+          EOF
+          gh release create "$VERSION" release/*.bps release/netplay_bridge.lua \
+            --target "$GITHUB_SHA" --title "Pokimon Multi $VERSION" --notes-file release/notes.md
