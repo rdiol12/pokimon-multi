@@ -2,10 +2,11 @@
 -- Copies the ROM's netplay mailbox (gNetplayMailbox) to and from the netplay
 -- server once per frame. Layout and protocol: docs/netplay.md.
 --
--- Load in mGBA with Tools > Scripting > File > Load script.
+-- Load in mGBA with Tools > Scripting > File > Load script. Set the globals
+-- NETPLAY_HOST / NETPLAY_PORT before loading to use another server.
 
-local HOST = "127.0.0.1"
-local PORT = 7777
+local HOST = NETPLAY_HOST or "127.0.0.1"
+local PORT = NETPLAY_PORT or 7777
 
 local EWRAM_START = 0x02000000
 local EWRAM_END = 0x02040000
@@ -200,8 +201,9 @@ function Bridge:handleLine(line)
     elseif cmd == "ENDED" then
         local sid = tonumber(args[2])
         if sid == self.session then
+            -- Keep rxQueue: the peer's last packets arrived before ENDED and
+            -- the ROM still needs them to finish its link.
             self.session = nil
-            self.rxQueue = {}
         end
         self:queueEvent(EV_ENDED, 0, sid)
     elseif cmd == "LINK" then
@@ -390,12 +392,14 @@ function Bridge:onFrame()
 
     self:pump()
     if not self.connected then return end
+    -- Link packets go out before requests, so the last packets of a link
+    -- reach the peer before our QUIT ends the session.
+    self:syncLink()
     if self.localId ~= 0 then
         self:sendPosition()
         self:handleRequest()
     end
     self:deliverEvent()
-    self:syncLink()
     self:writeRemotes()
 end
 
@@ -444,9 +448,21 @@ if emu ~= nil and callbacks ~= nil and socket ~= nil then
     }
     local bridge = Bridge.new(mem, net)
     bridge.logger = function(msg) console:log(msg) end
-    callbacks:add("frame", function() bridge:onFrame() end)
+    local failed = false
+    callbacks:add("frame", function()
+        if failed then return end
+        local ok, err = pcall(bridge.onFrame, bridge)
+        if not ok then
+            failed = true
+            console:log("netplay bridge stopped: " .. tostring(err))
+        end
+    end)
     callbacks:add("reset", function() bridge:onReset() end)
     console:log("netplay bridge loaded, server " .. HOST .. ":" .. PORT)
 end
 
-return Bridge
+-- Only return the module when loaded by the unit tests: mGBA leaves a script's
+-- return value on the Lua stack, which breaks its later callback calls.
+if emu == nil then
+    return Bridge
+end

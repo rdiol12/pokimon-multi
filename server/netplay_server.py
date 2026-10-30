@@ -333,7 +333,14 @@ class Server:
             self.finish_battle(session)
 
     def cmd_quit(self, player, sid):
-        self.end_session(self.require_session(player, sid), player)
+        session = self.sessions.get(int(sid))
+        if session is None:
+            # Already over: after a battle or trade both sides quit, and the
+            # second QUIT finds nothing left to end.
+            return
+        if player not in (session.host, session.guest):
+            raise ValueError("no such session")
+        self.end_session(session, player)
 
     def cmd_board(self, player):
         for i, (name, rating, w, l, d) in enumerate(self.league.top(), 1):

@@ -10,7 +10,7 @@ Netplay_EventScript_TalkToPlayer::
 	dynmultipush Netplay_Text_Battle, NETPLAY_KIND_BATTLE
 	dynmultipush Netplay_Text_Trade, NETPLAY_KIND_TRADE
 	dynmultipush Netplay_Text_Cancel, NETPLAY_KIND_NONE
-	dynmultistack 0, 0, FALSE, 3, FALSE, 0, DYN_MULTICHOICE_CB_NONE
+	dynmultistack 0, 0, FALSE, 3, FALSE, NETPLAY_KIND_BATTLE, DYN_MULTICHOICE_CB_NONE
 	switch VAR_RESULT
 	case NETPLAY_KIND_BATTLE, Netplay_EventScript_SendInvite
 	case NETPLAY_KIND_TRADE, Netplay_EventScript_SendInvite

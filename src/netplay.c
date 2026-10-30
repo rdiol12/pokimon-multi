@@ -12,6 +12,8 @@
 #include "link.h"
 #include "load_save.h"
 #include "main.h"
+#include "new_game.h"
+#include "play_time.h"
 #include "overworld.h"
 #include "palette.h"
 #include "pokemon.h"
@@ -26,6 +28,10 @@
 #include "constants/characters.h"
 #include "constants/event_object_movement.h"
 #include "constants/event_objects.h"
+#include "constants/flags.h"
+#include "constants/items.h"
+#include "constants/map_groups.h"
+#include "constants/species.h"
 #include "constants/songs.h"
 #include "constants/trainers.h"
 
@@ -40,6 +46,7 @@
 #define RESPONSE_TIMEOUT  (60 * 60)
 #define START_TIMEOUT     (60 * 15)
 #define LINKUP_TIMEOUT    (60 * 20)
+#define PEER_LEFT_GRACE_FRAMES (60 * 3)
 
 enum
 {
@@ -55,7 +62,9 @@ struct NetplaySession
     u8 kind;
     u8 role;
     bool8 active;
-    bool8 inActivity; // left the overworld for the battle or trade
+    bool8 inActivity; // handed off to the battle or trade screen
+    bool8 peerLeft;
+    u8 peerLeftTimer;
 };
 
 struct NetplayInvite
@@ -201,10 +210,21 @@ static void HandleEvent(const struct NetplayEvent *ev)
         }
         if (sSession.active && ev->sessionId == sSession.id)
         {
-            // The peer left. A running link stalls, so report it as a link error.
-            sSession.active = FALSE;
-            if (gLink.state == LINK_STATE_CONN_ESTABLISHED || gLink.state == LINK_STATE_HANDSHAKE)
-                gLink.hardwareError = TRUE;
+            if (sSession.inActivity)
+            {
+                // The peer may have just finished the battle or trade and
+                // closed its end first; its last packets are still on the
+                // way. Give our link time to finish before calling it lost.
+                sSession.peerLeft = TRUE;
+                sSession.peerLeftTimer = PEER_LEFT_GRACE_FRAMES;
+            }
+            else
+            {
+                // The peer left. A running link stalls, so report it as a link error.
+                sSession.active = FALSE;
+                if (gLink.state == LINK_STATE_CONN_ESTABLISHED || gLink.state == LINK_STATE_HANDSHAKE)
+                    gLink.hardwareError = TRUE;
+            }
         }
         break;
     }
@@ -234,6 +254,10 @@ void Netplay_Update(void)
     }
     ReceiveEvent();
     FlushRequest();
+
+    if (sSession.peerLeft && gReceivedRemoteLinkPlayers && sSession.peerLeftTimer != 0
+     && --sSession.peerLeftTimer == 0)
+        gLink.hardwareError = TRUE;
 }
 
 // Overworld --------------------------------------------------------------
@@ -344,9 +368,13 @@ bool32 Netplay_OverworldUpdate(void)
     for (i = 0; i < NETPLAY_MAX_REMOTES; i++)
         SyncAvatar(i);
 
-    // Back from the battle or trade with the link closed: the session is over.
-    if (sSession.active && sSession.inActivity && gLink.state == LINK_STATE_START0 && !gReceivedRemoteLinkPlayers)
+    // Back from the battle or trade once the link has finished: the session is
+    // over. The save after a link battle can leave the link open but idle.
+    if (sSession.active && sSession.inActivity && !gReceivedRemoteLinkPlayers)
+    {
+        CloseLink();
         Netplay_EndSession();
+    }
 
     return TryStartInviteScript();
 }
@@ -398,7 +426,7 @@ bool32 Netplay_InSession(void)
 
 void Netplay_EndSession(void)
 {
-    if (sSession.id != 0)
+    if (sSession.id != 0 && !sSession.peerLeft)
         QueueRequest(NETPLAY_REQ_LEAVE, 0, sSession.id, 0);
     sSession = (struct NetplaySession){0};
     sLink = (struct NetplayLinkState){0};
@@ -410,7 +438,8 @@ void Netplay_OnBattleEnd(u8 battleOutcome)
 
     if (!sSession.active || sSession.kind != NETPLAY_KIND_BATTLE)
         return;
-    switch (battleOutcome)
+    // Running from a link battle sets B_OUTCOME_LINK_BATTLE_RAN on top of won/lost.
+    switch (battleOutcome & ~B_OUTCOME_LINK_BATTLE_RAN)
     {
     case B_OUTCOME_WON:
         result = NETPLAY_RESULT_WON;
@@ -607,7 +636,6 @@ static void Task_Linkup(u8 taskId)
         // Both games are linked; leave the script behind and start the activity.
         ScriptContext_Init();
         UnlockPlayerFieldControls();
-        sSession.inActivity = TRUE;
         FadeScreen(FADE_TO_BLACK, 0);
         if (sSession.kind == NETPLAY_KIND_BATTLE)
         {
@@ -628,6 +656,7 @@ static void Task_Linkup(u8 taskId)
             {
                 CleanupOverworldWindowsAndTilemaps();
                 DestroyTask(taskId);
+                sSession.inActivity = TRUE;
                 SetMainCallback2(CB2_StartCreateTradeMenu);
             }
             else if (++tTimer > 20)
@@ -645,6 +674,7 @@ static void Task_Linkup(u8 taskId)
             gBattleTypeFlags = BATTLE_TYPE_LINK | BATTLE_TYPE_TRAINER;
             CleanupOverworldWindowsAndTilemaps();
             TRAINER_BATTLE_PARAM.opponentA = TRAINER_LINK_OPPONENT;
+            sSession.inActivity = TRUE;
             SetMainCallback2(CB2_InitBattle);
             gMain.savedCallback = CB2_ReturnFromCableClubBattle;
             DestroyTask(taskId);
@@ -655,6 +685,50 @@ static void Task_Linkup(u8 taskId)
 
 #undef tState
 #undef tTimer
+
+// Test boot --------------------------------------------------------------
+//
+// For automated tests (tools/netplay_bridge/e2e): a test driver writes
+// NETPLAY_TEST_BOOT_MAGIC | n into the mailbox's first padding byte on the
+// title screen, and "New Game" then skips the intro and drops player TESTn
+// with a small party in front of the Oldale Town Pokémon Center.
+
+#define NETPLAY_TEST_BOOT_MAGIC 0xB0
+
+static void CB2_TestNewGame(void)
+{
+    u8 n = gNetplayMailbox.filler[0] & 0xF;
+    u8 name[] = _("TEST0");
+
+    NewGameInitData();
+    ResetInitialPlayerAvatarState();
+    PlayTimeCounter_Start();
+    ScriptContext_Init();
+    UnlockPlayerFieldControls();
+
+    gSaveBlock2Ptr->optionsTextSpeed = OPTIONS_TEXT_SPEED_FAST;
+    name[4] += n;
+    StringCopy(gSaveBlock2Ptr->playerName, name);
+    gSaveBlock2Ptr->playerTrainerId[0] = n;
+    gSaveBlock2Ptr->playerTrainerId[1] = 0x10;
+    FlagSet(FLAG_SYS_POKEMON_GET);
+    ScriptGiveMon(n & 1 ? SPECIES_MUDKIP : SPECIES_TREECKO, 30, ITEM_NONE);
+    ScriptGiveMon(n & 1 ? SPECIES_POOCHYENA : SPECIES_ZIGZAGOON, 30, ITEM_NONE);
+
+    SetWarpDestination(MAP_GROUP(MAP_OLDALE_TOWN), MAP_NUM(MAP_OLDALE_TOWN), WARP_ID_NONE, 4 + 2 * n, 17);
+    WarpIntoMap();
+    gFieldCallback = FieldCB_WarpExitFadeFromBlack;
+    SetMainCallback2(CB2_LoadMap);
+}
+
+bool32 Netplay_TryTestBoot(u8 taskId)
+{
+    if ((gNetplayMailbox.filler[0] & 0xF0) != NETPLAY_TEST_BOOT_MAGIC)
+        return FALSE;
+    DestroyTask(taskId);
+    SetMainCallback2(CB2_TestNewGame);
+    return TRUE;
+}
 
 // Link transport ---------------------------------------------------------
 //

@@ -1879,7 +1879,12 @@ u32 LinkMain1(u8 *shouldAdvanceLinkState, u16 *sendCmd, u16 (*recvCmds)[CMD_LENG
         if (Netplay_IsLinkActive())
         {
             if (Netplay_LinkHandshake())
+            {
+                // LinkMain2 processes recvCmds as soon as the link is up, and
+                // they still hold the last cmds of the previous link.
                 gLink.state = LINK_STATE_CONN_ESTABLISHED;
+                DequeueRecvCmds(recvCmds);
+            }
             break;
         }
         switch (*shouldAdvanceLinkState)
