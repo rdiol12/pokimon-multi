@@ -73,7 +73,7 @@
 #define FLAG_RECEIVED_NIGHT_SPELL_TAG        0x33 // World: day/night
 #define FLAG_RECEIVED_STARGAZER_MOON_STONE   0x34 // World: day/night
 #define FLAG_WORLD_RIDING                    0x35 // World: mounts
-#define FLAG_UNUSED_0x036    0x36 // Unused Flag
+#define FLAG_WORLD_HOUSE_OPEN                0x36 // World: visitors see your furniture
 #define FLAG_UNUSED_0x037    0x37 // Unused Flag
 #define FLAG_UNUSED_0x038    0x38 // Unused Flag
 #define FLAG_UNUSED_0x039    0x39 // Unused Flag

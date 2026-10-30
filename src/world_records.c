@@ -27,7 +27,7 @@ static EWRAM_DATA bool8 sFishBattle = FALSE;
 static EWRAM_DATA u16 sHookedSpecies = 0;
 static EWRAM_DATA u16 sHookedSize = 0;
 
-static u32 SizeOf(u16 species, u32 personality)
+u32 Records_SizeOf(u16 species, u32 personality)
 {
     u32 heightMm = gSpeciesInfo[species].height * 100;
     u32 scale = 75 + ((personality >> 8) & 0xFF) * 50 / 255;
@@ -35,7 +35,7 @@ static u32 SizeOf(u16 species, u32 personality)
     return heightMm * scale / 100;
 }
 
-static void FormatSize(u8 *dest, u32 mm)
+void Records_FormatSize(u8 *dest, u32 mm)
 {
     if (mm >= 1000)
     {
@@ -59,7 +59,7 @@ void Records_OnFishHooked(void)
     struct Pokemon *mon = &gEnemyParty[0];
 
     sHookedSpecies = GetMonData(mon, MON_DATA_SPECIES);
-    sHookedSize = SizeOf(sHookedSpecies, GetMonData(mon, MON_DATA_PERSONALITY));
+    sHookedSize = Records_SizeOf(sHookedSpecies, GetMonData(mon, MON_DATA_PERSONALITY));
     sFishBattle = TRUE;
 }
 
@@ -86,7 +86,7 @@ void Records_OnWildBattleEnd(void)
         Achievements_Unlock(ACH_BIG_FISH);
 
     StringCopy(gStringVar1, GetSpeciesName(sHookedSpecies));
-    FormatSize(gStringVar2, sHookedSize);
+    Records_FormatSize(gStringVar2, sHookedSize);
     StringExpandPlaceholders(gStringVar3, COMPOUND_STRING("LANDED! {STR_VAR_1}, {STR_VAR_2}"));
     World_ShowToast(gStringVar3, record ? COMPOUND_STRING("A new personal record!") : COMPOUND_STRING("Not your biggest yet."));
 }
@@ -166,7 +166,7 @@ static void GetRecordLine(u16 i, u8 *dest)
             break;
         }
         StringCopy(gStringVar1, GetSpeciesName(world->bestFishSpecies));
-        FormatSize(gStringVar2, world->bestFishSize);
+        Records_FormatSize(gStringVar2, world->bestFishSize);
         StringExpandPlaceholders(dest, COMPOUND_STRING("Biggest fish: {STR_VAR_1} {STR_VAR_2}"));
         break;
     case RECORD_FISH_LANDED:

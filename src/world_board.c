@@ -93,6 +93,11 @@ void WorldBoard_Show(const u8 *title, u16 count, WorldBoardLineFunc getLine, Wor
     CreateTask(Task_Board, 80);
 }
 
+bool32 WorldBoard_IsOpen(void)
+{
+    return FuncIsActiveTask(Task_Board);
+}
+
 // Redraws an open board with new contents (for boards filled by the server).
 void WorldBoard_Refresh(u16 count)
 {

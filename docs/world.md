@@ -124,6 +124,48 @@ Furniture is drawn as sprites anchored to the map (sorted with the player
 by y, so the player can walk behind tall pieces) and blocks its footprint
 tiles. It is saved in `houseDecor` as (type, x | y << 4) pairs.
 
+## Online
+
+![Online: followers, a remote mount, berry board, Safari hunt, photo, and visiting an open house](images/world-online.png)
+
+These work through the netplay server (`docs/netplay.md`) when the player
+is connected; offline they quietly do nothing.
+
+- **Followers and mounts.** Other players' following Pokémon walk behind
+  them (local ids 200 + slot), shiny ones included, and a player riding
+  shows on their mount.
+- **Leaderboards.** R > LEADERBOARDS: biggest fish, berry pickers, hardcore
+  runs and the current Safari hunt. The server keeps each player's best.
+- **Safari hunts.** Every 30 minutes the server picks one of 20 common
+  Hoenn Pokémon; catching it scores its size on the hunt board ("Safari Hunter"
+  for the first entry). R > SAFARI HUNT says what is hunted and for how
+  long.
+- **Photos.** R > PHOTO saves a screenshot next to the bridge script and
+  uploads it ("Say Cheese"); the server's web page lists them at `/gallery`.
+- **House visits.** The house catalog's INVITE VISITORS opens the house:
+  any player who comes in while the host is there sees the host's
+  furniture ("This is TEST1's house!") and can't change it.
+
+The ROM side is `src/world_online.c` and its own mailbox,
+`gWorldMailbox` (`include/world_mailbox.h`): the player's look (follower,
+mount, house and its furniture), one queued request at a time (score or
+board), the board rows the bridge writes back, the hunt, a photo counter,
+and every other player's look by netplay id. `tools/netplay_bridge/
+netplay_world.lua` copies it to and from the server's world commands
+(`server/world.py`):
+
+| Bridge sends | Server sends | |
+| --- | --- | --- |
+| `WORLD` | `LOOK`/`HOUSE` of everyone, then `HUNT id minutesLeft` | on connecting |
+| `LOOK follower mount` | `LOOK id follower mount` | to everyone else |
+| `HOUSE open decorHex` | `HOUSE id open decorHex` | to everyone else |
+| `SCORE board key value extra` | | best per player; hunt scores need the current hunt id as key |
+| `WBOARD board key` | `WROW board rank name value extra` ..., `WBOARDEND board myRank` | top 10 |
+| `HUNT` | `HUNT id minutesLeft` | about once a minute |
+| `PHOTO hex`..., `PHOTOEND group num` | | PNG in 120-byte chunks, saved to `<db>-gallery/` |
+
+Boards and hunts are saved to `<db>.world.json`.
+
 ## Screenshots
 
 ```sh
@@ -134,3 +176,6 @@ python3 tools/world_shots/run.py tools/world_shots/daynight.lua out/daynight
 the test boot, then runs the scenario. `Driver.scene(hour, MAPS.MAP_X, x, y)`
 sets the clock and warps by writing `gWorldShowcase` (`src/world.c`);
 `Driver.findBattle`, `Driver.runAway` and `Driver.talk` do the rest.
+
+With a fourth argument of 2, `run.py` starts a server and runs two players
+side by side (`tools/world_shots/online.lua`).

@@ -44,6 +44,16 @@ void House_Update(void);
 bool32 House_TryInteract(s16 x, s16 y);
 bool32 World_TryInteract(s16 x, s16 y);
 
+// Online (world_online.c).
+void WorldOnline_Update(void);
+void World_OnWildBattleStart(void);
+void WorldOnline_OnCatch(void);
+const u8 *WorldOnline_GetOpenHouse(u16 *playerId, u8 *name);
+bool32 Mount_IsAttached(u8 spriteId, u8 objectId);
+u32 Records_SizeOf(u16 species, u32 personality);
+void Records_FormatSize(u8 *dest, u32 mm);
+bool32 WorldBoard_IsOpen(void);
+
 // Full-screen list window (world_board.c).
 typedef void (*WorldBoardLineFunc)(u16 index, u8 *dest);
 void WorldBoard_Show(const u8 *title, u16 count, WorldBoardLineFunc getLine, WorldBoardLineFunc getDetail);

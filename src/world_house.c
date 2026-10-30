@@ -10,6 +10,7 @@
 #include "sprite.h"
 #include "string_util.h"
 #include "world.h"
+#include "netplay.h"
 #include "constants/map_groups.h"
 #include "constants/songs.h"
 
@@ -89,6 +90,9 @@ static void SpriteCB_Furniture(struct Sprite *sprite) {}
 struct HouseState
 {
     u16 mapKey;            // the map the sprites were made on
+    u16 hostId;            // visiting another player's open house, or 0
+    u8 hostName[NETPLAY_NAME_LENGTH];
+    u8 shown[WORLD_HOUSE_SLOTS]; // the furniture the sprites show
     u8 spriteIds[HOUSE_MAX_PIECES];
     u8 holding;            // FURNITURE_* being placed, or NONE
     u8 ghostSprite;
@@ -100,6 +104,27 @@ static EWRAM_DATA struct HouseState sHouse = {0};
 static u8 *Decor(void)
 {
     return gSaveBlock3Ptr->world.houseDecor;
+}
+
+// Whose furniture to show: ours, unless another player in here opened
+// their house to visitors (and ours isn't open).
+static const u8 *ShownDecor(void)
+{
+    const u8 *decor;
+
+    if (!FlagGet(FLAG_WORLD_HOUSE_OPEN))
+    {
+        decor = WorldOnline_GetOpenHouse(&sHouse.hostId, sHouse.hostName);
+        if (decor == NULL && sHouse.hostId != 0)
+        {
+            sHouse.hostId = 0; // they left; look for anyone else next time
+            decor = WorldOnline_GetOpenHouse(&sHouse.hostId, sHouse.hostName);
+        }
+        if (decor != NULL)
+            return decor;
+    }
+    sHouse.hostId = 0;
+    return Decor();
 }
 
 static bool32 IsInHouse(void)
@@ -168,21 +193,39 @@ static bool32 SpritesAreUp(void)
     for (i = 0; i < HOUSE_MAX_PIECES; i++)
     {
         u8 id = sHouse.spriteIds[i];
-        if (Decor()[i * 2] != FURNITURE_NONE
+        if (sHouse.shown[i * 2] != FURNITURE_NONE
          && (id == MAX_SPRITES || !gSprites[id].inUse || gSprites[id].callback != SpriteCB_Furniture))
             return FALSE;
     }
     return TRUE;
 }
 
-static void PlaceAll(void)
+static void ClearAll(void)
+{
+    u32 i;
+
+    for (i = 0; i < HOUSE_MAX_PIECES; i++)
+    {
+        u8 type = sHouse.shown[i * 2], pos = sHouse.shown[i * 2 + 1], id = sHouse.spriteIds[i];
+        if (type == FURNITURE_NONE || type >= FURNITURE_COUNT)
+            continue;
+        SetFootprint(type, pos & 0xF, pos >> 4, FALSE);
+        if (id != MAX_SPRITES && gSprites[id].inUse && gSprites[id].callback == SpriteCB_Furniture)
+            DestroySprite(&gSprites[id]);
+        sHouse.spriteIds[i] = MAX_SPRITES;
+    }
+    memset(sHouse.shown, 0, sizeof(sHouse.shown));
+}
+
+static void PlaceAll(const u8 *decor)
 {
     u32 i;
 
     sHouse.mapKey = (gSaveBlock1Ptr->location.mapGroup << 8) | gSaveBlock1Ptr->location.mapNum;
+    memcpy(sHouse.shown, decor, sizeof(sHouse.shown));
     for (i = 0; i < HOUSE_MAX_PIECES; i++)
     {
-        u8 type = Decor()[i * 2], pos = Decor()[i * 2 + 1];
+        u8 type = decor[i * 2], pos = decor[i * 2 + 1];
         sHouse.spriteIds[i] = MAX_SPRITES;
         if (type == FURNITURE_NONE || type >= FURNITURE_COUNT)
             continue;
@@ -233,16 +276,27 @@ static void UpdateGhost(void)
 
 void House_Update(void)
 {
+    const u8 *decor;
+
     if (!IsInHouse())
     {
         sHouse.mapKey = 0;
+        sHouse.hostId = 0;
         sHouse.holding = FURNITURE_NONE;
         return;
     }
+    decor = ShownDecor();
     if (!SpritesAreUp())
     {
+        // Back from a menu or a new visit: everything was reset.
         sHouse.ghostSprite = MAX_SPRITES;
-        PlaceAll();
+        memset(sHouse.spriteIds, MAX_SPRITES, sizeof(sHouse.spriteIds));
+        PlaceAll(decor);
+    }
+    else if (memcmp(decor, sHouse.shown, sizeof(sHouse.shown)) != 0)
+    {
+        ClearAll(); // the host moved something, or we came or went
+        PlaceAll(decor);
     }
     if (sHouse.holding != FURNITURE_NONE)
         UpdateGhost();
@@ -288,8 +342,8 @@ static void Place(s16 x, s16 y)
     }
     if (i == HOUSE_MAX_PIECES)
         return;
-    Decor()[i * 2] = sHouse.holding;
-    Decor()[i * 2 + 1] = x | (y << 4);
+    Decor()[i * 2] = sHouse.shown[i * 2] = sHouse.holding;
+    Decor()[i * 2 + 1] = sHouse.shown[i * 2 + 1] = x | (y << 4);
     DropGhost();
     sHouse.spriteIds[i] = CreateFurnitureSprite(sHouse.holding, x, y);
     SetFootprint(sHouse.holding, x, y, TRUE);
@@ -319,7 +373,7 @@ bool32 House_TryInteract(s16 x, s16 y)
 {
     s32 piece;
 
-    if (!IsInHouse())
+    if (!IsInHouse() || sHouse.hostId != 0)
         return FALSE;
     x -= MAP_OFFSET;
     y -= MAP_OFFSET;
@@ -362,6 +416,28 @@ void House_StartPlacing(void)
     gSpecialVar_Result = HOUSE_PLACING;
 }
 
+// Script: the catalog. VAR_RESULT = 0 our house, 1 our house, open to
+// visitors, 2 visiting (STR_VAR_1 = whose).
+void House_GetCatalogState(void)
+{
+    if (sHouse.hostId != 0)
+    {
+        StringCopy(gStringVar1, sHouse.hostName);
+        gSpecialVar_Result = 2;
+        return;
+    }
+    gSpecialVar_Result = FlagGet(FLAG_WORLD_HOUSE_OPEN) ? 1 : 0;
+}
+
+// Script: opens or closes the house to visitors.
+void House_ToggleOpen(void)
+{
+    if (FlagGet(FLAG_WORLD_HOUSE_OPEN))
+        FlagClear(FLAG_WORLD_HOUSE_OPEN);
+    else
+        FlagSet(FLAG_WORLD_HOUSE_OPEN);
+}
+
 // Script: puts piece VAR_0x8004 away.
 void House_PutAway(void)
 {
@@ -374,6 +450,6 @@ void House_PutAway(void)
     if (sHouse.spriteIds[i] != MAX_SPRITES)
         DestroySprite(&gSprites[sHouse.spriteIds[i]]);
     sHouse.spriteIds[i] = MAX_SPRITES;
-    Decor()[i * 2] = FURNITURE_NONE;
-    Decor()[i * 2 + 1] = 0;
+    Decor()[i * 2] = sHouse.shown[i * 2] = FURNITURE_NONE;
+    Decor()[i * 2 + 1] = sHouse.shown[i * 2 + 1] = 0;
 }

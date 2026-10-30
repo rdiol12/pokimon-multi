@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 """Headless in-game screenshots of the world features.
 
-Usage: run.py <scenario.lua> <out dir> [frames]
+Usage: run.py <scenario.lua> <out dir> [frames] [players]
+
+With players = 2 it also starts the netplay server, and runs two instances
+(TEST1 and TEST2, joined online) of the same scenario; INSTANCE tells them
+apart and screenshots go to <out dir>/p1 and p2.
 
 Boots the ROM through the netplay test boot (player TEST1 in Oldale Town),
 then runs the scenario. Scenarios use the e2e Driver (driver_lib.lua) plus
@@ -12,8 +16,10 @@ Needs a built pokeemerald.gba and libmgba-dev, like the netplay e2e test.
 import os
 import re
 import shutil
+import socket
 import subprocess
 import sys
+import time
 
 here = os.path.dirname(os.path.abspath(__file__))
 root = os.path.abspath(os.path.join(here, "..", ".."))
@@ -25,6 +31,9 @@ SYMBOLS = ["gNetplayMailbox", "gMain", "gParties", "gPartiesCount", "CB2_Overwor
            "gSpecialVar_Result", "gWorldMailbox", "gWorldTimingMeter"]
 
 HELPERS = """
+function Driver.read8(addr) return E.read8(addr) end
+function Driver.read16(addr) return E.read16(addr) end
+
 -- Plays the timing meter (src/world_meter.c): presses A while the needle
 -- is over the green zone, until the meter closes. miss = true to miss.
 function Driver.playMeter(miss, shotName)
@@ -126,8 +135,10 @@ end
 def main():
     scenario, out = os.path.abspath(sys.argv[1]), os.path.abspath(sys.argv[2])
     frames = sys.argv[3] if len(sys.argv) > 3 else "200000"
+    players = int(sys.argv[4]) if len(sys.argv) > 4 else 1
     shutil.rmtree(out, ignore_errors=True)
-    os.makedirs(os.path.join(out, "p1"))
+    for n in range(1, players + 1):
+        os.makedirs(os.path.join(out, f"p{n}"))
     harness = os.path.join(out, "harness")
     subprocess.check_call(["gcc", "-O1", "-o", harness, os.path.join(e2e, "harness.c"), "-lmgba"])
 
@@ -158,11 +169,30 @@ def main():
     prelude += "SPECIES_ID = {\n" + "".join(f'    {n} = {v},\n' for n, v in species) + "}\n"
     prelude += "SPECIES_NAME = {\n" + "".join(f'    [{v}] = "{n}",\n' for n, v in species) + "}\n"
     prelude += f'OUT_DIR = "{out}"\n'
-    open(os.path.join(out, "p1", "driver.lua"), "w").write(prelude + open(scenario).read())
-    subprocess.call([harness, os.path.join(root, "pokeemerald.gba"),
-                     os.path.join(root, "tools", "netplay_bridge", "netplay_bridge.lua"), frames,
-                     os.path.join(out, "p1")])
-    print(open(os.path.join(out, "p1", "result.txt")).read().strip())
+    dirs = [os.path.join(out, f"p{n}") for n in range(1, players + 1)]
+    for d in dirs:
+        open(os.path.join(d, "driver.lua"), "w").write(prelude + open(scenario).read())
+    env, server = dict(os.environ), None
+    if players > 1:
+        with socket.socket() as s:
+            s.bind(("127.0.0.1", 0))
+            port = s.getsockname()[1]
+        server = subprocess.Popen(
+            [sys.executable, os.path.join(root, "server", "netplay_server.py"), "--host", "127.0.0.1",
+             "--port", str(port), "--db", os.path.join(out, "league.sqlite3")],
+            stdout=open(os.path.join(out, "server.log"), "w"), stderr=subprocess.STDOUT)
+        time.sleep(0.5)
+        env["NETPLAY_PORT"] = str(port)
+    try:
+        subprocess.call([harness, os.path.join(root, "pokeemerald.gba"),
+                         os.path.join(root, "tools", "netplay_bridge", "netplay_bridge.lua"), frames, *dirs], env=env)
+    finally:
+        if server:
+            server.terminate()
+            server.wait()
+    for d in dirs:
+        path = os.path.join(d, "result.txt")
+        print(os.path.basename(d) + ":", open(path).read().strip() if os.path.exists(path) else "no result")
 
 
 if __name__ == "__main__":

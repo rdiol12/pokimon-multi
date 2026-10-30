@@ -384,8 +384,15 @@ class Server:
         player.send("BOARDEND")
 
 
+# World features (followers, houses, leaderboards, hunts, photos): server/world.py.
+import world  # noqa: E402
+
+world.install(Server)
+
+
 async def serve(host, port, db_path, http_port=0, public_host=""):
     server = Server(League(db_path))
+    world.attach(server, db_path)
     srv = await asyncio.start_server(server.handle, host, port)
     log.info("listening on %s", ", ".join(str(s.getsockname()) for s in srv.sockets))
     servers = [srv]

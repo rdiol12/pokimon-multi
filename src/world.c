@@ -117,6 +117,7 @@ bool32 World_OverworldUpdate(void)
     Mount_Update();
     Legends_Update();
     House_Update();
+    WorldOnline_Update();
     Achievements_Update();
     return Hardcore_Update();
 }
@@ -145,7 +146,10 @@ void World_OnWildBattleEnd(void)
 {
     // The enemy party may already be cleared; gBattleResults isn't.
     if (gBattleOutcome == B_OUTCOME_CAUGHT)
+    {
         Achievements_OnCatch(gBattleResults.caughtMonSpecies, gBattleResults.shinyWildMon);
+        WorldOnline_OnCatch();
+    }
     ShinyChain_OnWildBattleEnd();
     Records_OnWildBattleEnd();
     Hardcore_OnBattleEnd(TRUE);
@@ -156,11 +160,3 @@ void World_OnTrainerBattleEnd(void)
     Hardcore_OnBattleEnd(FALSE);
 }
 
-// Until the online part sends these to the server.
-void World_SubmitScore(u8 board, u32 value, u32 extra)
-{
-}
-
-void World_OnHardcoreProgress(void)
-{
-}

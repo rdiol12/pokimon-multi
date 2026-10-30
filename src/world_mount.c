@@ -164,6 +164,11 @@ u8 Mount_Attach(u8 objectId, u16 gfx)
     return spriteId;
 }
 
+bool32 Mount_IsAttached(u8 spriteId, u8 objectId)
+{
+    return IsMountSprite(spriteId) && gSprites[spriteId].sObjectId == objectId;
+}
+
 void Mount_Detach(u8 spriteId)
 {
     if (!IsMountSprite(spriteId))
