@@ -76,6 +76,9 @@ enum Language
     #define IS_FRLG 0
     #endif
 #endif
+// Netplay: build FRLG overworld sprites into every game, for the Red and
+// Leaf player styles.
+#define FRLG_OBJECT_EVENTS TRUE
 #define GAME_LANGUAGE (LANGUAGE_ENGLISH)
 
 // party sizes

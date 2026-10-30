@@ -1,6 +1,8 @@
--- Two players meet in Oldale Town, battle (player 1 forfeits), trade their
+-- Two players meet in Oldale Town. Player 1 changes into Red in the Style
+-- menu and player 2 sees it. They battle (player 1 forfeits), trade their
 -- lead Pokémon, then make a deal: player 2 gives both its Pokémon for player
--- 1's lead Pokémon and ¥1,000.
+-- 1's lead Pokémon and ¥1,000. Last, player 2 opens the PvP ladder and finds
+-- itself in first place.
 -- Run with run_e2e.py.
 
 dofile(INSTANCE_DIR .. "/../driver_lib.lua")
@@ -35,6 +37,35 @@ D.run(function()
     D.waitFor("the other player", 600, function() return D.remoteCount() > 0 end)
     D.wait(30)
     D.shot("together")
+
+    -- Style --------------------------------------------------------------
+    -- START menu: POKéMON, BAG, PLAYER, STYLE, LADDER, SAVE, OPTION, EXIT.
+    if INSTANCE == 1 then
+        local gfx = D.mb16(0x01E)
+        D.press(K.START, 40)
+        D.shot("start-menu")
+        for _ = 1, 3 do D.press(K.DOWN, 10) end
+        D.press(K.A, 40) -- STYLE
+        D.press(K.DOWN, 15) -- MAY
+        D.press(K.DOWN, 30) -- RED
+        D.shot("style-menu")
+        D.press(K.A, 40)
+        if D.mb16(0x01E) == gfx then D.fail("the style didn't change") end
+        D.wait(30)
+        D.shot("style-red")
+    else
+        local gfx = D.mb16(0x020 + 10)
+        D.waitFor("player 1's new look", 900, function() return D.mb16(0x020 + 10) ~= gfx end)
+        -- The menu previews each look in turn; wait for the one kept.
+        local last, still = nil, 0
+        D.waitFor("player 1 to pick", 900, function()
+            local now = D.mb16(0x020 + 10)
+            still = now == last and still + 1 or 0
+            last = now
+            return still >= 90
+        end)
+        D.shot("sees-red")
+    end
 
     -- Battle -------------------------------------------------------------
     local seq = D.mb8(0x0C8)
@@ -168,4 +199,20 @@ D.run(function()
     end
     D.waitFor("the overworld after the deal", 600, D.inOverworld)
     D.shot("done")
+
+    -- Ladder: player 2 won the battle, so it is first. -----------------------
+    if INSTANCE == 2 then
+        local ladderSeq = D.mb8(0x388)
+        D.wait(60)
+        D.press(K.START, 40)
+        for _ = 1, 4 do D.press(K.DOWN, 10) end
+        D.press(K.A, 10) -- LADDER
+        D.waitFor("the ladder", 600, function() return D.mb8(0x388) ~= ladderSeq end)
+        D.wait(30)
+        D.shot("ladder")
+        local rank, count = D.mb16(0x38A), D.mb8(0x389)
+        D.log(string.format("ladder: %d players, my rank %d, rating %d", count, rank, D.mb16(0x38C + 8)))
+        if rank ~= 1 or count ~= 2 then D.fail("expected first of two on the ladder") end
+        D.press(K.B, 30)
+    end
 end)

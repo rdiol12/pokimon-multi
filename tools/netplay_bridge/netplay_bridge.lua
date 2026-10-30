@@ -2,17 +2,16 @@
 -- Copies the ROM's netplay mailbox (gNetplayMailbox) to and from the netplay
 -- server once per frame. Layout and protocol: docs/netplay.md.
 --
--- Load in mGBA with Tools > Scripting > File > Load script. Set the globals
--- NETPLAY_HOST / NETPLAY_PORT before loading to use another server.
-
-local HOST = NETPLAY_HOST or "127.0.0.1"
-local PORT = NETPLAY_PORT or 7777
+-- Load in mGBA with Tools > Scripting > File > Load script. It connects
+-- once the player picks JOIN ONLINE, to the server built into the game
+-- (include/config/netplay.h). The globals NETPLAY_HOST / NETPLAY_PORT, set
+-- before loading, override that address.
 
 local EWRAM_START = 0x02000000
 local EWRAM_END = 0x02040000
 local MAGIC_LO = 0x4E4D4B50 -- "PKMN"
 local MAGIC_HI = 0x3154454E -- "NET1"
-local MAILBOX_VERSION = 1
+local MAILBOX_VERSION = 2
 
 local OFF_VERSION = 0x008
 local OFF_STATE = 0x009
@@ -34,13 +33,20 @@ local OFF_EVENT = 0x0C8
 local OFF_EVENT_ACK = 0x0D0
 local OFF_TX = 0x0D4
 local OFF_RX = 0x218
+local OFF_JOIN_ONLINE = 0x0D2
+local OFF_SERVER_HOST = 0x35C
+local HOST_LENGTH = 40
+local OFF_SERVER_PORT = 0x384
+local OFF_LADDER = 0x388
+local LADDER_SIZE = 10
+local LADDER_ENTRY_SIZE = 16
 local RING_SIZE = 16
 local PACKET_SIZE = 20
 local NAME_LENGTH = 8
 
 local STATE_OFFLINE, STATE_CONNECTING, STATE_ONLINE = 0, 1, 2
 
-local REQ_CHALLENGE, REQ_TRADE, REQ_ACCEPT, REQ_DECLINE, REQ_RESULT, REQ_LEAVE, REQ_DEAL = 1, 2, 3, 4, 5, 6, 7
+local REQ_CHALLENGE, REQ_TRADE, REQ_ACCEPT, REQ_DECLINE, REQ_RESULT, REQ_LEAVE, REQ_DEAL, REQ_LADDER = 1, 2, 3, 4, 5, 6, 7, 8
 local EV_INVITE, EV_START, EV_DECLINED, EV_ENDED, EV_PENDING = 1, 2, 3, 4, 5
 local KIND_IDS = { battle = 1, trade = 2, deal = 3 }
 local RESULTS = { "win", "loss", "draw" }
@@ -94,6 +100,7 @@ function Bridge:resetConnection()
     self.rxQueue = {}     -- queued link packets (byte strings) for the ROM
     self.session = nil
     self.lastPos = nil
+    self.ladder = nil     -- rows of the ladder being received
     self.nextConnect = self.frame
 end
 
@@ -133,6 +140,18 @@ function Bridge:attach(addr)
     self.lastReqSeq = self:r8(OFF_REQUEST)
     self:w8(OFF_STATE, self.connected and STATE_ONLINE or STATE_OFFLINE)
     self:log(string.format("netplay mailbox found at 0x%08X", addr))
+end
+
+function Bridge:serverAddress()
+    local host = {}
+    for i = 0, HOST_LENGTH - 1 do
+        local b = self:r8(OFF_SERVER_HOST + i)
+        if b == 0 then break end
+        host[#host + 1] = string.char(b)
+    end
+    host = table.concat(host)
+    local port = self:r16(OFF_SERVER_PORT)
+    return NETPLAY_HOST or (host ~= "" and host or "127.0.0.1"), NETPLAY_PORT or (port ~= 0 and port or 7777)
 end
 
 function Bridge:mailboxValid()
@@ -212,6 +231,19 @@ function Bridge:handleLine(line)
             local bytes = hex:gsub("%x%x", function(h) return string.char(tonumber(h, 16)) end)
             table.insert(self.rxQueue, bytes)
         end
+    elseif cmd == "RANK" and self.ladder then
+        table.insert(self.ladder, {
+            name = args[3], rating = tonumber(args[4]),
+            wins = tonumber(args[5]), losses = tonumber(args[6]), draws = tonumber(args[7]),
+        })
+    elseif cmd == "BOARDEND" and self.ladder then
+        self:writeLadderTop(self.ladder)
+    elseif cmd == "MYRANK" and self.ladder then
+        self.ladder = nil
+        self:writeLadderMe(tonumber(args[2]), {
+            name = self:readName(), rating = tonumber(args[3]),
+            wins = tonumber(args[4]), losses = tonumber(args[5]), draws = tonumber(args[6]),
+        })
     elseif cmd == "ERR" then
         self:log("server: " .. line)
     end
@@ -320,10 +352,40 @@ function Bridge:handleRequest()
         self.net.send("DECLINE " .. sid)
     elseif type == REQ_RESULT and RESULTS[arg] then
         self.net.send("RESULT " .. sid .. " " .. RESULTS[arg])
+    elseif type == REQ_LADDER then
+        self.ladder = {}
+        self.net.send("BOARD")
+        self.net.send("MYRANK")
     elseif type == REQ_LEAVE then
         self.net.send("QUIT " .. sid)
         if sid == self.session then self.session = nil end
     end
+end
+
+function Bridge:writeLadderEntry(off, e)
+    for i = 0, NAME_LENGTH - 1 do
+        local ch = e.name:sub(i + 1, i + 1)
+        self:w8(off + i, ch == "" and 0xFF or asciiToChar(ch))
+    end
+    self:w16(off + 8, math.min(e.rating, 0xFFFF))
+    self:w16(off + 10, math.min(e.wins, 0xFFFF))
+    self:w16(off + 12, math.min(e.losses, 0xFFFF))
+    self:w16(off + 14, math.min(e.draws, 0xFFFF))
+end
+
+function Bridge:writeLadderTop(rows)
+    local count = math.min(#rows, LADDER_SIZE)
+    for i = 1, count do
+        self:writeLadderEntry(OFF_LADDER + 0x14 + (i - 1) * LADDER_ENTRY_SIZE, rows[i])
+    end
+    self:w8(OFF_LADDER + 1, count)
+end
+
+-- MYRANK comes last, so the whole ladder is in place: publish it.
+function Bridge:writeLadderMe(rank, me)
+    self:w16(OFF_LADDER + 2, rank)
+    if rank ~= 0 then self:writeLadderEntry(OFF_LADDER + 4, me) end
+    self:w8(OFF_LADDER, self:r8(OFF_LADDER) + 1)
 end
 
 function Bridge:deliverEvent()
@@ -379,10 +441,12 @@ function Bridge:onFrame()
 
     if not self.connected then
         if self.frame < self.nextConnect then return end
+        if self:r8(OFF_JOIN_ONLINE) == 0 then return end -- playing offline
         local name = self:readName()
         if name == "" then return end -- no save loaded yet
         self:w8(OFF_STATE, STATE_CONNECTING)
-        if self.net.connect() then
+        local host, port = self:serverAddress()
+        if self.net.connect(host, port) then
             self.connected = true
             self.net.send(string.format("HELLO %s %d", name, self:r16(OFF_TID)))
         else
@@ -410,15 +474,15 @@ end
 if emu ~= nil and callbacks ~= nil and socket ~= nil then
     local sock = nil
     local net = {
-        connect = function()
+        connect = function(host, port)
             sock = socket.tcp()
-            local ok, err = sock:connect(HOST, PORT)
+            local ok, err = sock:connect(host, port)
             if not ok then
-                console:log("netplay: cannot reach " .. HOST .. ":" .. PORT .. " (" .. tostring(err) .. ")")
+                console:log("netplay: cannot reach " .. host .. ":" .. port .. " (" .. tostring(err) .. ")")
                 sock = nil
                 return false
             end
-            console:log("netplay: connected to " .. HOST .. ":" .. PORT)
+            console:log("netplay: connected to " .. host .. ":" .. port)
             return true
         end,
         send = function(line)
@@ -460,7 +524,7 @@ if emu ~= nil and callbacks ~= nil and socket ~= nil then
         end
     end)
     callbacks:add("reset", function() bridge:onReset() end)
-    console:log("netplay bridge loaded, server " .. HOST .. ":" .. PORT)
+    console:log("netplay bridge loaded; it connects after JOIN ONLINE")
 end
 
 -- Only return the module when loaded by the unit tests: mGBA leaves a script's

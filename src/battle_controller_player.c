@@ -3,6 +3,7 @@
 #include "battle_anim.h"
 #include "battle_arena.h"
 #include "battle_controllers.h"
+#include "field_player_avatar.h"
 #include "battle_dome.h"
 #include "battle_interface.h"
 #include "battle_message.h"
@@ -1882,7 +1883,7 @@ static enum TrainerPicID PlayerGetTrainerBackPicId(void)
     if (gBattleTypeFlags & BATTLE_TYPE_LINK)
         trainerPicId = LinkPlayerGetTrainerPicId(GetMultiplayerId());
     else
-        trainerPicId = GetPlayerTrainerPic(gSaveBlock2Ptr->playerGender, GAME_VERSION);
+        trainerPicId = GetPlayerTrainerPic(GetPlayerStyleGender(GetPlayerStyle()), GetPlayerStyleVersion(GetPlayerStyle()));
 
     return trainerPicId;
 }

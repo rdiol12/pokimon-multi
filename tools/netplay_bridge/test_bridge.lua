@@ -21,7 +21,10 @@ end
 
 local function fakeNet()
     local net = { sent = {}, inbox = {}, up = true }
-    function net.connect() return net.up end
+    function net.connect(host, port)
+        net.address = host .. ":" .. port
+        return net.up
+    end
     function net.send(line) table.insert(net.sent, line) end
     function net.receive() return table.remove(net.inbox, 1) end
     function net.close() end
@@ -39,7 +42,10 @@ local function setup()
     local mem, net = fakeMemory(), fakeNet()
     mem.write32(BASE, 0x4E4D4B50)
     mem.write32(BASE + 4, 0x3154454E)
-    mem.write8(BASE + 0x08, 1)
+    mem.write8(BASE + 0x08, 2)
+    mem.write8(BASE + 0x0D2, 1) -- JOIN ONLINE picked
+    for i, c in ipairs({ string.byte("play.example.org", 1, -1) }) do mem.write8(BASE + 0x35C + i - 1, c) end
+    mem.write16(BASE + 0x384, 7000)
     local name = { 0xBB, 0xE7, 0xDC, 0xFF } -- "Ash"
     for i, c in ipairs(name) do mem.write8(BASE + 0x0C + i - 1, c) end
     mem.write16(BASE + 0x14, 4660)
@@ -72,6 +78,45 @@ end
 local function list(t) return table.concat(t, " | ") end
 
 local tests = {}
+
+function tests.stays_offline_until_join_online()
+    local bridge, mem, net = setup()
+    mem.write8(BASE + 0x0D2, 0)
+    for _ = 1, 400 do bridge:onFrame() end
+    eq(#net.take(), 0, "nothing sent")
+    eq(net.address, nil, "no connection")
+    mem.write8(BASE + 0x0D2, 1)
+    for _ = 1, 400 do bridge:onFrame() end
+    eq(list(net.take()), "HELLO Ash 4660", "connected after joining")
+end
+
+function tests.connects_to_the_server_built_into_the_game()
+    local bridge, mem, net = setup()
+    bridge:onFrame()
+    eq(net.address, "play.example.org:7000", "address")
+end
+
+function tests.ladder_request_fills_the_mailbox()
+    local bridge, mem, net = online()
+    local L = BASE + 0x388
+    mem.write8(BASE + 0x0C1, 8) -- REQ_LADDER
+    mem.write8(BASE + 0x0C0, mem.read8(BASE + 0x0C0) + 1)
+    bridge:onFrame()
+    local sent = net.take()
+    eq(sent[#sent - 1] .. " | " .. sent[#sent], "BOARD | MYRANK", "asked the server")
+    net.push("RANK 1 Misty 1032 2 0 0")
+    net.push("RANK 2 Ash 984 0 1 0")
+    net.push("BOARDEND")
+    net.push("MYRANK 2 984 0 1 0")
+    bridge:onFrame()
+    eq(mem.read8(L), 1, "published")
+    eq(mem.read8(L + 1), 2, "count")
+    eq(mem.read16(L + 2), 2, "my rank")
+    eq(mem.read16(L + 4 + 8), 984, "my rating")
+    eq(mem.read8(L + 0x14), 0xC7, "first name starts with M")
+    eq(mem.read16(L + 0x14 + 8), 1032, "first rating")
+    eq(mem.read16(L + 0x24 + 12), 1, "second's losses")
+end
 
 function tests.connects_and_reports_position()
     local bridge, mem, net = setup()

@@ -97,6 +97,19 @@ class League:
         self.db.commit()
         return status
 
+    def rank_of(self, key):
+        """(rank, rating, wins, losses, draws) for a player; rank 0 until
+        they have a rated battle. Ties share the better rank."""
+        row = self.db.execute(
+            "SELECT rating, wins, losses, draws FROM players WHERE name = ? AND tid = ?", key
+        ).fetchone()
+        if row is None or sum(row[1:]) == 0:
+            return (0, START_RATING, 0, 0, 0) if row is None else (0, *row)
+        above = self.db.execute(
+            "SELECT COUNT(*) FROM players WHERE wins + losses + draws > 0 AND rating > ?", (row[0],)
+        ).fetchone()[0]
+        return (above + 1, *row)
+
     def top(self, limit=10):
         return self.db.execute(
             "SELECT name, rating, wins, losses, draws FROM players"
@@ -342,6 +355,10 @@ class Server:
         if player not in (session.host, session.guest):
             raise ValueError("no such session")
         self.end_session(session, player)
+
+    def cmd_myrank(self, player):
+        rank, rating, w, l, d = self.league.rank_of((player.name, player.tid))
+        player.send(f"MYRANK {rank} {round(rating)} {w} {l} {d}")
 
     def cmd_board(self, player):
         for i, (name, rating, w, l, d) in enumerate(self.league.top(), 1):

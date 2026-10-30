@@ -265,7 +265,7 @@ static const u8 gText_BatteryRunDry[] = _("The internal battery has run dry.\nTh
 static const u8 gText_MainMenuNewGame[] = _("NEW GAME");
 static const u8 gText_MainMenuContinue[] = _("CONTINUE");
 static const u8 gText_MainMenuOption[] = _("OPTION");
-static const u8 gText_MainMenuMysteryGift[] = _("MYSTERY GIFT");
+static const u8 gText_MainMenuJoinOnline[] = _("JOIN ONLINE");
 static const u8 gText_MainMenuMysteryGift2[] = _("MYSTERY GIFT");
 static const u8 gText_MainMenuMysteryEvents[] = _("MYSTERY EVENTS");
 static const u8 gText_WirelessNotConnected[] = _("The Wireless Adapter is not\nconnected.");
@@ -532,7 +532,7 @@ enum
 {
     HAS_NO_SAVED_GAME,  //NEW GAME, OPTION
     HAS_SAVED_GAME,     //CONTINUE, NEW GAME, OPTION
-    HAS_MYSTERY_GIFT,   //CONTINUE, NEW GAME, MYSTERY GIFT, OPTION
+    HAS_MYSTERY_GIFT,   //CONTINUE, NEW GAME, JOIN ONLINE, OPTION (netplay replaces MYSTERY GIFT)
     HAS_MYSTERY_EVENTS, //CONTINUE, NEW GAME, MYSTERY GIFT, MYSTERY EVENTS, OPTION
 };
 
@@ -544,6 +544,7 @@ enum
     ACTION_MYSTERY_GIFT,
     ACTION_MYSTERY_EVENTS,
     ACTION_EREADER,
+    ACTION_JOIN_ONLINE,
     ACTION_INVALID
 };
 
@@ -662,9 +663,7 @@ static void Task_MainMenuCheckSaveFile(u8 taskId)
         switch (gSaveFileStatus)
         {
         case SAVE_STATUS_OK:
-            tMenuType = HAS_SAVED_GAME;
-            if (IsMysteryGiftEnabled())
-                tMenuType++;
+            tMenuType = HAS_MYSTERY_GIFT; // its slot is JOIN ONLINE
             gTasks[taskId].func = Task_MainMenuCheckBattery;
             break;
         case SAVE_STATUS_CORRUPT:
@@ -675,9 +674,7 @@ static void Task_MainMenuCheckSaveFile(u8 taskId)
         case SAVE_STATUS_ERROR:
             CreateMainMenuErrorWindow(gText_SaveFileCorrupted);
             gTasks[taskId].func = Task_WaitForSaveFileErrorWindow;
-            tMenuType = HAS_SAVED_GAME;
-            if (IsMysteryGiftEnabled() == TRUE)
-                tMenuType++;
+            tMenuType = HAS_MYSTERY_GIFT; // its slot is JOIN ONLINE
             break;
         case SAVE_STATUS_EMPTY:
         default:
@@ -838,7 +835,7 @@ static void Task_DisplayMainMenu(u8 taskId)
             FillWindowPixelBuffer(5, PIXEL_FILL(0xA));
             AddTextPrinterParameterized3(2, FONT_NORMAL, 0, 1, sTextColor_Headers, TEXT_SKIP_DRAW, gText_MainMenuContinue);
             AddTextPrinterParameterized3(3, FONT_NORMAL, 0, 1, sTextColor_Headers, TEXT_SKIP_DRAW, gText_MainMenuNewGame);
-            AddTextPrinterParameterized3(4, FONT_NORMAL, 0, 1, sTextColor_Headers, TEXT_SKIP_DRAW, gText_MainMenuMysteryGift);
+            AddTextPrinterParameterized3(4, FONT_NORMAL, 0, 1, sTextColor_Headers, TEXT_SKIP_DRAW, gText_MainMenuJoinOnline);
             AddTextPrinterParameterized3(5, FONT_NORMAL, 0, 1, sTextColor_Headers, TEXT_SKIP_DRAW, gText_MainMenuOption);
             MainMenu_FormatSavegameText();
             PutWindowTilemap(2);
@@ -1013,12 +1010,7 @@ static void Task_HandleMainMenuAPressed(u8 taskId)
                 action = ACTION_NEW_GAME;
                 break;
             case 2:
-                action = ACTION_MYSTERY_GIFT;
-                if (!wirelessAdapterConnected)
-                {
-                    action = ACTION_INVALID;
-                    gTasks[taskId].tMenuType = HAS_NO_SAVED_GAME;
-                }
+                action = ACTION_JOIN_ONLINE;
                 break;
             case 3:
                 action = ACTION_OPTION;
@@ -1099,6 +1091,9 @@ static void Task_HandleMainMenuAPressed(u8 taskId)
             gPlttBufferFaded[0] = RGB_BLACK;
             gTasks[taskId].func = Task_NewGameBirchSpeech_Init;
             break;
+        case ACTION_JOIN_ONLINE:
+            Netplay_JoinOnline();
+            // fallthrough
         case ACTION_CONTINUE:
             gPlttBufferUnfaded[0] = RGB_BLACK;
             gPlttBufferFaded[0] = RGB_BLACK;
