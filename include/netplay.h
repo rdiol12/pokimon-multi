@@ -10,10 +10,12 @@ struct ObjectEvent;
 // gNetplayMailbox, which tools/netplay_bridge/netplay_bridge.lua copies to
 // and from the netplay server every frame. See docs/netplay.md.
 
-#define NETPLAY_MAILBOX_VERSION 1
+#define NETPLAY_MAILBOX_VERSION 2
 #define NETPLAY_MAX_REMOTES     8
 #define NETPLAY_NAME_LENGTH     8
 #define NETPLAY_RING_SIZE       16
+#define NETPLAY_HOST_LENGTH     40
+#define NETPLAY_LADDER_SIZE     10
 
 // Object event local ids used for other players on the overworld.
 #define LOCALID_NETPLAY_PLAYER_START 228
@@ -36,6 +38,7 @@ enum NetplayRequestType
     NETPLAY_REQ_RESULT,
     NETPLAY_REQ_LEAVE,
     NETPLAY_REQ_DEAL,
+    NETPLAY_REQ_LADDER,
 };
 
 enum NetplayEventType
@@ -115,6 +118,25 @@ struct NetplayRing
     struct NetplayPacket packets[NETPLAY_RING_SIZE];
 };
 
+struct NetplayLadderEntry
+{
+    /*0x00*/ u8 name[NETPLAY_NAME_LENGTH];
+    /*0x08*/ u16 rating;
+    /*0x0A*/ u16 wins;
+    /*0x0C*/ u16 losses;
+    /*0x0E*/ u16 draws;
+}; // size 0x10
+
+// The PvP ladder, written by the bridge after a NETPLAY_REQ_LADDER.
+struct NetplayLadder
+{
+    /*0x00*/ u8 seq; // bumped by the bridge when the ladder below is new
+    /*0x01*/ u8 count;
+    /*0x02*/ u16 myRank; // 0: no rated battles yet
+    /*0x04*/ struct NetplayLadderEntry me;
+    /*0x14*/ struct NetplayLadderEntry top[NETPLAY_LADDER_SIZE];
+}; // size 0xB4
+
 struct NetplayMailbox
 {
     /*0x000*/ char magic[8];
@@ -134,10 +156,16 @@ struct NetplayMailbox
     /*0x0C0*/ struct NetplayRequest request;
     /*0x0C8*/ struct NetplayEvent event;
     /*0x0D0*/ u8 eventAck;
-    /*0x0D1*/ u8 filler[3];
+    /*0x0D1*/ u8 testBoot;   // see Netplay_TryTestBoot
+    /*0x0D2*/ u8 joinOnline; // the bridge connects only once this is set
+    /*0x0D3*/ u8 filler;
     /*0x0D4*/ struct NetplayRing tx;
     /*0x218*/ struct NetplayRing rx;
-}; // size 0x35C
+    /*0x35C*/ char serverHost[NETPLAY_HOST_LENGTH]; // ASCII, NUL-terminated
+    /*0x384*/ u16 serverPort;
+    /*0x386*/ u16 filler2;
+    /*0x388*/ struct NetplayLadder ladder;
+}; // size 0x43C
 
 extern struct NetplayMailbox gNetplayMailbox;
 
@@ -157,5 +185,9 @@ u8 Netplay_GetLinkRole(void);
 void Netplay_LinkReset(void);
 bool32 Netplay_LinkHandshake(void);
 void Netplay_LinkTransfer(void);
+
+void Netplay_JoinOnline(void);
+bool32 Netplay_HasJoined(void);
+void ShowNetplayLadder(void);
 
 #endif // GUARD_NETPLAY_H

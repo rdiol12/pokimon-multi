@@ -29,22 +29,45 @@ Add `--http-port 8080` for the leaderboard page, which also serves the bridge
 script with the server's address filled in. To run it on a real server
 (Docker or systemd), see `deploy/README.md`.
 
-In mGBA: *Tools → Scripting… → File → Load script*, pick
-`tools/netplay_bridge/netplay_bridge.lua` (or the copy downloaded from the
-leaderboard page). Set `NETPLAY_HOST`/`NETPLAY_PORT` at the top of the script to
-point at the server.
+The server JOIN ONLINE connects to is built into the game: set
+`NETPLAY_SERVER_HOST` / `NETPLAY_SERVER_PORT` in `include/config/netplay.h`
+(the **Build game** workflow can set it for you). Players then:
+
+1. Load `tools/netplay_bridge/netplay_bridge.lua` in mGBA (*Tools → Scripting… →
+   File → Load script*).
+2. Pick **JOIN ONLINE** on the title menu (it replaces MYSTERY GIFT).
+   CONTINUE plays offline: the bridge doesn't connect.
+
+`NETPLAY_HOST`/`NETPLAY_PORT` globals set before loading the script override
+the address in the game (the copy downloaded from the leaderboard page does
+this).
+
+In game, START → **STYLE** picks the trainer's look (Brendan, May, Red or
+Leaf; saved, and seen by other players), and START → **LADDER** (online only)
+shows the PvP ladder: the top 10 by rating and your own rank.
+
+## Releases
+
+GitHub → Actions → **Build game** → Run workflow. It runs only when started by
+hand, builds the ROM (optionally with a server address), builds the original
+Emerald from pret/pokeemerald to compare against, and publishes a GitHub
+release with a BPS patch (`tools/make_bps.py`) and the bridge script. The ROM
+itself is never published; players patch their own Pokémon Emerald (USA).
 
 Tests: `python3 -m unittest discover -s server` and
 `lua5.4 tools/netplay_bridge/test_bridge.lua`.
 
 End-to-end: `python3 tools/netplay_bridge/e2e/run_e2e.py` (needs a built
 `pokeemerald.gba`, `libmgba-dev` 0.10 and gcc). It runs two headless games
-against a fresh server: they meet in Oldale Town, battle (player 1 forfeits),
+against a fresh server: they meet in Oldale Town, player 1 changes into Red
+with the Style menu (player 2 checks it sees that), they battle (player 1 forfeits),
 trade their lead Pokémon, and then make a deal on the deal screen: player 2
-gives both its Pokémon for player 1's lead Pokémon and ¥1,000. It checks the leaderboard, both parties and both wallets. Screenshots and
+gives both its Pokémon for player 1's lead Pokémon and ¥1,000. Last, player 2
+opens the ladder and must be first of two. It checks the leaderboard, both
+parties and both wallets. Screenshots and
 logs go to `--out`.
 
-## Mailbox layout (version 1)
+## Mailbox layout (version 2)
 
 All values little-endian. The bridge finds the mailbox by scanning EWRAM
 (`0x02000000`–`0x0203FFFF`, 4-byte aligned) for the magic. "ROM" / "bridge"
@@ -53,7 +76,7 @@ says who writes the field; the other side only reads it.
 | Offset | Size | Writer | Field |
 |-------:|-----:|--------|-------|
 | 0x000 | 8 | ROM | magic `"PKMNNET1"` |
-| 0x008 | 1 | ROM | version (1) |
+| 0x008 | 1 | ROM | version (2) |
 | 0x009 | 1 | bridge | state: 0 offline, 1 connecting, 2 online |
 | 0x00A | 2 | bridge | local player id assigned by the server |
 | 0x00C | 8 | ROM | player name, game charset, `0xFF` terminated; empty until the player is in the overworld |
@@ -69,12 +92,18 @@ says who writes the field; the other side only reads it.
 | 0x0C0 | 8 | ROM | request (below) |
 | 0x0C8 | 8 | bridge | event (below) |
 | 0x0D0 | 1 | ROM | event ack: ROM copies the event seq here once handled |
-| 0x0D1 | 3 | — | padding |
+| 0x0D1 | 1 | test driver | test boot (see `Netplay_TryTestBoot`) |
+| 0x0D2 | 1 | ROM | join online: the bridge connects only once this is 1 |
+| 0x0D3 | 1 | — | padding |
 | 0x0D4 | 4 | ROM/bridge | link TX ring: u8 head (ROM), u8 tail (bridge), 2 pad |
 | 0x0D8 | 16×20 | ROM | link TX packets |
 | 0x218 | 4 | bridge/ROM | link RX ring: u8 head (bridge), u8 tail (ROM), 2 pad |
 | 0x21C | 16×20 | bridge | link RX packets |
-| 0x35C | | | end |
+| 0x35C | 40 | ROM | server host, ASCII, NUL-terminated |
+| 0x384 | 2 | ROM | server port |
+| 0x386 | 2 | — | padding |
+| 0x388 | 180 | bridge | PvP ladder (below) |
+| 0x43C | | | end |
 
 The C definition is `struct NetplayMailbox` in `include/netplay.h`.
 
@@ -96,6 +125,12 @@ most once per frame; the bridge acts once per new `seq`.
 | 5 | report battle result | session id, arg: 1 won, 2 lost, 3 draw |
 | 6 | leave or cancel a session | session id |
 | 7 | offer a deal (buy/sell) | target id |
+| 8 | fetch the PvP ladder | — |
+
+**Ladder (bridge → ROM):** u8 seq (bumped when a new ladder is in place),
+u8 count, u16 my rank (0 = no rated battles yet), my entry, then 10 entries.
+An entry is 16 bytes: u8 name[8] (game charset), u16 rating, wins, losses,
+draws.
 
 **Event (bridge → ROM, 8 bytes):** u8 seq, u8 type, u16 peer id,
 u16 session id, u8 kind (1 battle, 2 trade, 3 deal), u8 role (0 host, 1 guest). The
@@ -171,6 +206,7 @@ LINK <session id> <hex>
 RESULT <session id> <win|loss|draw>
 QUIT <session id>                   (leave a session, or cancel an invite)
 BOARD
+MYRANK
 ```
 
 Server → client:
@@ -187,6 +223,7 @@ ENDED <session id>
 LINK <session id> <hex>
 RANK <position> <name> <rating> <wins> <losses> <draws>
 BOARDEND
+MYRANK <rank, 0 if unranked> <rating> <wins> <losses> <draws>
 ERR <message>
 ```
 

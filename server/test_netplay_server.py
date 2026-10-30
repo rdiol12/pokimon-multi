@@ -166,6 +166,17 @@ class ServerTest(unittest.IsolatedAsyncioTestCase):
             "RANK 2 Misty 984 0 1 0",
         ])
 
+    async def test_myrank(self):
+        a, b, sid = await self.start_session()
+        await a.send("MYRANK")
+        self.assertEqual(await a.recv(), "MYRANK 0 1000 0 0 0")
+        await a.send(f"RESULT {sid} win")
+        await b.send(f"RESULT {sid} loss")
+        await b.send("MYRANK")
+        self.assertEqual(await b.recv(), "MYRANK 2 984 0 1 0")
+        await a.send("MYRANK")
+        self.assertEqual(await a.recv(), "MYRANK 1 1016 1 0 0")
+
     async def test_disputed_results_do_not_count(self):
         a, b, sid = await self.start_session()
         await a.send(f"RESULT {sid} win")
