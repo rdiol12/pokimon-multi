@@ -1,4 +1,5 @@
 #include "global.h"
+#include "world.h"
 #include "item_use.h"
 #include "battle.h"
 #include "battle_anim.h"
@@ -1130,6 +1131,8 @@ static u32 GetBallThrowableState(void)
         return BALL_THROW_UNABLE_SEMI_INVULNERABLE;
     else if (FlagGet(WE_FLAG_NO_CATCHING) || !IsAllowedToUseBag())
         return BALL_THROW_UNABLE_DISABLED_FLAG;
+    else if (Hardcore_IsCatchBlocked())
+        return BALL_THROW_UNABLE_HARDCORE;
 
     return BALL_THROW_ABLE;
 }
@@ -1254,6 +1257,10 @@ bool32 CannotUseItemsInBattle(enum Item itemId, struct Pokemon *mon)
             break;
         case BALL_THROW_UNABLE_DISABLED_FLAG:
             failStr = sText_CantThrowPokeBall_Disabled;
+            cannotUse = TRUE;
+            break;
+        case BALL_THROW_UNABLE_HARDCORE:
+            failStr = COMPOUND_STRING("Hardcore rules: only the first\nPokémon met here can be caught!\p");
             cannotUse = TRUE;
             break;
         }

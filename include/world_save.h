@@ -1,6 +1,8 @@
 #ifndef GUARD_WORLD_SAVE_H
 #define GUARD_WORLD_SAVE_H
 
+#include "constants/world.h"
+
 // Saved state of the world and gameplay features (docs/world.md). Lives in
 // SaveBlock3, so it costs no space in the vanilla save blocks.
 
@@ -8,12 +10,8 @@
 #define WORLD_HOUSE_SLOTS         16
 #define WORLD_LEGEND_QUESTS       8
 
-enum HardcoreState
-{
-    HARDCORE_OFF,
-    HARDCORE_ON,
-    HARDCORE_FAILED, // the party was wiped out; the run is over
-};
+// hardcore: HARDCORE_OFF, HARDCORE_ON or HARDCORE_FAILED (the party was
+// wiped out; the run is over), from constants/world.h.
 
 struct WorldSaveData
 {

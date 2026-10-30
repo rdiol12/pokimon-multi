@@ -90,7 +90,7 @@ bool32 World_OverworldUpdate(void)
     RoamingWeather_Update();
     Mount_Update();
     Achievements_Update();
-    return FALSE;
+    return Hardcore_Update();
 }
 
 bool32 World_TryOpenMenu(void)
@@ -111,8 +111,15 @@ void World_OnWildBattleEnd(void)
 
     if (gBattleOutcome == B_OUTCOME_CAUGHT)
         Achievements_OnCatch(wild);
+    Hardcore_OnBattleEnd(TRUE);
 }
 
 void World_OnTrainerBattleEnd(void)
+{
+    Hardcore_OnBattleEnd(FALSE);
+}
+
+// Until the online part sends it to the hardcore ladder.
+void World_OnHardcoreProgress(void)
 {
 }

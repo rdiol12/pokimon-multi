@@ -231,6 +231,10 @@ static void CheckCounters(void)
         Achievements_Unlock(ACH_STEPS);
     if (GetMoney(&gSaveBlock1Ptr->money) >= 100000)
         Achievements_Unlock(ACH_RICH);
+    if (Hardcore_IsOn() && badges >= 1)
+        Achievements_Unlock(ACH_HARDCORE_GYM);
+    if (Hardcore_IsOn() && FlagGet(FLAG_SYS_GAME_CLEAR))
+        Achievements_Unlock(ACH_HARDCORE_CHAMP);
     if (gSaveBlock3Ptr->world.fishLanded >= 25)
         Achievements_Unlock(ACH_ANGLER);
     if (gSaveBlock3Ptr->world.berriesHarvested >= 50)

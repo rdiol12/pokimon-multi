@@ -41,6 +41,14 @@ void WorldBoard_Refresh(u16 count);
 void World_OnWildBattleEnd(void);
 void World_OnTrainerBattleEnd(void);
 
+// Hardcore mode (world_hardcore.c).
+bool32 Hardcore_IsOn(void);
+bool32 Hardcore_IsCatchBlocked(void);
+void Hardcore_OnBattleEnd(bool32 wild);
+bool32 Hardcore_Update(void);
+// Sends the hardcore run's progress to the server (netplay_world.c).
+void World_OnHardcoreProgress(void);
+
 // The R button menu.
 bool32 World_TryOpenMenu(void);
 

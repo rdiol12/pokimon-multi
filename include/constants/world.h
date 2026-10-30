@@ -15,4 +15,9 @@
 #define MOUNT_NONE_IN_PARTY 2
 #define MOUNT_NOT_HERE     3
 
+// struct WorldSaveData.hardcore (enum HardcoreState).
+#define HARDCORE_OFF    0
+#define HARDCORE_ON     1
+#define HARDCORE_FAILED 2
+
 #endif // GUARD_CONSTANTS_WORLD_H
