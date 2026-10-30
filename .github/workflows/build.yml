@@ -88,25 +88,22 @@ jobs:
           GAME_VERSION: EMERALD
         run: make -j$(nproc) -O all
 
+      - name: Build the original Emerald to patch against
+        run: |
+          git clone --depth 1 https://github.com/pret/agbcc ../agbcc
+          git clone --depth 1 https://github.com/pret/pokeemerald ../pokeemerald
+          (cd ../agbcc && ./build.sh && ./install.sh ../pokeemerald)
+          make -C ../pokeemerald -j$(nproc)
+          echo "f3ae088181bf583e55daf962a92bb46f4f1d07b7  ../pokeemerald/pokeemerald.gba" | sha1sum -c -
+
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ inputs.version }}
           SERVER: ${{ inputs.server_host }}
-          # A link to your own Pokémon Emerald (USA) ROM, kept as a repository
-          # secret. It is only used to make the patch and is never published.
-          BASE_ROM_URL: ${{ secrets.BASE_ROM_URL }}
         run: |
-          if [ -z "$BASE_ROM_URL" ]; then
-            echo "::error::Add the BASE_ROM_URL secret (Settings > Secrets and variables > Actions): a download link to a Pokémon Emerald (USA) ROM."
-            exit 1
-          fi
-          curl -fsSL "$BASE_ROM_URL" -o base.gba
-          echo "f3ae088181bf583e55daf962a92bb46f4f1d07b7  base.gba" | sha1sum -c - \
-            || { echo "::error::BASE_ROM_URL is not Pokémon Emerald (USA)"; exit 1; }
           mkdir -p release
-          python3 tools/make_bps.py base.gba pokeemerald.gba "release/pokimon-multi-$VERSION.bps"
-          rm base.gba
+          python3 tools/make_bps.py ../pokeemerald/pokeemerald.gba pokeemerald.gba "release/pokimon-multi-$VERSION.bps"
           cp tools/netplay_bridge/netplay_bridge.lua release/
           cat > release/notes.md <<EOF
           1. Patch your own Pokémon Emerald (USA) ROM with \`pokimon-multi-$VERSION.bps\`,
