@@ -72,6 +72,20 @@ Pokémon, at the map's levels and at the stage they'd have evolved to by then
 A weather watcher in Oldale Town (next to the Pokémon Center) tells where
 each front is right now.
 
+## Fishing and berry picking
+
+A bite opens the reel meter (`src/world_meter.c`): stop the needle in the
+green with A to hook the Pokémon. Better rods get a smaller, faster zone
+(4 tiles for the Old Rod, 2 for the Super Rod) but the same official
+encounter tables. Every hooked Pokémon has a size: its official Pokédex
+height scaled 75–125% by its personality, so the same Pokémon always
+measures the same. Landing it (catching it) counts it, and a new biggest
+fish shows a "personal record" notice.
+
+Before a berry tree is picked, a three-stop meter adds one berry per hit
+(up to the tree's 31-berry limit). R > RECORDS lists the biggest fish,
+fish landed, berries picked, best harvest and the other world records.
+
 ## Screenshots
 
 ```sh

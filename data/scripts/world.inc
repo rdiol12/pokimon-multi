@@ -4,3 +4,4 @@
 	.include "data/scripts/world/weather.inc"
 	.include "data/scripts/world/menu.inc"
 	.include "data/scripts/world/hardcore.inc"
+	.include "data/scripts/world/records.inc"

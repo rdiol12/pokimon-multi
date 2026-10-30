@@ -4,11 +4,13 @@ World_EventScript_Menu::
 	lockall
 	dynmultipush World_Text_MenuRide, WORLD_MENU_RIDE
 	dynmultipush World_Text_MenuAchievements, WORLD_MENU_ACHIEVEMENTS
+	dynmultipush World_Text_MenuRecords, WORLD_MENU_RECORDS
 	dynmultipush World_Text_MenuClose, WORLD_MENU_CLOSE
 	dynmultistack 0, 0, FALSE, 6, FALSE, WORLD_MENU_RIDE, DYN_MULTICHOICE_CB_NONE
 	switch VAR_RESULT
 	case WORLD_MENU_RIDE, World_EventScript_Ride
 	case WORLD_MENU_ACHIEVEMENTS, World_EventScript_Achievements
+	case WORLD_MENU_RECORDS, World_EventScript_Records
 	releaseall
 	end
 
@@ -23,6 +25,11 @@ World_EventScript_Ride::
 
 World_EventScript_Achievements::
 	callnative Achievements_ShowList, waitstate=1
+	releaseall
+	end
+
+World_EventScript_Records::
+	callnative Records_ShowList, waitstate=1
 	releaseall
 	end
 

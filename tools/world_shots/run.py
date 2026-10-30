@@ -22,9 +22,32 @@ e2e = os.path.join(root, "tools", "netplay_bridge", "e2e")
 SYMBOLS = ["gNetplayMailbox", "gMain", "gParties", "gPartiesCount", "CB2_Overworld", "BattleMainCB2",
            "gLink", "gLinkStatus", "gReceivedRemoteLinkPlayers", "gLinkCallback", "gReadyToCloseLink",
            "gBattleMons", "gSaveBlock1Ptr", "gSaveBlock2Ptr", "gWorldShowcase", "gObjectEvents",
-           "gSpecialVar_Result", "gWorldMailbox"]
+           "gSpecialVar_Result", "gWorldMailbox", "gWorldTimingMeter"]
 
 HELPERS = """
+-- Plays the timing meter (src/world_meter.c): presses A while the needle
+-- is over the green zone, until the meter closes. miss = true to miss.
+function Driver.playMeter(miss, shotName)
+    local m = Driver.SYM.gWorldTimingMeter
+    local function s16(off) local v = E.read16(m + off); return v >= 0x8000 and v - 0x10000 or v end
+    local shot = false
+    Driver.waitFor("the meter to start", 3000, function() return E.read8(m + 20) == 0xFF end)
+    Driver.waitFor("the meter", 3000, function() return E.read8(m + 20) ~= 0xFF end, function()
+        if E.read8(m + 13) ~= 0 then return end -- flashing between rounds
+        local needle, zone, tiles = s16(16), s16(18), E.read8(m + 7)
+        local inZone = needle >= zone + 1 and needle <= zone + tiles * 8 - 3
+        if shotName and not shot and needle > 12 then
+            Driver.shot(shotName); shot = true
+        end
+        if inZone and not miss then
+            E.setKeys(Driver.KEY.A)
+        else
+            E.setKeys(0)
+        end
+    end)
+    E.setKeys(0)
+end
+
 -- Species of the wild Pokémon (gBattleMons[1]) in the current battle.
 function Driver.enemySpecies() return E.read16(Driver.SYM.gBattleMons + Driver.SYM.BATTLEMON_SIZE) end
 
@@ -86,6 +109,7 @@ function Driver.scene(hour, map, x, y, extra)
     E.write8(s + 12, extra.level or 30)
     local item = extra.item and ITEM_ID[extra.item] or 0
     E.write8(s + 14, item & 0xFF); E.write8(s + 15, item >> 8)
+    E.write8(s + 16, extra.ripen and 1 or 0)
     E.write8(s, 1)
     -- B closes whatever message is still open, so the warp can run.
     Driver.waitFor("the warp", 900, function() return E.read8(s) == 0 end, function(i)

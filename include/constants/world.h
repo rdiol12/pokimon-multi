@@ -20,4 +20,10 @@
 #define HARDCORE_ON     1
 #define HARDCORE_FAILED 2
 
+// Server leaderboards (World_SubmitScore).
+#define WORLD_BOARD_FISH     0 // value: size in mm, extra: species
+#define WORLD_BOARD_BERRIES  1 // value: berries picked, extra: best harvest
+#define WORLD_BOARD_HARDCORE 2
+#define WORLD_BOARD_HUNT     3
+
 #endif // GUARD_CONSTANTS_WORLD_H

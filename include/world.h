@@ -1,6 +1,8 @@
 #ifndef GUARD_WORLD_H
 #define GUARD_WORLD_H
 
+#include "constants/world.h"
+
 // World and gameplay features that are not tied to one screen: day/night
 // events, roaming weather fronts and the hooks the overworld calls for them.
 // See docs/world.md.
@@ -46,8 +48,10 @@ bool32 Hardcore_IsOn(void);
 bool32 Hardcore_IsCatchBlocked(void);
 void Hardcore_OnBattleEnd(bool32 wild);
 bool32 Hardcore_Update(void);
-// Sends the hardcore run's progress to the server (netplay_world.c).
+// Online (netplay_world.c): the hardcore run's progress, and new records
+// for the leaderboards (board: WORLD_BOARD_*).
 void World_OnHardcoreProgress(void);
+void World_SubmitScore(u8 board, u32 value, u32 extra);
 
 // Shiny chaining (world_shiny.c).
 void ShinyChain_OnWildSpecies(enum Species species);
@@ -57,6 +61,21 @@ void ShinyChain_OnWildBattleEnd(void);
 
 // A two-line notice at the top of the screen (world_achievements.c).
 void World_ShowToast(const u8 *title, const u8 *text);
+
+// Timing meter minigame (world_meter.c).
+void TimingMeter_Start(u8 rounds, u8 zoneTiles, u8 speed);
+s32 TimingMeter_GetResult(void);
+
+// Fishing: the reel meter replaces the "press A on a bite" check; the zone
+// is 4 tiles wide with the Old Rod, 3 with the Good Rod and 2 with the Super.
+#define WORLD_FISHING_REEL_METER TRUE
+#define MAX_ZONE_TILES_FOR_ROD(rod) (4 - (rod))
+
+// Fishing and berry records (world_records.c).
+void Records_OnFishHooked(void);
+void Records_OnWildBattleEnd(void);
+void Records_OnBerriesPicked(u32 count);
+void Records_ShowList(void);
 
 // The R button menu.
 bool32 World_TryOpenMenu(void);

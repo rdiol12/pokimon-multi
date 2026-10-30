@@ -1,6 +1,7 @@
 #include "global.h"
 #include "achievements.h"
 #include "battle.h"
+#include "berry.h"
 #include "event_data.h"
 #include "item.h"
 #include "field_screen_effect.h"
@@ -30,7 +31,8 @@ struct WorldShowcase
     u8 shiny;
     u16 giveSpecies;
     u8 giveLevel;
-    u16 giveItem; // 20 of these go in the bag
+    u16 giveItem; // 20 of these go in the bag; a rod is also registered to SELECT
+    u8 ripen;     // 1: the Route 102 Oran Berry tree is ready to pick
 };
 
 EWRAM_DATA struct WorldShowcase gWorldShowcase = {0};
@@ -47,6 +49,10 @@ static void RunShowcase(void)
     if (gWorldShowcase.giveItem != ITEM_NONE)
     {
         AddBagItem(gWorldShowcase.giveItem, 20);
+        if (gWorldShowcase.giveItem == ITEM_OLD_ROD || gWorldShowcase.giveItem == ITEM_GOOD_ROD || gWorldShowcase.giveItem == ITEM_SUPER_ROD)
+            gSaveBlock1Ptr->registeredItem = gWorldShowcase.giveItem;
+        if (GetItemPocket(gWorldShowcase.giveItem) == POCKET_POKE_BALLS)
+            gLastThrownBall = gBallToDisplay = gWorldShowcase.giveItem; // R throws it in battle
         gWorldShowcase.giveItem = ITEM_NONE;
     }
     if (gWorldShowcase.giveSpecies != SPECIES_NONE)
@@ -74,6 +80,11 @@ static void RunShowcase(void)
         }
         CalculatePlayerPartyCount();
         gWorldShowcase.giveSpecies = SPECIES_NONE;
+    }
+    if (gWorldShowcase.ripen)
+    {
+        PlantBerryTree(BERRY_TREE_ROUTE_102_ORAN, ItemIdToBerryType(ITEM_ORAN_BERRY), BERRY_STAGE_BERRIES, TRUE);
+        gWorldShowcase.ripen = FALSE;
     }
     RtcCalcLocalTimeOffset(0, gWorldShowcase.hour, 0, 0);
     SetWarpDestination(gWorldShowcase.mapGroup, gWorldShowcase.mapNum, WARP_ID_NONE, gWorldShowcase.x, gWorldShowcase.y);
@@ -113,6 +124,7 @@ void World_OnWildBattleEnd(void)
     if (gBattleOutcome == B_OUTCOME_CAUGHT)
         Achievements_OnCatch(gBattleResults.caughtMonSpecies, gBattleResults.shinyWildMon);
     ShinyChain_OnWildBattleEnd();
+    Records_OnWildBattleEnd();
     Hardcore_OnBattleEnd(TRUE);
 }
 
@@ -121,7 +133,11 @@ void World_OnTrainerBattleEnd(void)
     Hardcore_OnBattleEnd(FALSE);
 }
 
-// Until the online part sends it to the hardcore ladder.
+// Until the online part sends these to the server.
+void World_SubmitScore(u8 board, u32 value, u32 extra)
+{
+}
+
 void World_OnHardcoreProgress(void)
 {
 }
