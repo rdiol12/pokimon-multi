@@ -11,7 +11,7 @@ local EWRAM_START = 0x02000000
 local EWRAM_END = 0x02040000
 local MAGIC_LO = 0x4E4D4B50 -- "PKMN"
 local MAGIC_HI = 0x3154454E -- "NET1"
-local MAILBOX_VERSION = 2
+local MAILBOX_VERSION = 3
 
 local OFF_VERSION = 0x008
 local OFF_STATE = 0x009
@@ -40,6 +40,10 @@ local OFF_SERVER_PORT = 0x384
 local OFF_LADDER = 0x388
 local LADDER_SIZE = 10
 local LADDER_ENTRY_SIZE = 16
+local OFF_FRIENDS = 0x43C
+local MAX_FRIENDS = 10
+local FRIEND_SIZE = 20
+local FRIEND_ADD_RESULTS = { ok = 1, full = 2 }
 local RING_SIZE = 16
 local PACKET_SIZE = 20
 local NAME_LENGTH = 8
@@ -47,6 +51,7 @@ local NAME_LENGTH = 8
 local STATE_OFFLINE, STATE_CONNECTING, STATE_ONLINE = 0, 1, 2
 
 local REQ_CHALLENGE, REQ_TRADE, REQ_ACCEPT, REQ_DECLINE, REQ_RESULT, REQ_LEAVE, REQ_DEAL, REQ_LADDER, REQ_EMOTE = 1, 2, 3, 4, 5, 6, 7, 8, 9
+local REQ_FRIENDS, REQ_FRIEND_ADD, REQ_FRIEND_DEL = 10, 11, 12
 local EV_INVITE, EV_START, EV_DECLINED, EV_ENDED, EV_PENDING, EV_EMOTE = 1, 2, 3, 4, 5, 6
 local KIND_IDS = { battle = 1, trade = 2, deal = 3 }
 local RESULTS = { "win", "loss", "draw" }
@@ -101,6 +106,8 @@ function Bridge:resetConnection()
     self.session = nil
     self.lastPos = nil
     self.ladder = nil     -- rows of the ladder being received
+    self.friendRows = nil -- rows of the friend list being received
+    self.friendList = {}  -- the last friend list given to the ROM
     self.nextConnect = self.frame
 end
 
@@ -231,6 +238,18 @@ function Bridge:handleLine(line)
             local bytes = hex:gsub("%x%x", function(h) return string.char(tonumber(h, 16)) end)
             table.insert(self.rxQueue, bytes)
         end
+    elseif cmd == "FRIEND" and self.friendRows then
+        table.insert(self.friendRows, {
+            name = args[2], tid = args[3], id = tonumber(args[4]),
+            group = tonumber(args[5]), num = tonumber(args[6]),
+            x = tonumber(args[7]), y = tonumber(args[8]), gfx = tonumber(args[9]), busy = tonumber(args[10]),
+        })
+    elseif cmd == "FRIENDSEND" and self.friendRows then
+        self:writeFriends(self.friendRows)
+        self.friendRows = nil
+    elseif cmd == "FRIENDADD" then
+        self:w8(OFF_FRIENDS + 3, FRIEND_ADD_RESULTS[args[2]] or 0)
+        self:w8(OFF_FRIENDS + 2, self:r8(OFF_FRIENDS + 2) + 1)
     elseif cmd == "EMOTE" then
         self:queueEvent(EV_EMOTE, tonumber(args[2]), 0, tonumber(args[3]))
     elseif cmd == "RANK" and self.ladder then
@@ -354,6 +373,14 @@ function Bridge:handleRequest()
         self.net.send("DECLINE " .. sid)
     elseif type == REQ_RESULT and RESULTS[arg] then
         self.net.send("RESULT " .. sid .. " " .. RESULTS[arg])
+    elseif type == REQ_FRIENDS then
+        self.friendRows = {}
+        self.net.send("FRIENDS")
+    elseif type == REQ_FRIEND_ADD then
+        self.net.send("FRIEND ADD " .. target)
+    elseif type == REQ_FRIEND_DEL then
+        local f = self.friendList[arg + 1]
+        if f then self.net.send("FRIEND DEL " .. f.name .. " " .. f.tid) end
     elseif type == REQ_EMOTE then
         self.net.send("EMOTE " .. arg)
     elseif type == REQ_LADDER then
@@ -375,6 +402,29 @@ function Bridge:writeLadderEntry(off, e)
     self:w16(off + 10, math.min(e.wins, 0xFFFF))
     self:w16(off + 12, math.min(e.losses, 0xFFFF))
     self:w16(off + 14, math.min(e.draws, 0xFFFF))
+end
+
+function Bridge:writeFriends(rows)
+    local count = math.min(#rows, MAX_FRIENDS)
+    self.friendList = {}
+    for i = 1, count do
+        local f = rows[i]
+        local off = OFF_FRIENDS + 4 + (i - 1) * FRIEND_SIZE
+        self.friendList[i] = f
+        for c = 0, NAME_LENGTH - 1 do
+            local ch = f.name:sub(c + 1, c + 1)
+            self:w8(off + c, ch == "" and 0xFF or asciiToChar(ch))
+        end
+        self:w16(off + 8, f.id)
+        self:w8(off + 10, f.group)
+        self:w8(off + 11, f.num)
+        self:w16(off + 12, f.x)
+        self:w16(off + 14, f.y)
+        self:w16(off + 16, f.gfx)
+        self:w8(off + 18, f.busy)
+    end
+    self:w8(OFF_FRIENDS + 1, count)
+    self:w8(OFF_FRIENDS, self:r8(OFF_FRIENDS) + 1) -- publish
 end
 
 function Bridge:writeLadderTop(rows)

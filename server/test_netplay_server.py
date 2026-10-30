@@ -87,6 +87,31 @@ class ServerTest(unittest.IsolatedAsyncioTestCase):
         await a.send("EMOTE 99")
         self.assertTrue((await a.recv()).startswith("ERR"))
 
+    async def friends(self, client):
+        await client.send("FRIENDS")
+        rows = []
+        while (line := await client.recv()) != "FRIENDSEND":
+            rows.append(line)
+        return rows
+
+    async def test_friends(self):
+        a = await self.connect("Ash", 11)
+        b = await self.connect("Misty", 22, map_key=(3, 4), xy=(7, 8))
+        self.assertEqual(await self.friends(a), [])
+        await a.send(f"FRIEND ADD {b.id}")
+        self.assertEqual(await a.recv(), "FRIENDADD ok Misty")
+        await a.send(f"FRIEND ADD {b.id}")  # again: no duplicate
+        self.assertEqual(await a.recv(), "FRIENDADD ok Misty")
+        self.assertEqual(await self.friends(a), [f"FRIEND Misty 22 {b.id} 3 4 7 8 100 0"])
+        self.assertEqual(await self.friends(b), [], "one-way")
+        b.writer.close()
+        await asyncio.sleep(0.05)
+        self.assertEqual(await self.friends(a), ["FRIEND Misty 22 0 0 0 0 0 0 0"])
+        await a.send("FRIEND DEL Misty 22")
+        self.assertEqual(await self.friends(a), [])
+        await a.send(f"FRIEND ADD {a.id}")
+        self.assertTrue((await a.recv()).startswith("ERR"))
+
     async def test_disconnect_broadcasts_gone(self):
         a = await self.connect("Ash")
         b = await self.connect("Misty")

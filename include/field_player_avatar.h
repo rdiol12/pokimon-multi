@@ -89,5 +89,6 @@ void SetPlayerStyle(enum PlayerStyle style);
 enum Gender GetPlayerStyleGender(enum PlayerStyle style);
 enum GameVersion GetPlayerStyleVersion(enum PlayerStyle style);
 void ApplyPlayerStyleToAvatar(void);
+bool32 IsPlayerSurfingGraphicsId(u16 graphicsId);
 
 #endif // GUARD_FIELD_PLAYER_AVATAR_H

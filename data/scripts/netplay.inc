@@ -10,13 +10,34 @@ Netplay_EventScript_TalkToPlayer::
 	dynmultipush Netplay_Text_Battle, NETPLAY_KIND_BATTLE
 	dynmultipush Netplay_Text_Trade, NETPLAY_KIND_TRADE
 	dynmultipush Netplay_Text_BuySell, NETPLAY_KIND_DEAL
+	dynmultipush Netplay_Text_AddFriend, NETPLAY_KIND_FRIEND
 	dynmultipush Netplay_Text_Cancel, NETPLAY_KIND_NONE
-	dynmultistack 0, 0, FALSE, 4, FALSE, NETPLAY_KIND_BATTLE, DYN_MULTICHOICE_CB_NONE
+	dynmultistack 0, 0, FALSE, 5, FALSE, NETPLAY_KIND_BATTLE, DYN_MULTICHOICE_CB_NONE
 	switch VAR_RESULT
 	case NETPLAY_KIND_BATTLE, Netplay_EventScript_SendInvite
 	case NETPLAY_KIND_TRADE, Netplay_EventScript_SendInvite
 	case NETPLAY_KIND_DEAL, Netplay_EventScript_SendInvite
+	case NETPLAY_KIND_FRIEND, Netplay_EventScript_AddFriend
 	goto Netplay_EventScript_CloseAndRelease
+	end
+
+Netplay_EventScript_AddFriend:
+	special Netplay_AddFriend
+	goto_if_eq VAR_RESULT, NETPLAY_FRIEND_ADD_OK, Netplay_EventScript_FriendAdded
+	goto_if_eq VAR_RESULT, NETPLAY_FRIEND_ADD_FULL, Netplay_EventScript_FriendsFull
+	msgbox Netplay_Text_NoAnswer, MSGBOX_DEFAULT
+	releaseall
+	end
+
+Netplay_EventScript_FriendAdded:
+	playse SE_SUCCESS
+	msgbox Netplay_Text_FriendAdded, MSGBOX_DEFAULT
+	releaseall
+	end
+
+Netplay_EventScript_FriendsFull:
+	msgbox Netplay_Text_FriendsFull, MSGBOX_DEFAULT
+	releaseall
 	end
 
 Netplay_EventScript_SendInvite:
@@ -133,6 +154,21 @@ Netplay_Text_Trade:
 
 Netplay_Text_BuySell:
 	.string "Buy/Sell$"
+
+Netplay_Text_AddFriend:
+	.string "Add friend$"
+
+Netplay_Text_FriendAdded:
+	.string "{STR_VAR_1} is now on your friend list!\p"
+	.string "See where your friends are with\n"
+	.string "START {RIGHT_ARROW} ONLINE {RIGHT_ARROW} FRIENDS.$"
+
+Netplay_Text_FriendsFull:
+	.string "Your friend list is full.\n"
+	.string "Remove someone first.$"
+
+Netplay_Text_NoAnswer:
+	.string "The server didn't answer.$"
 
 Netplay_Text_Cancel:
 	.string "Cancel$"

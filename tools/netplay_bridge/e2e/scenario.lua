@@ -1,8 +1,9 @@
 -- Two players meet in Oldale Town. Player 1 changes into Red in the Style
 -- menu and player 2 sees it; player 1 sends an emote and a quick phrase. They battle (player 1 forfeits), trade their
 -- lead Pokémon, then make a deal: player 2 gives both its Pokémon for player
--- 1's lead Pokémon and ¥1,000. Last, player 2 opens the PvP ladder and finds
--- itself in first place.
+-- 1's lead Pokémon and ¥1,000. Player 2 opens the PvP ladder and finds
+-- itself in first place, then adds player 1 as a friend, and after player 1
+-- walks off to Route 101, travels to it from the friend list.
 -- Run with run_e2e.py.
 
 dofile(INSTANCE_DIR .. "/../driver_lib.lua")
@@ -226,11 +227,14 @@ D.run(function()
     D.shot("done")
 
     -- Ladder: player 2 won the battle, so it is first. -----------------------
+    -- START: POKéMON, BAG, PLAYER, STYLE, ONLINE...; ONLINE: LADDER, FRIENDS.
     if INSTANCE == 2 then
         local ladderSeq = D.mb8(0x388)
         D.wait(60)
         D.press(K.START, 40)
         for _ = 1, 4 do D.press(K.DOWN, 10) end
+        D.press(K.A, 30) -- ONLINE
+        D.shot("online-menu")
         D.press(K.A, 10) -- LADDER
         D.waitFor("the ladder", 600, function() return D.mb8(0x388) ~= ladderSeq end)
         D.wait(30)
@@ -239,5 +243,51 @@ D.run(function()
         D.log(string.format("ladder: %d players, my rank %d, rating %d", count, rank, D.mb16(0x38C + 8)))
         if rank ~= 1 or count ~= 2 then D.fail("expected first of two on the ladder") end
         D.press(K.B, 30)
+    end
+
+    -- Friends: player 2 adds player 1, player 1 walks to Route 101, and
+    -- player 2 finds it on the friend list and travels there. ---------------
+    if INSTANCE == 2 then
+        if select(3, D.pos()) ~= D.DIR.WEST then D.press(K.LEFT, 20) end
+        talkToOtherPlayer(4) -- Add friend
+        D.wait(60)
+        D.shot("friend-added")
+        D.waitFor("player 1 to leave", 3000, function() return D.remoteCount() == 0 end)
+        -- Two pages of text; a spare A then faces empty grass.
+        for _ = 1, 3 do D.press(K.A, 40) end
+        local listSeq = D.mb8(0x43C)
+        D.wait(120)
+        D.press(K.START, 40) -- the cursor is still on ONLINE
+        D.shot("start-online")
+        D.press(K.A, 30)
+        D.press(K.DOWN, 10)
+        D.press(K.A, 10) -- FRIENDS
+        D.waitFor("the friend list", 600, function() return D.mb8(0x43C) ~= listSeq end)
+        D.wait(30)
+        D.shot("friends")
+        if D.mb8(0x43D) ~= 1 or D.mb16(0x440 + 8) == 0 then D.fail("expected one online friend") end
+        local group, num = D.mb8(0x440 + 10), D.mb8(0x440 + 11)
+        D.press(K.A, 10) -- TRAVEL
+        D.waitFor("the trip", 600, function() return D.mb8(0x016) == group and D.mb8(0x017) == num and D.inOverworld() end)
+        D.waitFor("player 1", 600, function() return D.remoteCount() > 0 end)
+        D.wait(60)
+        D.shot("traveled")
+    else
+        D.wait(400)
+        local num = D.mb8(0x017)
+        -- Player 2 is to the east and trees to the south: step down, then
+        -- take the path at x = 9.
+        D.press(K.DOWN, 30)
+        D.waitFor("the path south", 600, function() return D.pos() >= 9 end, function() D.setKeys(K.RIGHT) end)
+        D.setKeys(0)
+        D.wait(20)
+        D.waitFor("Route 101", 1200, function() return D.mb8(0x017) ~= num end, function() D.setKeys(K.DOWN) end)
+        D.setKeys(0)
+        D.press(K.DOWN, 30)
+        D.press(K.DOWN, 30)
+        D.log(string.format("on map %d.%d", D.mb8(0x016), D.mb8(0x017)))
+        D.waitFor("player 2", 3000, function() return D.remoteCount() > 0 end)
+        D.wait(90)
+        D.shot("friend-arrived")
     end
 end)

@@ -42,7 +42,7 @@ local function setup()
     local mem, net = fakeMemory(), fakeNet()
     mem.write32(BASE, 0x4E4D4B50)
     mem.write32(BASE + 4, 0x3154454E)
-    mem.write8(BASE + 0x08, 2)
+    mem.write8(BASE + 0x08, 3)
     mem.write8(BASE + 0x0D2, 1) -- JOIN ONLINE picked
     for i, c in ipairs({ string.byte("play.example.org", 1, -1) }) do mem.write8(BASE + 0x35C + i - 1, c) end
     mem.write16(BASE + 0x384, 7000)
@@ -109,6 +109,42 @@ function tests.emotes_go_both_ways()
     eq(mem.read8(BASE + 0x0C9), 6, "event type")
     eq(mem.read16(BASE + 0x0CA), 5, "from")
     eq(mem.read8(BASE + 0x0CE), 2, "emote")
+end
+
+local function request(mem, type, target, arg)
+    mem.write8(BASE + 0x0C1, type)
+    mem.write16(BASE + 0x0C2, target or 0)
+    mem.write16(BASE + 0x0C6, arg or 0)
+    mem.write8(BASE + 0x0C0, mem.read8(BASE + 0x0C0) + 1)
+end
+
+function tests.friends()
+    local bridge, mem, net = online()
+    local F = BASE + 0x43C
+    request(mem, 11, 7) -- REQ_FRIEND_ADD
+    bridge:onFrame()
+    eq(net.take()[1], "FRIEND ADD 7", "add")
+    net.push("FRIENDADD ok Misty")
+    bridge:onFrame()
+    eq(mem.read8(F + 2), 1, "answered")
+    eq(mem.read8(F + 3), 1, "ok")
+    request(mem, 10) -- REQ_FRIENDS
+    bridge:onFrame()
+    eq(net.take()[1], "FRIENDS", "list asked")
+    net.push("FRIEND Misty 22 7 3 4 -2 8 100 1")
+    net.push("FRIEND Brock 5 0 0 0 0 0 0 0")
+    net.push("FRIENDSEND")
+    bridge:onFrame()
+    eq(mem.read8(F), 1, "published")
+    eq(mem.read8(F + 1), 2, "count")
+    eq(mem.read16(F + 4 + 8), 7, "online id")
+    eq(mem.read8(F + 4 + 10), 3, "map group")
+    eq(mem.read16(F + 4 + 12), 0xFFFE, "x")
+    eq(mem.read8(F + 4 + 18), 1, "busy")
+    eq(mem.read16(F + 24 + 8), 0, "offline")
+    request(mem, 12, 0, 1) -- REQ_FRIEND_DEL, second friend
+    bridge:onFrame()
+    eq(net.take()[1], "FRIEND DEL Brock 5", "delete by index")
 end
 
 function tests.ladder_request_fills_the_mailbox()

@@ -43,8 +43,16 @@ the address in the game (the copy downloaded from the leaderboard page does
 this).
 
 In game, START → **STYLE** picks the trainer's look (Brendan, May, Red or
-Leaf; saved, and seen by other players), and START → **LADDER** (online only)
-shows the PvP ladder: the top 10 by rating and your own rank. **L** opens the
+Leaf; saved, and seen by other players). START → **ONLINE** (when you joined
+online) opens the online screens (`gNetplayOnlineMenu` in `src/netplay_menu.c`;
+new features add a row there):
+
+- **LADDER**: the PvP ladder, the top 10 by rating and your own rank.
+- **FRIENDS**: your friend list (up to 10) with where each friend is right
+  now. A travels to an online friend who is outdoors in a town, city or on a
+  route (not while they are surfing or in a battle, trade or deal); SELECT
+  twice removes one. Add friends by talking to a player → *Add friend*. The
+  list is one-way, like following, and kept by the server. **L** opens the
 emote menu: eight emotes that pop up above your head (happy, love, music,
 wow, huh, angry, sad, hmm) and six quick phrases (HI!, GG!, BATTLE?, TRADE?,
 THANKS!, BYE!) that show in a box with your name. Everyone on the same map
@@ -71,7 +79,7 @@ opens the ladder and must be first of two. It checks the leaderboard, both
 parties and both wallets. Screenshots and
 logs go to `--out`.
 
-## Mailbox layout (version 2)
+## Mailbox layout (version 3)
 
 All values little-endian. The bridge finds the mailbox by scanning EWRAM
 (`0x02000000`–`0x0203FFFF`, 4-byte aligned) for the magic. "ROM" / "bridge"
@@ -80,7 +88,7 @@ says who writes the field; the other side only reads it.
 | Offset | Size | Writer | Field |
 |-------:|-----:|--------|-------|
 | 0x000 | 8 | ROM | magic `"PKMNNET1"` |
-| 0x008 | 1 | ROM | version (2) |
+| 0x008 | 1 | ROM | version (3) |
 | 0x009 | 1 | bridge | state: 0 offline, 1 connecting, 2 online |
 | 0x00A | 2 | bridge | local player id assigned by the server |
 | 0x00C | 8 | ROM | player name, game charset, `0xFF` terminated; empty until the player is in the overworld |
@@ -107,7 +115,8 @@ says who writes the field; the other side only reads it.
 | 0x384 | 2 | ROM | server port |
 | 0x386 | 2 | — | padding |
 | 0x388 | 180 | bridge | PvP ladder (below) |
-| 0x43C | | | end |
+| 0x43C | 204 | bridge | friend list (below) |
+| 0x508 | | | end; 0x508–0x5FF reserved here, 0x600 on for extensions |
 
 The C definition is `struct NetplayMailbox` in `include/netplay.h`.
 
@@ -131,11 +140,20 @@ most once per frame; the bridge acts once per new `seq`.
 | 7 | offer a deal (buy/sell) | target id |
 | 8 | fetch the PvP ladder | — |
 | 9 | emote | arg: emote (0–7 icons, 8–13 phrases) |
+| 10 | fetch the friend list | — |
+| 11 | add a friend | target id |
+| 12 | remove a friend | arg: index in the last friend list |
 
 **Ladder (bridge → ROM):** u8 seq (bumped when a new ladder is in place),
 u8 count, u16 my rank (0 = no rated battles yet), my entry, then 10 entries.
 An entry is 16 bytes: u8 name[8] (game charset), u16 rating, wins, losses,
 draws.
+
+**Friend list (bridge → ROM):** u8 seq (bumped when a new list is in place),
+u8 count, u8 add seq (bumped when the server answers an add), u8 add result
+(1 ok, 2 list full), then 10 entries of 20 bytes: u8 name[8], u16 player id
+(0 = offline), u8 map group, u8 map number, s16 x, s16 y, u16 graphics id,
+u8 busy, 1 pad.
 
 **Event (bridge → ROM, 8 bytes):** u8 seq, u8 type, u16 peer id,
 u16 session id, u8 kind (1 battle, 2 trade, 3 deal), u8 role (0 host, 1 guest). The
@@ -213,6 +231,9 @@ RESULT <session id> <win|loss|draw>
 QUIT <session id>                   (leave a session, or cancel an invite)
 BOARD
 MYRANK
+FRIEND ADD <player id>              (answered with FRIENDADD)
+FRIEND DEL <name> <trainer id>
+FRIENDS                             (answered with FRIEND lines, then FRIENDSEND)
 EMOTE <emote 0-31>                  (to everyone else on the map; bursts of more than 4 are dropped)
 ```
 
@@ -229,6 +250,9 @@ DECLINED <session id>
 ENDED <session id>
 LINK <session id> <hex>
 EMOTE <player id> <emote>
+FRIENDADD <ok|full> <name>
+FRIEND <name> <tid> <player id or 0> <map group> <map num> <x> <y> <gfx> <busy 0|1>
+FRIENDSEND
 RANK <position> <name> <rating> <wins> <losses> <draws>
 BOARDEND
 MYRANK <rank, 0 if unranked> <rating> <wins> <losses> <draws>

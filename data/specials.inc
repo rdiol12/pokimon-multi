@@ -650,3 +650,4 @@ gSpecials::
 	def_special Netplay_DealAddMon
 	def_special Netplay_DealApply
 	def_special Netplay_DealEnd
+	def_special Netplay_AddFriend, waitstate=1

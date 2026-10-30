@@ -7,6 +7,14 @@
 #define NETPLAY_KIND_TRADE  2
 #define NETPLAY_KIND_DEAL   3 // Pokémon and/or money, for Pokémon and/or money
 
+// Not a session: the talk menu's "Add friend".
+#define NETPLAY_KIND_FRIEND 10
+
+// VAR_RESULT of Netplay_WaitForFriendAdd, and NetplayFriends.addResult.
+#define NETPLAY_FRIEND_ADD_NO_ANSWER 0
+#define NETPLAY_FRIEND_ADD_OK        1
+#define NETPLAY_FRIEND_ADD_FULL      2
+
 // VAR_RESULT of Netplay_DealScreen.
 #define NETPLAY_DEAL_QUIT      0
 #define NETPLAY_DEAL_ADD_MON   1

@@ -11,6 +11,7 @@
 #include "field_player_avatar.h"
 #include "follower_helper.h"
 #include "field_screen_effect.h"
+#include "region_map.h"
 #include "field_weather.h"
 #include "fieldmap.h"
 #include "link.h"
@@ -41,6 +42,7 @@
 #include "constants/event_object_movement.h"
 #include "constants/event_objects.h"
 #include "constants/field_effects.h"
+#include "constants/map_types.h"
 #include "constants/flags.h"
 #include "constants/items.h"
 #include "constants/map_groups.h"
@@ -138,6 +140,11 @@ void Netplay_Init(void)
 static bool32 IsOnline(void)
 {
     return gNetplayMailbox.bridgeState == NETPLAY_ONLINE;
+}
+
+bool32 Netplay_IsOnline(void)
+{
+    return IsOnline();
 }
 
 // JOIN ONLINE on the title menu: lets the bridge connect to the server.
@@ -1977,3 +1984,296 @@ static void Task_EmoteMenu(u8 taskId)
 
 #undef tWindowId
 #undef tTimer
+
+// Friends ------------------------------------------------------------------
+//
+// Talk to a player > Add friend puts them on your list (kept by the server).
+// START > ONLINE > FRIENDS shows the list with where each friend is, and
+// travels to an online friend who is outdoors.
+
+#define FRIEND_ANSWER_TIMEOUT (3 * 60)
+#define FRIEND_LINE_HEIGHT    11
+
+#define tState      data[0]
+#define tWindowId   data[1]
+#define tSeq        data[2]
+#define tTimer      data[3]
+#define tCursor     data[4]
+#define tConfirmDel data[5]
+
+static void Task_WaitForFriendAdd(u8 taskId);
+static void Task_Friends(u8 taskId);
+
+void Netplay_AddFriend(void)
+{
+    u8 taskId = CreateTask(Task_WaitForFriendAdd, 80);
+
+    gTasks[taskId].tSeq = gNetplayMailbox.friends.addSeq;
+    gTasks[taskId].tTimer = 0;
+    QueueRequest(NETPLAY_REQ_FRIEND_ADD, gSpecialVar_0x8007, 0, 0);
+}
+
+static void Task_WaitForFriendAdd(u8 taskId)
+{
+    struct Task *task = &gTasks[taskId];
+
+    if (gNetplayMailbox.friends.addSeq != (u8)task->tSeq)
+        gSpecialVar_Result = gNetplayMailbox.friends.addResult;
+    else if (++task->tTimer > FRIEND_ANSWER_TIMEOUT || !IsOnline())
+        gSpecialVar_Result = NETPLAY_FRIEND_ADD_NO_ANSWER;
+    else
+        return;
+    DestroyTask(taskId);
+    ScriptContext_Enable();
+}
+
+static const struct WindowTemplate sFriendsWindowTemplate =
+{
+    .bg = 0,
+    .tilemapLeft = 1,
+    .tilemapTop = 1,
+    .width = 28,
+    .height = 17,
+    .paletteNum = 15,
+    .baseBlock = 0x008,
+};
+
+enum
+{
+    FRIENDS_STATE_WAIT,
+    FRIENDS_STATE_SHOWN,
+    FRIENDS_STATE_MESSAGE,
+};
+
+// Why the player can't travel to this friend, or NULL if they can.
+static const u8 *CantTravelReason(const struct NetplayFriend *friend)
+{
+    const struct MapHeader *header;
+
+    if (friend->playerId == 0)
+        return COMPOUND_STRING("They're offline.");
+    if (friend->busy)
+        return COMPOUND_STRING("They're busy right now.");
+    if (IsPlayerSurfingGraphicsId(friend->graphicsId))
+        return COMPOUND_STRING("They're out on the water.");
+    header = Overworld_GetMapHeaderByGroupAndId(friend->mapGroup, friend->mapNum);
+    if (header->mapType != MAP_TYPE_TOWN && header->mapType != MAP_TYPE_CITY && header->mapType != MAP_TYPE_ROUTE)
+        return COMPOUND_STRING("You can only travel to friends\nwho are outdoors.");
+    return NULL;
+}
+
+static void BufferFriendName(u8 *dest, const struct NetplayFriend *friend)
+{
+    u32 i;
+
+    for (i = 0; i < NETPLAY_NAME_LENGTH && friend->name[i] != EOS; i++)
+        dest[i] = friend->name[i];
+    dest[i] = EOS;
+}
+
+static void DrawFriends(struct Task *task, const u8 *message)
+{
+    const struct NetplayFriends *friends = &gNetplayMailbox.friends;
+    u8 windowId = task->tWindowId;
+    s32 i;
+
+    // Drawn bottom-up: lines are closer together than the font's box.
+    FillWindowPixelBuffer(windowId, PIXEL_FILL(1));
+    if (message != NULL)
+        AddTextPrinterParameterized(windowId, FONT_NORMAL, message, 8, FRIEND_LINE_HEIGHT * 11 - 4, TEXT_SKIP_DRAW, NULL);
+    else if (task->tConfirmDel)
+        AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("Press SELECT again to remove. B: keep"), 8, FRIEND_LINE_HEIGHT * 11 + 2, TEXT_SKIP_DRAW, NULL);
+    else if (task->tState == FRIENDS_STATE_SHOWN && friends->count != 0)
+        AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("A: TRAVEL  SELECT: REMOVE  B: BACK"), 8, FRIEND_LINE_HEIGHT * 11 + 2, TEXT_SKIP_DRAW, NULL);
+
+    if (task->tState != FRIENDS_STATE_WAIT)
+    {
+        for (i = friends->count - 1; i >= 0; i--)
+        {
+            const struct NetplayFriend *friend = &friends->list[i];
+            u32 y = FRIEND_LINE_HEIGHT * (i + 1);
+
+            BufferFriendName(gStringVar4, friend);
+            AddTextPrinterParameterized(windowId, FONT_SMALL, gStringVar4, 12, y, TEXT_SKIP_DRAW, NULL);
+            if (friend->playerId == 0)
+            {
+                AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("offline"), 70, y, TEXT_SKIP_DRAW, NULL);
+            }
+            else
+            {
+                const struct MapHeader *header = Overworld_GetMapHeaderByGroupAndId(friend->mapGroup, friend->mapNum);
+
+                GetMapName(gStringVar4, header->regionMapSectionId, 0);
+                if (friend->busy)
+                    StringAppend(gStringVar4, COMPOUND_STRING(" (busy)"));
+                AddTextPrinterParameterized(windowId, FONT_SMALL, gStringVar4, 70, y, TEXT_SKIP_DRAW, NULL);
+            }
+            if (i == task->tCursor)
+                AddTextPrinterParameterized(windowId, FONT_SMALL, gText_SelectorArrow3, 2, y, TEXT_SKIP_DRAW, NULL);
+        }
+        if (friends->count == 0)
+            AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("No friends yet. Talk to a player and\npick Add friend."), 12, FRIEND_LINE_HEIGHT, TEXT_SKIP_DRAW, NULL);
+    }
+    else
+    {
+        AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("Loading…"), 12, FRIEND_LINE_HEIGHT, TEXT_SKIP_DRAW, NULL);
+    }
+    AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("FRIENDS"), 12, 0, TEXT_SKIP_DRAW, NULL);
+    AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("WHERE"), 70, 0, TEXT_SKIP_DRAW, NULL);
+    CopyWindowToVram(windowId, COPYWIN_FULL);
+}
+
+static void RequestFriends(struct Task *task)
+{
+    task->tSeq = gNetplayMailbox.friends.seq;
+    task->tTimer = 0;
+    task->tState = FRIENDS_STATE_WAIT;
+    QueueRequest(NETPLAY_REQ_FRIENDS, 0, 0, 0);
+}
+
+void ShowNetplayFriends(void)
+{
+    u8 taskId = CreateTask(Task_Friends, 80);
+    struct Task *task = &gTasks[taskId];
+
+    task->tWindowId = AddWindow(&sFriendsWindowTemplate);
+    task->tCursor = 0;
+    task->tConfirmDel = FALSE;
+    DrawStdWindowFrame(task->tWindowId, FALSE);
+    PutWindowTilemap(task->tWindowId);
+    if (IsOnline())
+    {
+        RequestFriends(task);
+        DrawFriends(task, NULL);
+    }
+    else
+    {
+        task->tState = FRIENDS_STATE_MESSAGE;
+        DrawFriends(task, COMPOUND_STRING("Not online."));
+    }
+    ScheduleBgCopyTilemapToVram(0);
+}
+
+static void CloseFriends(u8 taskId)
+{
+    ClearStdWindowAndFrameToTransparent(gTasks[taskId].tWindowId, FALSE);
+    ClearWindowTilemap(gTasks[taskId].tWindowId);
+    RemoveWindow(gTasks[taskId].tWindowId);
+    ScheduleBgCopyTilemapToVram(0);
+    DestroyTask(taskId);
+}
+
+static void TravelToFriend(u8 taskId, const struct NetplayFriend *friend)
+{
+    CloseFriends(taskId);
+    SetWarpDestination(friend->mapGroup, friend->mapNum, WARP_ID_NONE, friend->x, friend->y);
+    DoWarp();
+    ResetInitialPlayerAvatarState();
+}
+
+static void Task_Friends(u8 taskId)
+{
+    struct Task *task = &gTasks[taskId];
+    const struct NetplayFriends *friends = &gNetplayMailbox.friends;
+
+    switch (task->tState)
+    {
+    case FRIENDS_STATE_WAIT:
+        if (friends->seq != (u8)task->tSeq)
+        {
+            task->tState = FRIENDS_STATE_SHOWN;
+            if (task->tCursor >= friends->count)
+                task->tCursor = friends->count == 0 ? 0 : friends->count - 1;
+            DrawFriends(task, NULL);
+        }
+        else if (++task->tTimer > FRIEND_ANSWER_TIMEOUT || !IsOnline())
+        {
+            task->tState = FRIENDS_STATE_MESSAGE;
+            DrawFriends(task, COMPOUND_STRING("The server didn't answer."));
+        }
+        else if (JOY_NEW(B_BUTTON))
+        {
+            break;
+        }
+        return;
+    case FRIENDS_STATE_MESSAGE:
+        if (JOY_NEW(A_BUTTON | B_BUTTON))
+        {
+            PlaySE(SE_SELECT);
+            if (friends->count != 0 && IsOnline())
+            {
+                task->tState = FRIENDS_STATE_SHOWN;
+                DrawFriends(task, NULL);
+                return;
+            }
+            break;
+        }
+        return;
+    case FRIENDS_STATE_SHOWN:
+        if (JOY_NEW(DPAD_UP) && task->tCursor > 0)
+        {
+            PlaySE(SE_SELECT);
+            task->tCursor--;
+            task->tConfirmDel = FALSE;
+            DrawFriends(task, NULL);
+        }
+        else if (JOY_NEW(DPAD_DOWN) && task->tCursor + 1 < friends->count)
+        {
+            PlaySE(SE_SELECT);
+            task->tCursor++;
+            task->tConfirmDel = FALSE;
+            DrawFriends(task, NULL);
+        }
+        else if (JOY_NEW(SELECT_BUTTON) && friends->count != 0)
+        {
+            PlaySE(SE_SELECT);
+            if (task->tConfirmDel)
+            {
+                QueueRequest(NETPLAY_REQ_FRIEND_DEL, 0, 0, task->tCursor);
+                task->tConfirmDel = FALSE;
+                RequestFriends(task);
+            }
+            else
+            {
+                task->tConfirmDel = TRUE;
+            }
+            DrawFriends(task, NULL);
+        }
+        else if (JOY_NEW(A_BUTTON) && friends->count != 0 && !task->tConfirmDel)
+        {
+            const struct NetplayFriend *friend = &friends->list[task->tCursor];
+            const u8 *reason = CantTravelReason(friend);
+
+            if (reason == NULL)
+            {
+                TravelToFriend(taskId, friend);
+                return;
+            }
+            PlaySE(SE_FAILURE);
+            task->tState = FRIENDS_STATE_MESSAGE;
+            DrawFriends(task, reason);
+        }
+        else if (JOY_NEW(B_BUTTON))
+        {
+            PlaySE(SE_SELECT);
+            if (task->tConfirmDel)
+            {
+                task->tConfirmDel = FALSE;
+                DrawFriends(task, NULL);
+                return;
+            }
+            break;
+        }
+        return;
+    }
+    CloseFriends(taskId);
+    ScriptUnfreezeObjectEvents();
+    UnlockPlayerFieldControls();
+}
+
+#undef tState
+#undef tWindowId
+#undef tSeq
+#undef tTimer
+#undef tCursor
+#undef tConfirmDel

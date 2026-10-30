@@ -10,12 +10,13 @@ struct ObjectEvent;
 // gNetplayMailbox, which tools/netplay_bridge/netplay_bridge.lua copies to
 // and from the netplay server every frame. See docs/netplay.md.
 
-#define NETPLAY_MAILBOX_VERSION 2
+#define NETPLAY_MAILBOX_VERSION 3
 #define NETPLAY_MAX_REMOTES     8
 #define NETPLAY_NAME_LENGTH     8
 #define NETPLAY_RING_SIZE       16
 #define NETPLAY_HOST_LENGTH     40
 #define NETPLAY_LADDER_SIZE     10
+#define NETPLAY_MAX_FRIENDS     10
 
 // Object event local ids used for other players on the overworld.
 #define LOCALID_NETPLAY_PLAYER_START 228
@@ -40,6 +41,9 @@ enum NetplayRequestType
     NETPLAY_REQ_DEAL,
     NETPLAY_REQ_LADDER,
     NETPLAY_REQ_EMOTE,
+    NETPLAY_REQ_FRIENDS,     // fetch the friend list
+    NETPLAY_REQ_FRIEND_ADD,  // targetId: player to add
+    NETPLAY_REQ_FRIEND_DEL,  // arg: index in the last friend list
 };
 
 enum NetplayEventType
@@ -139,6 +143,29 @@ struct NetplayLadder
     /*0x14*/ struct NetplayLadderEntry top[NETPLAY_LADDER_SIZE];
 }; // size 0xB4
 
+struct NetplayFriend
+{
+    /*0x00*/ u8 name[NETPLAY_NAME_LENGTH];
+    /*0x08*/ u16 playerId; // 0: offline
+    /*0x0A*/ u8 mapGroup;
+    /*0x0B*/ u8 mapNum;
+    /*0x0C*/ s16 x;
+    /*0x0E*/ s16 y;
+    /*0x10*/ u16 graphicsId;
+    /*0x12*/ u8 busy; // in a battle, trade or deal
+    /*0x13*/ u8 filler;
+}; // size 0x14
+
+// Written by the bridge after NETPLAY_REQ_FRIENDS / NETPLAY_REQ_FRIEND_ADD.
+struct NetplayFriends
+{
+    /*0x00*/ u8 seq;       // bumped when the list below is new
+    /*0x01*/ u8 count;
+    /*0x02*/ u8 addSeq;    // bumped when the server answers a FRIEND_ADD
+    /*0x03*/ u8 addResult; // NETPLAY_FRIEND_ADD_*
+    /*0x04*/ struct NetplayFriend list[NETPLAY_MAX_FRIENDS];
+}; // size 0xCC
+
 struct NetplayMailbox
 {
     /*0x000*/ char magic[8];
@@ -167,7 +194,9 @@ struct NetplayMailbox
     /*0x384*/ u16 serverPort;
     /*0x386*/ u16 filler2;
     /*0x388*/ struct NetplayLadder ladder;
-}; // size 0x43C
+    /*0x43C*/ struct NetplayFriends friends;
+    // 0x508-0x5FF: reserved for this file's features; 0x600 on: netplay extensions.
+}; // size 0x508
 
 extern struct NetplayMailbox gNetplayMailbox;
 
@@ -192,5 +221,7 @@ void Netplay_JoinOnline(void);
 bool32 Netplay_HasJoined(void);
 void ShowNetplayLadder(void);
 bool32 Netplay_TryOpenEmoteMenu(void);
+void ShowNetplayFriends(void);
+bool32 Netplay_IsOnline(void);
 
 #endif // GUARD_NETPLAY_H

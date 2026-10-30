@@ -11,6 +11,8 @@ import re
 import sqlite3
 import time
 
+from friends import Friends
+
 log = logging.getLogger("netplay")
 
 START_RATING = 1000
@@ -164,6 +166,7 @@ class Session:
 class Server:
     def __init__(self, league):
         self.league = league
+        self.friends = Friends(league.db)
         self.players = {}
         self.sessions = {}
         # Battles that ended before both players reported a result.
@@ -373,6 +376,34 @@ class Server:
             return  # flooding: drop it
         player.emote_tokens -= 1
         self.broadcast_map(player.map, f"EMOTE {player.id} {emote}", exclude=player)
+
+    def online_player(self, key):
+        return next((p for p in self.players.values() if p.key == key), None)
+
+    def cmd_friend(self, player, action, *args):
+        """FRIEND ADD <player id> | FRIEND DEL <name> <tid>"""
+        if action == "ADD" and len(args) == 1:
+            other = self.players.get(int(args[0]))
+            if other is None or other.name is None:
+                raise ValueError("no such player")
+            ok = self.friends.add(player.key, other.key)
+            player.send(f"FRIENDADD {'ok' if ok else 'full'} {other.name}")
+        elif action == "DEL" and len(args) == 2:
+            self.friends.remove(player.key, (args[0], int(args[1])))
+        else:
+            raise ValueError("bad FRIEND")
+
+    def cmd_friends(self, player):
+        """One FRIEND line per friend: where they are when online, else 0s."""
+        for name, tid in self.friends.list(player.key):
+            other = self.online_player((name, tid))
+            if other is not None and other.map is not None:
+                x, y, _, _, gfx = other.pos
+                busy = 1 if other.session is not None else 0
+                player.send(f"FRIEND {name} {tid} {other.id} {other.map[0]} {other.map[1]} {x} {y} {gfx} {busy}")
+            else:
+                player.send(f"FRIEND {name} {tid} 0 0 0 0 0 0 0")
+        player.send("FRIENDSEND")
 
     def cmd_myrank(self, player):
         rank, rating, w, l, d = self.league.rank_of((player.name, player.tid))
