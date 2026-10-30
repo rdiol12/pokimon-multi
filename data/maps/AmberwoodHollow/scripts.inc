@@ -10,26 +10,26 @@ AmberwoodHollow_OnLoad:
 	end
 
 AmberwoodHollow_EventScript_SetLantern1::
-	setmetatile 11, 11, 0x289, FALSE
-	setmetatile 11, 12, 0x28A, TRUE
+	setmetatile 11, 11, 0x295, FALSE
+	setmetatile 11, 12, 0x296, TRUE
 	return
 
 AmberwoodHollow_EventScript_SetLantern2::
-	setmetatile 33, 8, 0x28B, FALSE
-	setmetatile 33, 9, 0x28C, TRUE
+	setmetatile 33, 8, 0x297, FALSE
+	setmetatile 33, 9, 0x298, TRUE
 	return
 
 AmberwoodHollow_EventScript_SetLantern3::
-	setmetatile 13, 21, 0x28D, FALSE
-	setmetatile 13, 22, 0x28A, TRUE
+	setmetatile 13, 21, 0x299, FALSE
+	setmetatile 13, 22, 0x296, TRUE
 	return
 
 AmberwoodHollow_EventScript_TryOpenShrine::
 	goto_if_unset FLAG_AMBERWOOD_LANTERN_1, AmberwoodHollow_EventScript_Return
 	goto_if_unset FLAG_AMBERWOOD_LANTERN_2, AmberwoodHollow_EventScript_Return
 	goto_if_unset FLAG_AMBERWOOD_LANTERN_3, AmberwoodHollow_EventScript_Return
-	setmetatile 19, 9, 0x231, FALSE
-	setmetatile 20, 9, 0x231, FALSE
+	setmetatile 19, 9, 0x238, FALSE
+	setmetatile 20, 9, 0x238, FALSE
 	return
 
 AmberwoodHollow_EventScript_Return::
@@ -96,8 +96,8 @@ AmberwoodHollow_EventScript_CheckAllLit::
 	setvar VAR_0x8007, 3
 	special ShakeCamera
 	waitstate
-	setmetatile 19, 9, 0x231, FALSE
-	setmetatile 20, 9, 0x231, FALSE
+	setmetatile 19, 9, 0x238, FALSE
+	setmetatile 20, 9, 0x238, FALSE
 	special DrawWholeMapView
 	msgbox AmberwoodHollow_Text_ShrineOpens, MSGBOX_DEFAULT
 	releaseall
