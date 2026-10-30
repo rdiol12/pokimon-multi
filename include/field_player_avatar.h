@@ -74,4 +74,20 @@ void UpdateSpinData(void);
 void ResetSpinTimer(void);
 bool32 CanTriggerSpinEvolution();
 
+// The look the player picked in the Style menu. Other players see it online.
+enum PlayerStyle
+{
+    PLAYER_STYLE_BRENDAN,
+    PLAYER_STYLE_MAY,
+    PLAYER_STYLE_RED,
+    PLAYER_STYLE_LEAF,
+    PLAYER_STYLE_COUNT,
+};
+
+enum PlayerStyle GetPlayerStyle(void);
+void SetPlayerStyle(enum PlayerStyle style);
+enum Gender GetPlayerStyleGender(enum PlayerStyle style);
+enum GameVersion GetPlayerStyleVersion(enum PlayerStyle style);
+void ApplyPlayerStyleToAvatar(void);
+
 #endif // GUARD_FIELD_PLAYER_AVATAR_H
