@@ -41,6 +41,7 @@ class ServerTest(unittest.IsolatedAsyncioTestCase):
             c.writer.close()
         self.srv.close()
         await self.srv.wait_closed()
+        self.league.db.close()
 
     async def connect(self, name, tid=1, map_key=(0, 9), xy=(5, 5)):
         c = Client(*await asyncio.open_connection("127.0.0.1", self.port))
@@ -50,22 +51,22 @@ class ServerTest(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(welcome.startswith("WELCOME "))
         c.id = int(welcome.split()[1])
         if map_key is not None:
-            await c.send(f"POS {map_key[0]} {map_key[1]} {xy[0]} {xy[1]} 1 0")
+            await c.send(f"POS {map_key[0]} {map_key[1]} {xy[0]} {xy[1]} 1 0 100")
         return c
 
     async def test_presence_same_map_only(self):
         a = await self.connect("Ash")
         b = await self.connect("Misty")
         # B arriving on A's map: B sees A, A sees B.
-        self.assertEqual(await b.recv(), f"PLAYER {a.id} Ash 0 9 5 5 1 0")
-        self.assertEqual(await a.recv(), f"PLAYER {b.id} Misty 0 9 5 5 1 0")
-        await b.send("POS 0 9 6 5 4 0")
-        self.assertEqual(await a.recv(), f"PLAYER {b.id} Misty 0 9 6 5 4 0")
+        self.assertEqual(await b.recv(), f"PLAYER {a.id} Ash 0 9 5 5 1 0 100")
+        self.assertEqual(await a.recv(), f"PLAYER {b.id} Misty 0 9 5 5 1 0 100")
+        await b.send("POS 0 9 6 5 4 3 100")
+        self.assertEqual(await a.recv(), f"PLAYER {b.id} Misty 0 9 6 5 4 3 100")
         # B leaves for another map: both get GONE for each other.
-        await b.send("POS 1 2 3 4 1 0")
+        await b.send("POS 1 2 3 4 1 0 100")
         self.assertEqual(await a.recv(), f"GONE {b.id}")
         self.assertEqual(await b.recv(), f"GONE {a.id}")
-        await a.send("POS 0 9 7 5 1 0")
+        await a.send("POS 0 9 7 5 1 0 100")
         await b.expect_silence()
 
     async def test_disconnect_broadcasts_gone(self):
@@ -79,7 +80,7 @@ class ServerTest(unittest.IsolatedAsyncioTestCase):
     async def test_rejects_commands_before_hello(self):
         c = Client(*await asyncio.open_connection("127.0.0.1", self.port))
         self.clients.append(c)
-        await c.send("POS 0 0 0 0 0 0")
+        await c.send("POS 0 0 0 0 0 0 0")
         self.assertTrue((await c.recv()).startswith("ERR"))
         await c.send("HELLO bad-name 1")
         self.assertTrue((await c.recv()).startswith("ERR"))
@@ -90,7 +91,9 @@ class ServerTest(unittest.IsolatedAsyncioTestCase):
         await a.recv()
         await b.recv()
         await a.send(f"REQ {kind} {b.id}")
+        pending = await a.recv()
         invite = await b.recv()
+        self.assertEqual(pending, f"PENDING {invite.split()[1]}")
         _, sid, k, frm = invite.split()
         self.assertEqual((k, int(frm)), (kind, a.id))
         await b.send(f"ACCEPT {sid}")
@@ -105,17 +108,44 @@ class ServerTest(unittest.IsolatedAsyncioTestCase):
         await b.send(f"LINK {sid} ff")
         self.assertEqual(await a.recv(), f"LINK {sid} ff")
 
+    async def test_invite_to_busy_or_missing_player_is_declined(self):
+        a, b, sid = await self.start_session()
+        c = await self.connect("Brock")
+        await c.recv()
+        await c.recv()
+        await c.send(f"REQ trade {a.id}")
+        sid2 = (await c.recv()).split()[1]
+        self.assertEqual(await c.recv(), f"DECLINED {sid2}")
+        await c.send("REQ trade 999")
+        sid3 = (await c.recv()).split()[1]
+        self.assertEqual(await c.recv(), f"DECLINED {sid3}")
+
+    async def test_cancel_invite(self):
+        a = await self.connect("Ash")
+        b = await self.connect("Misty")
+        await a.recv()
+        await b.recv()
+        await a.send(f"REQ battle {b.id}")
+        sid = (await a.recv()).split()[1]
+        await b.recv()
+        await a.send(f"QUIT {sid}")
+        self.assertEqual(await b.recv(), f"ENDED {sid}")
+        await b.send(f"ACCEPT {sid}")
+        self.assertTrue((await b.recv()).startswith("ERR"))
+
     async def test_decline(self):
         a = await self.connect("Ash")
         b = await self.connect("Misty")
         await a.recv()
         await b.recv()
         await a.send(f"REQ trade {b.id}")
+        self.assertTrue((await a.recv()).startswith("PENDING"))
         sid = (await b.recv()).split()[1]
         await b.send(f"DECLINE {sid}")
         self.assertEqual(await a.recv(), f"DECLINED {sid}")
         # Both are free again.
         await b.send(f"REQ battle {a.id}")
+        self.assertTrue((await b.recv()).startswith("PENDING"))
         self.assertTrue((await a.recv()).startswith("INVITE"))
 
     async def board(self, client):
@@ -180,6 +210,7 @@ class ServerTest(unittest.IsolatedAsyncioTestCase):
         await a.recv()
         await b.recv()
         await a.send(f"REQ battle {b.id}")
+        await a.recv()
         sid = (await b.recv()).split()[1]
         await a.send(f"LINK {sid} 00")
         self.assertTrue((await a.recv()).startswith("ERR"))
@@ -193,6 +224,7 @@ class LeagueTest(unittest.TestCase):
             [(n, r, w, l, d) for n, r, w, l, d in league.top()],
             [("A", 1000, 0, 0, 1), ("B", 1000, 0, 0, 1)],
         )
+        league.db.close()
 
 
 if __name__ == "__main__":

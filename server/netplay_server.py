@@ -112,7 +112,7 @@ class Player:
         self.name = None
         self.tid = 0
         self.map = None
-        self.pos = (0, 0, 0, 0)  # x, y, facing, gfx
+        self.pos = (0, 0, 0, 0, 0)  # x, y, facing, elevation, gfx
         self.session = None
 
     @property
@@ -123,8 +123,8 @@ class Player:
         self.writer.write((line + "\n").encode())
 
     def describe(self):
-        x, y, facing, gfx = self.pos
-        return f"PLAYER {self.id} {self.name} {self.map[0]} {self.map[1]} {x} {y} {facing} {gfx}"
+        x, y, facing, elevation, gfx = self.pos
+        return f"PLAYER {self.id} {self.name} {self.map[0]} {self.map[1]} {x} {y} {facing} {elevation} {gfx}"
 
 
 class Session:
@@ -272,9 +272,9 @@ class Server:
         player.tid = int(tid) & 0xFFFF
         player.send(f"WELCOME {player.id}")
 
-    def cmd_pos(self, player, group, num, x, y, facing, gfx):
+    def cmd_pos(self, player, group, num, x, y, facing, elevation, gfx):
         new_map = (int(group), int(num))
-        player.pos = (int(x), int(y), int(facing), int(gfx))
+        player.pos = (int(x), int(y), int(facing), int(elevation), int(gfx))
         old_map = player.map
         player.map = new_map
         if old_map != new_map:
@@ -289,12 +289,15 @@ class Server:
     def cmd_req(self, player, kind, target_id):
         if kind not in KINDS:
             raise ValueError("bad kind")
-        target = self.players.get(int(target_id))
-        if target is None or target is player or target.name is None:
-            raise ValueError("no such player")
-        if player.session or target.session:
+        if player.session:
             raise ValueError("busy")
-        session = Session(next(self._sids), kind, player, target)
+        sid = next(self._sids)
+        player.send(f"PENDING {sid}")
+        target = self.players.get(int(target_id))
+        if target is None or target is player or target.name is None or target.session:
+            player.send(f"DECLINED {sid}")
+            return
+        session = Session(sid, kind, player, target)
         self.sessions[session.id] = session
         player.session = target.session = session
         self.settle_pending(player)

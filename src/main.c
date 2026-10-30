@@ -23,6 +23,7 @@
 #include "intro.h"
 #include "main.h"
 #include "trainer_hill.h"
+#include "netplay.h"
 #include "test_runner.h"
 #include "constants/rgb.h"
 
@@ -105,6 +106,7 @@ void AgbMain(void)
     CheckForFlashMemory();
     InitMainCallbacks();
     InitMapMusic();
+    Netplay_Init();
 #ifdef BUGFIX
     SeedRngWithRtc(); // see comment at SeedRngWithRtc definition below
 #endif
@@ -169,6 +171,7 @@ void AgbMainLoop(void)
 
         PlayTimeCounter_Update();
         MapMusicMain();
+        Netplay_Update();
         WaitForVBlank();
     }
 }
@@ -353,7 +356,7 @@ static void VBlankIntr(void)
 {
     if (gWirelessCommType != 0)
         RfuVSync();
-    else if (gLinkVSyncDisabled == FALSE)
+    else if (gLinkVSyncDisabled == FALSE && !Netplay_IsLinkActive())
         LinkVSync();
 
     gMain.vblankCounter1++;

@@ -23,7 +23,8 @@ local OFF_MAP_NUM = 0x017
 local OFF_X = 0x018
 local OFF_Y = 0x01A
 local OFF_FACING = 0x01C
-local OFF_GFX = 0x01D
+local OFF_ELEVATION = 0x01D
+local OFF_GFX = 0x01E
 local OFF_REMOTES = 0x020
 local REMOTE_SIZE = 20
 local MAX_REMOTES = 8
@@ -31,15 +32,15 @@ local OFF_REQUEST = 0x0C0
 local OFF_EVENT = 0x0C8
 local OFF_EVENT_ACK = 0x0D0
 local OFF_TX = 0x0D4
-local OFF_RX = 0x1D8
+local OFF_RX = 0x218
 local RING_SIZE = 16
-local PACKET_SIZE = 16
+local PACKET_SIZE = 20
 local NAME_LENGTH = 8
 
 local STATE_OFFLINE, STATE_CONNECTING, STATE_ONLINE = 0, 1, 2
 
 local REQ_CHALLENGE, REQ_TRADE, REQ_ACCEPT, REQ_DECLINE, REQ_RESULT, REQ_LEAVE = 1, 2, 3, 4, 5, 6
-local EV_INVITE, EV_START, EV_DECLINED, EV_ENDED = 1, 2, 3, 4
+local EV_INVITE, EV_START, EV_DECLINED, EV_ENDED, EV_PENDING = 1, 2, 3, 4, 5
 local KIND_IDS = { battle = 1, trade = 2 }
 local RESULTS = { "win", "loss", "draw" }
 
@@ -95,6 +96,16 @@ function Bridge:resetConnection()
     self.nextConnect = self.frame
 end
 
+-- The game was reset or a different ROM loaded: drop the connection so the
+-- server ends our sessions, and reconnect once the game is back.
+function Bridge:onReset()
+    if self.connected then
+        self.net.close()
+        self:resetConnection()
+    end
+    self.base = nil
+end
+
 function Bridge:log(msg)
     if self.logger then self.logger(msg) end
 end
@@ -144,7 +155,8 @@ function Bridge:readLocal()
         x = s16(self:r16(OFF_X)),
         y = s16(self:r16(OFF_Y)),
         facing = self:r8(OFF_FACING),
-        gfx = self:r8(OFF_GFX),
+        elevation = self:r8(OFF_ELEVATION),
+        gfx = self:r16(OFF_GFX),
     }
 end
 
@@ -167,21 +179,30 @@ function Bridge:handleLine(line)
             name = args[3],
             group = tonumber(args[4]), num = tonumber(args[5]),
             x = tonumber(args[6]), y = tonumber(args[7]),
-            facing = tonumber(args[8]), gfx = tonumber(args[9]),
+            facing = tonumber(args[8]), elevation = tonumber(args[9]),
+            gfx = tonumber(args[10]),
         }
     elseif cmd == "GONE" then
         self.players[tonumber(args[2])] = nil
     elseif cmd == "INVITE" then
         self:queueEvent(EV_INVITE, tonumber(args[4]), tonumber(args[2]), KIND_IDS[args[3]])
+    elseif cmd == "PENDING" then
+        self:queueEvent(EV_PENDING, 0, tonumber(args[2]))
     elseif cmd == "START" then
         self.session = tonumber(args[2])
         self.rxQueue = {}
+        -- Drop anything left in the rings from an earlier session.
+        self:w8(OFF_RX, self:r8(OFF_RX + 1))
+        self:w8(OFF_TX + 1, self:r8(OFF_TX))
         self:queueEvent(EV_START, tonumber(args[4]), self.session, KIND_IDS[args[3]], tonumber(args[5]))
     elseif cmd == "DECLINED" then
         self:queueEvent(EV_DECLINED, 0, tonumber(args[2]))
     elseif cmd == "ENDED" then
         local sid = tonumber(args[2])
-        if sid == self.session then self.session = nil end
+        if sid == self.session then
+            self.session = nil
+            self.rxQueue = {}
+        end
         self:queueEvent(EV_ENDED, 0, sid)
     elseif cmd == "LINK" then
         if tonumber(args[2]) == self.session then
@@ -252,10 +273,11 @@ function Bridge:writeRemotes()
             self:w16(off + 4, p.x)
             self:w16(off + 6, p.y)
             self:w8(off + 8, p.facing)
-            self:w8(off + 9, p.gfx)
+            self:w8(off + 9, p.elevation)
+            self:w16(off + 10, p.gfx)
             for i = 0, NAME_LENGTH - 1 do
                 local ch = p.name:sub(i + 1, i + 1)
-                self:w8(off + 10 + i, ch == "" and 0xFF or asciiToChar(ch))
+                self:w8(off + 12 + i, ch == "" and 0xFF or asciiToChar(ch))
             end
             self:w16(off, id) -- id last: a non-zero id marks the slot as filled
         else
@@ -267,12 +289,13 @@ end
 function Bridge:sendPosition()
     local pos = self:readLocal()
     local last = self.lastPos
-    if last and last.group == pos.group and last.num == pos.num and last.x == pos.x
-        and last.y == pos.y and last.facing == pos.facing and last.gfx == pos.gfx then
+    if last and last.group == pos.group and last.num == pos.num and last.x == pos.x and last.y == pos.y
+        and last.facing == pos.facing and last.elevation == pos.elevation and last.gfx == pos.gfx then
         return
     end
     self.lastPos = pos
-    self.net.send(string.format("POS %d %d %d %d %d %d", pos.group, pos.num, pos.x, pos.y, pos.facing, pos.gfx))
+    self.net.send(string.format("POS %d %d %d %d %d %d %d",
+        pos.group, pos.num, pos.x, pos.y, pos.facing, pos.elevation, pos.gfx))
 end
 
 function Bridge:handleRequest()
@@ -407,7 +430,9 @@ if emu ~= nil and callbacks ~= nil and socket ~= nil then
             return data
         end,
         close = function()
+            if sock then pcall(function() sock:close() end) end
             sock = nil
+            collectgarbage()
         end,
     }
     local mem = {
@@ -420,7 +445,7 @@ if emu ~= nil and callbacks ~= nil and socket ~= nil then
     local bridge = Bridge.new(mem, net)
     bridge.logger = function(msg) console:log(msg) end
     callbacks:add("frame", function() bridge:onFrame() end)
-    callbacks:add("reset", function() bridge.base = nil end)
+    callbacks:add("reset", function() bridge:onReset() end)
     console:log("netplay bridge loaded, server " .. HOST .. ":" .. PORT)
 end
 

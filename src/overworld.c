@@ -84,6 +84,7 @@
 #include "constants/songs.h"
 #include "constants/trainer_hill.h"
 #include "constants/weather.h"
+#include "netplay.h"
 
 STATIC_ASSERT((B_FLAG_FOLLOWERS_DISABLED == 0 || OW_FOLLOWERS_ENABLED), FollowersFlagAssignedWithoutEnablingThem);
 
@@ -1660,7 +1661,12 @@ static void DoCB1_Overworld(u16 newKeys, u16 heldKeys)
     FieldClearPlayerInput(&inputStruct);
     FieldGetPlayerInput(&inputStruct, newKeys, heldKeys);
     CancelSignPostMessageBox(&inputStruct);
-    if (!ArePlayerFieldControlsLocked())
+    if (Netplay_OverworldUpdate())
+    {
+        LockPlayerFieldControls();
+        HideMapNamePopUpWindow();
+    }
+    else if (!ArePlayerFieldControlsLocked())
     {
         if (ProcessPlayerFieldInput(&inputStruct) == 1)
         {
@@ -2062,6 +2068,15 @@ static void CB2_ReturnToFieldLink(void)
 
 void CB2_ReturnToFieldFromMultiplayer(void)
 {
+    if (Netplay_InSession())
+    {
+        // Online trades happen wherever the players met, not in a link room.
+        ScriptContext_Init();
+        UnlockPlayerFieldControls();
+        CB2_ReturnToField();
+        return;
+    }
+
     FieldClearVBlankHBlankCallbacks();
     StopMapMusic();
     SetMainCallback1(CB1_OverworldLink);

@@ -25,6 +25,7 @@
 #include "battle.h"
 #include "link.h"
 #include "link_rfu.h"
+#include "netplay.h"
 #include "constants/rgb.h"
 #include "constants/trade.h"
 
@@ -986,6 +987,9 @@ u8 GetMultiplayerId(void)
     if (gWirelessCommType == TRUE)
         return Rfu_GetMultiplayerId();
 
+    if (Netplay_IsLinkActive())
+        return Netplay_GetLinkRole();
+
     return SIO_MULTI_CNT->id;
 }
 
@@ -1855,11 +1859,29 @@ u32 LinkMain1(u8 *shouldAdvanceLinkState, u16 *sendCmd, u16 (*recvCmds)[CMD_LENG
     case LINK_STATE_START1:
         if (*shouldAdvanceLinkState == 1)
         {
-            EnableSerial();
+            if (Netplay_IsLinkActive())
+            {
+                // Linked over the network instead of the cable: the other
+                // player is already known, so skip the hardware handshake.
+                Netplay_LinkReset();
+                gLink.localId = Netplay_GetLinkRole();
+                gLink.playerCount = 2;
+                gLink.isMaster = gLink.localId == 0 ? LINK_MASTER : LINK_SLAVE;
+            }
+            else
+            {
+                EnableSerial();
+            }
             gLink.state = 2;
         }
         break;
     case LINK_STATE_HANDSHAKE:
+        if (Netplay_IsLinkActive())
+        {
+            if (Netplay_LinkHandshake())
+                gLink.state = LINK_STATE_CONN_ESTABLISHED;
+            break;
+        }
         switch (*shouldAdvanceLinkState)
         {
         default:
@@ -1881,6 +1903,8 @@ u32 LinkMain1(u8 *shouldAdvanceLinkState, u16 *sendCmd, u16 (*recvCmds)[CMD_LENG
         // fallthrough
     case LINK_STATE_CONN_ESTABLISHED:
         EnqueueSendCmd(sendCmd);
+        if (Netplay_IsLinkActive())
+            Netplay_LinkTransfer();
         DequeueRecvCmds(recvCmds);
         break;
     }

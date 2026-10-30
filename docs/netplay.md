@@ -42,33 +42,36 @@ says who writes the field; the other side only reads it.
 | 0x008 | 1 | ROM | version (1) |
 | 0x009 | 1 | bridge | state: 0 offline, 1 connecting, 2 online |
 | 0x00A | 2 | bridge | local player id assigned by the server |
-| 0x00C | 8 | ROM | player name, game charset, `0xFF` terminated |
+| 0x00C | 8 | ROM | player name, game charset, `0xFF` terminated; empty until the player is in the overworld |
 | 0x014 | 2 | ROM | trainer id (low 16 bits) |
 | 0x016 | 1 | ROM | map group |
 | 0x017 | 1 | ROM | map number |
-| 0x018 | 2 | ROM | x (s16) |
+| 0x018 | 2 | ROM | x (s16, map coordinates) |
 | 0x01A | 2 | ROM | y (s16) |
 | 0x01C | 1 | ROM | facing direction (`DIR_*`) |
-| 0x01D | 1 | ROM | avatar graphics id |
-| 0x01E | 2 | — | padding |
+| 0x01D | 1 | ROM | elevation |
+| 0x01E | 2 | ROM | avatar graphics id (`OBJ_EVENT_GFX_*`) |
 | 0x020 | 8×20 | bridge | remote players (below) |
 | 0x0C0 | 8 | ROM | request (below) |
 | 0x0C8 | 8 | bridge | event (below) |
-| 0x0D0 | 1 | ROM | event ack: ROM copies event seq here once handled |
+| 0x0D0 | 1 | ROM | event ack: ROM copies the event seq here once handled |
 | 0x0D1 | 3 | — | padding |
 | 0x0D4 | 4 | ROM/bridge | link TX ring: u8 head (ROM), u8 tail (bridge), 2 pad |
-| 0x0D8 | 16×16 | ROM | link TX packets |
-| 0x1D8 | 4 | bridge/ROM | link RX ring: u8 head (bridge), u8 tail (ROM), 2 pad |
-| 0x1DC | 16×16 | bridge | link RX packets |
-| 0x2DC | | | end |
+| 0x0D8 | 16×20 | ROM | link TX packets |
+| 0x218 | 4 | bridge/ROM | link RX ring: u8 head (bridge), u8 tail (ROM), 2 pad |
+| 0x21C | 16×20 | bridge | link RX packets |
+| 0x35C | | | end |
+
+The C definition is `struct NetplayMailbox` in `include/netplay.h`.
 
 **Remote player slot (20 bytes):** u16 id (0 = empty slot), u8 map group,
-u8 map number, s16 x, s16 y, u8 facing, u8 gfx, u8 name[8], 2 pad. The bridge
-only fills slots with players on the same map as the local player.
+u8 map number, s16 x, s16 y, u8 facing, u8 elevation, u16 graphics id,
+u8 name[8]. The bridge only fills slots with players on the same map as the
+local player, and keeps each player in the same slot while they stay.
 
 **Request (ROM → bridge, 8 bytes):** u8 seq, u8 type, u16 target id,
-u16 session id, u16 arg. The ROM fills the fields, then increments `seq`; the
-bridge acts once per new `seq`.
+u16 session id, u16 arg. The ROM fills the fields, then increments `seq`, at
+most once per frame; the bridge acts once per new `seq`.
 
 | type | meaning | fields used |
 |-----:|---------|-------------|
@@ -77,7 +80,7 @@ bridge acts once per new `seq`.
 | 3 | accept invite | session id |
 | 4 | decline invite | session id |
 | 5 | report battle result | session id, arg: 1 won, 2 lost, 3 draw |
-| 6 | leave session | session id |
+| 6 | leave or cancel a session | session id |
 
 **Event (bridge → ROM, 8 bytes):** u8 seq, u8 type, u16 peer id,
 u16 session id, u8 kind (1 battle, 2 trade), u8 role (0 host, 1 guest). The
@@ -86,14 +89,34 @@ bridge writes a new event only after the ROM has acked the previous one.
 | type | meaning |
 |-----:|---------|
 | 1 | invite received from peer |
-| 2 | session started; begin link with `role` |
-| 3 | peer declined |
-| 4 | session ended (peer left or disconnected) |
+| 2 | session started; open the link with `role` |
+| 3 | our invite was declined (or the player was busy or gone) |
+| 4 | session ended (peer left, canceled, or disconnected) |
+| 5 | our invite was sent; this is its session id |
 
-**Link rings:** one packet is one link command block (`CMD_LENGTH` = 8 u16).
-A ring is empty when `head == tail`; index wraps at 16. The writer copies the
-packet into `packets[head]`, then advances `head`. The reader consumes
-`packets[tail]`, then advances `tail`.
+**Link rings:** a packet is 20 bytes: u8 kind (1 data, 2 handshake,
+3 handshake ack), 3 bytes padding, then one link command (`CMD_LENGTH` = 8
+u16). A ring is empty when `head == tail`; indices wrap at 16. The writer
+fills `packets[head]`, then advances `head`; the reader consumes
+`packets[tail]`, then advances `tail`. On `START` the bridge empties both rings.
+
+## Link over the network
+
+While a session is running, `link.c` uses the rings instead of the serial port
+(`Netplay_LinkHandshake` and `Netplay_LinkTransfer` in `src/netplay.c`):
+
+- **Handshake.** When the link opens, the host sends a handshake packet and the
+  guest answers with a handshake ack; each side is connected once it has seen
+  the other's. Packets that arrive before that are left over from an earlier
+  link and are dropped.
+- **Transfer.** Every frame each game sends exactly one data packet: its next
+  queued link command, or zeros. The k-th packet from each side is delivered
+  together as one entry of the receive queue, which is what a serial transfer
+  does. Network delay only delays entries; it never reorders them.
+
+Battles and trades then run on Emerald's own link code: a battle uses each
+player's whole party (healed, and restored afterwards like a cable club
+battle), and a trade uses the normal trade screen.
 
 ## Server protocol
 
@@ -103,13 +126,13 @@ Client → server:
 
 ```
 HELLO <name> <trainer id>
-POS <map group> <map num> <x> <y> <facing> <gfx>
-REQ <battle|trade> <target id>
+POS <map group> <map num> <x> <y> <facing> <elevation> <gfx>
+REQ <battle|trade> <target id>      (answered with PENDING, then START or DECLINED)
 ACCEPT <session id>
 DECLINE <session id>
 LINK <session id> <hex>
 RESULT <session id> <win|loss|draw>
-QUIT <session id>
+QUIT <session id>                   (leave a session, or cancel an invite)
 BOARD
 ```
 
@@ -117,7 +140,8 @@ Server → client:
 
 ```
 WELCOME <id>
-PLAYER <id> <name> <map group> <map num> <x> <y> <facing> <gfx>
+PENDING <session id>
+PLAYER <id> <name> <map group> <map num> <x> <y> <facing> <elevation> <gfx>
 GONE <id>
 INVITE <session id> <battle|trade> <from id>
 START <session id> <battle|trade> <peer id> <0 host|1 guest>
