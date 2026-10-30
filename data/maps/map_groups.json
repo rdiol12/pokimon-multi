@@ -133,7 +133,8 @@
     "Underwater_Route128",
     "Underwater_Route129",
     "Underwater_Route105",
-    "Underwater_Route125"
+    "Underwater_Route125",
+    "StarfallIsle"
   ],
   "gMapGroup_IndoorLittleroot": [
     "LittlerootTown_BrendansHouse_1F",
@@ -285,7 +286,10 @@
     "LilycoveCity_DepartmentStore_4F",
     "LilycoveCity_DepartmentStore_5F",
     "LilycoveCity_DepartmentStoreRooftop",
-    "LilycoveCity_DepartmentStoreElevator"
+    "LilycoveCity_DepartmentStoreElevator",
+    "StarfallIsle_Cave",
+    "StarfallIsle_EldersHouse",
+    "StarfallIsle_ExplorersHouse"
   ],
   "gMapGroup_IndoorMossdeep": [
     "MossdeepCity_Gym",

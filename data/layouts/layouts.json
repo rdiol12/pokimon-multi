@@ -9323,6 +9323,16 @@
       "border_filepath": "data/layouts/OneIsland_KindleRoad_EmberSpa_Frlg/border.bin",
       "blockdata_filepath": "data/layouts/OneIsland_KindleRoad_EmberSpa_Frlg/map.bin",
       "layout_version": "frlg"
+    },
+    {
+      "id": "LAYOUT_STARFALL_ISLE",
+      "name": "StarfallIsle_Layout",
+      "width": 56,
+      "height": 58,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Lilycove",
+      "border_filepath": "data/layouts/StarfallIsle/border.bin",
+      "blockdata_filepath": "data/layouts/StarfallIsle/map.bin"
     }
   ]
 }
