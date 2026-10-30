@@ -367,6 +367,7 @@ gStdScripts_End::
 	.include "data/maps/StarfallIsle_Cave/scripts.inc"
 	.include "data/maps/StarfallIsle_EldersHouse/scripts.inc"
 	.include "data/maps/StarfallIsle_ExplorersHouse/scripts.inc"
+	.include "data/maps/StarfallIsle_PlayerHouse/scripts.inc"
 	.include "data/maps/Route104_MrBrineysHouse/scripts.inc"
 	.include "data/maps/Route104_PrettyPetalFlowerShop/scripts.inc"
 	.include "data/maps/Route111_WinstrateFamilysHouse/scripts.inc"

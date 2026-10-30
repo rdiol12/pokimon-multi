@@ -71,7 +71,6 @@ static const struct AchievementInfo sAchievements[ACHIEVEMENT_COUNT] =
 };
 
 static EWRAM_DATA u32 sPendingBanners = 0;
-static EWRAM_DATA u16 sLastCaughtCount = 0;
 
 bool32 Achievements_Has(u8 id)
 {

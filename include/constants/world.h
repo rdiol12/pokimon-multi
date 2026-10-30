@@ -43,4 +43,23 @@
 // use 200-214).
 #define LOCALID_WORLD_LEGEND 215
 
+// House furniture (src/world_house.c). 0 is an empty slot.
+#define FURNITURE_NONE      0
+#define FURNITURE_PLANT     1
+#define FURNITURE_BOOKCASE  2
+#define FURNITURE_TABLE     3
+#define FURNITURE_STOOL     4
+#define FURNITURE_BED       5
+#define FURNITURE_TV        6
+#define FURNITURE_LAMP      7
+#define FURNITURE_AQUARIUM  8
+#define FURNITURE_CUSHION   9
+#define FURNITURE_TROPHIES  10
+#define FURNITURE_TELESCOPE 11
+#define FURNITURE_COUNT     12
+
+// House_StartPlacing results (VAR_RESULT).
+#define HOUSE_PLACING   0
+#define HOUSE_FULL      1
+
 #endif // GUARD_CONSTANTS_WORLD_H

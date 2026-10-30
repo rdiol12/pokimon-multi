@@ -116,8 +116,15 @@ bool32 World_OverworldUpdate(void)
     RoamingWeather_Update();
     Mount_Update();
     Legends_Update();
+    House_Update();
     Achievements_Update();
     return Hardcore_Update();
+}
+
+// A pressed facing (x, y), map coordinates with MAP_OFFSET.
+bool32 World_TryInteract(s16 x, s16 y)
+{
+    return Legends_TryInteract(x, y) || House_TryInteract(x, y);
 }
 
 bool32 World_TryOpenMenu(void)

@@ -39,6 +39,11 @@ void Legends_Update(void);
 bool32 Legends_TryInteract(s16 x, s16 y);
 void Legends_ShowList(void);
 
+// Player housing (world_house.c).
+void House_Update(void);
+bool32 House_TryInteract(s16 x, s16 y);
+bool32 World_TryInteract(s16 x, s16 y);
+
 // Full-screen list window (world_board.c).
 typedef void (*WorldBoardLineFunc)(u16 index, u8 *dest);
 void WorldBoard_Show(const u8 *title, u16 count, WorldBoardLineFunc getLine, WorldBoardLineFunc getDetail);

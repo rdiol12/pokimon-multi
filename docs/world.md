@@ -108,6 +108,22 @@ spawned object (local id 215, `LOCALID_WORLD_LEGEND`); pressing A on it is
 caught by `Legends_TryInteract` before the normal interaction code.
 R > QUESTS lists the quests the player has heard of.
 
+## Player housing
+
+A new house on Starfall Isle (door at 39,32, east of the explorer's
+house) opens into an empty 13x10 room (`tools/world_maps/make_house.py`
+builds the layout from the standard house metatiles). The catalog on the
+wall lists eleven pieces of furniture, drawn for this game in Emerald's
+indoor style (`tools/world_shots/draw_furniture.py`, `graphics/world/
+furniture/`): potted plant, bookcase, table, stool, bed, TV, lamp,
+aquarium, ball cushion, trophy case and telescope. Pick one, face an
+empty spot and press A to put it down; A on a placed piece offers to put
+it away. Up to 8 pieces; placing 5 unlocks "Homeowner".
+
+Furniture is drawn as sprites anchored to the map (sorted with the player
+by y, so the player can walk behind tall pieces) and blocks its footprint
+tiles. It is saved in `houseDecor` as (type, x | y << 4) pairs.
+
 ## Screenshots
 
 ```sh

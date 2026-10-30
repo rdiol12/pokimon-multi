@@ -217,7 +217,7 @@ int ProcessPlayerFieldInput(struct FieldInput *input)
     if (input->heldDirection && (input->dpadDirection == playerDirection) && (TrySetUpWalkIntoSignpostScript(&position, metatileBehavior, playerDirection) == TRUE))
         return TRUE;
 
-    if (input->pressedAButton && Legends_TryInteract(position.x, position.y))
+    if (input->pressedAButton && World_TryInteract(position.x, position.y))
         return TRUE;
     if (input->pressedAButton && TryStartInteractionScript(&position, metatileBehavior, playerDirection) == TRUE)
         return TRUE;
