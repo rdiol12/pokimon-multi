@@ -74,6 +74,15 @@ new features add a row there):
 
   ![The live battle list, watching a battle, and its end](images/netplay-watch.png)
 
+**Co-op battles:** talk to another player → *Co-op battle*. If they accept,
+the two of you team up in a double battle (three Pokémon each) against two
+Battle Frontier trainers, picked from the session id so both games agree.
+Their Pokémon are set to the host's highest party level. It runs on the
+game's own Battle Tower link-multi mode over the network link; nothing is
+won or lost, and both parties are healed and put back afterwards.
+
+![Teaming up against two trainers](images/netplay-coop.png)
+
 **L** opens the emote menu: eight emotes that pop up above your head (happy, love, music,
 wow, huh, angry, sad, hmm) and six quick phrases (HI!, GG!, BATTLE?, TRADE?,
 THANKS!, BYE!) that show in a box with your name. Everyone on the same map
@@ -189,6 +198,7 @@ most once per frame; the bridge acts once per new `seq`.
 | 20 | list live battles | — |
 | 21 | watch a battle | arg: index in the live list |
 | 22 | stop watching | — |
+| 23 | invite to a co-op battle | target id |
 
 **Ladder (bridge → ROM):** u8 seq (bumped when a new ladder is in place),
 u8 count, u16 my rank (0 = no rated battles yet), my entry, then 10 entries.
@@ -227,7 +237,7 @@ u8 host[8], u8 guest[8], 2 pad), then the watched battle, laid out like the
 battle report; its seq is bumped on every change.
 
 **Event (bridge → ROM, 8 bytes):** u8 seq, u8 type, u16 peer id,
-u16 session id, u8 kind (1 battle, 2 trade, 3 deal), u8 role (0 host, 1 guest). The
+u16 session id, u8 kind (1 battle, 2 trade, 3 deal, 4 co-op), u8 role (0 host, 1 guest). The
 bridge writes a new event only after the ROM has acked the previous one.
 
 | type | meaning |
@@ -294,7 +304,7 @@ Client → server:
 ```
 HELLO <name> <trainer id>
 POS <map group> <map num> <x> <y> <facing> <elevation> <gfx>
-REQ <battle|trade|deal> <target id>      (answered with PENDING, then START or DECLINED)
+REQ <battle|trade|deal|coop> <target id> (answered with PENDING, then START or DECLINED)
 ACCEPT <session id>
 DECLINE <session id>
 LINK <session id> <hex>

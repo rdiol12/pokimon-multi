@@ -11,10 +11,12 @@ Netplay_EventScript_TalkToPlayer::
 	dynmultipush Netplay_Text_Trade, NETPLAY_KIND_TRADE
 	dynmultipush Netplay_Text_BuySell, NETPLAY_KIND_DEAL
 	dynmultipush Netplay_Text_AddFriend, NETPLAY_KIND_FRIEND
+	dynmultipush Netplay_Text_Coop, NETPLAY_KIND_COOP
 	dynmultipush Netplay_Text_Cancel, NETPLAY_KIND_NONE
-	dynmultistack 0, 0, FALSE, 5, FALSE, NETPLAY_KIND_BATTLE, DYN_MULTICHOICE_CB_NONE
+	dynmultistack 0, 0, FALSE, 6, FALSE, NETPLAY_KIND_BATTLE, DYN_MULTICHOICE_CB_NONE
 	switch VAR_RESULT
 	case NETPLAY_KIND_BATTLE, Netplay_EventScript_SendInvite
+	case NETPLAY_KIND_COOP, Netplay_EventScript_SendInvite
 	case NETPLAY_KIND_TRADE, Netplay_EventScript_SendInvite
 	case NETPLAY_KIND_DEAL, Netplay_EventScript_SendInvite
 	case NETPLAY_KIND_FRIEND, Netplay_EventScript_AddFriend
@@ -58,6 +60,7 @@ Netplay_EventScript_Invite::
 	goto_if_eq VAR_RESULT, NETPLAY_KIND_NONE, Netplay_EventScript_ReleaseAll
 	goto_if_eq VAR_RESULT, NETPLAY_KIND_TRADE, Netplay_EventScript_TradeInvite
 	goto_if_eq VAR_RESULT, NETPLAY_KIND_DEAL, Netplay_EventScript_DealInvite
+	goto_if_eq VAR_RESULT, NETPLAY_KIND_COOP, Netplay_EventScript_CoopInvite
 	playse SE_PIN
 	msgbox Netplay_Text_BattleInvite, MSGBOX_YESNO
 	goto Netplay_EventScript_AnswerInvite
@@ -66,6 +69,12 @@ Netplay_EventScript_Invite::
 Netplay_EventScript_TradeInvite:
 	playse SE_PIN
 	msgbox Netplay_Text_TradeInvite, MSGBOX_YESNO
+	goto Netplay_EventScript_AnswerInvite
+	end
+
+Netplay_EventScript_CoopInvite:
+	playse SE_PIN
+	msgbox Netplay_Text_CoopInvite, MSGBOX_YESNO
 	goto Netplay_EventScript_AnswerInvite
 	end
 
@@ -173,6 +182,9 @@ Netplay_Text_WhatToDo:
 Netplay_Text_Battle:
 	.string "Battle$"
 
+Netplay_Text_Coop:
+	.string "Co-op battle$"
+
 Netplay_Text_Trade:
 	.string "Trade$"
 
@@ -224,6 +236,10 @@ Netplay_Text_Linking:
 Netplay_Text_LinkFailed:
 	.string "The link with the other player\n"
 	.string "couldn't be made.$"
+
+Netplay_Text_CoopInvite:
+	.string "{STR_VAR_1} wants to team up against\n"
+	.string "two tough TRAINERS. Join in?$"
 
 Netplay_Text_DealInvite:
 	.string "{STR_VAR_1} wants to make a deal\n"

@@ -6,7 +6,8 @@
 -- walks off to Route 101, travels to it from the friend list. Player 2 claims
 -- a ladder season reward. Last, both go to the Oldale Poké Mart: player 1
 -- puts a Pokémon on the market board, player 2 buys it, and player 1 collects
--- the money. Player 3 starts inside the Pokémon Center and watches the battle
+-- the money, and the two team up for a co-op battle against two Battle
+-- Frontier trainers. Player 3 starts inside the Pokémon Center and watches the battle
 -- from START > ONLINE > WATCH.
 -- Run with run_e2e.py.
 
@@ -448,4 +449,40 @@ D.run(function()
         walk("away from the board", K.DOWN, function() return select(2, D.pos()) >= 3 end)
         D.wait(600)
     end
+
+    -- Co-op: player 2 (below player 1, by the board) teams up with player 1
+    -- against two trainers; both pick the first move and target each turn.
+    seq = D.mb8(0x0C8)
+    if INSTANCE == 2 then
+        D.wait(200)
+        D.press(K.UP, 20) -- face player 1
+        talkToOtherPlayer(5) -- Co-op battle
+    else
+        acceptInvite(seq)
+    end
+    D.waitFor("the co-op battle", 3000, D.inBattle)
+    D.log(string.format("co-op battle started; opponents' levels %d and %d",
+        D.partyLevel(1, 0), D.partyLevel(3, 0)))
+    D.wait(400)
+    D.shot("coop-battle")
+    local turns = 0
+    D.waitFor("the end of the co-op battle", 40000, D.inOverworld, function(i)
+        if i % 30 ~= 0 then return end
+        -- A picks the first move and target. After a faint the game leaves
+        -- the battle screen for the party menu: step down to the next
+        -- Pokémon, pick it, SHIFT, and back out if it can't fight.
+        if not D.inBattle() then
+            local cycle = { K.DOWN, K.A, K.A, K.B }
+            D.press(cycle[(i // 30) % #cycle + 1], 0)
+        else
+            D.press(K.A, 0)
+        end
+        if i % 900 == 0 and turns < 4 then
+            turns = turns + 1
+            D.shot("coop-battle")
+        end
+    end)
+    D.log("co-op battle over")
+    D.wait(120)
+    D.shot("after-coop")
 end)

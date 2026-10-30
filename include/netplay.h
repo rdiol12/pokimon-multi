@@ -55,6 +55,7 @@ enum NetplayRequestType
     NETPLAY_REQ_LIVE,        // list live PvP battles
     NETPLAY_REQ_WATCH,       // arg: index in the live list
     NETPLAY_REQ_UNWATCH,
+    NETPLAY_REQ_COOP,        // target: the player to team up with
 };
 
 enum NetplayEventType
@@ -330,6 +331,7 @@ bool32 Netplay_TryOpenEmoteMenu(void);
 void ShowNetplayFriends(void);
 void ShowNetplaySeason(void);
 void ShowNetplayWatch(void);
+bool32 Netplay_IsCoopBattle(void);
 bool32 Netplay_MarketAvailable(void);
 bool32 Netplay_IsOnline(void);
 

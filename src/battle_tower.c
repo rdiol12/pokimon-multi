@@ -1,4 +1,5 @@
 #include "global.h"
+#include "netplay.h"
 #include "battle_tower.h"
 #include "apprentice.h"
 #include "event_data.h"
@@ -2032,6 +2033,9 @@ static void FillTentTrainerParty_(u16 trainerId, u8 firstMonId, u8 monCount)
 
 void TrySetLinkBattleTowerEnemyPartyLevel(void)
 {
+    // Online co-op battles pick their own level (src/netplay.c).
+    if (Netplay_IsCoopBattle())
+        return;
     if (!TESTING)
     {
         if (gBattleTypeFlags & (BATTLE_TYPE_LINK | BATTLE_TYPE_RECORDED_LINK))

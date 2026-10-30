@@ -1,6 +1,7 @@
 #include "global.h"
 #include "netplay.h"
 #include "battle.h"
+#include "battle_frontier.h"
 #include "battle_setup.h"
 #include "config/netplay.h"
 #include "cable_club.h"
@@ -11,6 +12,7 @@
 #include "field_player_avatar.h"
 #include "follower_helper.h"
 #include "field_screen_effect.h"
+#include "frontier_util.h"
 #include "region_map.h"
 #include "field_weather.h"
 #include "fieldmap.h"
@@ -38,6 +40,7 @@
 #include "trade.h"
 #include "window.h"
 #include "constants/battle.h"
+#include "constants/battle_frontier.h"
 #include "constants/cable_club.h"
 #include "constants/characters.h"
 #include "constants/event_object_movement.h"
@@ -103,6 +106,7 @@ struct NetplayLinkState
 EWRAM_DATA struct NetplayMailbox gNetplayMailbox = {0};
 
 static EWRAM_DATA struct NetplaySession sSession = {0};
+static EWRAM_DATA u8 sSavedFrontierLvlMode = 0; // put back after a co-op battle
 static EWRAM_DATA struct NetplayInvite sInvite = {0};
 static EWRAM_DATA struct NetplayLinkState sLink = {0};
 static EWRAM_DATA struct NetplayRequest sRequestQueue[REQUEST_QUEUE_SIZE] = {0};
@@ -478,6 +482,8 @@ void Netplay_OnBattleEnd(u8 battleOutcome)
 {
     u16 result;
 
+    if (sSession.active && sSession.kind == NETPLAY_KIND_COOP)
+        gSaveBlock2Ptr->frontier.lvlMode = sSavedFrontierLvlMode;
     if (!sSession.active || sSession.kind != NETPLAY_KIND_BATTLE)
         return;
     // Running from a link battle sets B_OUTCOME_LINK_BATTLE_RAN on top of won/lost.
@@ -530,6 +536,9 @@ void Netplay_SendInvite(void)
         break;
     case NETPLAY_KIND_DEAL:
         type = NETPLAY_REQ_DEAL;
+        break;
+    case NETPLAY_KIND_COOP:
+        type = NETPLAY_REQ_COOP;
         break;
     default:
         type = NETPLAY_REQ_TRADE;
@@ -642,6 +651,61 @@ void Netplay_StartActivity(void)
     gTasks[taskId].tTimer = 0;
 }
 
+static bool32 IsBattleKind(u8 kind)
+{
+    return kind == NETPLAY_KIND_BATTLE || kind == NETPLAY_KIND_COOP;
+}
+
+// Co-op: the two players against two Battle Frontier trainers, in the
+// Battle Tower's link multi battle. Both games pick the same trainers from
+// the session id; the host's game makes their parties and the battle sends
+// them to the guest. The trainers' Pokémon match the host's strongest.
+#define COOP_PARTY_SIZE 3
+
+// Frontier parties don't say whether a Pokémon may Dynamax or Terastallize,
+// and the AI takes "not set" as yes, so block both like trainer_util.c does.
+static void PrepareCoopOpponent(struct Pokemon *mon, u8 level)
+{
+    u16 species = GetMonData(mon, MON_DATA_SPECIES);
+    u32 data;
+
+    if (species == SPECIES_NONE)
+        return;
+    data = BLOCK_AI_DYNAMAX;
+    SetMonData(mon, MON_DATA_DYNAMAX_LEVEL, &data);
+    data = TYPE_MYSTERY;
+    SetMonData(mon, MON_DATA_TERA_TYPE, &data);
+    SetMonData(mon, MON_DATA_EXP, &gExperienceTables[gSpeciesInfo[species].growthRate][level]);
+    SetMonData(mon, MON_DATA_LEVEL, &level);
+    CalculateMonStats(mon);
+}
+
+static void SetUpCoopBattle(void)
+{
+    u32 i;
+    u8 level = GetHighestLevelInPlayerParty();
+
+    gBattleTypeFlags = BATTLE_TYPE_LINK | BATTLE_TYPE_TRAINER | BATTLE_TYPE_DOUBLE | BATTLE_TYPE_MULTI
+                     | BATTLE_TYPE_TOWER_LINK_MULTI | BATTLE_TYPE_BATTLE_TOWER;
+    gBattleScripting.specialTrainerBattleType = FACILITY_BATTLE_TOWER;
+    TRAINER_BATTLE_PARAM.opponentA = (sSession.id * 37) % FRONTIER_TRAINERS_COUNT;
+    TRAINER_BATTLE_PARAM.opponentB = (TRAINER_BATTLE_PARAM.opponentA + FRONTIER_TRAINERS_COUNT / 2) % FRONTIER_TRAINERS_COUNT;
+    VarSet(VAR_FRONTIER_BATTLE_MODE, FRONTIER_MODE_LINK_MULTIS);
+    sSavedFrontierLvlMode = gSaveBlock2Ptr->frontier.lvlMode;
+    gSaveBlock2Ptr->frontier.lvlMode = FRONTIER_LVL_OPEN;
+    FillFrontierTrainersParties(COOP_PARTY_SIZE);
+    for (i = 0; i < COOP_PARTY_SIZE; i++)
+    {
+        PrepareCoopOpponent(&gParties[B_TRAINER_OPPONENT_A][i], level);
+        PrepareCoopOpponent(&gParties[B_TRAINER_OPPONENT_B][i], level);
+    }
+}
+
+bool32 Netplay_IsCoopBattle(void)
+{
+    return sSession.active && sSession.kind == NETPLAY_KIND_COOP && gMain.inBattle;
+}
+
 static void LinkupFailed(u8 taskId)
 {
     CloseLink();
@@ -664,7 +728,7 @@ static void Task_Linkup(u8 taskId)
     switch (tState)
     {
     case 0:
-        gLinkType = sSession.kind == NETPLAY_KIND_BATTLE ? LINKTYPE_SINGLE_BATTLE : LINKTYPE_TRADE_SETUP;
+        gLinkType = IsBattleKind(sSession.kind) ? LINKTYPE_SINGLE_BATTLE : LINKTYPE_TRADE_SETUP;
         gBattleTypeFlags = 0;
         OpenLinkTimed();
         ResetLinkPlayerCount();
@@ -693,9 +757,9 @@ static void Task_Linkup(u8 taskId)
         ScriptContext_Init();
         UnlockPlayerFieldControls();
         FadeScreen(FADE_TO_BLACK, 0);
-        if (sSession.kind == NETPLAY_KIND_BATTLE)
+        if (IsBattleKind(sSession.kind))
         {
-            gSpecialVar_0x8004 = USING_SINGLE_BATTLE;
+            gSpecialVar_0x8004 = sSession.kind == NETPLAY_KIND_COOP ? USING_BATTLE_TOWER : USING_SINGLE_BATTLE;
             gLinkType = LINKTYPE_BATTLE;
             HealPlayerParty();
             SavePlayerParty();
@@ -727,9 +791,16 @@ static void Task_Linkup(u8 taskId)
         if (!gReceivedRemoteLinkPlayers)
         {
             PlayMapChosenOrBattleBGM(MUS_VS_TRAINER);
-            gBattleTypeFlags = BATTLE_TYPE_LINK | BATTLE_TYPE_TRAINER;
             CleanupOverworldWindowsAndTilemaps();
-            TRAINER_BATTLE_PARAM.opponentA = TRAINER_LINK_OPPONENT;
+            if (sSession.kind == NETPLAY_KIND_COOP)
+            {
+                SetUpCoopBattle();
+            }
+            else
+            {
+                gBattleTypeFlags = BATTLE_TYPE_LINK | BATTLE_TYPE_TRAINER;
+                TRAINER_BATTLE_PARAM.opponentA = TRAINER_LINK_OPPONENT;
+            }
             sSession.inActivity = TRUE;
             SetMainCallback2(CB2_InitBattle);
             gMain.savedCallback = CB2_ReturnFromCableClubBattle;

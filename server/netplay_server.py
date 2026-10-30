@@ -26,7 +26,7 @@ EMOTE_BURST = 4  # emotes a player can send at once; one more each EMOTE_REFILL 
 EMOTE_REFILL = 1.0
 NAME_RE = re.compile(r"^[A-Za-z0-9]{1,7}$")
 HEX_RE = re.compile(r"^[0-9a-fA-F]{2,64}$")
-KINDS = ("battle", "trade", "deal")
+KINDS = ("battle", "trade", "deal", "coop")
 OUTCOMES = ("win", "loss", "draw")
 MAX_LINE = 256
 
