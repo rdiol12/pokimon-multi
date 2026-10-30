@@ -21,18 +21,23 @@ leaderboard.
 
 ## Running
 
+One command, with mGBA 0.10+ installed:
+
 ```sh
-python3 server/netplay_server.py --port 7777 --db league.sqlite3
+make play                 # host: build, start the server, open the game
+make play JOIN=1.2.3.4    # join a friend who is hosting
 ```
 
-Add `--http-port 8080` for the leaderboard page, which also serves the bridge
-script with the server's address filled in. To run it on a real server
-(Docker or systemd), see `deploy/README.md`.
+Hosting builds the ROM, starts the server (game port 7777, leaderboard page on
+8080) unless one is already running, and opens mGBA with the bridge script
+loaded and pointed at it. It prints the address friends join with. The server
+stops when the host closes the game; `python3 tools/play.py --keep-server` or
+`--server-only` keeps it up. Set `MGBA=/path/to/mgba-qt` if mGBA isn't found.
 
-In mGBA: *Tools → Scripting… → File → Load script*, pick
-`tools/netplay_bridge/netplay_bridge.lua` (or the copy downloaded from the
-leaderboard page). Set `NETPLAY_HOST`/`NETPLAY_PORT` at the top of the script to
-point at the server.
+For an always-on server (Docker or systemd), see `deploy/README.md`. By hand:
+`python3 server/netplay_server.py --port 7777 --http-port 8080`, then in mGBA
+*Tools → Scripting… → File → Load script* and pick the bridge downloaded from
+the leaderboard page.
 
 Tests: `python3 -m unittest discover -s server` and
 `lua5.4 tools/netplay_bridge/test_bridge.lua`.

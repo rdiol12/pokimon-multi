@@ -269,7 +269,7 @@ MAKEFLAGS += --no-print-directory
 .DELETE_ON_ERROR:
 
 RULES_NO_SCAN += libagbsyscall clean clean-assets tidy tidymodern tidycheck tidyrelease generated clean-generated clean-teachables clean-teachables_intermediates
-.PHONY: all rom agbcc modern compare check debug release
+.PHONY: all rom agbcc modern compare check debug release play
 .PHONY: $(RULES_NO_SCAN)
 
 infoshell = $(foreach line, $(shell $1 | sed "s/ /__SPACE__/g"), $(info $(subst __SPACE__, ,$(line))))
@@ -366,6 +366,11 @@ check: $(TESTELF)
 
 # Other rules
 rom: $(ROM)
+
+# Host or join an online game: builds, starts the netplay server and opens
+# mGBA with the bridge loaded. See tools/play.py.
+play: $(ROM)
+	python3 tools/play.py --no-build $(if $(JOIN),--join $(JOIN))
 ifeq ($(COMPARE),1)
 	@$(SHA1) rom.sha1
 endif

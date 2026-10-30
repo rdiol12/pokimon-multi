@@ -1,5 +1,9 @@
 # Running the netplay server
 
+For playing with friends, `make play` is enough: the host's machine runs the
+server next to the game (see docs/netplay.md). This page is for a server that
+stays up on its own.
+
 One process runs everything players need:
 
 - **Game port** (TCP 7777): the mGBA bridge script connects here. It handles
@@ -57,6 +61,8 @@ Each setting is a command line flag or an environment variable.
 | `--db` | `NETPLAY_DB` | `league.sqlite3` | league database file |
 
 ## Players
+
+`make play JOIN=<server>` opens the game connected to it. Without the source:
 
 1. Open `http://<server>:8080/` and download `netplay_bridge.lua`.
 2. Open the game in mGBA 0.10 or newer.
