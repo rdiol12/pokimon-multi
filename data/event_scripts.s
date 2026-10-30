@@ -1701,6 +1701,7 @@ EventScript_PalletTown_PlayersHouse_2F_TurnOnPC::
 	.include "data/scripts/secret_base.inc"
 	.include "data/scripts/cable_club.inc"
 	.include "data/scripts/netplay.inc"
+	.include "data/scripts/world.inc"
 	.include "data/text/cable_club.inc"
 	.include "data/scripts/contest_hall.inc"
 	.include "data/scripts/tv.inc"

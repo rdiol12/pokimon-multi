@@ -85,6 +85,7 @@
 #include "constants/trainer_hill.h"
 #include "constants/weather.h"
 #include "netplay.h"
+#include "world.h"
 
 STATIC_ASSERT((B_FLAG_FOLLOWERS_DISABLED == 0 || OW_FOLLOWERS_ENABLED), FollowersFlagAssignedWithoutEnablingThem);
 
@@ -896,6 +897,7 @@ void LoadMapFromCameraTransition(u8 mapGroup, u8 mapNum)
 
     DoTimeBasedEvents();
     SetSavedWeatherFromCurrMapHeader();
+    World_OnMapTransition();
     ChooseAmbientCrySpecies();
     SetDefaultFlashLevel();
     Overworld_ClearSavedMusic();
@@ -964,6 +966,7 @@ static void LoadMapFromWarp(bool32 a1)
     if (a1 != TRUE)
         DoTimeBasedEvents();
     SetSavedWeatherFromCurrMapHeader();
+    World_OnMapTransition();
     ChooseAmbientCrySpecies();
     if (isOutdoors)
         FlagClear(FLAG_SYS_USE_FLASH);
@@ -1661,7 +1664,7 @@ static void DoCB1_Overworld(u16 newKeys, u16 heldKeys)
     FieldClearPlayerInput(&inputStruct);
     FieldGetPlayerInput(&inputStruct, newKeys, heldKeys);
     CancelSignPostMessageBox(&inputStruct);
-    if (Netplay_OverworldUpdate())
+    if (Netplay_OverworldUpdate() || World_OverworldUpdate())
     {
         LockPlayerFieldControls();
         HideMapNamePopUpWindow();
