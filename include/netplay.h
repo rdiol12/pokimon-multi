@@ -2,6 +2,7 @@
 #define GUARD_NETPLAY_H
 
 #include "link.h"
+#include "pokemon.h"
 #include "constants/netplay.h"
 
 struct ObjectEvent;
@@ -46,6 +47,11 @@ enum NetplayRequestType
     NETPLAY_REQ_FRIEND_DEL,  // arg: index in the last friend list
     NETPLAY_REQ_SEASON,      // fetch the current season
     NETPLAY_REQ_CLAIM,       // claim the oldest unclaimed season reward
+    NETPLAY_REQ_MARKET,      // arg: page of the market board
+    NETPLAY_REQ_MARKET_SELL, // list market.mon for market.sellPrice
+    NETPLAY_REQ_MARKET_BUY,  // arg: index on the current page
+    NETPLAY_REQ_MARKET_CANCEL, // arg: index on the current page
+    NETPLAY_REQ_MARKET_COLLECT, // money from sales while away
 };
 
 enum NetplayEventType
@@ -186,6 +192,37 @@ struct NetplaySeason
     /*0x0E*/ u16 filler2;
 }; // size 0x10
 
+#define NETPLAY_MARKET_PAGE_SIZE 5
+
+struct NetplayMarketListing
+{
+    /*0x00*/ u16 species;
+    /*0x02*/ u8 level;
+    /*0x03*/ u8 mine;
+    /*0x04*/ u32 price;
+    /*0x08*/ u8 seller[PLAYER_NAME_LENGTH + 1];
+}; // size 0x10
+
+// The market board (Poké Marts). The bridge publishes a page with seq; the
+// answer to a sell, buy, cancel or collect comes with answerSeq.
+struct NetplayMarket
+{
+    /*0x00*/ u8 seq;
+    /*0x01*/ u8 count;
+    /*0x02*/ u8 page;
+    /*0x03*/ u8 pages;
+    /*0x04*/ u8 answerSeq;
+    /*0x05*/ u8 answer;      // NETPLAY_MARKET_*
+    /*0x06*/ u16 sales;      // collect: listings sold while away
+    /*0x08*/ u32 money;      // buy: price paid; collect: money earned
+    /*0x0C*/ struct NetplayMarketListing listings[NETPLAY_MARKET_PAGE_SIZE];
+    /*0x5C*/ u32 sellPrice;  // written by the ROM before a sell
+    /*0x60*/ u16 sellSpecies;
+    /*0x62*/ u8 sellLevel;
+    /*0x63*/ u8 filler;
+    /*0x64*/ struct Pokemon mon; // sell: written by the ROM; buy/cancel: by the bridge
+}; // size 0xC8
+
 struct NetplayMailbox
 {
     /*0x000*/ char magic[8];
@@ -216,8 +253,9 @@ struct NetplayMailbox
     /*0x388*/ struct NetplayLadder ladder;
     /*0x43C*/ struct NetplayFriends friends;
     /*0x508*/ struct NetplaySeason season;
-    // 0x518-0x5FF: reserved for this file's features.
-}; // size 0x518
+    /*0x518*/ struct NetplayMarket market;
+    // 0x5E0-0x5FF: reserved for this file's features.
+}; // size 0x5E0
 
 extern struct NetplayMailbox gNetplayMailbox;
 
@@ -244,6 +282,7 @@ void ShowNetplayLadder(void);
 bool32 Netplay_TryOpenEmoteMenu(void);
 void ShowNetplayFriends(void);
 void ShowNetplaySeason(void);
+bool32 Netplay_MarketAvailable(void);
 bool32 Netplay_IsOnline(void);
 
 #endif // GUARD_NETPLAY_H

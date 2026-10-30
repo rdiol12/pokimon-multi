@@ -23,6 +23,7 @@
 #include "play_time.h"
 #include "overworld.h"
 #include "palette.h"
+#include "party_menu.h"
 #include "pokedex.h"
 #include "pokemon.h"
 #include "pokemon_storage_system.h"
@@ -2532,3 +2533,475 @@ static void Task_Season(u8 taskId)
 #undef tWindowId
 #undef tSeq
 #undef tTimer
+
+// Market board ------------------------------------------------------------
+//
+// A board on the wall of every Poké Mart. Players list a Pokémon for a price
+// and can log off; a buyer pays the price, which the server keeps until the
+// seller next opens a board. Server side: server/market.py.
+
+#define MARKET_MAX_PRICE     999999
+#define MARKET_PRICE_DIGITS  6
+#define MARKET_DEFAULT_PRICE 1000
+#define MARKET_ROW_Y(i)      (26 + (i) * 14)
+#define MARKET_NO_SLOT       0xFF
+
+enum
+{
+    MARKET_STATE_LOAD,     // waiting for a page
+    MARKET_STATE_BROWSE,
+    MARKET_STATE_CONFIRM,  // A again to buy or take back
+    MARKET_STATE_PRICE,    // setting the price of the Pokémon to sell
+    MARKET_STATE_ANSWER,   // waiting for the server to answer a request
+    MARKET_STATE_SAVE,     // the message is up; save on this frame
+};
+
+struct NetplayMarketScreen
+{
+    u8 state;
+    u8 windowId;
+    u8 cursor;
+    u8 page;
+    u8 seq;        // gNetplayMailbox.market.seq or .answerSeq being waited on
+    u8 request;    // the request being answered
+    u8 sellSlot;   // party slot picked to sell, or MARKET_NO_SLOT
+    u8 priceDigit;
+    bool8 collected;
+    u16 timer;
+    u32 price;
+    const u8 *status;
+    u8 statusText[64];
+};
+
+static EWRAM_DATA struct NetplayMarketScreen sMarket = {0};
+
+static void Task_MarketScreen(u8 taskId);
+
+bool32 Netplay_MarketAvailable(void)
+{
+    return IsOnline();
+}
+
+void Netplay_MarketBegin(void)
+{
+    memset(&sMarket, 0, sizeof(sMarket));
+    sMarket.sellSlot = MARKET_NO_SLOT;
+}
+
+static void SetMarketStatus(const u8 *text)
+{
+    StringExpandPlaceholders(sMarket.statusText, text);
+    sMarket.status = sMarket.statusText;
+}
+
+static u8 *BufferPrice(u8 *dest, u32 price)
+{
+    dest = StringCopy(dest, COMPOUND_STRING("¥"));
+    return ConvertIntToDecimalStringN(dest, price, STR_CONV_MODE_LEFT_ALIGN, MARKET_PRICE_DIGITS);
+}
+
+static void DrawMarket(void)
+{
+    const struct NetplayMarket *market = &gNetplayMailbox.market;
+    u8 windowId = sMarket.windowId;
+    u8 *str;
+    u32 i;
+
+    FillWindowPixelBuffer(windowId, PIXEL_FILL(1));
+    str = StringCopy(gStringVar4, COMPOUND_STRING("MARKET BOARD"));
+    if (sMarket.state != MARKET_STATE_LOAD || market->count != 0)
+    {
+        str = StringCopy(str, COMPOUND_STRING("  page "));
+        str = ConvertIntToDecimalStringN(str, market->page + 1, STR_CONV_MODE_LEFT_ALIGN, 3);
+        str = StringCopy(str, COMPOUND_STRING("/"));
+        ConvertIntToDecimalStringN(str, market->pages, STR_CONV_MODE_LEFT_ALIGN, 3);
+    }
+    AddTextPrinterParameterized(windowId, FONT_NORMAL, gStringVar4, 4, 0, TEXT_SKIP_DRAW, NULL);
+    BufferPrice(gStringVar4, GetMoney(&gSaveBlock1Ptr->money));
+    AddTextPrinterParameterized(windowId, FONT_SMALL, gStringVar4, 172, 2, TEXT_SKIP_DRAW, NULL);
+
+    if (sMarket.state == MARKET_STATE_PRICE)
+    {
+        struct Pokemon *mon = &gParties[B_TRAINER_PLAYER][sMarket.sellSlot];
+
+        GetMonNickname(mon, gStringVar1);
+        StringExpandPlaceholders(gStringVar4, COMPOUND_STRING("Sell {STR_VAR_1} for how much?"));
+        AddTextPrinterParameterized(windowId, FONT_NORMAL, gStringVar4, 8, MARKET_ROW_Y(1), TEXT_SKIP_DRAW, NULL);
+        // The price, with a caret under the digit being changed.
+        str = StringCopy(gStringVar4, COMPOUND_STRING("¥"));
+        ConvertIntToDecimalStringN(str, sMarket.price, STR_CONV_MODE_LEADING_ZEROS, MARKET_PRICE_DIGITS);
+        AddTextPrinterParameterized(windowId, FONT_NORMAL, gStringVar4, 80, MARKET_ROW_Y(2) + 4, TEXT_SKIP_DRAW, NULL);
+        AddTextPrinterParameterized(windowId, FONT_NORMAL, COMPOUND_STRING("{UP_ARROW}"),
+                                    80 + 6 * (1 + MARKET_PRICE_DIGITS - 1 - sMarket.priceDigit), MARKET_ROW_Y(3), TEXT_SKIP_DRAW, NULL);
+        AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("{DPAD_UPDOWN} change  {DPAD_LEFTRIGHT} digit  A: list it  B: back"),
+                                    4, MARKET_ROW_Y(5) + 12, TEXT_SKIP_DRAW, NULL);
+        CopyWindowToVram(windowId, COPYWIN_FULL);
+        return;
+    }
+
+    if (sMarket.state == MARKET_STATE_LOAD && market->count == 0)
+        AddTextPrinterParameterized(windowId, FONT_NORMAL, COMPOUND_STRING("Loading…"), 8, MARKET_ROW_Y(0), TEXT_SKIP_DRAW, NULL);
+    else if (market->count == 0)
+        AddTextPrinterParameterized(windowId, FONT_NORMAL, COMPOUND_STRING("Nothing for sale yet."), 8, MARKET_ROW_Y(0), TEXT_SKIP_DRAW, NULL);
+
+    for (i = 0; i < market->count && i < NETPLAY_MARKET_PAGE_SIZE; i++)
+    {
+        const struct NetplayMarketListing *listing = &market->listings[i];
+        u32 y = MARKET_ROW_Y(i);
+
+        if (i == sMarket.cursor)
+            AddTextPrinterParameterized(windowId, FONT_NORMAL, gText_SelectorArrow3, 0, y, TEXT_SKIP_DRAW, NULL);
+        AddTextPrinterParameterized(windowId, FONT_NORMAL, GetSpeciesName(listing->species), 8, y, TEXT_SKIP_DRAW, NULL);
+        str = StringCopy(gStringVar4, COMPOUND_STRING("Lv"));
+        ConvertIntToDecimalStringN(str, listing->level, STR_CONV_MODE_LEFT_ALIGN, 3);
+        AddTextPrinterParameterized(windowId, FONT_SMALL, gStringVar4, 78, y + 2, TEXT_SKIP_DRAW, NULL);
+        BufferPrice(gStringVar4, listing->price);
+        AddTextPrinterParameterized(windowId, FONT_SMALL, gStringVar4, 106, y + 2, TEXT_SKIP_DRAW, NULL);
+        if (listing->mine)
+        {
+            AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("YOURS"), 160, y + 2, TEXT_SKIP_DRAW, NULL);
+        }
+        else
+        {
+            StringCopyN(gStringVar4, listing->seller, PLAYER_NAME_LENGTH);
+            gStringVar4[PLAYER_NAME_LENGTH] = EOS;
+            AddTextPrinterParameterized(windowId, FONT_SMALL, gStringVar4, 160, y + 2, TEXT_SKIP_DRAW, NULL);
+        }
+    }
+
+    if (sMarket.state == MARKET_STATE_CONFIRM)
+    {
+        const struct NetplayMarketListing *listing = &market->listings[sMarket.cursor];
+
+        StringCopy(gStringVar1, GetSpeciesName(listing->species));
+        if (listing->mine)
+        {
+            StringExpandPlaceholders(gStringVar4, COMPOUND_STRING("Take back {STR_VAR_1}? A: yes  B: no"));
+        }
+        else
+        {
+            BufferPrice(gStringVar2, listing->price);
+            StringExpandPlaceholders(gStringVar4, COMPOUND_STRING("Buy {STR_VAR_1} for {STR_VAR_2}? A: yes  B: no"));
+        }
+        AddTextPrinterParameterized(windowId, FONT_SMALL, gStringVar4, 4, MARKET_ROW_Y(5) + 2, TEXT_SKIP_DRAW, NULL);
+    }
+    else if (sMarket.status != NULL)
+    {
+        AddTextPrinterParameterized(windowId, FONT_SMALL, sMarket.status, 4, MARKET_ROW_Y(5) + 2, TEXT_SKIP_DRAW, NULL);
+    }
+    AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("A: buy  SELECT: sell  {DPAD_LEFTRIGHT} page  B: exit"),
+                                4, MARKET_ROW_Y(5) + 12, TEXT_SKIP_DRAW, NULL);
+    CopyWindowToVram(windowId, COPYWIN_FULL);
+}
+
+static void MarketRequest(u8 type, u16 arg)
+{
+    sMarket.request = type;
+    sMarket.timer = 0;
+    if (type == NETPLAY_REQ_MARKET)
+    {
+        sMarket.seq = gNetplayMailbox.market.seq;
+        sMarket.state = MARKET_STATE_LOAD;
+    }
+    else
+    {
+        sMarket.seq = gNetplayMailbox.market.answerSeq;
+        sMarket.state = MARKET_STATE_ANSWER;
+    }
+    QueueRequest(type, 0, 0, arg);
+}
+
+// Shows the board until the player leaves it (VAR_RESULT
+// NETPLAY_MARKET_SCREEN_QUIT) or picks SELECT to choose a Pokémon to sell
+// (NETPLAY_MARKET_SCREEN_SELL); Netplay_MarketPickedMon then brings the
+// choice back here.
+void Netplay_MarketScreen(void)
+{
+    CreateTask(Task_MarketScreen, 80);
+    sMarket.windowId = AddWindow(&sLadderWindowTemplate);
+    DrawStdWindowFrame(sMarket.windowId, FALSE);
+    PutWindowTilemap(sMarket.windowId);
+    if (sMarket.sellSlot != MARKET_NO_SLOT)
+    {
+        sMarket.state = MARKET_STATE_PRICE;
+        sMarket.price = MARKET_DEFAULT_PRICE;
+        sMarket.priceDigit = 3;
+    }
+    else if (!sMarket.collected)
+    {
+        sMarket.collected = TRUE;
+        MarketRequest(NETPLAY_REQ_MARKET_COLLECT, 0);
+    }
+    else
+    {
+        MarketRequest(NETPLAY_REQ_MARKET, sMarket.page);
+    }
+    DrawMarket();
+    ScheduleBgCopyTilemapToVram(0);
+}
+
+// After the party menu: VAR_0x8004 is the chosen slot (PARTY_SIZE or more
+// if none).
+void Netplay_MarketPickedMon(void)
+{
+    u8 slot = gSpecialVar_0x8004;
+
+    sMarket.sellSlot = MARKET_NO_SLOT;
+    sMarket.status = NULL;
+    if (slot >= gPartiesCount[B_TRAINER_PLAYER])
+        return;
+    if (GetMonData(&gParties[B_TRAINER_PLAYER][slot], MON_DATA_IS_EGG))
+        SetMarketStatus(COMPOUND_STRING("Eggs can't go on the board."));
+    else
+        sMarket.sellSlot = slot;
+}
+
+static void EndMarketScreen(u8 taskId, u16 result)
+{
+    ClearStdWindowAndFrameToTransparent(sMarket.windowId, FALSE);
+    ClearWindowTilemap(sMarket.windowId);
+    RemoveWindow(sMarket.windowId);
+    ScheduleBgCopyTilemapToVram(0);
+    gSpecialVar_Result = result;
+    DestroyTask(taskId);
+    ScriptContext_Enable();
+}
+
+static void AddMarketMonToParty(void)
+{
+    struct Pokemon *mon = &gParties[B_TRAINER_PLAYER][gPartiesCount[B_TRAINER_PLAYER]];
+    u16 species;
+
+    *mon = gNetplayMailbox.market.mon;
+    mon->mail = MAIL_NONE;
+    species = GetMonData(mon, MON_DATA_SPECIES);
+    GetSetPokedexFlag(SpeciesToNationalPokedexNum(species), FLAG_SET_SEEN);
+    GetSetPokedexFlag(SpeciesToNationalPokedexNum(species), FLAG_SET_CAUGHT);
+    CalculatePlayerPartyCount();
+    GetMonNickname(mon, gStringVar1);
+}
+
+// The server answered: apply it to the save. Returns TRUE if the save changed.
+static bool32 ApplyMarketAnswer(void)
+{
+    const struct NetplayMarket *market = &gNetplayMailbox.market;
+
+    switch (market->answer)
+    {
+    case NETPLAY_MARKET_GONE:
+        SetMarketStatus(COMPOUND_STRING("Someone got there first."));
+        return FALSE;
+    case NETPLAY_MARKET_FULL:
+        SetMarketStatus(COMPOUND_STRING("You can list up to 5 POKéMON at a time."));
+        return FALSE;
+    case NETPLAY_MARKET_SELF:
+        SetMarketStatus(COMPOUND_STRING("That's your own listing."));
+        return FALSE;
+    case NETPLAY_MARKET_OK:
+        break;
+    default:
+        return FALSE;
+    }
+
+    switch (sMarket.request)
+    {
+    case NETPLAY_REQ_MARKET_COLLECT:
+        if (market->sales == 0)
+            return FALSE;
+        AddMoney(&gSaveBlock1Ptr->money, market->money);
+        ConvertIntToDecimalStringN(gStringVar1, market->sales, STR_CONV_MODE_LEFT_ALIGN, 3);
+        BufferPrice(gStringVar2, market->money);
+        SetMarketStatus(COMPOUND_STRING("Sold {STR_VAR_1} since your last visit: +{STR_VAR_2}!"));
+        return TRUE;
+    case NETPLAY_REQ_MARKET_BUY:
+        RemoveMoney(&gSaveBlock1Ptr->money, market->money);
+        AddMarketMonToParty();
+        SetMarketStatus(COMPOUND_STRING("You bought {STR_VAR_1}!"));
+        return TRUE;
+    case NETPLAY_REQ_MARKET_CANCEL:
+        AddMarketMonToParty();
+        SetMarketStatus(COMPOUND_STRING("{STR_VAR_1} is back with you."));
+        return TRUE;
+    case NETPLAY_REQ_MARKET_SELL:
+        GetMonNickname(&gParties[B_TRAINER_PLAYER][sMarket.sellSlot], gStringVar1);
+        ZeroMonData(&gParties[B_TRAINER_PLAYER][sMarket.sellSlot]);
+        CompactPartySlots();
+        CalculatePlayerPartyCount();
+        sMarket.sellSlot = MARKET_NO_SLOT;
+        SetMarketStatus(COMPOUND_STRING("{STR_VAR_1} is on the board!"));
+        return TRUE;
+    }
+    return FALSE;
+}
+
+static void HandleMarketBrowseInput(u8 taskId)
+{
+    const struct NetplayMarket *market = &gNetplayMailbox.market;
+
+    if (JOY_NEW(B_BUTTON))
+    {
+        PlaySE(SE_SELECT);
+        EndMarketScreen(taskId, NETPLAY_MARKET_SCREEN_QUIT);
+        return;
+    }
+    if (JOY_NEW(SELECT_BUTTON))
+    {
+        PlaySE(SE_SELECT);
+        if (gPartiesCount[B_TRAINER_PLAYER] <= 1)
+        {
+            SetMarketStatus(COMPOUND_STRING("You can't sell your last POKéMON."));
+            DrawMarket();
+            return;
+        }
+        EndMarketScreen(taskId, NETPLAY_MARKET_SCREEN_SELL);
+        return;
+    }
+    if (JOY_NEW(DPAD_UP) && sMarket.cursor > 0)
+    {
+        sMarket.cursor--;
+    }
+    else if (JOY_NEW(DPAD_DOWN) && sMarket.cursor + 1 < market->count)
+    {
+        sMarket.cursor++;
+    }
+    else if (JOY_NEW(DPAD_LEFT) && market->page > 0)
+    {
+        sMarket.page = market->page - 1;
+        sMarket.cursor = 0;
+        MarketRequest(NETPLAY_REQ_MARKET, sMarket.page);
+    }
+    else if (JOY_NEW(DPAD_RIGHT) && market->page + 1 < market->pages)
+    {
+        sMarket.page = market->page + 1;
+        sMarket.cursor = 0;
+        MarketRequest(NETPLAY_REQ_MARKET, sMarket.page);
+    }
+    else if (JOY_NEW(A_BUTTON) && sMarket.cursor < market->count)
+    {
+        const struct NetplayMarketListing *listing = &market->listings[sMarket.cursor];
+
+        if (gPartiesCount[B_TRAINER_PLAYER] >= PARTY_SIZE)
+            SetMarketStatus(COMPOUND_STRING("Make room in your party first."));
+        else if (!listing->mine && !IsEnoughMoney(&gSaveBlock1Ptr->money, listing->price))
+            SetMarketStatus(COMPOUND_STRING("You don't have enough money."));
+        else
+            sMarket.state = MARKET_STATE_CONFIRM;
+    }
+    else
+    {
+        return;
+    }
+    PlaySE(SE_SELECT);
+    DrawMarket();
+}
+
+static void HandleMarketPriceInput(void)
+{
+    static const u32 sPowers[MARKET_PRICE_DIGITS] = {1, 10, 100, 1000, 10000, 100000};
+    u32 step = sPowers[sMarket.priceDigit];
+    struct Pokemon *mon;
+
+    if (JOY_NEW(DPAD_UP))
+    {
+        sMarket.price = min(sMarket.price + step, MARKET_MAX_PRICE);
+    }
+    else if (JOY_NEW(DPAD_DOWN))
+    {
+        sMarket.price = sMarket.price > step ? sMarket.price - step : 1;
+    }
+    else if (JOY_NEW(DPAD_LEFT) && sMarket.priceDigit < MARKET_PRICE_DIGITS - 1)
+    {
+        sMarket.priceDigit++;
+    }
+    else if (JOY_NEW(DPAD_RIGHT) && sMarket.priceDigit > 0)
+    {
+        sMarket.priceDigit--;
+    }
+    else if (JOY_NEW(A_BUTTON))
+    {
+        mon = &gParties[B_TRAINER_PLAYER][sMarket.sellSlot];
+        gNetplayMailbox.market.mon = *mon;
+        gNetplayMailbox.market.sellPrice = sMarket.price;
+        gNetplayMailbox.market.sellSpecies = GetMonData(mon, MON_DATA_SPECIES);
+        gNetplayMailbox.market.sellLevel = GetMonData(mon, MON_DATA_LEVEL);
+        sMarket.status = NULL;
+        MarketRequest(NETPLAY_REQ_MARKET_SELL, 0);
+    }
+    else if (JOY_NEW(B_BUTTON))
+    {
+        sMarket.sellSlot = MARKET_NO_SLOT;
+        sMarket.status = NULL;
+        MarketRequest(NETPLAY_REQ_MARKET, sMarket.page);
+    }
+    else
+    {
+        return;
+    }
+    PlaySE(SE_SELECT);
+    DrawMarket();
+}
+
+static void Task_MarketScreen(u8 taskId)
+{
+    const struct NetplayMarket *market = &gNetplayMailbox.market;
+
+    switch (sMarket.state)
+    {
+    case MARKET_STATE_LOAD:
+    case MARKET_STATE_ANSWER:
+        if (sMarket.state == MARKET_STATE_LOAD ? market->seq != sMarket.seq : market->answerSeq != sMarket.seq)
+        {
+            if (sMarket.state == MARKET_STATE_LOAD)
+            {
+                if (sMarket.cursor >= market->count)
+                    sMarket.cursor = market->count ? market->count - 1 : 0;
+                sMarket.state = MARKET_STATE_BROWSE;
+            }
+            else if (ApplyMarketAnswer())
+            {
+                // Saved on the next frame, once the message is on screen.
+                sMarket.state = MARKET_STATE_SAVE;
+                if (sMarket.request != NETPLAY_REQ_MARKET_COLLECT)
+                    PlayFanfare(MUS_OBTAIN_ITEM);
+            }
+            else
+            {
+                MarketRequest(NETPLAY_REQ_MARKET, sMarket.page);
+            }
+            DrawMarket();
+        }
+        else if (++sMarket.timer > LADDER_TIMEOUT || !IsOnline())
+        {
+            PlaySE(SE_FAILURE);
+            EndMarketScreen(taskId, NETPLAY_MARKET_SCREEN_QUIT);
+        }
+        break;
+    case MARKET_STATE_SAVE:
+        TrySavingData(SAVE_NORMAL);
+        MarketRequest(NETPLAY_REQ_MARKET, sMarket.page);
+        DrawMarket();
+        break;
+    case MARKET_STATE_BROWSE:
+        HandleMarketBrowseInput(taskId);
+        break;
+    case MARKET_STATE_CONFIRM:
+        if (JOY_NEW(A_BUTTON))
+        {
+            PlaySE(SE_SELECT);
+            sMarket.status = NULL;
+            MarketRequest(market->listings[sMarket.cursor].mine ? NETPLAY_REQ_MARKET_CANCEL : NETPLAY_REQ_MARKET_BUY,
+                          sMarket.cursor);
+            DrawMarket();
+        }
+        else if (JOY_NEW(B_BUTTON))
+        {
+            PlaySE(SE_SELECT);
+            sMarket.state = MARKET_STATE_BROWSE;
+            DrawMarket();
+        }
+        break;
+    case MARKET_STATE_PRICE:
+        HandleMarketPriceInput();
+        break;
+    }
+}

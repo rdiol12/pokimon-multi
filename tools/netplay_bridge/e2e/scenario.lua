@@ -3,12 +3,62 @@
 -- lead Pokémon, then make a deal: player 2 gives both its Pokémon for player
 -- 1's lead Pokémon and ¥1,000. Player 2 opens the PvP ladder and finds
 -- itself in first place, then adds player 1 as a friend, and after player 1
--- walks off to Route 101, travels to it from the friend list.
+-- walks off to Route 101, travels to it from the friend list. Player 2 claims
+-- a ladder season reward. Last, both go to the Oldale Poké Mart: player 1
+-- puts a Pokémon on the market board, player 2 buys it, and player 1 collects
+-- the money.
 -- Run with run_e2e.py.
 
 dofile(INSTANCE_DIR .. "/../driver_lib.lua")
 local D = Driver
 local K = D.KEY
+
+-- Holds a direction until pred() is true.
+local function walk(desc, key, pred)
+    D.waitFor(desc, 900, pred, function() D.setKeys(key) end)
+    D.setKeys(0)
+    D.wait(20)
+end
+
+local function remoteAt(x, y)
+    for slot = 0, 7 do
+        local off = 0x020 + slot * 20
+        if D.mb16(off) ~= 0 and D.mb16(off + 4) == x and D.mb16(off + 6) == y then return true end
+    end
+    return false
+end
+
+local OLDALE, OLDALE_MART = 10, 4 -- map numbers (groups 0 and 2)
+
+-- From Route 101 just south of Oldale Town to the market board (x=5, y=1)
+-- in its Poké Mart, then opens the board.
+local function goToMarketBoard(inside)
+    walk("Oldale Town", D.KEY.UP, function() return D.mb8(0x017) == OLDALE end)
+    walk("the street to the Mart", D.KEY.UP, function() return select(2, D.pos()) <= 8 end)
+    walk("the Mart's column", D.KEY.RIGHT, function() return D.pos() >= 14 end)
+    walk("the Mart", D.KEY.UP, function() return D.mb8(0x016) == 2 and D.mb8(0x017) == OLDALE_MART end)
+    D.waitFor("the Mart", 300, D.inOverworld)
+    D.wait(60)
+    if inside then inside() end
+    walk("the aisle", D.KEY.RIGHT, function() return D.pos() >= 4 end)
+    walk("the back wall", D.KEY.UP, function() return select(2, D.pos()) <= 2 end)
+    walk("the spot by the board", D.KEY.RIGHT, function() return D.pos() >= 5 end)
+    D.press(D.KEY.UP, 20)
+end
+
+local function openMarketBoard()
+    local seq = D.mb8(0x518)
+    D.press(D.KEY.A, 20)
+    D.waitFor("the market board", 600, function() return D.mb8(0x518) ~= seq end)
+    D.wait(30)
+end
+
+-- After a sale, purchase or collect the board saves, then reloads its page.
+local function waitForMarketReload()
+    local seq = D.mb8(0x518)
+    D.waitFor("the board to reload", 1200, function() return D.mb8(0x518) ~= seq end)
+    D.wait(30)
+end
 
 local function talkToOtherPlayer(choice)
     -- Player 2 stands at x=7 facing west, next to player 1 at x=6.
@@ -310,5 +360,58 @@ D.run(function()
         D.waitFor("player 2", 3000, function() return D.remoteCount() > 0 end)
         D.wait(90)
         D.shot("friend-arrived")
+    end
+
+    -- Market board: player 1 lists its second Pokémon for ¥1000, player 2
+    -- buys it, and player 1 collects the money. ---------------------------
+    if INSTANCE == 1 then
+        D.wait(200)
+        goToMarketBoard()
+        D.shot("market-mart")
+        openMarketBoard()
+        D.shot("market-board")
+        local count = D.partyCount()
+        D.press(K.SELECT, 150) -- party menu
+        D.press(K.DOWN, 20)
+        D.press(K.A, 200) -- back on the board, setting a price
+        D.shot("market-price")
+        D.press(K.A, 10) -- list it for ¥1000
+        D.waitFor("the listing", 600, function() return D.partyCount() ~= count end)
+        waitForMarketReload()
+        D.shot("market-listed")
+        D.press(K.B, 30)
+        -- Out of player 2's way, and wait for it to buy and step back.
+        walk("out of the way", K.LEFT, function() return D.pos() <= 3 end)
+        D.waitFor("player 2 at the board", 4000, function() return remoteAt(5, 2) end)
+        D.waitFor("player 2 to step back", 3000, function() return remoteAt(5, 3) end)
+        local money = D.money()
+        walk("back to the board", K.RIGHT, function() return D.pos() >= 5 end)
+        D.press(K.UP, 20)
+        openMarketBoard() -- collects first, then shows the board
+        D.shot("market-collected")
+        D.log(string.format("collected: ¥%d -> ¥%d", money, D.money()))
+        if D.money() ~= money + 1000 then D.fail("expected ¥1000 from the sale") end
+        D.press(K.B, 30)
+    else
+        D.waitFor("player 1 to go into the Mart", 3000, function() return D.remoteCount() == 0 end)
+        D.wait(300)
+        goToMarketBoard(function()
+            D.waitFor("player 1 out of the way", 3000, function() return remoteAt(3, 2) end)
+        end)
+        openMarketBoard()
+        D.shot("market-for-sale")
+        if D.mb8(0x519) < 1 then D.fail("expected a Pokémon for sale") end
+        local money, count = D.money(), D.partyCount()
+        D.press(K.A, 30) -- the newest listing
+        D.shot("market-confirm")
+        D.press(K.A, 10) -- buy
+        D.waitFor("the purchase", 600, function() return D.partyCount() ~= count end)
+        waitForMarketReload()
+        D.shot("market-bought")
+        D.log(string.format("bought: ¥%d -> ¥%d, %d -> %d Pokémon", money, D.money(), count, D.partyCount()))
+        if D.money() ~= money - 1000 then D.fail("expected to pay ¥1000") end
+        D.press(K.B, 30)
+        walk("away from the board", K.DOWN, function() return select(2, D.pos()) >= 3 end)
+        D.wait(600)
     end
 end)

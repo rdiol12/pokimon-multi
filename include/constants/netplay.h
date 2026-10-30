@@ -27,3 +27,12 @@
 #define NETPLAY_RESPONSE_CANCELED 2
 
 #endif // GUARD_CONSTANTS_NETPLAY_H
+
+// Market board answers (gNetplayMailbox.market.answer) and screen results.
+#define NETPLAY_MARKET_OK    1
+#define NETPLAY_MARKET_GONE  2 // sold or taken back already
+#define NETPLAY_MARKET_FULL  3 // too many listings
+#define NETPLAY_MARKET_SELF  4 // your own listing
+
+#define NETPLAY_MARKET_SCREEN_QUIT 0
+#define NETPLAY_MARKET_SCREEN_SELL 1

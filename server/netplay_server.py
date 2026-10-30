@@ -12,6 +12,7 @@ import sqlite3
 import time
 
 from friends import Friends
+from market import Market
 from seasons import Seasons
 
 log = logging.getLogger("netplay")
@@ -169,6 +170,7 @@ class Server:
         self.league = league
         self.friends = Friends(league.db)
         self.seasons = Seasons(league.db, START_RATING, season_days, clock)
+        self.market = Market(league.db)
         self.players = {}
         self.sessions = {}
         # Battles that ended before both players reported a result.
@@ -422,6 +424,30 @@ class Server:
         reward = self.seasons.claim(player.key)
         season, tier = reward if reward else (0, -1)
         player.send(f"CLAIMED {tier} {season}")
+
+    def cmd_market(self, player, action, *args):
+        """The market board: LIST <page>, SELL <species> <level> <price> <mon hex>,
+        BUY <id>, CANCEL <id>, COLLECT."""
+        if action == "LIST" and len(args) == 1:
+            rows, page, pages = self.market.page(int(args[0]))
+            for listing_id, name, tid, species, level, price in rows:
+                mine = 1 if (name, tid) == player.key else 0
+                player.send(f"MITEM {listing_id} {name} {species} {level} {price} {mine}")
+            player.send(f"MARKETEND {page} {pages}")
+        elif action == "SELL" and len(args) == 4:
+            listing_id = self.market.sell(player.key, int(args[0]), int(args[1]), int(args[2]), args[3].lower())
+            player.send(f"MLISTED ok {listing_id}" if listing_id else "MLISTED full 0")
+        elif action == "BUY" and len(args) == 1:
+            result, price, mon = self.market.buy(player.key, int(args[0]))
+            player.send(f"MBOUGHT {result} {price} {mon or '-'}")
+        elif action == "CANCEL" and len(args) == 1:
+            mon = self.market.cancel(player.key, int(args[0]))
+            player.send(f"MCANCELED ok {mon}" if mon else "MCANCELED gone -")
+        elif action == "COLLECT" and not args:
+            money, sales = self.market.collect(player.key)
+            player.send(f"MCOLLECT {money} {sales}")
+        else:
+            raise ValueError("bad MARKET")
 
     def cmd_myrank(self, player):
         rank, rating, w, l, d = self.league.rank_of((player.name, player.tid))

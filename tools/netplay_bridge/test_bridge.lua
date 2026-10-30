@@ -197,6 +197,58 @@ function tests.season_and_claim()
     eq(mem.read8(S + 10), 0xFF, "nothing claimed")
 end
 
+function tests.market_board()
+    local bridge, mem, net = online()
+    local M = BASE + 0x518
+    request(mem, 15, 0, 1) -- REQ_MARKET, page 1
+    bridge:onFrame()
+    eq(net.take()[1], "MARKET LIST 1", "asked for a page")
+    net.push("MITEM 41 Misty 25 12 123456 0")
+    net.push("MITEM 40 Ash 1 5 10 1")
+    net.push("MARKETEND 1 3")
+    bridge:onFrame()
+    eq(mem.read8(M), 1, "published")
+    eq(mem.read8(M + 1), 2, "count")
+    eq(mem.read8(M + 2) .. "/" .. mem.read8(M + 3), "1/3", "page")
+    eq(mem.read16(M + 0x0C), 25, "species")
+    eq(mem.read8(M + 0x0E), 12, "level")
+    eq(mem.read32(M + 0x10), 123456, "price")
+    eq(mem.read8(M + 0x14), 0xC7, "seller starts with M")
+    eq(mem.read8(M + 0x1C + 3), 1, "second is mine")
+
+    request(mem, 17, 0, 0) -- REQ_MARKET_BUY, first row
+    bridge:onFrame()
+    eq(net.take()[1], "MARKET BUY 41", "buy by id")
+    net.push("MBOUGHT ok 123456 " .. string.rep("0a", 100))
+    bridge:onFrame()
+    eq(mem.read8(M + 4), 1, "answered")
+    eq(mem.read8(M + 5), 1, "ok")
+    eq(mem.read32(M + 8), 123456, "paid")
+    eq(mem.read8(M + 0x64 + 99), 10, "the Pokémon")
+
+    mem.write32(M + 0x5C, 700)
+    mem.write16(M + 0x60, 133)
+    mem.write8(M + 0x62, 20)
+    request(mem, 16, 0, 0) -- REQ_MARKET_SELL
+    bridge:onFrame()
+    eq(net.take()[1], "MARKET SELL 133 20 700 " .. string.rep("0a", 100), "sell")
+    net.push("MLISTED full 0")
+    bridge:onFrame()
+    eq(mem.read8(M + 5), 3, "full")
+
+    request(mem, 18, 0, 4) -- REQ_MARKET_CANCEL, no such row
+    bridge:onFrame()
+    eq(mem.read8(M + 5), 2, "gone without asking")
+
+    request(mem, 19, 0, 0) -- REQ_MARKET_COLLECT
+    bridge:onFrame()
+    eq(net.take()[1], "MARKET COLLECT", "collect")
+    net.push("MCOLLECT 900 2")
+    bridge:onFrame()
+    eq(mem.read32(M + 8), 900, "earned")
+    eq(mem.read16(M + 6), 2, "sales")
+end
+
 function tests.hooks_see_lines_and_frames()
     local bridge, mem, net = online()
     local seen, frames = nil, 0

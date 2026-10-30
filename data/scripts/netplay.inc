@@ -136,6 +136,30 @@ Netplay_EventScript_DealEnd:
 	releaseall
 	end
 
+@ The market board on the wall of every Poké Mart (src/netplay.c).
+Netplay_EventScript_MarketBoard::
+	lockall
+	specialvar VAR_RESULT, Netplay_MarketAvailable
+	goto_if_eq VAR_RESULT, FALSE, Netplay_EventScript_MarketOffline
+	special Netplay_MarketBegin
+Netplay_EventScript_MarketScreen:
+	special Netplay_MarketScreen
+	goto_if_eq VAR_RESULT, NETPLAY_MARKET_SCREEN_SELL, Netplay_EventScript_MarketSell
+	releaseall
+	end
+
+Netplay_EventScript_MarketSell:
+	special ChoosePartyMon
+	waitstate
+	special Netplay_MarketPickedMon
+	goto Netplay_EventScript_MarketScreen
+	end
+
+Netplay_EventScript_MarketOffline:
+	msgbox Netplay_Text_MarketOffline, MSGBOX_DEFAULT
+	releaseall
+	end
+
 Netplay_EventScript_CloseAndRelease:
 	closemessage
 Netplay_EventScript_ReleaseAll:
@@ -204,6 +228,12 @@ Netplay_Text_LinkFailed:
 Netplay_Text_DealInvite:
 	.string "{STR_VAR_1} wants to make a deal\n"
 	.string "with POKéMON or money. Accept?$"
+
+Netplay_Text_MarketOffline:
+	.string "MARKET BOARD\n"
+	.string "Trainers buy and sell POKéMON here.\p"
+	.string "Pick JOIN ONLINE on the title menu\n"
+	.string "to use it.$"
 
 Netplay_Text_DealDone:
 	.string "The deal is done!$"

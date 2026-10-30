@@ -65,11 +65,23 @@ new features add a row there):
   now. A travels to an online friend who is outdoors in a town, city or on a
   route (not while they are surfing or in a battle, trade or deal); SELECT
   twice removes one. Add friends by talking to a player → *Add friend*. The
-  list is one-way, like following, and kept by the server. **L** opens the
-emote menu: eight emotes that pop up above your head (happy, love, music,
+  list is one-way, like following, and kept by the server.
+
+**L** opens the emote menu: eight emotes that pop up above your head (happy, love, music,
 wow, huh, angry, sad, hmm) and six quick phrases (HI!, GG!, BATTLE?, TRADE?,
 THANKS!, BYE!) that show in a box with your name. Everyone on the same map
 sees them.
+
+The **market board** is on the back wall of every Hoenn Poké Mart (right of
+the counter; face the wall and press A). It lists Pokémon other trainers put
+up for sale, five per page (◀▶ turns pages). A buys (it needs a free party
+slot and the money); on your own listing, A takes it back. SELECT sells:
+pick a party Pokémon (not your last one, not an egg) and set a price up to
+¥999,999. Listings stay up while you're offline (up to 5 each), and the money
+from sales is paid out the next time you open any board. Every change saves
+the game.
+
+![Setting a price, the listing, the buyer's view, and the seller collecting](images/netplay-market.png)
 
 ## Releases
 
@@ -130,7 +142,8 @@ says who writes the field; the other side only reads it.
 | 0x388 | 180 | bridge | PvP ladder (below) |
 | 0x43C | 204 | bridge | friend list (below) |
 | 0x508 | 16 | bridge | ladder season (below) |
-| 0x518 | | | end; 0x518–0x5FF reserved here |
+| 0x518 | 200 | both | market board (below) |
+| 0x5E0 | | | end; 0x5E0–0x5FF reserved here |
 
 The C definition is `struct NetplayMailbox` in `include/netplay.h`.
 
@@ -159,6 +172,11 @@ most once per frame; the bridge acts once per new `seq`.
 | 12 | remove a friend | arg: index in the last friend list |
 | 13 | fetch the ladder season | — |
 | 14 | claim the oldest season reward | — |
+| 15 | fetch a market board page | arg: page |
+| 16 | list a Pokémon on the market | (market fields below) |
+| 17 | buy a listing | arg: index on the page |
+| 18 | take back your listing | arg: index on the page |
+| 19 | collect money from sales | — |
 
 **Ladder (bridge → ROM):** u8 seq (bumped when a new ladder is in place),
 u8 count, u16 my rank (0 = no rated battles yet), my entry, then 10 entries.
@@ -175,6 +193,15 @@ u8 busy, 1 pad.
 tier (0 BRONZE … 5 MASTER, 0xFF none), u16 season, u16 days left, u16 rating,
 u8 rated, u8 claim seq (bumped on each CLAIMED answer), u8 claimed tier
 (0xFF nothing), 1 pad, u16 reward season, 2 pad.
+
+**Market:** u8 seq (bumped when a page is in place), u8 count, u8 page,
+u8 pages, u8 answer seq (bumped on each MLISTED/MBOUGHT/MCANCELED/MCOLLECT),
+u8 answer (1 ok, 2 gone, 3 full, 4 your own), u16 sales, u32 money (price
+paid, or money collected), then 5 listings of 16 bytes (u16 species,
+u8 level, u8 mine, u32 price, u8 seller[8]); then, written by the ROM
+before a sell: u32 price, u16 species, u8 level, 1 pad; then a
+`struct Pokemon` (100 bytes) holding the Pokémon being sold, or the one
+bought or taken back.
 
 **Event (bridge → ROM, 8 bytes):** u8 seq, u8 type, u16 peer id,
 u16 session id, u8 kind (1 battle, 2 trade, 3 deal), u8 role (0 host, 1 guest). The
@@ -256,6 +283,11 @@ FRIEND ADD <player id>              (answered with FRIENDADD)
 FRIEND DEL <name> <trainer id>
 FRIENDS                             (answered with FRIEND lines, then FRIENDSEND)
 EMOTE <emote 0-31>                  (to everyone else on the map; bursts of more than 4 are dropped)
+MARKET LIST <page>                  (answered with MITEM lines, then MARKETEND)
+MARKET SELL <species> <level> <price> <mon hex>   (answered with MLISTED)
+MARKET BUY <listing id>             (answered with MBOUGHT)
+MARKET CANCEL <listing id>          (answered with MCANCELED)
+MARKET COLLECT                      (answered with MCOLLECT)
 SEASON                              (answered with SEASON)
 CLAIM                               (answered with CLAIMED)
 ```
@@ -280,6 +312,12 @@ RANK <position> <name> <rating> <wins> <losses> <draws>
 BOARDEND
 SEASON <season> <days left> <rated 0|1> <rating> <reward tier or -1> <reward season>
 CLAIMED <tier or -1> <season>
+MITEM <listing id> <seller> <species> <level> <price> <mine 0|1>
+MARKETEND <page> <pages>
+MLISTED <ok|full> <listing id>
+MBOUGHT <ok|gone|self> <price> <mon hex or ->
+MCANCELED <ok|gone> <mon hex or ->
+MCOLLECT <money> <sales>
 MYRANK <rank, 0 if unranked> <rating> <wins> <losses> <draws>
 ERR <message>
 ```
@@ -292,7 +330,7 @@ ERR <message>
 - Mismatched reports are recorded as disputed and do not change ratings.
 - If a player disconnects during a battle, the remaining player's report is
   accepted on its own, so leaving a losing battle counts as a loss.
-- Trades and deals never touch the leaderboard.
+- Trades, deals and the market never touch the leaderboard.
 - Seasons: when one ends, each player with games gets a reward for the tier
   of their final rating (claimed in game, oldest first), ratings move halfway
   back to 1000, and W-L-D starts over.

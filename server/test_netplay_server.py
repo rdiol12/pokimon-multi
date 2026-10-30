@@ -112,6 +112,61 @@ class ServerTest(unittest.IsolatedAsyncioTestCase):
         await a.send(f"FRIEND ADD {a.id}")
         self.assertTrue((await a.recv()).startswith("ERR"))
 
+    async def market_page(self, client, page=0):
+        await client.send(f"MARKET LIST {page}")
+        rows = []
+        while True:
+            line = await client.recv()
+            if line.startswith("MARKETEND"):
+                return rows, line
+            rows.append(line)
+
+    async def test_market(self):
+        mon = "ab" * 100
+        a = await self.connect("Ash", 11)
+        await a.send(f"MARKET SELL 25 12 500 {mon}")
+        listed = await a.recv()
+        self.assertTrue(listed.startswith("MLISTED ok "))
+        listing = int(listed.split()[2])
+        a.writer.close()  # the listing stays while the seller is away
+        await asyncio.sleep(0.05)
+
+        b = await self.connect("Misty", 22, map_key=(3, 4))
+        self.assertEqual(await self.market_page(b), ([f"MITEM {listing} Ash 25 12 500 0"], "MARKETEND 0 1"))
+        await b.send(f"MARKET BUY {listing}")
+        self.assertEqual(await b.recv(), f"MBOUGHT ok 500 {mon}")
+        await b.send(f"MARKET BUY {listing}")
+        self.assertEqual(await b.recv(), "MBOUGHT gone 0 -")
+        self.assertEqual(await self.market_page(b), ([], "MARKETEND 0 1"))
+
+        a = await self.connect("Ash", 11, map_key=(5, 6))
+        await a.send("MARKET COLLECT")
+        self.assertEqual(await a.recv(), "MCOLLECT 500 1")
+        await a.send("MARKET COLLECT")
+        self.assertEqual(await a.recv(), "MCOLLECT 0 0")
+
+    async def test_market_cancel_and_limits(self):
+        mon = "00" * 100
+        a = await self.connect("Ash", 11)
+        b = await self.connect("Misty", 22, map_key=(3, 4))
+        ids = []
+        for _ in range(5):
+            await a.send(f"MARKET SELL 1 5 10 {mon}")
+            ids.append(int((await a.recv()).split()[2]))
+        await a.send(f"MARKET SELL 1 5 10 {mon}")
+        self.assertEqual(await a.recv(), "MLISTED full 0")
+        rows, end = await self.market_page(a)
+        self.assertEqual((len(rows), end), (5, "MARKETEND 0 1"))
+        self.assertTrue(rows[0].endswith(" 1"), "marked as mine")
+        await a.send(f"MARKET BUY {ids[0]}")
+        self.assertEqual(await a.recv(), "MBOUGHT self 0 -")
+        await b.send(f"MARKET CANCEL {ids[0]}")
+        self.assertEqual(await b.recv(), "MCANCELED gone -", "not theirs")
+        await a.send(f"MARKET CANCEL {ids[0]}")
+        self.assertEqual(await a.recv(), f"MCANCELED ok {mon}")
+        await a.send("MARKET SELL 1 5 0 " + mon)
+        self.assertTrue((await a.recv()).startswith("ERR"), "free listings are refused")
+
     async def test_disconnect_broadcasts_gone(self):
         a = await self.connect("Ash")
         b = await self.connect("Misty")

@@ -45,6 +45,11 @@ local MAX_FRIENDS = 10
 local FRIEND_SIZE = 20
 local FRIEND_ADD_RESULTS = { ok = 1, full = 2 }
 local OFF_SEASON = 0x508
+local OFF_MARKET = 0x518
+local MARKET_PAGE_SIZE = 5
+local MARKET_LISTING_SIZE = 16
+local MON_SIZE = 100
+local MARKET_ANSWERS = { ok = 1, gone = 2, full = 3, self = 4 }
 local NO_TIER = 0xFF
 local RING_SIZE = 16
 local PACKET_SIZE = 20
@@ -54,6 +59,7 @@ local STATE_OFFLINE, STATE_CONNECTING, STATE_ONLINE = 0, 1, 2
 
 local REQ_CHALLENGE, REQ_TRADE, REQ_ACCEPT, REQ_DECLINE, REQ_RESULT, REQ_LEAVE, REQ_DEAL, REQ_LADDER, REQ_EMOTE = 1, 2, 3, 4, 5, 6, 7, 8, 9
 local REQ_FRIENDS, REQ_FRIEND_ADD, REQ_FRIEND_DEL, REQ_SEASON, REQ_CLAIM = 10, 11, 12, 13, 14
+local REQ_MARKET, REQ_MARKET_SELL, REQ_MARKET_BUY, REQ_MARKET_CANCEL, REQ_MARKET_COLLECT = 15, 16, 17, 18, 19
 local EV_INVITE, EV_START, EV_DECLINED, EV_ENDED, EV_PENDING, EV_EMOTE = 1, 2, 3, 4, 5, 6
 local KIND_IDS = { battle = 1, trade = 2, deal = 3 }
 local RESULTS = { "win", "loss", "draw" }
@@ -111,6 +117,8 @@ function Bridge:resetConnection()
     self.ladder = nil     -- rows of the ladder being received
     self.friendRows = nil -- rows of the friend list being received
     self.friendList = {}  -- the last friend list given to the ROM
+    self.marketRows = nil -- rows of the market page being received
+    self.marketIds = {}   -- listing ids of the last market page given to the ROM
     self.nextConnect = self.frame
 end
 
@@ -204,6 +212,7 @@ function Bridge:addHook(hook)
 end
 
 function Bridge:handleLine(line)
+    if os.getenv("NETPLAY_TRACE") then self:log("<< " .. line:sub(1, 60)) end
     local args = {}
     for word in line:gmatch("%S+") do table.insert(args, word) end
     for _, hook in ipairs(self.hooks) do
@@ -278,6 +287,23 @@ function Bridge:handleLine(line)
         self:w8(OFF_SEASON + 0x0A, tier >= 0 and tier or NO_TIER)
         if tier >= 0 then self:w8(OFF_SEASON + 1, NO_TIER) end
         self:w8(OFF_SEASON + 9, self:r8(OFF_SEASON + 9) + 1)
+    elseif cmd == "MITEM" and self.marketRows then
+        table.insert(self.marketRows, {
+            id = tonumber(args[2]), seller = args[3], species = tonumber(args[4]),
+            level = tonumber(args[5]), price = tonumber(args[6]), mine = tonumber(args[7]),
+        })
+    elseif cmd == "MARKETEND" and self.marketRows then
+        self:writeMarket(self.marketRows, tonumber(args[2]), tonumber(args[3]))
+        self.marketRows = nil
+    elseif cmd == "MLISTED" then
+        self:marketAnswer(args[2])
+    elseif cmd == "MBOUGHT" then
+        self:marketAnswer(args[2], tonumber(args[3]), args[4])
+    elseif cmd == "MCANCELED" then
+        self:marketAnswer(args[2], 0, args[3])
+    elseif cmd == "MCOLLECT" then
+        self:w16(OFF_MARKET + 6, tonumber(args[3]))
+        self:marketAnswer("ok", tonumber(args[2]))
     elseif cmd == "EMOTE" then
         self:queueEvent(EV_EMOTE, tonumber(args[2]), 0, tonumber(args[3]))
     elseif cmd == "RANK" and self.ladder then
@@ -413,6 +439,24 @@ function Bridge:handleRequest()
         self.net.send("SEASON")
     elseif type == REQ_CLAIM then
         self.net.send("CLAIM")
+    elseif type == REQ_MARKET then
+        self.marketRows = {}
+        self.net.send("MARKET LIST " .. arg)
+    elseif type == REQ_MARKET_SELL then
+        local hex = {}
+        for i = 0, MON_SIZE - 1 do hex[#hex + 1] = string.format("%02x", self:r8(OFF_MARKET + 0x64 + i)) end
+        local price = self:r16(OFF_MARKET + 0x5C) | (self:r16(OFF_MARKET + 0x5E) << 16)
+        self.net.send(string.format("MARKET SELL %d %d %d %s",
+            self:r16(OFF_MARKET + 0x60), self:r8(OFF_MARKET + 0x62), price, table.concat(hex)))
+    elseif type == REQ_MARKET_BUY or type == REQ_MARKET_CANCEL then
+        local id = self.marketIds[arg + 1]
+        if id then
+            self.net.send((type == REQ_MARKET_BUY and "MARKET BUY " or "MARKET CANCEL ") .. id)
+        else
+            self:marketAnswer("gone")
+        end
+    elseif type == REQ_MARKET_COLLECT then
+        self.net.send("MARKET COLLECT")
     elseif type == REQ_EMOTE then
         self.net.send("EMOTE " .. arg)
     elseif type == REQ_LADDER then
@@ -457,6 +501,43 @@ function Bridge:writeFriends(rows)
     end
     self:w8(OFF_FRIENDS + 1, count)
     self:w8(OFF_FRIENDS, self:r8(OFF_FRIENDS) + 1) -- publish
+end
+
+function Bridge:writeMarket(rows, page, pages)
+    local count = math.min(#rows, MARKET_PAGE_SIZE)
+    self.marketIds = {}
+    for i = 1, count do
+        local r = rows[i]
+        local off = OFF_MARKET + 0x0C + (i - 1) * MARKET_LISTING_SIZE
+        self.marketIds[i] = r.id
+        self:w16(off, r.species)
+        self:w8(off + 2, r.level)
+        self:w8(off + 3, r.mine)
+        self:w16(off + 4, r.price & 0xFFFF)
+        self:w16(off + 6, r.price >> 16)
+        for c = 0, NAME_LENGTH - 1 do
+            local ch = r.seller:sub(c + 1, c + 1)
+            self:w8(off + 8 + c, ch == "" and 0xFF or asciiToChar(ch))
+        end
+    end
+    self:w8(OFF_MARKET + 1, count)
+    self:w8(OFF_MARKET + 2, page)
+    self:w8(OFF_MARKET + 3, pages)
+    self:w8(OFF_MARKET, self:r8(OFF_MARKET) + 1) -- publish
+end
+
+-- The answer to a sell, buy, cancel or collect, with the Pokémon handed back.
+function Bridge:marketAnswer(answer, money, monHex)
+    if monHex and #monHex == MON_SIZE * 2 then
+        for i = 0, MON_SIZE - 1 do
+            self:w8(OFF_MARKET + 0x64 + i, tonumber(monHex:sub(i * 2 + 1, i * 2 + 2), 16))
+        end
+    end
+    money = money or 0
+    self:w16(OFF_MARKET + 8, money & 0xFFFF)
+    self:w16(OFF_MARKET + 10, money >> 16)
+    self:w8(OFF_MARKET + 5, MARKET_ANSWERS[answer] or MARKET_ANSWERS.gone)
+    self:w8(OFF_MARKET + 4, self:r8(OFF_MARKET + 4) + 1) -- publish
 end
 
 function Bridge:writeLadderTop(rows)
