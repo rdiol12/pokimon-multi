@@ -7,7 +7,9 @@
 #include "event_data.h"
 #include "event_object_lock.h"
 #include "event_object_movement.h"
+#include "field_effect.h"
 #include "field_player_avatar.h"
+#include "follower_helper.h"
 #include "field_screen_effect.h"
 #include "field_weather.h"
 #include "fieldmap.h"
@@ -38,6 +40,7 @@
 #include "constants/characters.h"
 #include "constants/event_object_movement.h"
 #include "constants/event_objects.h"
+#include "constants/field_effects.h"
 #include "constants/flags.h"
 #include "constants/items.h"
 #include "constants/map_groups.h"
@@ -183,10 +186,15 @@ static void FlushRequest(void)
 
 // Events -----------------------------------------------------------------
 
+static void ShowRemoteEmote(u16 peerId, u8 emote);
+
 static void HandleEvent(const struct NetplayEvent *ev)
 {
     switch (ev->type)
     {
+    case NETPLAY_EV_EMOTE:
+        ShowRemoteEmote(ev->peerId, ev->kind);
+        break;
     case NETPLAY_EV_INVITE:
         if (sSession.active || sInvite.pending || sOutgoingSessionId != 0 || !sInGame)
         {
@@ -1765,4 +1773,207 @@ static void Task_Ladder(u8 taskId)
 #undef tState
 #undef tWindowId
 #undef tSeq
+#undef tTimer
+
+// Emotes ------------------------------------------------------------------
+//
+// L in the overworld while online: pick an emote or a quick phrase. Emotes
+// pop up above the player for everyone on the map; phrases show in a small
+// box at the top of the screen with the player's name.
+
+#define EMOTE_ICON_COUNT   8
+#define EMOTE_COUNT        14
+#define CHAT_SHOW_FRAMES   (3 * 60)
+
+static const u8 sEmoteEmotions[EMOTE_ICON_COUNT] =
+{
+    FOLLOWER_EMOTION_HAPPY,
+    FOLLOWER_EMOTION_LOVE,
+    FOLLOWER_EMOTION_MUSIC,
+    FOLLOWER_EMOTION_SURPRISE,
+    FOLLOWER_EMOTION_CURIOUS,
+    FOLLOWER_EMOTION_ANGRY,
+    FOLLOWER_EMOTION_SAD,
+    FOLLOWER_EMOTION_PENSIVE,
+};
+
+static const struct MenuAction sEmoteMenuItems[EMOTE_COUNT] =
+{
+    {COMPOUND_STRING("HAPPY")},
+    {COMPOUND_STRING("LOVE")},
+    {COMPOUND_STRING("MUSIC")},
+    {COMPOUND_STRING("WOW!")},
+    {COMPOUND_STRING("HUH?")},
+    {COMPOUND_STRING("ANGRY")},
+    {COMPOUND_STRING("SAD")},
+    {COMPOUND_STRING("HMM…")},
+    {COMPOUND_STRING("HI!")},
+    {COMPOUND_STRING("GG!")},
+    {COMPOUND_STRING("BATTLE?")},
+    {COMPOUND_STRING("TRADE?")},
+    {COMPOUND_STRING("THANKS!")},
+    {COMPOUND_STRING("BYE!")},
+};
+
+static const struct WindowTemplate sEmoteWindowTemplate =
+{
+    .bg = 0,
+    .tilemapLeft = 13,
+    .tilemapTop = 1,
+    .width = 16,
+    .height = EMOTE_COUNT, // two columns of seven
+    .paletteNum = 15,
+    .baseBlock = 0x139,
+};
+
+// Below the emote menu's tiles; the box closes whenever a script or menu
+// takes over the screen.
+static const struct WindowTemplate sChatWindowTemplate =
+{
+    .bg = 0,
+    .tilemapLeft = 1,
+    .tilemapTop = 1,
+    .width = 18,
+    .height = 2,
+    .paletteNum = 15,
+    .baseBlock = 0x0F0,
+};
+
+static EWRAM_DATA bool8 sChatShowing = FALSE;
+static EWRAM_DATA u8 sChatTaskId = 0;
+
+static void Task_EmoteMenu(u8 taskId);
+static void Task_ChatLine(u8 taskId);
+
+static void ShowEmoteIcon(u8 localId, u8 emote)
+{
+    gFieldEffectArguments[0] = localId;
+    gFieldEffectArguments[1] = gSaveBlock1Ptr->location.mapNum;
+    gFieldEffectArguments[2] = gSaveBlock1Ptr->location.mapGroup;
+    gFieldEffectArguments[7] = sEmoteEmotions[emote];
+    FieldEffectStart(FLDEFF_EMOTE);
+}
+
+#define tWindowId data[0]
+#define tTimer    data[1]
+
+static void CloseChatLine(void)
+{
+    if (!sChatShowing)
+        return;
+    ClearStdWindowAndFrameToTransparent(gTasks[sChatTaskId].tWindowId, FALSE);
+    ClearWindowTilemap(gTasks[sChatTaskId].tWindowId);
+    RemoveWindow(gTasks[sChatTaskId].tWindowId);
+    ScheduleBgCopyTilemapToVram(0);
+    DestroyTask(sChatTaskId);
+    sChatShowing = FALSE;
+}
+
+static void ShowChatLine(const u8 *name, u8 emote)
+{
+    u8 windowId;
+    u8 *str;
+
+    if (ArePlayerFieldControlsLocked() && !FuncIsActiveTask(Task_EmoteMenu))
+        return; // a script or menu owns the screen
+    CloseChatLine();
+    sChatTaskId = CreateTask(Task_ChatLine, 90);
+    sChatShowing = TRUE;
+    windowId = AddWindow(&sChatWindowTemplate);
+    gTasks[sChatTaskId].tWindowId = windowId;
+    gTasks[sChatTaskId].tTimer = CHAT_SHOW_FRAMES;
+    str = StringCopy(gStringVar4, name);
+    str = StringCopy(str, COMPOUND_STRING(": "));
+    StringCopy(str, sEmoteMenuItems[emote].text);
+    DrawStdWindowFrame(windowId, FALSE);
+    FillWindowPixelBuffer(windowId, PIXEL_FILL(1));
+    AddTextPrinterParameterized(windowId, FONT_NORMAL, gStringVar4, 2, 1, TEXT_SKIP_DRAW, NULL);
+    PutWindowTilemap(windowId);
+    CopyWindowToVram(windowId, COPYWIN_FULL);
+}
+
+static void Task_ChatLine(u8 taskId)
+{
+    // Leave the screen to scripts and menus.
+    if (--gTasks[taskId].tTimer <= 0
+     || (ArePlayerFieldControlsLocked() && !FuncIsActiveTask(Task_EmoteMenu))
+     || gMain.callback2 != CB2_Overworld)
+        CloseChatLine();
+}
+
+static void ShowEmote(u8 localId, const u8 *name, u8 emote)
+{
+    if (emote >= EMOTE_COUNT || gMain.callback2 != CB2_Overworld)
+        return;
+    PlaySE(SE_BALL_TRAY_ENTER);
+    if (emote < EMOTE_ICON_COUNT)
+        ShowEmoteIcon(localId, emote);
+    else
+        ShowChatLine(name, emote);
+}
+
+static void ShowRemoteEmote(u16 peerId, u8 emote)
+{
+    u32 slot;
+
+    for (slot = 0; slot < NETPLAY_MAX_REMOTES; slot++)
+    {
+        const struct NetplayRemotePlayer *remote = &gNetplayMailbox.remotes[slot];
+        u8 name[NETPLAY_NAME_LENGTH + 1];
+
+        if (remote->id != peerId || !IsRemoteHere(remote) || sAvatarIds[slot] != peerId)
+            continue;
+        memcpy(name, remote->name, NETPLAY_NAME_LENGTH);
+        name[NETPLAY_NAME_LENGTH] = EOS;
+        ShowEmote(LOCALID_NETPLAY_PLAYER_START + slot, name, emote);
+        return;
+    }
+}
+
+bool32 Netplay_TryOpenEmoteMenu(void)
+{
+    u8 taskId;
+    u8 windowId;
+
+    if (!IsOnline() || sSession.active)
+        return FALSE;
+    FreezeObjectEvents();
+    PlayerFreeze();
+    StopPlayerAvatar();
+    LockPlayerFieldControls();
+    PlaySE(SE_WIN_OPEN);
+    taskId = CreateTask(Task_EmoteMenu, 80);
+    windowId = AddWindow(&sEmoteWindowTemplate);
+    gTasks[taskId].tWindowId = windowId;
+    DrawStdWindowFrame(windowId, FALSE);
+    PrintMenuGridTable(windowId, 64, 2, EMOTE_COUNT / 2, sEmoteMenuItems);
+    InitMenuActionGrid(windowId, 64, 2, EMOTE_COUNT / 2, 0);
+    PutWindowTilemap(windowId);
+    ScheduleBgCopyTilemapToVram(0);
+    return TRUE;
+}
+
+static void Task_EmoteMenu(u8 taskId)
+{
+    s8 input = Menu_ProcessGridInput();
+
+    if (input == MENU_NOTHING_CHOSEN)
+        return;
+    ClearStdWindowAndFrameToTransparent(gTasks[taskId].tWindowId, FALSE);
+    ClearWindowTilemap(gTasks[taskId].tWindowId);
+    RemoveWindow(gTasks[taskId].tWindowId);
+    ScheduleBgCopyTilemapToVram(0);
+    DestroyTask(taskId);
+    ScriptUnfreezeObjectEvents();
+    UnlockPlayerFieldControls();
+    if (input == MENU_B_PRESSED)
+    {
+        PlaySE(SE_SELECT);
+        return;
+    }
+    QueueRequest(NETPLAY_REQ_EMOTE, 0, 0, input);
+    ShowEmote(LOCALID_PLAYER, gSaveBlock2Ptr->playerName, input);
+}
+
+#undef tWindowId
 #undef tTimer

@@ -96,6 +96,21 @@ function tests.connects_to_the_server_built_into_the_game()
     eq(net.address, "play.example.org:7000", "address")
 end
 
+function tests.emotes_go_both_ways()
+    local bridge, mem, net = online()
+    mem.write8(BASE + 0x0C1, 9) -- REQ_EMOTE
+    mem.write16(BASE + 0x0C6, 9)
+    mem.write8(BASE + 0x0C0, mem.read8(BASE + 0x0C0) + 1)
+    bridge:onFrame()
+    local sent = net.take()
+    eq(sent[#sent], "EMOTE 9", "sent")
+    net.push("EMOTE 5 2")
+    bridge:onFrame()
+    eq(mem.read8(BASE + 0x0C9), 6, "event type")
+    eq(mem.read16(BASE + 0x0CA), 5, "from")
+    eq(mem.read8(BASE + 0x0CE), 2, "emote")
+end
+
 function tests.ladder_request_fills_the_mailbox()
     local bridge, mem, net = online()
     local L = BASE + 0x388

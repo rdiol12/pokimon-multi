@@ -9,11 +9,15 @@ import logging
 import os
 import re
 import sqlite3
+import time
 
 log = logging.getLogger("netplay")
 
 START_RATING = 1000
 ELO_K = 32
+MAX_EMOTE = 32  # emote ids the ROM may send (see Emotes in src/netplay.c)
+EMOTE_BURST = 4  # emotes a player can send at once; one more each EMOTE_REFILL seconds
+EMOTE_REFILL = 1.0
 NAME_RE = re.compile(r"^[A-Za-z0-9]{1,7}$")
 HEX_RE = re.compile(r"^[0-9a-fA-F]{2,64}$")
 KINDS = ("battle", "trade", "deal")
@@ -128,6 +132,8 @@ class Player:
         self.map = None
         self.pos = (0, 0, 0, 0, 0)  # x, y, facing, elevation, gfx
         self.session = None
+        self.emote_tokens = EMOTE_BURST
+        self.emote_time = time.monotonic()
 
     @property
     def key(self):
@@ -355,6 +361,18 @@ class Server:
         if player not in (session.host, session.guest):
             raise ValueError("no such session")
         self.end_session(session, player)
+
+    def cmd_emote(self, player, emote):
+        emote = int(emote)
+        if not 0 <= emote < MAX_EMOTE:
+            raise ValueError("bad emote")
+        now = time.monotonic()
+        player.emote_tokens = min(EMOTE_BURST, player.emote_tokens + (now - player.emote_time) / EMOTE_REFILL)
+        player.emote_time = now
+        if player.map is None or player.emote_tokens < 1:
+            return  # flooding: drop it
+        player.emote_tokens -= 1
+        self.broadcast_map(player.map, f"EMOTE {player.id} {emote}", exclude=player)
 
     def cmd_myrank(self, player):
         rank, rating, w, l, d = self.league.rank_of((player.name, player.tid))
