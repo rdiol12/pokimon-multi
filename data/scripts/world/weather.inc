@@ -6,6 +6,9 @@ World_EventScript_WeatherWatcher::
 	faceplayer
 	callnative RoamingWeather_GetForecast
 	msgbox World_Text_WeatherForecast, MSGBOX_DEFAULT
+	setvar VAR_0x8004, LEGEND_HINT_STORMS
+	callnative Legends_Hint
+	msgbox gStringVar4, MSGBOX_DEFAULT
 	release
 	end
 

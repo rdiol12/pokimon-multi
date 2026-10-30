@@ -5,12 +5,14 @@ World_EventScript_Menu::
 	dynmultipush World_Text_MenuRide, WORLD_MENU_RIDE
 	dynmultipush World_Text_MenuAchievements, WORLD_MENU_ACHIEVEMENTS
 	dynmultipush World_Text_MenuRecords, WORLD_MENU_RECORDS
+	dynmultipush World_Text_MenuQuests, WORLD_MENU_QUESTS
 	dynmultipush World_Text_MenuClose, WORLD_MENU_CLOSE
 	dynmultistack 0, 0, FALSE, 6, FALSE, WORLD_MENU_RIDE, DYN_MULTICHOICE_CB_NONE
 	switch VAR_RESULT
 	case WORLD_MENU_RIDE, World_EventScript_Ride
 	case WORLD_MENU_ACHIEVEMENTS, World_EventScript_Achievements
 	case WORLD_MENU_RECORDS, World_EventScript_Records
+	case WORLD_MENU_QUESTS, World_EventScript_Quests
 	releaseall
 	end
 
@@ -30,6 +32,11 @@ World_EventScript_Achievements::
 
 World_EventScript_Records::
 	callnative Records_ShowList, waitstate=1
+	releaseall
+	end
+
+World_EventScript_Quests::
+	callnative Legends_ShowList, waitstate=1
 	releaseall
 	end
 
@@ -54,6 +61,8 @@ World_Text_MenuAchievements:
 	.string "ACHIEVEMENTS$"
 World_Text_MenuRecords:
 	.string "RECORDS$"
+World_Text_MenuQuests:
+	.string "QUESTS$"
 World_Text_MenuPhoto:
 	.string "PHOTO$"
 World_Text_MenuHunt:

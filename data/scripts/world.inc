@@ -5,3 +5,4 @@
 	.include "data/scripts/world/menu.inc"
 	.include "data/scripts/world/hardcore.inc"
 	.include "data/scripts/world/records.inc"
+	.include "data/scripts/world/legends.inc"

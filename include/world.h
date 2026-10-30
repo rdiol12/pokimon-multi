@@ -34,6 +34,11 @@ void Mount_Detach(u8 spriteId);
 void Mount_Update(void);
 void Mount_Toggle(void);
 
+// Legendary quests (world_legends.c).
+void Legends_Update(void);
+bool32 Legends_TryInteract(s16 x, s16 y);
+void Legends_ShowList(void);
+
 // Full-screen list window (world_board.c).
 typedef void (*WorldBoardLineFunc)(u16 index, u8 *dest);
 void WorldBoard_Show(const u8 *title, u16 count, WorldBoardLineFunc getLine, WorldBoardLineFunc getDetail);

@@ -8,6 +8,7 @@
 #define WORLD_MENU_PHOTO         3
 #define WORLD_MENU_HUNT          4
 #define WORLD_MENU_CLOSE         5
+#define WORLD_MENU_QUESTS        6
 
 // Mount_Toggle results.
 #define MOUNT_RODE_OFF     0
@@ -25,5 +26,21 @@
 #define WORLD_BOARD_BERRIES  1 // value: berries picked, extra: best harvest
 #define WORLD_BOARD_HARDCORE 2
 #define WORLD_BOARD_HUNT     3
+
+// Legendary quests (src/world_legends.c), index into legendStage.
+#define LEGEND_RAIKOU    0
+#define LEGEND_SUICUNE   1
+#define LEGEND_ENTEI     2
+#define LEGEND_CRESSELIA 3
+#define LEGEND_COUNT     4
+
+// Who tells the player about them (VAR_0x8004 for Legends_Hint).
+#define LEGEND_HINT_STORMS 0 // the Oldale weather watcher: Raikou, Suicune
+#define LEGEND_HINT_STARS  1 // the Fallarbor stargazer: Entei
+#define LEGEND_HINT_MOON   2 // the Lilycove Night Market: Cresselia
+
+// The legendary standing on the map (other players' followers and mounts
+// use 200-214).
+#define LOCALID_WORLD_LEGEND 215
 
 #endif // GUARD_CONSTANTS_WORLD_H

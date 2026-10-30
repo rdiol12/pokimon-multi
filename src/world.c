@@ -10,6 +10,8 @@
 #include "overworld.h"
 #include "pokemon.h"
 #include "rtc.h"
+#include "field_weather.h"
+#include "constants/weather.h"
 #include "world.h"
 
 extern const u8 World_EventScript_Menu[];
@@ -33,6 +35,7 @@ struct WorldShowcase
     u8 giveLevel;
     u16 giveItem; // 20 of these go in the bag; a rod is also registered to SELECT
     u8 ripen;     // 1: the Route 102 Oran Berry tree is ready to pick
+    u8 storm;     // 1: pick the hour the thunderstorm is over the map, 2: any rain
 };
 
 EWRAM_DATA struct WorldShowcase gWorldShowcase = {0};
@@ -45,6 +48,8 @@ void World_OnMapTransition(void)
 
 static void RunShowcase(void)
 {
+    u32 hour;
+
     gWorldShowcase.pending = FALSE;
     if (gWorldShowcase.giveItem != ITEM_NONE)
     {
@@ -87,6 +92,16 @@ static void RunShowcase(void)
         gWorldShowcase.ripen = FALSE;
     }
     RtcCalcLocalTimeOffset(0, gWorldShowcase.hour, 0, 0);
+    for (hour = 0; gWorldShowcase.storm && hour < 24; hour++)
+    {
+        enum OverworldWeather weather;
+        RtcCalcLocalTimeOffset(0, hour, 0, 0);
+        RtcCalcLocalTime();
+        weather = RoamingWeather_GetForMap(gWorldShowcase.mapGroup, gWorldShowcase.mapNum);
+        if (weather == WEATHER_RAIN_THUNDERSTORM || (gWorldShowcase.storm == 2 && weather == WEATHER_RAIN))
+            break;
+    }
+    gWorldShowcase.storm = 0;
     SetWarpDestination(gWorldShowcase.mapGroup, gWorldShowcase.mapNum, WARP_ID_NONE, gWorldShowcase.x, gWorldShowcase.y);
     DoWarp();
 }
@@ -100,6 +115,7 @@ bool32 World_OverworldUpdate(void)
     }
     RoamingWeather_Update();
     Mount_Update();
+    Legends_Update();
     Achievements_Update();
     return Hardcore_Update();
 }

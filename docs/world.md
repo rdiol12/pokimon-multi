@@ -6,8 +6,8 @@ Features that make the world itself more alive, offline and online. Each has
 its own section; screenshots are made with `tools/world_shots/` (below).
 
 Numbers this batch owns (agreed with the other feature threads):
-flags `0x030`–`0x04F`, vars `0x40F7`–`0x40FF`, object local ids 200–215
-for other players' followers and mounts, netplay request/event types 96–127,
+flags `0x030`–`0x04F`, vars `0x40F7`–`0x40FF`, object local ids 200–214
+for other players' followers and mounts, 215 for a quest legendary, netplay request/event types 96–127,
 and its own EWRAM mailbox (`gWorldMailbox`, magic `PKMNWLD1`).
 
 Script→C calls use `callnative`, so the shared `data/specials.inc` table is
@@ -85,6 +85,28 @@ fish shows a "personal record" notice.
 Before a berry tree is picked, a three-stop meter adds one berry per hit
 (up to the tree's 31-berry limit). R > RECORDS lists the biggest fish,
 fish landed, berries picked, best harvest and the other world records.
+
+## Legendary quests
+
+Official legendaries at the levels the main series gives them, with their
+own level-up moves (`src/world_legends.c`). Someone tells you the legend;
+the legendary then stands at a first spot, but only in its weather or at
+night. Walk up to it and it runs off; follow it to the second spot and
+battle it there. If it faints or you run, it comes back; catching it
+finishes the quest (achievements "Legend Seeker" and "Mythmaker").
+
+| Legendary | Lv | Told by | When | First spot | Second spot |
+| --- | --- | --- | --- | --- | --- |
+| Raikou | 40 | Oldale weather watcher | thunderstorm | Route 110 (14,94) | Route 118 (62,10) |
+| Suicune | 40 | Oldale weather watcher | rain | Route 120 (5,26) | Route 119 (30,17) |
+| Entei | 40 | Fallarbor stargazer | night | Route 113 (9,10) | Route 113 (40,4) |
+| Cresselia | 50 | Lilycove Night Market | night | Route 121 (12,9) | Route 121 (55,13) |
+
+"When" is the weather the player sees, so the roaming rain front, Route
+119's rain and Route 120's rainy middle all count. The legendary is a
+spawned object (local id 215, `LOCALID_WORLD_LEGEND`); pressing A on it is
+caught by `Legends_TryInteract` before the normal interaction code.
+R > QUESTS lists the quests the player has heard of.
 
 ## Screenshots
 

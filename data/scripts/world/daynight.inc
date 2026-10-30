@@ -23,10 +23,13 @@ World_EventScript_FallarborStargazer::
 	giveitem ITEM_MOON_STONE
 	goto_if_eq VAR_RESULT, FALSE, Common_EventScript_ShowBagIsFull
 	setflag FLAG_RECEIVED_STARGAZER_MOON_STONE
-	release
-	end
+	goto World_EventScript_StargazerLegend
 World_EventScript_StargazerDone:
 	msgbox World_Text_StargazerDone, MSGBOX_DEFAULT
+World_EventScript_StargazerLegend:
+	setvar VAR_0x8004, LEGEND_HINT_STARS
+	callnative Legends_Hint
+	msgbox gStringVar4, MSGBOX_DEFAULT
 	release
 	end
 
@@ -36,6 +39,9 @@ World_EventScript_NightMarket::
 	msgbox World_Text_NightMarketIntro, MSGBOX_DEFAULT
 	pokemart World_NightMarket_Items
 	msgbox World_Text_NightMarketBye, MSGBOX_DEFAULT
+	setvar VAR_0x8004, LEGEND_HINT_MOON
+	callnative Legends_Hint
+	msgbox gStringVar4, MSGBOX_DEFAULT
 	release
 	end
 
