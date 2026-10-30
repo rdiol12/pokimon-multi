@@ -73,6 +73,8 @@ function Driver.press(keys, after)
 end
 
 -- Memory helpers
+function Driver.read8(addr) return E.read8(addr) end
+function Driver.write8(addr, v) E.write8(addr, v) end
 function Driver.mb8(off) return E.read8(MB + off) end
 function Driver.mb16(off) return E.read16(MB + off) end
 function Driver.callback2() return E.read32(SYM.gMain + 4) & ~1 end

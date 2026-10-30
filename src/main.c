@@ -24,6 +24,7 @@
 #include "main.h"
 #include "trainer_hill.h"
 #include "netplay.h"
+#include "netplay_ext.h"
 #include "test_runner.h"
 #include "constants/rgb.h"
 
@@ -107,6 +108,7 @@ void AgbMain(void)
     InitMainCallbacks();
     InitMapMusic();
     Netplay_Init();
+    NetplayExt_Init();
 #ifdef BUGFIX
     SeedRngWithRtc(); // see comment at SeedRngWithRtc definition below
 #endif

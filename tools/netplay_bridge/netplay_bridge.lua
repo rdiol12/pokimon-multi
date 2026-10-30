@@ -51,6 +51,25 @@ local EV_INVITE, EV_START, EV_DECLINED, EV_ENDED, EV_PENDING, EV_EMOTE = 1, 2, 3
 local KIND_IDS = { battle = 1, trade = 2, deal = 3 }
 local RESULTS = { "win", "loss", "draw" }
 
+-- Second mailbox (gNetplayExtMailbox): one request at a time for the
+-- online features in docs/netplay_ext.md, passed through to the server as
+-- XD/X lines and answered with XR.
+local EXT_MAGIC_LO = 0x4E4D4B50 -- "PKMN"
+local EXT_MAGIC_HI = 0x31545845 -- "EXT1"
+local EXT_REQ_SEQ = 0x009
+local EXT_RESP_SEQ = 0x00A
+local EXT_STATUS = 0x00B
+local EXT_REQ_LEN = 0x00C
+local EXT_RESP_LEN = 0x00E
+local EXT_REQ_TEXT = 0x010
+local EXT_TEXT_LENGTH = 64
+local EXT_REQ_DATA = 0x050
+local EXT_DATA_SIZE = 1024
+local EXT_RESP = 0x450
+local EXT_RESP_SIZE = 1536
+local EXT_NOTES = 0xA50
+local EXT_CHUNK = 100 -- bytes of data per XD line
+
 local SCAN_INTERVAL = 60
 local RECONNECT_INTERVAL = 180
 
@@ -101,6 +120,7 @@ function Bridge:resetConnection()
     self.session = nil
     self.lastPos = nil
     self.ladder = nil     -- rows of the ladder being received
+    self.extSeq = nil     -- ext request the server is answering
     self.nextConnect = self.frame
 end
 
@@ -112,6 +132,7 @@ function Bridge:onReset()
         self:resetConnection()
     end
     self.base = nil
+    self.ext = nil
 end
 
 function Bridge:log(msg)
@@ -129,6 +150,15 @@ function Bridge:findMailbox()
     for addr = EWRAM_START, EWRAM_END - 8, 4 do
         if self.mem.read32(addr) == MAGIC_LO and self.mem.read32(addr + 4) == MAGIC_HI
             and self.mem.read8(addr + OFF_VERSION) == MAILBOX_VERSION then
+            return addr
+        end
+    end
+    return nil
+end
+
+function Bridge:findExtMailbox()
+    for addr = EWRAM_START, EWRAM_END - 8, 4 do
+        if self.mem.read32(addr) == EXT_MAGIC_LO and self.mem.read32(addr + 4) == EXT_MAGIC_HI then
             return addr
         end
     end
@@ -246,6 +276,10 @@ function Bridge:handleLine(line)
             name = self:readName(), rating = tonumber(args[3]),
             wins = tonumber(args[4]), losses = tonumber(args[5]), draws = tonumber(args[6]),
         })
+    elseif cmd == "XR" then
+        self:writeExtResponse(tonumber(args[2]), tonumber(args[3]), args[4] or "")
+    elseif cmd == "XNOTE" and self.ext then
+        self.mem.write8(self.ext + EXT_NOTES, (self.mem.read8(self.ext + EXT_NOTES) + 1) & 0xFF)
     elseif cmd == "ERR" then
         self:log("server: " .. line)
     end
@@ -392,6 +426,46 @@ function Bridge:writeLadderMe(rank, me)
     self:w8(OFF_LADDER, self:r8(OFF_LADDER) + 1)
 end
 
+-- Second mailbox ---------------------------------------------------------
+
+function Bridge:handleExtRequest()
+    local ext = self.ext
+    if not ext then return end
+    local seq = self.mem.read8(ext + EXT_REQ_SEQ)
+    if seq == self.lastExtSeq then return end
+    self.lastExtSeq = seq
+    local text = {}
+    for i = 0, EXT_TEXT_LENGTH - 1 do
+        local b = self.mem.read8(ext + EXT_REQ_TEXT + i)
+        if b == 0 then break end
+        -- Keep the line to printable ASCII so it can't split into two commands.
+        text[#text + 1] = (b >= 32 and b < 127) and string.char(b) or " "
+    end
+    local len = math.min(self.mem.read16(ext + EXT_REQ_LEN), EXT_DATA_SIZE)
+    for start = 0, len - 1, EXT_CHUNK do
+        local hex = {}
+        for i = start, math.min(start + EXT_CHUNK, len) - 1 do
+            hex[#hex + 1] = string.format("%02x", self.mem.read8(ext + EXT_REQ_DATA + i))
+        end
+        self.net.send("XD " .. table.concat(hex))
+    end
+    self.extSeq = seq
+    self.net.send("X " .. seq .. " " .. table.concat(text))
+end
+
+function Bridge:writeExtResponse(seq, status, hex)
+    local ext = self.ext
+    if not ext or seq ~= self.extSeq then return end
+    self.extSeq = nil
+    local n = math.min(#hex // 2, EXT_RESP_SIZE)
+    for i = 0, n - 1 do
+        self.mem.write8(ext + EXT_RESP + i, tonumber(hex:sub(2 * i + 1, 2 * i + 2), 16))
+    end
+    self.mem.write16(ext + EXT_RESP_LEN, n)
+    self.mem.write8(ext + EXT_STATUS, status)
+    self.mem.write8(ext + EXT_RESP_SEQ, seq) -- seq last: publishes the answer
+end
+
 function Bridge:deliverEvent()
     local ev = self.events[1]
     if not ev then return end
@@ -438,7 +512,11 @@ function Bridge:onFrame()
     if not self.base then
         if self.frame % SCAN_INTERVAL == 1 then
             local addr = self:findMailbox()
-            if addr then self:attach(addr) end
+            if addr then
+                self:attach(addr)
+                self.ext = self:findExtMailbox()
+                self.lastExtSeq = self.ext and self.mem.read8(self.ext + EXT_REQ_SEQ)
+            end
         end
         if not self.base then return end
     end
@@ -468,6 +546,7 @@ function Bridge:onFrame()
     if self.localId ~= 0 then
         self:sendPosition()
         self:handleRequest()
+        self:handleExtRequest()
     end
     self:deliverEvent()
     self:writeRemotes()

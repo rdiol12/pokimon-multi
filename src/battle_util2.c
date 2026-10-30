@@ -1,4 +1,5 @@
 #include "global.h"
+#include "netplay_ext.h"
 #include "battle.h"
 #include "battle_anim.h"
 #include "battle_controllers.h"
@@ -64,7 +65,11 @@ void AllocateBattleResources(void)
     if (gBattleTypeFlags & BATTLE_TYPE_SECRET_BASE)
     {
         u16 currSecretBaseId = VarGet(VAR_CURRENT_SECRET_BASE);
-        CreateSecretBaseEnemyParty(&gSaveBlock1Ptr->secretBases[currSecretBaseId]);
+        const struct SecretBase *onlineBase = NetplayExt_GetBattleBase();
+        if (onlineBase != NULL)
+            CreateSecretBaseEnemyParty((struct SecretBase *)onlineBase);
+        else
+            CreateSecretBaseEnemyParty(&gSaveBlock1Ptr->secretBases[currSecretBaseId]);
     }
 }
 

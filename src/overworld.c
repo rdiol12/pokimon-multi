@@ -85,6 +85,7 @@
 #include "constants/trainer_hill.h"
 #include "constants/weather.h"
 #include "netplay.h"
+#include "netplay_ext.h"
 
 STATIC_ASSERT((B_FLAG_FOLLOWERS_DISABLED == 0 || OW_FOLLOWERS_ENABLED), FollowersFlagAssignedWithoutEnablingThem);
 
@@ -1661,7 +1662,8 @@ static void DoCB1_Overworld(u16 newKeys, u16 heldKeys)
     FieldClearPlayerInput(&inputStruct);
     FieldGetPlayerInput(&inputStruct, newKeys, heldKeys);
     CancelSignPostMessageBox(&inputStruct);
-    if (Netplay_OverworldUpdate())
+    // Both run every frame; either may start a script.
+    if (Netplay_OverworldUpdate() | NetplayExt_OverworldUpdate())
     {
         LockPlayerFieldControls();
         HideMapNamePopUpWindow();
