@@ -25,9 +25,14 @@ leaderboard.
 python3 server/netplay_server.py --port 7777 --db league.sqlite3
 ```
 
+Add `--http-port 8080` for the leaderboard page, which also serves the bridge
+script with the server's address filled in. To run it on a real server
+(Docker or systemd), see `deploy/README.md`.
+
 In mGBA: *Tools → Scripting… → File → Load script*, pick
-`tools/netplay_bridge/netplay_bridge.lua`. Edit `HOST`/`PORT` at the top of the
-script to point at the server.
+`tools/netplay_bridge/netplay_bridge.lua` (or the copy downloaded from the
+leaderboard page). Set `NETPLAY_HOST`/`NETPLAY_PORT` at the top of the script to
+point at the server.
 
 Tests: `python3 -m unittest discover -s server` and
 `lua5.4 tools/netplay_bridge/test_bridge.lua`.
