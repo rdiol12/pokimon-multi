@@ -13,6 +13,7 @@
 const struct NetplayMenuEntry gNetplayOnlineMenu[] =
 {
     {COMPOUND_STRING("LADDER"),  ShowNetplayLadder},
+    {COMPOUND_STRING("SEASON"),  ShowNetplaySeason},
     {COMPOUND_STRING("FRIENDS"), ShowNetplayFriends},
     {NULL, NULL},
 };

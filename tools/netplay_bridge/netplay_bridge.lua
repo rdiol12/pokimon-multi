@@ -44,6 +44,8 @@ local OFF_FRIENDS = 0x43C
 local MAX_FRIENDS = 10
 local FRIEND_SIZE = 20
 local FRIEND_ADD_RESULTS = { ok = 1, full = 2 }
+local OFF_SEASON = 0x508
+local NO_TIER = 0xFF
 local RING_SIZE = 16
 local PACKET_SIZE = 20
 local NAME_LENGTH = 8
@@ -51,7 +53,7 @@ local NAME_LENGTH = 8
 local STATE_OFFLINE, STATE_CONNECTING, STATE_ONLINE = 0, 1, 2
 
 local REQ_CHALLENGE, REQ_TRADE, REQ_ACCEPT, REQ_DECLINE, REQ_RESULT, REQ_LEAVE, REQ_DEAL, REQ_LADDER, REQ_EMOTE = 1, 2, 3, 4, 5, 6, 7, 8, 9
-local REQ_FRIENDS, REQ_FRIEND_ADD, REQ_FRIEND_DEL = 10, 11, 12
+local REQ_FRIENDS, REQ_FRIEND_ADD, REQ_FRIEND_DEL, REQ_SEASON, REQ_CLAIM = 10, 11, 12, 13, 14
 local EV_INVITE, EV_START, EV_DECLINED, EV_ENDED, EV_PENDING, EV_EMOTE = 1, 2, 3, 4, 5, 6
 local KIND_IDS = { battle = 1, trade = 2, deal = 3 }
 local RESULTS = { "win", "loss", "draw" }
@@ -91,6 +93,7 @@ function Bridge.new(mem, net)
     self.net = net
     self.frame = 0
     self.base = nil
+    self.hooks = {}
     self:resetConnection()
     return self
 end
@@ -193,9 +196,19 @@ function Bridge:queueEvent(type, peer, sid, kind, role)
     table.insert(self.events, { type = type, peer = peer, sid = sid, kind = kind or 0, role = role or 0 })
 end
 
+-- Extensions (other netplay features with their own mailbox) add hooks:
+--   onLine(args, line) -> true when it handled a server line
+--   onFrame(mem)       -> each frame while connected and welcomed
+function Bridge:addHook(hook)
+    table.insert(self.hooks, hook)
+end
+
 function Bridge:handleLine(line)
     local args = {}
     for word in line:gmatch("%S+") do table.insert(args, word) end
+    for _, hook in ipairs(self.hooks) do
+        if hook.onLine and hook.onLine(args, line) then return end
+    end
     local cmd = args[1]
     if cmd == "WELCOME" then
         self.localId = tonumber(args[2])
@@ -250,6 +263,21 @@ function Bridge:handleLine(line)
     elseif cmd == "FRIENDADD" then
         self:w8(OFF_FRIENDS + 3, FRIEND_ADD_RESULTS[args[2]] or 0)
         self:w8(OFF_FRIENDS + 2, self:r8(OFF_FRIENDS + 2) + 1)
+    elseif cmd == "SEASON" then
+        -- SEASON <n> <days left> <rated> <rating> <reward tier or -1> <reward season>
+        local tier = tonumber(args[6])
+        self:w8(OFF_SEASON + 1, tier >= 0 and tier or NO_TIER)
+        self:w16(OFF_SEASON + 2, tonumber(args[2]))
+        self:w16(OFF_SEASON + 4, tonumber(args[3]))
+        self:w16(OFF_SEASON + 6, math.min(tonumber(args[5]), 0xFFFF))
+        self:w8(OFF_SEASON + 8, tonumber(args[4]))
+        self:w16(OFF_SEASON + 0x0C, tonumber(args[7]))
+        self:w8(OFF_SEASON, self:r8(OFF_SEASON) + 1)
+    elseif cmd == "CLAIMED" then
+        local tier = tonumber(args[2])
+        self:w8(OFF_SEASON + 0x0A, tier >= 0 and tier or NO_TIER)
+        if tier >= 0 then self:w8(OFF_SEASON + 1, NO_TIER) end
+        self:w8(OFF_SEASON + 9, self:r8(OFF_SEASON + 9) + 1)
     elseif cmd == "EMOTE" then
         self:queueEvent(EV_EMOTE, tonumber(args[2]), 0, tonumber(args[3]))
     elseif cmd == "RANK" and self.ladder then
@@ -381,6 +409,10 @@ function Bridge:handleRequest()
     elseif type == REQ_FRIEND_DEL then
         local f = self.friendList[arg + 1]
         if f then self.net.send("FRIEND DEL " .. f.name .. " " .. f.tid) end
+    elseif type == REQ_SEASON then
+        self.net.send("SEASON")
+    elseif type == REQ_CLAIM then
+        self.net.send("CLAIM")
     elseif type == REQ_EMOTE then
         self.net.send("EMOTE " .. arg)
     elseif type == REQ_LADDER then
@@ -521,6 +553,11 @@ function Bridge:onFrame()
     end
     self:deliverEvent()
     self:writeRemotes()
+    if self.localId ~= 0 then
+        for _, hook in ipairs(self.hooks) do
+            if hook.onFrame then hook.onFrame(self.mem) end
+        end
+    end
 end
 
 -- mGBA glue --------------------------------------------------------------
@@ -568,6 +605,26 @@ if emu ~= nil and callbacks ~= nil and socket ~= nil then
     }
     local bridge = Bridge.new(mem, net)
     bridge.logger = function(msg) console:log(msg) end
+
+    -- The API extensions see. Each file named in extensions.txt (one per
+    -- line, next to this script) is loaded after the bridge starts.
+    NetplayBridge = {
+        addHook = function(hook) bridge:addHook(hook) end,
+        send = function(line) if bridge.connected then net.send(line) end end,
+        connected = function() return bridge.connected and bridge.localId ~= 0 end,
+    }
+    local dir = (script and script.dir) or "."
+    local list = io.open(dir .. "/extensions.txt", "r")
+    if list then
+        for name in list:lines() do
+            name = name:match("^%s*(.-)%s*$")
+            if name ~= "" and name:sub(1, 1) ~= "#" then
+                local ok, err = pcall(dofile, dir .. "/" .. name)
+                console:log(ok and ("netplay: loaded " .. name) or ("netplay: cannot load " .. name .. ": " .. tostring(err)))
+            end
+        end
+        list:close()
+    end
     local failed = false
     callbacks:add("frame", function()
         if failed then return end

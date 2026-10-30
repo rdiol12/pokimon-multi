@@ -86,10 +86,22 @@ def main():
         shutil.copy(os.path.join(HERE, "scenario.lua"), os.path.join(d, "driver.lua"))
         dirs.append(d)
 
+    # Player 2 (TEST2, trainer id 4098) finished an earlier season in GOLD,
+    # so it has a reward to claim from ONLINE > SEASON.
+    db_path = os.path.join(out, "league.sqlite3")
+    sys.path.insert(0, os.path.join(ROOT, "server"))
+    import sqlite3
+    from seasons import Seasons
+    db = sqlite3.connect(db_path)
+    Seasons(db, 1000)
+    db.execute("INSERT INTO season_rewards (season, name, tid, tier, rating) VALUES (0, 'TEST2', 4098, 2, 1150)")
+    db.commit()
+    db.close()
+
     port = free_port()
     server = subprocess.Popen(
         [sys.executable, os.path.join(ROOT, "server", "netplay_server.py"),
-         "--host", "127.0.0.1", "--port", str(port), "--db", os.path.join(out, "league.sqlite3")],
+         "--host", "127.0.0.1", "--port", str(port), "--db", db_path],
         stdout=open(os.path.join(out, "server.log"), "w"), stderr=subprocess.STDOUT)
     try:
         time.sleep(0.5)

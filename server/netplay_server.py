@@ -12,6 +12,7 @@ import sqlite3
 import time
 
 from friends import Friends
+from seasons import Seasons
 
 log = logging.getLogger("netplay")
 
@@ -164,9 +165,10 @@ class Session:
 
 
 class Server:
-    def __init__(self, league):
+    def __init__(self, league, season_days=28, clock=time.time):
         self.league = league
         self.friends = Friends(league.db)
+        self.seasons = Seasons(league.db, START_RATING, season_days, clock)
         self.players = {}
         self.sessions = {}
         # Battles that ended before both players reported a result.
@@ -278,6 +280,7 @@ class Server:
             return self.cmd_hello(player, *args)
         if player.name is None:
             raise ValueError("say HELLO first")
+        self.seasons.roll_if_due()
         handler = getattr(self, "cmd_" + cmd.lower(), None)
         if handler is None or cmd == "HELLO":
             raise ValueError("unknown command")
@@ -405,6 +408,21 @@ class Server:
                 player.send(f"FRIEND {name} {tid} 0 0 0 0 0 0 0")
         player.send("FRIENDSEND")
 
+    def cmd_season(self, player):
+        """SEASON <number> <days left> <rated 0|1> <rating> <reward tier or -1> <reward season or 0>"""
+        season, _ = self.seasons.current()
+        rank, rating, *_ = self.league.rank_of(player.key)
+        reward = self.seasons.pending_reward(player.key)
+        reward_season, reward_tier = reward if reward else (0, -1)
+        player.send(f"SEASON {season} {self.seasons.days_left()} {1 if rank else 0} {round(rating)}"
+                    f" {reward_tier} {reward_season}")
+
+    def cmd_claim(self, player):
+        """CLAIMED <tier> <season>, or CLAIMED -1 0 when there is nothing to claim."""
+        reward = self.seasons.claim(player.key)
+        season, tier = reward if reward else (0, -1)
+        player.send(f"CLAIMED {tier} {season}")
+
     def cmd_myrank(self, player):
         rank, rating, w, l, d = self.league.rank_of((player.name, player.tid))
         player.send(f"MYRANK {rank} {round(rating)} {w} {l} {d}")
@@ -415,8 +433,8 @@ class Server:
         player.send("BOARDEND")
 
 
-async def serve(host, port, db_path, http_port=0, public_host=""):
-    server = Server(League(db_path))
+async def serve(host, port, db_path, http_port=0, public_host="", season_days=28):
+    server = Server(League(db_path), season_days)
     srv = await asyncio.start_server(server.handle, host, port)
     log.info("listening on %s", ", ".join(str(s.getsockname()) for s in srv.sockets))
     servers = [srv]
@@ -441,9 +459,11 @@ def main():
                         help="address players use to reach this server, written into the"
                              " downloaded bridge script (default: from the page request)")
     parser.add_argument("--db", default=env("NETPLAY_DB", "league.sqlite3"))
+    parser.add_argument("--season-days", type=float, default=float(env("NETPLAY_SEASON_DAYS", "28")),
+                        help="length of a ladder season")
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
-    asyncio.run(serve(args.host, args.port, args.db, args.http_port, args.public_host))
+    asyncio.run(serve(args.host, args.port, args.db, args.http_port, args.public_host, args.season_days))
 
 
 if __name__ == "__main__":

@@ -1665,7 +1665,9 @@ static u8 *BufferLadderRecord(u8 *dest, const struct NetplayLadderEntry *entry)
     return ConvertIntToDecimalStringN(dest, entry->draws, STR_CONV_MODE_LEFT_ALIGN, 4);
 }
 
-// Columns: rank, name, rating, wins-losses-draws.
+static const u8 *GetTierName(u16 rating);
+
+// Columns: rank, name, tier, rating, wins-losses-draws.
 static void PrintLadderRow(u8 windowId, u32 y, u32 rank, const struct NetplayLadderEntry *entry)
 {
     u8 *str;
@@ -1683,10 +1685,11 @@ static void PrintLadderRow(u8 windowId, u32 y, u32 rank, const struct NetplayLad
     AddTextPrinterParameterized(windowId, FONT_SMALL, gStringVar4, 6, y, TEXT_SKIP_DRAW, NULL);
     BufferLadderName(gStringVar4, entry->name);
     AddTextPrinterParameterized(windowId, FONT_SMALL, gStringVar4, 30, y, TEXT_SKIP_DRAW, NULL);
+    AddTextPrinterParameterized(windowId, FONT_SMALL, GetTierName(entry->rating), 78, y, TEXT_SKIP_DRAW, NULL);
     ConvertIntToDecimalStringN(gStringVar4, entry->rating, STR_CONV_MODE_LEFT_ALIGN, 5);
-    AddTextPrinterParameterized(windowId, FONT_SMALL, gStringVar4, 110, y, TEXT_SKIP_DRAW, NULL);
+    AddTextPrinterParameterized(windowId, FONT_SMALL, gStringVar4, 130, y, TEXT_SKIP_DRAW, NULL);
     BufferLadderRecord(gStringVar4, entry);
-    AddTextPrinterParameterized(windowId, FONT_SMALL, gStringVar4, 160, y, TEXT_SKIP_DRAW, NULL);
+    AddTextPrinterParameterized(windowId, FONT_SMALL, gStringVar4, 172, y, TEXT_SKIP_DRAW, NULL);
 }
 
 static void DrawLadder(u8 windowId, const u8 *message)
@@ -1712,9 +1715,10 @@ static void DrawLadder(u8 windowId, const u8 *message)
             PrintLadderRow(windowId, LADDER_LINE_HEIGHT * (i + 1), i + 1, &ladder->top[i]);
         if (ladder->count == 0)
             AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("No rated battles yet."), 30, LADDER_LINE_HEIGHT + 2, TEXT_SKIP_DRAW, NULL);
-        AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("PvP LADDER"), 30, 0, TEXT_SKIP_DRAW, NULL);
-        AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("RATING"), 110, 0, TEXT_SKIP_DRAW, NULL);
-        AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("W-L-D"), 160, 0, TEXT_SKIP_DRAW, NULL);
+        AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("PvP LADDER"), 2, 0, TEXT_SKIP_DRAW, NULL);
+        AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("TIER"), 78, 0, TEXT_SKIP_DRAW, NULL);
+        AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("RATING"), 130, 0, TEXT_SKIP_DRAW, NULL);
+        AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("W-L-D"), 172, 0, TEXT_SKIP_DRAW, NULL);
     }
     CopyWindowToVram(windowId, COPYWIN_FULL);
 }
@@ -2277,3 +2281,254 @@ static void Task_Friends(u8 taskId)
 #undef tTimer
 #undef tCursor
 #undef tConfirmDel
+
+// Seasons -----------------------------------------------------------------
+//
+// The ladder runs in seasons (server/seasons.py). Your rating puts you in a
+// tier; when a season ends, everyone who played gets their tier's Pokémon,
+// claimed from START > ONLINE > SEASON. The tiers match the server's.
+
+struct SeasonTier
+{
+    const u8 *name;
+    u16 floor;
+    u16 species;
+    u8 level;
+};
+
+static const struct SeasonTier sSeasonTiers[] =
+{
+    {COMPOUND_STRING("BRONZE"),   0,    SPECIES_EEVEE,    10},
+    {COMPOUND_STRING("SILVER"),   1000, SPECIES_DRATINI,  15},
+    {COMPOUND_STRING("GOLD"),     1100, SPECIES_BELDUM,   15},
+    {COMPOUND_STRING("PLATINUM"), 1200, SPECIES_GIBLE,    20},
+    {COMPOUND_STRING("DIAMOND"),  1300, SPECIES_DREEPY,   20},
+    {COMPOUND_STRING("MASTER"),   1400, SPECIES_LARVESTA, 25},
+};
+
+#define SEASON_LINE_HEIGHT 11
+
+static u32 GetTier(u16 rating)
+{
+    u32 i, tier = 0;
+
+    for (i = 0; i < ARRAY_COUNT(sSeasonTiers); i++)
+    {
+        if (rating >= sSeasonTiers[i].floor)
+            tier = i;
+    }
+    return tier;
+}
+
+static const u8 *GetTierName(u16 rating)
+{
+    return sSeasonTiers[GetTier(rating)].name;
+}
+
+#define tState     data[0]
+#define tWindowId  data[1]
+#define tSeq       data[2]
+#define tTimer     data[3]
+
+enum
+{
+    SEASON_STATE_WAIT,
+    SEASON_STATE_SHOWN,
+    SEASON_STATE_CLAIMING,
+    SEASON_STATE_SAVE,
+    SEASON_STATE_MESSAGE,
+};
+
+static void Task_Season(u8 taskId);
+
+static void DrawSeason(struct Task *task, const u8 *message)
+{
+    const struct NetplaySeason *season = &gNetplayMailbox.season;
+    u8 windowId = task->tWindowId;
+    u8 *str;
+    s32 i;
+    u32 y, myTier = GetTier(season->rating);
+
+    FillWindowPixelBuffer(windowId, PIXEL_FILL(1));
+    if (task->tState == SEASON_STATE_WAIT)
+    {
+        AddTextPrinterParameterized(windowId, FONT_NORMAL, COMPOUND_STRING("Loading…"), 8, 1, TEXT_SKIP_DRAW, NULL);
+        CopyWindowToVram(windowId, COPYWIN_FULL);
+        return;
+    }
+
+    // Drawn bottom-up: lines are closer together than the font's box.
+    y = SEASON_LINE_HEIGHT * 10 + 8;
+    if (message != NULL)
+    {
+        AddTextPrinterParameterized(windowId, FONT_SMALL, message, 8, y, TEXT_SKIP_DRAW, NULL);
+    }
+    else if (season->rewardTier < ARRAY_COUNT(sSeasonTiers))
+    {
+        str = StringCopy(gStringVar4, COMPOUND_STRING("Season "));
+        str = ConvertIntToDecimalStringN(str, season->rewardSeason, STR_CONV_MODE_LEFT_ALIGN, 4);
+        str = StringCopy(str, COMPOUND_STRING(" reward: "));
+        str = StringCopy(str, GetSpeciesName(sSeasonTiers[season->rewardTier].species));
+        StringCopy(str, COMPOUND_STRING("!  A: CLAIM"));
+        AddTextPrinterParameterized(windowId, FONT_SMALL, gStringVar4, 8, y, TEXT_SKIP_DRAW, NULL);
+    }
+    else
+    {
+        AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("Finish in a tier to win its POKéMON."), 8, y, TEXT_SKIP_DRAW, NULL);
+    }
+
+    for (i = ARRAY_COUNT(sSeasonTiers) - 1; i >= 0; i--)
+    {
+        const struct SeasonTier *tier = &sSeasonTiers[i];
+
+        y = SEASON_LINE_HEIGHT * (4 + ARRAY_COUNT(sSeasonTiers) - 1 - i) + 4;
+        if (season->rated && (u32)i == myTier)
+            AddTextPrinterParameterized(windowId, FONT_SMALL, gText_SelectorArrow3, 2, y, TEXT_SKIP_DRAW, NULL);
+        AddTextPrinterParameterized(windowId, FONT_SMALL, tier->name, 12, y, TEXT_SKIP_DRAW, NULL);
+        str = ConvertIntToDecimalStringN(gStringVar4, tier->floor, STR_CONV_MODE_LEFT_ALIGN, 4);
+        StringCopy(str, COMPOUND_STRING("+"));
+        AddTextPrinterParameterized(windowId, FONT_SMALL, gStringVar4, 70, y, TEXT_SKIP_DRAW, NULL);
+        str = StringCopy(gStringVar4, GetSpeciesName(tier->species));
+        str = StringCopy(str, COMPOUND_STRING(" Lv"));
+        ConvertIntToDecimalStringN(str, tier->level, STR_CONV_MODE_LEFT_ALIGN, 3);
+        AddTextPrinterParameterized(windowId, FONT_SMALL, gStringVar4, 116, y, TEXT_SKIP_DRAW, NULL);
+    }
+    AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("TIER"), 12, SEASON_LINE_HEIGHT * 3 + 2, TEXT_SKIP_DRAW, NULL);
+    AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("RATING"), 70, SEASON_LINE_HEIGHT * 3 + 2, TEXT_SKIP_DRAW, NULL);
+    AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("END-OF-SEASON PRIZE"), 116, SEASON_LINE_HEIGHT * 3 + 2, TEXT_SKIP_DRAW, NULL);
+
+    if (season->rated)
+    {
+        str = StringCopy(gStringVar4, COMPOUND_STRING("You: "));
+        str = StringCopy(str, sSeasonTiers[myTier].name);
+        str = StringCopy(str, COMPOUND_STRING(", rating "));
+        ConvertIntToDecimalStringN(str, season->rating, STR_CONV_MODE_LEFT_ALIGN, 5);
+    }
+    else
+    {
+        StringCopy(gStringVar4, COMPOUND_STRING("You: no rated battles this season yet"));
+    }
+    AddTextPrinterParameterized(windowId, FONT_SMALL, gStringVar4, 8, SEASON_LINE_HEIGHT + 4, TEXT_SKIP_DRAW, NULL);
+
+    str = StringCopy(gStringVar4, COMPOUND_STRING("LADDER SEASON "));
+    str = ConvertIntToDecimalStringN(str, season->season, STR_CONV_MODE_LEFT_ALIGN, 4);
+    str = StringCopy(str, COMPOUND_STRING(" - "));
+    str = ConvertIntToDecimalStringN(str, season->daysLeft, STR_CONV_MODE_LEFT_ALIGN, 4);
+    StringCopy(str, season->daysLeft == 1 ? COMPOUND_STRING(" day left") : COMPOUND_STRING(" days left"));
+    AddTextPrinterParameterized(windowId, FONT_NORMAL, gStringVar4, 8, 0, TEXT_SKIP_DRAW, NULL);
+    CopyWindowToVram(windowId, COPYWIN_FULL);
+}
+
+void ShowNetplaySeason(void)
+{
+    u8 taskId = CreateTask(Task_Season, 80);
+    struct Task *task = &gTasks[taskId];
+
+    task->tWindowId = AddWindow(&sLadderWindowTemplate);
+    DrawStdWindowFrame(task->tWindowId, FALSE);
+    PutWindowTilemap(task->tWindowId);
+    task->tSeq = gNetplayMailbox.season.seq;
+    task->tTimer = 0;
+    task->tState = SEASON_STATE_WAIT;
+    if (IsOnline())
+        QueueRequest(NETPLAY_REQ_SEASON, 0, 0, 0);
+    DrawSeason(task, NULL);
+    ScheduleBgCopyTilemapToVram(0);
+}
+
+static void GiveSeasonReward(u32 tier)
+{
+    u16 species = sSeasonTiers[tier].species;
+
+    ScriptGiveMon(species, sSeasonTiers[tier].level, ITEM_NONE);
+    GetSetPokedexFlag(SpeciesToNationalPokedexNum(species), FLAG_SET_SEEN);
+    GetSetPokedexFlag(SpeciesToNationalPokedexNum(species), FLAG_SET_CAUGHT);
+}
+
+static void Task_Season(u8 taskId)
+{
+    struct Task *task = &gTasks[taskId];
+    const struct NetplaySeason *season = &gNetplayMailbox.season;
+
+    switch (task->tState)
+    {
+    case SEASON_STATE_WAIT:
+    case SEASON_STATE_CLAIMING:
+    {
+        bool32 answered = task->tState == SEASON_STATE_WAIT ? season->seq != (u8)task->tSeq
+                                                           : season->claimSeq != (u8)task->tSeq;
+        if (answered && task->tState == SEASON_STATE_CLAIMING)
+        {
+            if (season->claimedTier < ARRAY_COUNT(sSeasonTiers))
+            {
+                // Saved on the next frame, once the message is on screen:
+                // the save holds up the game for a moment.
+                GiveSeasonReward(season->claimedTier);
+                StringCopy(gStringVar1, GetSpeciesName(sSeasonTiers[season->claimedTier].species));
+                StringExpandPlaceholders(gStringVar2, COMPOUND_STRING("You received {STR_VAR_1}! Saving…"));
+                task->tState = SEASON_STATE_SAVE;
+                DrawSeason(task, gStringVar2);
+            }
+            else
+            {
+                task->tState = SEASON_STATE_MESSAGE;
+                DrawSeason(task, COMPOUND_STRING("Nothing to claim."));
+            }
+        }
+        else if (answered)
+        {
+            task->tState = SEASON_STATE_SHOWN;
+            DrawSeason(task, NULL);
+        }
+        else if (++task->tTimer > LADDER_TIMEOUT || !IsOnline())
+        {
+            task->tState = SEASON_STATE_MESSAGE;
+            DrawSeason(task, COMPOUND_STRING("The server didn't answer.  B: back"));
+        }
+        return;
+    }
+    case SEASON_STATE_SAVE:
+        TrySavingData(SAVE_NORMAL);
+        PlayFanfare(MUS_OBTAIN_ITEM);
+        StringExpandPlaceholders(gStringVar2, COMPOUND_STRING("You received {STR_VAR_1}!  B: back"));
+        task->tState = SEASON_STATE_MESSAGE;
+        DrawSeason(task, gStringVar2);
+        return;
+    case SEASON_STATE_SHOWN:
+        if (JOY_NEW(A_BUTTON) && season->rewardTier < ARRAY_COUNT(sSeasonTiers))
+        {
+            PlaySE(SE_SELECT);
+            if (gPartiesCount[B_TRAINER_PLAYER] >= PARTY_SIZE)
+            {
+                task->tState = SEASON_STATE_MESSAGE;
+                DrawSeason(task, COMPOUND_STRING("Make room in your party first."));
+                return;
+            }
+            task->tSeq = season->claimSeq;
+            task->tTimer = 0;
+            task->tState = SEASON_STATE_CLAIMING;
+            QueueRequest(NETPLAY_REQ_CLAIM, 0, 0, 0);
+            return;
+        }
+        if (!JOY_NEW(B_BUTTON))
+            return;
+        break;
+    case SEASON_STATE_MESSAGE:
+        if (!JOY_NEW(A_BUTTON | B_BUTTON))
+            return;
+        break;
+    }
+    PlaySE(SE_SELECT);
+    ClearStdWindowAndFrameToTransparent(task->tWindowId, FALSE);
+    ClearWindowTilemap(task->tWindowId);
+    RemoveWindow(task->tWindowId);
+    ScheduleBgCopyTilemapToVram(0);
+    DestroyTask(taskId);
+    ScriptUnfreezeObjectEvents();
+    UnlockPlayerFieldControls();
+}
+
+#undef tState
+#undef tWindowId
+#undef tSeq
+#undef tTimer

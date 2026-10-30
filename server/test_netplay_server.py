@@ -220,6 +220,24 @@ class ServerTest(unittest.IsolatedAsyncioTestCase):
         await a.send("MYRANK")
         self.assertEqual(await a.recv(), "MYRANK 1 1016 1 0 0")
 
+    async def test_season_and_claim(self):
+        a, b, sid = await self.start_session()
+        await a.send("SEASON")
+        self.assertEqual(await a.recv(), "SEASON 1 28 0 1000 -1 0")
+        await a.send(f"RESULT {sid} win")
+        await b.send(f"RESULT {sid} loss")
+        await a.send(f"QUIT {sid}")
+        self.assertEqual(await b.recv(), f"ENDED {sid}")
+        await a.send("SEASON")
+        self.assertEqual(await a.recv(), "SEASON 1 28 1 1016 -1 0")
+        self.server.seasons.end_season(*self.server.seasons.current())
+        await a.send("SEASON")
+        self.assertEqual(await a.recv(), "SEASON 2 28 0 1008 1 1")
+        await a.send("CLAIM")
+        self.assertEqual(await a.recv(), "CLAIMED 1 1")
+        await a.send("CLAIM")
+        self.assertEqual(await a.recv(), "CLAIMED -1 0")
+
     async def test_disputed_results_do_not_count(self):
         a, b, sid = await self.start_session()
         await a.send(f"RESULT {sid} win")
@@ -286,6 +304,38 @@ class ServerTest(unittest.IsolatedAsyncioTestCase):
         sid = (await b.recv()).split()[1]
         await a.send(f"LINK {sid} 00")
         self.assertTrue((await a.recv()).startswith("ERR"))
+
+
+class SeasonTest(unittest.TestCase):
+    def test_season_end_gives_rewards_and_softens_ratings(self):
+        import seasons
+        now = [1000.0]
+        league = ns.League(":memory:")
+        s = seasons.Seasons(league.db, ns.START_RATING, days=1, clock=lambda: now[0])
+        league.record(("A", 1), "win", ("B", 2), "loss")
+        league.db.execute("UPDATE players SET rating = 1240 WHERE name = 'A'")
+        self.assertEqual(s.current()[0], 1)
+        self.assertEqual(s.days_left(), 1)
+        self.assertEqual(s.roll_if_due(), 0)
+        now[0] += seasons.DAY
+        self.assertEqual(s.roll_if_due(), 1)
+        self.assertEqual(s.current()[0], 2)
+        self.assertEqual(s.pending_reward(("A", 1)), (1, 3))  # PLATINUM
+        self.assertEqual(s.pending_reward(("B", 2)), (1, 0))  # BRONZE (984)
+        self.assertEqual(league.rating(("A", 1)), 1120)
+        self.assertEqual(league.rank_of(("A", 1))[0], 0, "unranked until a battle this season")
+        self.assertEqual(s.claim(("A", 1)), (1, 3))
+        self.assertIsNone(s.claim(("A", 1)), "only once")
+        now[0] += 3 * seasons.DAY  # three more seasons pass while nobody plays
+        self.assertEqual(s.roll_if_due(), 3)
+        self.assertEqual(s.current()[0], 5)
+        self.assertIsNone(s.pending_reward(("A", 1)), "no reward without battles")
+        league.db.close()
+
+    def test_tiers(self):
+        import seasons
+        self.assertEqual([seasons.tier_of(r) for r in (0, 999, 1000, 1099, 1100, 1399, 1400, 2000)],
+                         [0, 0, 1, 1, 2, 4, 5, 5])
 
 
 class LeagueTest(unittest.TestCase):

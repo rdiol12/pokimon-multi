@@ -44,6 +44,8 @@ enum NetplayRequestType
     NETPLAY_REQ_FRIENDS,     // fetch the friend list
     NETPLAY_REQ_FRIEND_ADD,  // targetId: player to add
     NETPLAY_REQ_FRIEND_DEL,  // arg: index in the last friend list
+    NETPLAY_REQ_SEASON,      // fetch the current season
+    NETPLAY_REQ_CLAIM,       // claim the oldest unclaimed season reward
 };
 
 enum NetplayEventType
@@ -166,6 +168,24 @@ struct NetplayFriends
     /*0x04*/ struct NetplayFriend list[NETPLAY_MAX_FRIENDS];
 }; // size 0xCC
 
+#define NETPLAY_NO_TIER 0xFF
+
+// Written by the bridge after NETPLAY_REQ_SEASON / NETPLAY_REQ_CLAIM.
+struct NetplaySeason
+{
+    /*0x00*/ u8 seq;         // bumped when the fields below are new
+    /*0x01*/ u8 rewardTier;  // unclaimed reward, or NETPLAY_NO_TIER
+    /*0x02*/ u16 season;
+    /*0x04*/ u16 daysLeft;
+    /*0x06*/ u16 rating;
+    /*0x08*/ u8 rated;       // played a rated battle this season
+    /*0x09*/ u8 claimSeq;    // bumped when the server answers a claim
+    /*0x0A*/ u8 claimedTier; // the reward just claimed, or NETPLAY_NO_TIER
+    /*0x0B*/ u8 filler;
+    /*0x0C*/ u16 rewardSeason;
+    /*0x0E*/ u16 filler2;
+}; // size 0x10
+
 struct NetplayMailbox
 {
     /*0x000*/ char magic[8];
@@ -195,8 +215,9 @@ struct NetplayMailbox
     /*0x386*/ u16 filler2;
     /*0x388*/ struct NetplayLadder ladder;
     /*0x43C*/ struct NetplayFriends friends;
-    // 0x508-0x5FF: reserved for this file's features; 0x600 on: netplay extensions.
-}; // size 0x508
+    /*0x508*/ struct NetplaySeason season;
+    // 0x518-0x5FF: reserved for this file's features.
+}; // size 0x518
 
 extern struct NetplayMailbox gNetplayMailbox;
 
@@ -222,6 +243,7 @@ bool32 Netplay_HasJoined(void);
 void ShowNetplayLadder(void);
 bool32 Netplay_TryOpenEmoteMenu(void);
 void ShowNetplayFriends(void);
+void ShowNetplaySeason(void);
 bool32 Netplay_IsOnline(void);
 
 #endif // GUARD_NETPLAY_H

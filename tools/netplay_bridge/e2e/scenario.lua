@@ -227,7 +227,7 @@ D.run(function()
     D.shot("done")
 
     -- Ladder: player 2 won the battle, so it is first. -----------------------
-    -- START: POKéMON, BAG, PLAYER, STYLE, ONLINE...; ONLINE: LADDER, FRIENDS.
+    -- START: POKéMON, BAG, PLAYER, STYLE, ONLINE...; ONLINE: LADDER, SEASON, FRIENDS.
     if INSTANCE == 2 then
         local ladderSeq = D.mb8(0x388)
         D.wait(60)
@@ -261,6 +261,7 @@ D.run(function()
         D.shot("start-online")
         D.press(K.A, 30)
         D.press(K.DOWN, 10)
+        D.press(K.DOWN, 10)
         D.press(K.A, 10) -- FRIENDS
         D.waitFor("the friend list", 600, function() return D.mb8(0x43C) ~= listSeq end)
         D.wait(30)
@@ -272,6 +273,26 @@ D.run(function()
         D.waitFor("player 1", 600, function() return D.remoteCount() > 0 end)
         D.wait(60)
         D.shot("traveled")
+
+        -- Season: claim the reward run_e2e.py left for an earlier season.
+        local seasonSeq, count = D.mb8(0x508), D.partyCount()
+        D.press(K.START, 40)
+        D.press(K.A, 30) -- ONLINE
+        D.press(K.UP, 10)
+        D.press(K.A, 10) -- SEASON
+        D.waitFor("the season", 600, function() return D.mb8(0x508) ~= seasonSeq end)
+        D.wait(30)
+        D.shot("season")
+        D.log(string.format("season %d, %d days left, reward tier %d", D.mb16(0x50A), D.mb16(0x50C), D.mb8(0x509)))
+        if D.mb8(0x509) ~= 2 then D.fail("expected a GOLD reward to claim") end
+        D.press(K.A, 10) -- CLAIM
+        D.waitFor("the reward", 600, function() return D.partyCount() ~= count end)
+        D.wait(10)
+        D.shot("season-saving")
+        D.wait(900)
+        D.shot("season-claimed")
+        D.press(K.B, 30)
+        D.waitFor("the overworld after the season", 600, D.inOverworld)
     else
         D.wait(400)
         local num = D.mb8(0x017)

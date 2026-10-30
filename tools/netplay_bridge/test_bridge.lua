@@ -169,6 +169,47 @@ function tests.ladder_request_fills_the_mailbox()
     eq(mem.read16(L + 0x24 + 12), 1, "second's losses")
 end
 
+function tests.season_and_claim()
+    local bridge, mem, net = online()
+    local S = BASE + 0x508
+    request(mem, 13, 0, 0) -- REQ_SEASON
+    bridge:onFrame()
+    eq(net.take()[1], "SEASON", "asked for the season")
+    net.push("SEASON 3 12 1 1150 2 2")
+    bridge:onFrame()
+    eq(mem.read8(S), 1, "published")
+    eq(mem.read8(S + 1), 2, "reward tier")
+    eq(mem.read16(S + 2), 3, "season")
+    eq(mem.read16(S + 4), 12, "days left")
+    eq(mem.read16(S + 6), 1150, "rating")
+    eq(mem.read8(S + 8), 1, "rated")
+    eq(mem.read16(S + 12), 2, "reward season")
+    request(mem, 14, 0, 0) -- REQ_CLAIM
+    bridge:onFrame()
+    eq(net.take()[1], "CLAIM", "claimed")
+    net.push("CLAIMED 2 2")
+    bridge:onFrame()
+    eq(mem.read8(S + 9), 1, "claim answered")
+    eq(mem.read8(S + 10), 2, "claimed tier")
+    eq(mem.read8(S + 1), 0xFF, "nothing left to claim")
+    net.push("CLAIMED -1 0")
+    bridge:onFrame()
+    eq(mem.read8(S + 10), 0xFF, "nothing claimed")
+end
+
+function tests.hooks_see_lines_and_frames()
+    local bridge, mem, net = online()
+    local seen, frames = nil, 0
+    bridge:addHook({
+        onLine = function(args) if args[1] == "MARKET" then seen = args[2]; return true end end,
+        onFrame = function(m) frames = frames + 1 end,
+    })
+    net.push("MARKET 42")
+    bridge:onFrame()
+    eq(seen, "42", "hook got its line")
+    eq(frames, 1, "hook ran each frame")
+end
+
 function tests.connects_and_reports_position()
     local bridge, mem, net = setup()
     bridge:onFrame()

@@ -25,6 +25,9 @@ leaderboard.
 python3 server/netplay_server.py --port 7777 --db league.sqlite3
 ```
 
+Ladder seasons last 28 days; `--season-days N` (or `NETPLAY_SEASON_DAYS`)
+changes that.
+
 Add `--http-port 8080` for the leaderboard page, which also serves the bridge
 script with the server's address filled in. To run it on a real server
 (Docker or systemd), see `deploy/README.md`.
@@ -47,7 +50,17 @@ Leaf; saved, and seen by other players). START → **ONLINE** (when you joined
 online) opens the online screens (`gNetplayOnlineMenu` in `src/netplay_menu.c`;
 new features add a row there):
 
-- **LADDER**: the PvP ladder, the top 10 by rating and your own rank.
+- **LADDER**: the PvP ladder, the top 10 by rating with each player's tier,
+  and your own rank.
+- **SEASON**: the current ladder season, days left, your tier, and the
+  prize for each tier. When a season ends, everyone who played a rated
+  battle gets their tier's Pokémon; press A here to claim it (it needs a free
+  party slot, and the game saves). Tiers by rating: BRONZE (Eevee Lv10),
+  SILVER 1000+ (Dratini Lv15), GOLD 1100+ (Beldum Lv15), PLATINUM 1200+
+  (Gible Lv20), DIAMOND 1300+ (Dreepy Lv20), MASTER 1400+ (Larvesta Lv25).
+  A new season halves everyone's distance from 1000 and clears W-L-D.
+
+  ![The season screen, claiming a reward, and the ladder with tiers](images/netplay-seasons.png)
 - **FRIENDS**: your friend list (up to 10) with where each friend is right
   now. A travels to an online friend who is outdoors in a town, city or on a
   route (not while they are surfing or in a battle, trade or deal); SELECT
@@ -116,7 +129,8 @@ says who writes the field; the other side only reads it.
 | 0x386 | 2 | — | padding |
 | 0x388 | 180 | bridge | PvP ladder (below) |
 | 0x43C | 204 | bridge | friend list (below) |
-| 0x508 | | | end; 0x508–0x5FF reserved here, 0x600 on for extensions |
+| 0x508 | 16 | bridge | ladder season (below) |
+| 0x518 | | | end; 0x518–0x5FF reserved here |
 
 The C definition is `struct NetplayMailbox` in `include/netplay.h`.
 
@@ -143,6 +157,8 @@ most once per frame; the bridge acts once per new `seq`.
 | 10 | fetch the friend list | — |
 | 11 | add a friend | target id |
 | 12 | remove a friend | arg: index in the last friend list |
+| 13 | fetch the ladder season | — |
+| 14 | claim the oldest season reward | — |
 
 **Ladder (bridge → ROM):** u8 seq (bumped when a new ladder is in place),
 u8 count, u16 my rank (0 = no rated battles yet), my entry, then 10 entries.
@@ -154,6 +170,11 @@ u8 count, u8 add seq (bumped when the server answers an add), u8 add result
 (1 ok, 2 list full), then 10 entries of 20 bytes: u8 name[8], u16 player id
 (0 = offline), u8 map group, u8 map number, s16 x, s16 y, u16 graphics id,
 u8 busy, 1 pad.
+
+**Season (bridge → ROM):** u8 seq (bumped on each SEASON answer), u8 reward
+tier (0 BRONZE … 5 MASTER, 0xFF none), u16 season, u16 days left, u16 rating,
+u8 rated, u8 claim seq (bumped on each CLAIMED answer), u8 claimed tier
+(0xFF nothing), 1 pad, u16 reward season, 2 pad.
 
 **Event (bridge → ROM, 8 bytes):** u8 seq, u8 type, u16 peer id,
 u16 session id, u8 kind (1 battle, 2 trade, 3 deal), u8 role (0 host, 1 guest). The
@@ -235,6 +256,8 @@ FRIEND ADD <player id>              (answered with FRIENDADD)
 FRIEND DEL <name> <trainer id>
 FRIENDS                             (answered with FRIEND lines, then FRIENDSEND)
 EMOTE <emote 0-31>                  (to everyone else on the map; bursts of more than 4 are dropped)
+SEASON                              (answered with SEASON)
+CLAIM                               (answered with CLAIMED)
 ```
 
 Server → client:
@@ -255,6 +278,8 @@ FRIEND <name> <tid> <player id or 0> <map group> <map num> <x> <y> <gfx> <busy 0
 FRIENDSEND
 RANK <position> <name> <rating> <wins> <losses> <draws>
 BOARDEND
+SEASON <season> <days left> <rated 0|1> <rating> <reward tier or -1> <reward season>
+CLAIMED <tier or -1> <season>
 MYRANK <rank, 0 if unranked> <rating> <wins> <losses> <draws>
 ERR <message>
 ```
@@ -268,3 +293,21 @@ ERR <message>
 - If a player disconnects during a battle, the remaining player's report is
   accepted on its own, so leaving a losing battle counts as a loss.
 - Trades and deals never touch the leaderboard.
+- Seasons: when one ends, each player with games gets a reward for the tier
+  of their final rating (claimed in game, oldest first), ratings move halfway
+  back to 1000, and W-L-D starts over.
+
+## Bridge extensions
+
+Features with their own mailbox can ride on the same connection. List their
+Lua files in `extensions.txt` next to `netplay_bridge.lua` (one per line);
+the bridge loads them after it starts. They get a global `NetplayBridge`:
+
+```lua
+NetplayBridge.addHook({
+    onLine = function(args, line) return args[1] == "MYCMD" end, -- true: handled
+    onFrame = function(mem) end, -- each frame while online
+})
+NetplayBridge.send("MYCMD 1")    -- one line to the server (dropped while offline)
+NetplayBridge.connected()        -- online and welcomed
+```
