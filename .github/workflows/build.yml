@@ -1,6 +1,8 @@
 name: Build game
 
-# Runs only when started by hand: Actions > Build game > Run workflow.
+# Runs only when started by hand: Actions > Build game > Run workflow. Each
+# run builds the ROM and publishes it, with the mGBA bridge script, as a
+# GitHub release.
 on:
   workflow_dispatch:
     inputs:
@@ -12,6 +14,9 @@ on:
         description: "Server game port"
         required: false
         default: "7777"
+      version:
+        description: "Release name, e.g. v0.3 (each run publishes a GitHub release)"
+        required: true
       run_tests:
         description: "Also run the test suite (slow)"
         type: boolean
@@ -27,6 +32,8 @@ env:
 jobs:
   build-emerald:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -87,6 +94,25 @@ jobs:
           path: |
             pokeemerald.gba
             tools/netplay_bridge/netplay_bridge.lua
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+          SERVER: ${{ inputs.server_host }}
+        run: |
+          mkdir -p release
+          cp pokeemerald.gba "release/pokimon-multi-$VERSION.gba"
+          cp tools/netplay_bridge/netplay_bridge.lua release/
+          cat > release/notes.md <<EOF
+          1. Open \`pokimon-multi-$VERSION.gba\` in mGBA 0.10 or newer.
+          2. Tools > Scripting... > File > Load script, and pick \`netplay_bridge.lua\`.
+          3. Pick JOIN ONLINE on the title menu.
+
+          Server: ${SERVER:-as set in include/config/netplay.h}
+          EOF
+          gh release create "$VERSION" release/*.gba release/netplay_bridge.lua \
+            --target "$GITHUB_SHA" --title "Pokimon Multi $VERSION" --notes-file release/notes.md
 
   test:
     if: ${{ inputs.run_tests }}
