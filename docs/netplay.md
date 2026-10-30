@@ -30,6 +30,12 @@ script to point at the server.
 Tests: `python3 -m unittest discover -s server` and
 `lua5.4 tools/netplay_bridge/test_bridge.lua`.
 
+End-to-end: `python3 tools/netplay_bridge/e2e/run_e2e.py` (needs a built
+`pokeemerald.gba`, `libmgba-dev` 0.10 and gcc). It runs two headless games
+against a fresh server: they meet in Oldale Town, battle (player 1 forfeits),
+then trade their lead Pokémon, and it checks the leaderboard. Screenshots and
+logs go to `--out`.
+
 ## Mailbox layout (version 1)
 
 All values little-endian. The bridge finds the mailbox by scanning EWRAM
