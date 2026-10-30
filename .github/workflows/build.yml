@@ -1,10 +1,21 @@
-name: CI
+name: Build game
 
+# Runs only when started by hand: Actions > Build game > Run workflow.
 on:
-  push:
-    branches:
-      - main
-  pull_request:
+  workflow_dispatch:
+    inputs:
+      server_host:
+        description: "Server JOIN ONLINE connects to (blank: keep include/config/netplay.h)"
+        required: false
+        default: ""
+      server_port:
+        description: "Server game port"
+        required: false
+        default: "7777"
+      run_tests:
+        description: "Also run the test suite (slow)"
+        type: boolean
+        default: false
 
 env:
   GAME_REVISION: 0
@@ -45,6 +56,25 @@ jobs:
             tools/wav2agb/wav2agb
           key: tools-${{ runner.os }}-${{ hashFiles('tools/*/Makefile', 'tools/**/*.c', 'tools/**/*.cpp', 'tools/**/*.h') }}
 
+      - name: Set the server address
+        if: ${{ inputs.server_host != '' }}
+        env:
+          SERVER_HOST: ${{ inputs.server_host }}
+          SERVER_PORT: ${{ inputs.server_port }}
+        run: |
+          python3 - <<'PY'
+          import os, re
+          host, port = os.environ["SERVER_HOST"], os.environ["SERVER_PORT"]
+          if not re.fullmatch(r"[A-Za-z0-9.-]{1,39}", host) or not port.isdigit():
+              raise SystemExit("server_host must be a host name or IP, server_port a number")
+          path = "include/config/netplay.h"
+          text = open(path).read()
+          text = re.sub(r'#define NETPLAY_SERVER_HOST ".*"', f'#define NETPLAY_SERVER_HOST "{host}"', text)
+          text = re.sub(r"#define NETPLAY_SERVER_PORT \d+", f"#define NETPLAY_SERVER_PORT {port}", text)
+          open(path, "w").write(text)
+          PY
+          grep NETPLAY_SERVER include/config/netplay.h
+
       - name: ROM (Emerald)
         env:
           GAME_VERSION: EMERALD
@@ -53,10 +83,13 @@ jobs:
       - name: Upload ROM
         uses: actions/upload-artifact@v4
         with:
-          name: pokeemerald
-          path: pokeemerald.gba
+          name: pokimon-multi
+          path: |
+            pokeemerald.gba
+            tools/netplay_bridge/netplay_bridge.lua
 
   test:
+    if: ${{ inputs.run_tests }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
