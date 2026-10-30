@@ -101,16 +101,18 @@ bool32 World_TryOpenMenu(void)
 
 enum Species World_ModifyWildSpecies(enum Species species, u8 level)
 {
-    return RoamingWeather_ModifyWildSpecies(species, level);
+    species = RoamingWeather_ModifyWildSpecies(species, level);
+    ShinyChain_OnWildSpecies(species);
+    return species;
 }
 
 // Back from a wild battle, before the field reloads.
 void World_OnWildBattleEnd(void)
 {
-    struct Pokemon *wild = &gEnemyParty[0];
-
+    // The enemy party may already be cleared; gBattleResults isn't.
     if (gBattleOutcome == B_OUTCOME_CAUGHT)
-        Achievements_OnCatch(wild);
+        Achievements_OnCatch(gBattleResults.caughtMonSpecies, gBattleResults.shinyWildMon);
+    ShinyChain_OnWildBattleEnd();
     Hardcore_OnBattleEnd(TRUE);
 }
 

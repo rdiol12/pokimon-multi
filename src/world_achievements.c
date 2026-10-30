@@ -148,9 +148,12 @@ static void CloseBanner(u8 taskId)
     ClearWindowTilemap(task->tWindowId);
     RemoveWindow(task->tWindowId);
     ScheduleBgCopyTilemapToVram(0);
-    DestroySprite(&gSprites[task->tSpriteId]);
-    FreeSpriteTilesByTag(TAG_TROPHY);
-    FreeSpritePaletteByTag(TAG_TROPHY);
+    if (task->tSpriteId != MAX_SPRITES)
+    {
+        DestroySprite(&gSprites[task->tSpriteId]);
+        FreeSpriteTilesByTag(TAG_TROPHY);
+        FreeSpritePaletteByTag(TAG_TROPHY);
+    }
     DestroyTask(taskId);
 }
 
@@ -163,28 +166,52 @@ static void Task_Banner(u8 taskId)
         CloseBanner(taskId);
 }
 
-static void ShowBanner(u8 id)
+// Two lines at the top of the screen; with the trophy for achievements.
+static void ShowBanner(const u8 *title, const u8 *subtitle, bool32 trophy)
 {
     u8 taskId = CreateTask(Task_Banner, 90);
     struct Task *task = &gTasks[taskId];
-    u8 *str;
+    u32 x = trophy ? 26 : 4;
 
     task->tWindowId = AddWindow(&sBannerWindowTemplate);
     DrawStdWindowFrame(task->tWindowId, FALSE);
     FillWindowPixelBuffer(task->tWindowId, PIXEL_FILL(1));
-    str = StringCopy(gStringVar4, COMPOUND_STRING("ACHIEVEMENT! "));
-    StringCopy(str, sAchievements[id].name);
-    AddTextPrinterParameterized(task->tWindowId, FONT_NORMAL, gStringVar4, 26, 1, TEXT_SKIP_DRAW, NULL);
-    CopyItemName(sAchievements[id].reward, gStringVar1);
-    StringExpandPlaceholders(gStringVar4, COMPOUND_STRING("Reward: {STR_VAR_1}"));
-    AddTextPrinterParameterized(task->tWindowId, FONT_SMALL, gStringVar4, 26, 17, TEXT_SKIP_DRAW, NULL);
+    AddTextPrinterParameterized(task->tWindowId, FONT_NORMAL, title, x, 1, TEXT_SKIP_DRAW, NULL);
+    AddTextPrinterParameterized(task->tWindowId, FONT_SMALL, subtitle, x, 17, TEXT_SKIP_DRAW, NULL);
     PutWindowTilemap(task->tWindowId);
     CopyWindowToVram(task->tWindowId, COPYWIN_FULL);
 
-    LoadSpriteSheet(&sTrophySheet);
-    LoadSpritePalette(&sTrophyPalette);
-    task->tSpriteId = CreateSprite(&sTrophyTemplate, 4 * 8 + 12, 8 + 16, 0);
-    PlayFanfare(MUS_OBTAIN_TMHM);
+    task->tSpriteId = MAX_SPRITES;
+    if (trophy)
+    {
+        LoadSpriteSheet(&sTrophySheet);
+        LoadSpritePalette(&sTrophyPalette);
+        task->tSpriteId = CreateSprite(&sTrophyTemplate, 4 * 8 + 12, 8 + 16, 0);
+        PlayFanfare(MUS_OBTAIN_TMHM);
+    }
+}
+
+static void ShowAchievementBanner(u8 id)
+{
+    u8 *title = gStringVar3;
+
+    StringCopy(StringCopy(title, COMPOUND_STRING("ACHIEVEMENT! ")), sAchievements[id].name);
+    CopyItemName(sAchievements[id].reward, gStringVar1);
+    StringExpandPlaceholders(gStringVar4, COMPOUND_STRING("Reward: {STR_VAR_1}"));
+    ShowBanner(title, gStringVar4, TRUE);
+}
+
+// A short notice in the same place (no trophy), shown once the screen is
+// free. Only the latest one is kept.
+static EWRAM_DATA u8 sToastTitle[32] = {0};
+static EWRAM_DATA u8 sToastText[48] = {0};
+
+void World_ShowToast(const u8 *title, const u8 *text)
+{
+    StringCopyN(sToastTitle, title, sizeof(sToastTitle) - 1);
+    sToastTitle[sizeof(sToastTitle) - 1] = EOS;
+    StringCopyN(sToastText, text, sizeof(sToastText) - 1);
+    sToastText[sizeof(sToastText) - 1] = EOS;
 }
 
 #undef tTimer
@@ -241,8 +268,8 @@ static void CheckCounters(void)
         Achievements_Unlock(ACH_FARMER);
 }
 
-// Called by World_OnWildBattleEnd when the player caught `mon`.
-void Achievements_OnCatch(struct Pokemon *mon)
+// Called by World_OnWildBattleEnd when the player caught a Pokémon.
+void Achievements_OnCatch(u16 species, bool32 shiny)
 {
     u32 weather = GetSavedWeather();
 
@@ -252,7 +279,7 @@ void Achievements_OnCatch(struct Pokemon *mon)
     if (weather == WEATHER_RAIN || weather == WEATHER_RAIN_THUNDERSTORM || weather == WEATHER_DOWNPOUR
      || weather == WEATHER_SANDSTORM || weather == WEATHER_SNOW)
         Achievements_Unlock(ACH_STORM_CHASER);
-    if (GetMonData(mon, MON_DATA_IS_SHINY))
+    if (shiny)
         Achievements_Unlock(ACH_SHINY);
 }
 
@@ -263,14 +290,20 @@ void Achievements_Update(void)
 
     if ((gMain.vblankCounter1 & 0x7F) == 0)
         CheckCounters();
-    if (sPendingBanners == 0 || ArePlayerFieldControlsLocked() || FuncIsActiveTask(Task_Banner))
+    if ((sPendingBanners == 0 && sToastTitle[0] == EOS) || ArePlayerFieldControlsLocked() || FuncIsActiveTask(Task_Banner))
         return;
+    if (sPendingBanners == 0)
+    {
+        ShowBanner(sToastTitle, sToastText, FALSE);
+        sToastTitle[0] = EOS;
+        return;
+    }
     for (i = 0; i < ACHIEVEMENT_COUNT; i++)
     {
         if (sPendingBanners & (1u << i))
         {
             sPendingBanners &= ~(1u << i);
-            ShowBanner(i);
+            ShowAchievementBanner(i);
             return;
         }
     }

@@ -36,12 +36,10 @@ enum Achievement
     ACHIEVEMENT_COUNT, // at most 32
 };
 
-struct Pokemon;
-
 bool32 Achievements_Has(u8 id);
 u32 Achievements_Count(void);
 void Achievements_Unlock(u8 id);
-void Achievements_OnCatch(struct Pokemon *mon);
+void Achievements_OnCatch(u16 species, bool32 shiny);
 void Achievements_Update(void);
 void Achievements_ShowList(void);
 

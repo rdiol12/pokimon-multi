@@ -49,6 +49,15 @@ bool32 Hardcore_Update(void);
 // Sends the hardcore run's progress to the server (netplay_world.c).
 void World_OnHardcoreProgress(void);
 
+// Shiny chaining (world_shiny.c).
+void ShinyChain_OnWildSpecies(enum Species species);
+u32 ShinyChain_ExtraRolls(void);
+u32 ShinyChain_BonusFor(u32 count);
+void ShinyChain_OnWildBattleEnd(void);
+
+// A two-line notice at the top of the screen (world_achievements.c).
+void World_ShowToast(const u8 *title, const u8 *text);
+
 // The R button menu.
 bool32 World_TryOpenMenu(void);
 
