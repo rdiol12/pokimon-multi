@@ -52,12 +52,12 @@
 #else
 
 #define FLAG_BATTLE_LEAGUE_CLEARED    0x20 // Beaten the Battle League champion at least once
-#define FLAG_UNUSED_0x021    0x21 // Unused Flag
-#define FLAG_UNUSED_0x022    0x22 // Unused Flag
-#define FLAG_UNUSED_0x023    0x23 // Unused Flag
-#define FLAG_UNUSED_0x024    0x24 // Unused Flag
-#define FLAG_UNUSED_0x025    0x25 // Unused Flag
-#define FLAG_UNUSED_0x026    0x26 // Unused Flag
+#define FLAG_STARFALL_SKWOVET_FOUND    0x21 // Found the Starfall Isle elder's lost Skwovet
+#define FLAG_STARFALL_SKWOVET_REWARD    0x22 // Got the reward for finding the elder's Skwovet
+#define FLAG_HIDE_STARFALL_SKWOVET_AT_HOME    0x23 // Hides the elder's Skwovet in her house until it is found
+#define FLAG_STARFALL_JIRACHI_DONE    0x24 // Caught or defeated Jirachi in Starfall Cave
+#define FLAG_STARFALL_EXPLORER_REWARD    0x25 // Got the explorer's reward for meeting Jirachi
+#define FLAG_ITEM_STARFALL_GROVE_BIG_NUGGET    0x26 // Item ball in the hidden grove on Starfall Isle
 #define FLAG_UNUSED_0x027    0x27 // Unused Flag
 #define FLAG_UNUSED_0x028    0x28 // Unused Flag
 #define FLAG_UNUSED_0x029    0x29 // Unused Flag
@@ -689,9 +689,9 @@
 #define FLAG_UNUSED_0x27A  0x27A // Unused Flag
 #define FLAG_UNUSED_0x27B  0x27B // Unused Flag
 #define FLAG_UNUSED_0x27C  0x27C // Unused Flag
-#define FLAG_UNUSED_0x27D  0x27D // Unused Flag
-#define FLAG_UNUSED_0x27E  0x27E // Unused Flag
-#define FLAG_UNUSED_0x27F  0x27F // Unused Flag
+#define FLAG_HIDDEN_ITEM_STARFALL_STAR_PIECE  0x27D // Hidden item: Starfall Isle grove
+#define FLAG_HIDDEN_ITEM_STARFALL_RARE_CANDY  0x27E // Hidden item: behind the Starfall Isle elder's house
+#define FLAG_HIDDEN_ITEM_STARFALL_PP_MAX  0x27F // Hidden item: Starfall Isle meadow
 #define FLAG_UNUSED_0x280  0x280 // Unused Flag
 #define FLAG_UNUSED_0x281  0x281 // Unused Flag
 #define FLAG_UNUSED_0x282  0x282 // Unused Flag

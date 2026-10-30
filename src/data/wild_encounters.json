@@ -36577,6 +36577,160 @@
               }
             ]
           }
+        },
+        {
+          "map": "MAP_STARFALL_ISLE",
+          "base_label": "gStarfallIsle",
+          "land_mons": {
+            "encounter_rate": 20,
+            "mons": [
+              {
+                "min_level": 45,
+                "max_level": 47,
+                "species": "SPECIES_EEVEE"
+              },
+              {
+                "min_level": 45,
+                "max_level": 47,
+                "species": "SPECIES_RIOLU"
+              },
+              {
+                "min_level": 46,
+                "max_level": 48,
+                "species": "SPECIES_TOGETIC"
+              },
+              {
+                "min_level": 46,
+                "max_level": 48,
+                "species": "SPECIES_HERDIER"
+              },
+              {
+                "min_level": 46,
+                "max_level": 48,
+                "species": "SPECIES_LUXIO"
+              },
+              {
+                "min_level": 46,
+                "max_level": 48,
+                "species": "SPECIES_PAWMO"
+              },
+              {
+                "min_level": 44,
+                "max_level": 46,
+                "species": "SPECIES_SKWOVET"
+              },
+              {
+                "min_level": 45,
+                "max_level": 47,
+                "species": "SPECIES_MUNCHLAX"
+              },
+              {
+                "min_level": 46,
+                "max_level": 48,
+                "species": "SPECIES_LARVESTA"
+              },
+              {
+                "min_level": 46,
+                "max_level": 48,
+                "species": "SPECIES_DEINO"
+              },
+              {
+                "min_level": 50,
+                "max_level": 50,
+                "species": "SPECIES_SNORLAX"
+              },
+              {
+                "min_level": 46,
+                "max_level": 48,
+                "species": "SPECIES_ZORUA"
+              }
+            ]
+          },
+          "water_mons": {
+            "encounter_rate": 4,
+            "mons": [
+              {
+                "min_level": 40,
+                "max_level": 45,
+                "species": "SPECIES_WINGULL"
+              },
+              {
+                "min_level": 40,
+                "max_level": 45,
+                "species": "SPECIES_MANTYKE"
+              },
+              {
+                "min_level": 40,
+                "max_level": 45,
+                "species": "SPECIES_WAILMER"
+              },
+              {
+                "min_level": 45,
+                "max_level": 50,
+                "species": "SPECIES_LAPRAS"
+              },
+              {
+                "min_level": 45,
+                "max_level": 50,
+                "species": "SPECIES_DONDOZO"
+              }
+            ]
+          },
+          "fishing_mons": {
+            "encounter_rate": 30,
+            "mons": [
+              {
+                "min_level": 10,
+                "max_level": 30,
+                "species": "SPECIES_MAGIKARP"
+              },
+              {
+                "min_level": 10,
+                "max_level": 30,
+                "species": "SPECIES_FINNEON"
+              },
+              {
+                "min_level": 30,
+                "max_level": 40,
+                "species": "SPECIES_FINNEON"
+              },
+              {
+                "min_level": 30,
+                "max_level": 40,
+                "species": "SPECIES_LUVDISC"
+              },
+              {
+                "min_level": 30,
+                "max_level": 40,
+                "species": "SPECIES_REMORAID"
+              },
+              {
+                "min_level": 40,
+                "max_level": 45,
+                "species": "SPECIES_FINIZEN"
+              },
+              {
+                "min_level": 40,
+                "max_level": 45,
+                "species": "SPECIES_LUMINEON"
+              },
+              {
+                "min_level": 40,
+                "max_level": 45,
+                "species": "SPECIES_DRATINI"
+              },
+              {
+                "min_level": 40,
+                "max_level": 45,
+                "species": "SPECIES_GYARADOS"
+              },
+              {
+                "min_level": 45,
+                "max_level": 50,
+                "species": "SPECIES_DRAGONAIR"
+              }
+            ]
+          }
         }
       ]
     },

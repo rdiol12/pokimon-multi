@@ -754,3 +754,38 @@ LilycoveCity_Text_HoneymoonVowToSeeRarePokemon:
 	.string "POKéMON as soon as we arrived.\p"
 	.string "I mean, we are totally happy!$"
 
+
+LilycoveCity_EventScript_StarfallSailor::
+	lock
+	faceplayer
+	goto_if_unset FLAG_SYS_GAME_CLEAR, LilycoveCity_EventScript_StarfallNotYet
+	msgbox LilycoveCity_Text_StarfallOffer, MSGBOX_YESNO
+	goto_if_eq VAR_RESULT, NO, LilycoveCity_EventScript_StarfallDeclined
+	msgbox LilycoveCity_Text_StarfallAllAboard, MSGBOX_DEFAULT
+	closemessage
+	warp MAP_STARFALL_ISLE, 28, 52
+	waitstate
+	release
+	end
+
+LilycoveCity_EventScript_StarfallNotYet::
+	msgbox LilycoveCity_Text_StarfallNotYet, MSGBOX_DEFAULT
+	release
+	end
+
+LilycoveCity_EventScript_StarfallDeclined::
+	msgbox LilycoveCity_Text_StarfallDeclined, MSGBOX_DEFAULT
+	release
+	end
+
+LilycoveCity_Text_StarfallNotYet:
+	.string "I sail to STARFALL ISLE, a secret\nisland far out at sea.\pBut only the CHAMPION of HOENN\nmay set foot there.$"
+
+LilycoveCity_Text_StarfallOffer:
+	.string "You're the CHAMPION! I can take you\nto STARFALL ISLE.\pIt's an island of rare POKéMON and\nold legends. Shall we set sail?$"
+
+LilycoveCity_Text_StarfallAllAboard:
+	.string "Anchors aweigh!$"
+
+LilycoveCity_Text_StarfallDeclined:
+	.string "Come find me whenever you're ready.$"
