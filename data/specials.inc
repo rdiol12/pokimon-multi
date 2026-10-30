@@ -645,3 +645,11 @@ gSpecials::
 	def_special Netplay_AnswerInvite
 	def_special Netplay_WaitForStart, waitstate=1
 	def_special Netplay_StartActivity, waitstate=1
+	def_special Netplay_DealBegin
+	def_special Netplay_DealSendOffer
+	def_special Netplay_DealWaitForOffer, waitstate=1
+	def_special Netplay_DealBufferOffers
+	def_special Netplay_DealAnswer
+	def_special Netplay_DealWaitForAnswer, waitstate=1
+	def_special Netplay_DealApply
+	def_special Netplay_DealEnd

@@ -107,6 +107,16 @@ function Driver.partyMon(slot)
     return { nickname = decodeName(base + 8, 10), ot = decodeName(base + 20, 7) }
 end
 
+function Driver.partyCount() return E.read8(SYM.gPartiesCount) end
+
+-- Money is stored xor'd with the save's encryption key.
+local OFF_SB1_MONEY = 0x490
+local OFF_SB2_ENCRYPTION_KEY = 0xAC
+function Driver.money()
+    local sb1, sb2 = E.read32(SYM.gSaveBlock1Ptr), E.read32(SYM.gSaveBlock2Ptr)
+    return (E.read32(sb1 + OFF_SB1_MONEY) ~ E.read32(sb2 + OFF_SB2_ENCRYPTION_KEY)) & 0xFFFFFFFF
+end
+
 -- Boots straight into the overworld through the netplay test boot.
 function Driver.boot()
     Driver.waitFor("overworld", 4000, Driver.inOverworld, function(i)

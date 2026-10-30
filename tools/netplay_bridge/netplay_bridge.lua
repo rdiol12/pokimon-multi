@@ -40,9 +40,9 @@ local NAME_LENGTH = 8
 
 local STATE_OFFLINE, STATE_CONNECTING, STATE_ONLINE = 0, 1, 2
 
-local REQ_CHALLENGE, REQ_TRADE, REQ_ACCEPT, REQ_DECLINE, REQ_RESULT, REQ_LEAVE = 1, 2, 3, 4, 5, 6
+local REQ_CHALLENGE, REQ_TRADE, REQ_ACCEPT, REQ_DECLINE, REQ_RESULT, REQ_LEAVE, REQ_DEAL = 1, 2, 3, 4, 5, 6, 7
 local EV_INVITE, EV_START, EV_DECLINED, EV_ENDED, EV_PENDING = 1, 2, 3, 4, 5
-local KIND_IDS = { battle = 1, trade = 2 }
+local KIND_IDS = { battle = 1, trade = 2, deal = 3 }
 local RESULTS = { "win", "loss", "draw" }
 
 local SCAN_INTERVAL = 60
@@ -312,6 +312,8 @@ function Bridge:handleRequest()
         self.net.send("REQ battle " .. target)
     elseif type == REQ_TRADE then
         self.net.send("REQ trade " .. target)
+    elseif type == REQ_DEAL then
+        self.net.send("REQ deal " .. target)
     elseif type == REQ_ACCEPT then
         self.net.send("ACCEPT " .. sid)
     elseif type == REQ_DECLINE then

@@ -12,11 +12,15 @@
 #include "link.h"
 #include "load_save.h"
 #include "main.h"
+#include "money.h"
 #include "new_game.h"
 #include "play_time.h"
 #include "overworld.h"
 #include "palette.h"
+#include "pokedex.h"
 #include "pokemon.h"
+#include "pokemon_storage_system.h"
+#include "save.h"
 #include "script.h"
 #include "script_pokemon_util.h"
 #include "sound.h"
@@ -479,9 +483,23 @@ void Netplay_GetTalkedPlayer(void)
 // VAR_0x8004: NETPLAY_KIND_*, VAR_0x8007: target player id.
 void Netplay_SendInvite(void)
 {
+    u8 type;
+
+    switch (gSpecialVar_0x8004)
+    {
+    case NETPLAY_KIND_BATTLE:
+        type = NETPLAY_REQ_CHALLENGE;
+        break;
+    case NETPLAY_KIND_DEAL:
+        type = NETPLAY_REQ_DEAL;
+        break;
+    default:
+        type = NETPLAY_REQ_TRADE;
+        break;
+    }
     sResponse = RESPONSE_NONE;
     sOutgoingSessionId = 0;
-    QueueRequest(gSpecialVar_0x8004 == NETPLAY_KIND_BATTLE ? NETPLAY_REQ_CHALLENGE : NETPLAY_REQ_TRADE, gSpecialVar_0x8007, 0, 0);
+    QueueRequest(type, gSpecialVar_0x8007, 0, 0);
 }
 
 #define tTimer data[0]
@@ -739,7 +757,8 @@ bool32 Netplay_TryTestBoot(u8 taskId)
 
 bool32 Netplay_IsLinkActive(void)
 {
-    return sSession.active;
+    // Deals talk over the rings directly; only battles and trades open a link.
+    return sSession.active && sSession.kind != NETPLAY_KIND_DEAL;
 }
 
 u8 Netplay_GetLinkRole(void)
@@ -884,4 +903,277 @@ void Netplay_LinkTransfer(void)
         sLink.pendingHead = (sLink.pendingHead + 1) % PENDING_CMDS_SIZE;
         sLink.pendingCount--;
     }
+}
+
+// Deals ------------------------------------------------------------------
+//
+// A deal swaps an offer of a Pokémon and/or money for the other player's
+// offer. It doesn't open a link: each game sends its offer over the packet
+// rings in chunks, both players see both offers, and each game applies the
+// deal once both have said yes. See Netplay_EventScript_Deal.
+
+#define DEAL_ANSWER_NONE 0
+#define DEAL_ANSWER_YES  1
+#define DEAL_ANSWER_NO   2
+
+#define DEAL_TIMEOUT (60 * 60 * 3)
+
+struct NetplayDealOffer
+{
+    u32 money;
+    u8 hasMon;
+    u8 filler[3];
+    struct Pokemon mon;
+};
+
+#define DEAL_CHUNK_SIZE  (CMD_LENGTH * 2)
+#define DEAL_CHUNKS      ((sizeof(struct NetplayDealOffer) + DEAL_CHUNK_SIZE - 1) / DEAL_CHUNK_SIZE)
+#define DEAL_BUFFER_SIZE (DEAL_CHUNKS * DEAL_CHUNK_SIZE)
+
+STATIC_ASSERT(DEAL_CHUNKS <= 32, NetplayDealChunksFitInMask);
+
+struct NetplayDeal
+{
+    union {
+        struct NetplayDealOffer offer;
+        u8 bytes[DEAL_BUFFER_SIZE];
+    } mine, theirs;
+    u32 chunksReceived; // bit mask
+    u8 chunksSent;
+    u8 mySlot;
+    u8 theirAnswer;
+    bool8 myAnswerSent;
+};
+
+static EWRAM_DATA struct NetplayDeal sDeal = {0};
+
+static const u32 sDealMoneyChoices[NETPLAY_DEAL_MONEY_CHOICES] =
+{
+    0, 100, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000,
+};
+
+static void Task_WaitForDealOffer(u8 taskId);
+static void Task_WaitForDealAnswer(u8 taskId);
+
+// Reads the deal packets that have arrived. Other packets are dropped.
+static void ReceiveDealPackets(void)
+{
+    struct NetplayPacket *packet;
+
+    while ((packet = PeekPacket()) != NULL)
+    {
+        if (packet->kind == NETPLAY_PACKET_DEAL_OFFER && packet->filler1 < DEAL_CHUNKS)
+        {
+            memcpy(&sDeal.theirs.bytes[packet->filler1 * DEAL_CHUNK_SIZE], packet->cmd, DEAL_CHUNK_SIZE);
+            sDeal.chunksReceived |= 1u << packet->filler1;
+        }
+        else if (packet->kind == NETPLAY_PACKET_DEAL_ANSWER)
+        {
+            sDeal.theirAnswer = packet->cmd[0] ? DEAL_ANSWER_YES : DEAL_ANSWER_NO;
+        }
+        PopPacket();
+    }
+}
+
+static bool32 HaveTheirOffer(void)
+{
+    return sDeal.chunksReceived == (1u << DEAL_CHUNKS) - 1;
+}
+
+static void SendDealChunks(void)
+{
+    while (sDeal.chunksSent < DEAL_CHUNKS)
+    {
+        struct NetplayRing *ring = &gNetplayMailbox.tx;
+
+        if (!SendPacket(NETPLAY_PACKET_DEAL_OFFER, (const u16 *)&sDeal.mine.bytes[sDeal.chunksSent * DEAL_CHUNK_SIZE]))
+            break;
+        // SendPacket clears filler1; it carries the chunk index here.
+        ring->packets[(ring->head + NETPLAY_RING_SIZE - 1) % NETPLAY_RING_SIZE].filler1 = sDeal.chunksSent;
+        sDeal.chunksSent++;
+    }
+}
+
+static void BufferOfferText(u8 *dest, struct NetplayDealOffer *offer)
+{
+    u8 *end = dest;
+
+    *end = EOS;
+    if (offer->hasMon)
+    {
+        u16 species = GetMonData(&offer->mon, MON_DATA_SPECIES);
+        u8 level = GetMonData(&offer->mon, MON_DATA_LEVEL);
+
+        if (GetMonData(&offer->mon, MON_DATA_IS_EGG))
+        {
+            end = StringCopy(end, COMPOUND_STRING("an EGG"));
+        }
+        else
+        {
+            end = StringCopy(end, GetSpeciesName(species));
+            end = StringCopy(end, COMPOUND_STRING(" Lv"));
+            end = ConvertIntToDecimalStringN(end, level, STR_CONV_MODE_LEFT_ALIGN, 3);
+        }
+        if (offer->money != 0)
+            end = StringCopy(end, COMPOUND_STRING(" and "));
+    }
+    if (offer->money != 0)
+    {
+        end = StringCopy(end, COMPOUND_STRING("¥"));
+        end = ConvertIntToDecimalStringN(end, offer->money, STR_CONV_MODE_LEFT_ALIGN, 7);
+    }
+    if (!offer->hasMon && offer->money == 0)
+        StringCopy(end, COMPOUND_STRING("nothing"));
+}
+
+// gStringVar1: the other player's name. Menus in between can reuse it, so
+// every deal special that shows text sets it again.
+static void BufferDealPeerName(void)
+{
+    BufferRemoteName(gStringVar1, sSession.peerId);
+    if (gStringVar1[0] == EOS)
+        StringCopy(gStringVar1, COMPOUND_STRING("The other player"));
+}
+
+// Both players start here once the session has started.
+void Netplay_DealBegin(void)
+{
+    sDeal = (struct NetplayDeal){0};
+    BufferDealPeerName();
+}
+
+// VAR_0x8004: party slot to offer (PARTY_SIZE or more for none).
+// VAR_0x8005: index into sDealMoneyChoices.
+// VAR_RESULT: FALSE if the player doesn't have that much money.
+void Netplay_DealSendOffer(void)
+{
+    u32 money = gSpecialVar_0x8005 < NETPLAY_DEAL_MONEY_CHOICES ? sDealMoneyChoices[gSpecialVar_0x8005] : 0;
+    struct NetplayDealOffer *offer = &sDeal.mine.offer;
+
+    BufferDealPeerName();
+    gSpecialVar_Result = FALSE;
+    if (!IsEnoughMoney(&gSaveBlock1Ptr->money, money))
+        return;
+    memset(&sDeal.mine, 0, sizeof(sDeal.mine));
+    offer->money = money;
+    sDeal.mySlot = gSpecialVar_0x8004;
+    if (sDeal.mySlot < gPartiesCount[B_TRAINER_PLAYER])
+    {
+        offer->hasMon = TRUE;
+        offer->mon = gParties[B_TRAINER_PLAYER][sDeal.mySlot];
+    }
+    sDeal.chunksSent = 0;
+    SendDealChunks();
+    gSpecialVar_Result = TRUE;
+}
+
+#define tTimer data[0]
+
+// Waits for the other player's offer. VAR_RESULT: TRUE once it's here,
+// FALSE if they left, it timed out, or we pressed B.
+void Netplay_DealWaitForOffer(void)
+{
+    u8 taskId = CreateTask(Task_WaitForDealOffer, 80);
+    gTasks[taskId].tTimer = 0;
+}
+
+static void Task_WaitForDealOffer(u8 taskId)
+{
+    s16 *data = gTasks[taskId].data;
+
+    SendDealChunks();
+    ReceiveDealPackets();
+    if (HaveTheirOffer())
+        gSpecialVar_Result = TRUE;
+    else if (!sSession.active || ++tTimer > DEAL_TIMEOUT || JOY_NEW(B_BUTTON))
+        gSpecialVar_Result = FALSE;
+    else
+        return;
+    DestroyTask(taskId);
+    ScriptContext_Enable();
+}
+
+// gStringVar2: their offer, gStringVar3: ours.
+// VAR_RESULT: FALSE if the deal can't happen (nothing offered, or it would
+// leave a party empty or overfull).
+void Netplay_DealBufferOffers(void)
+{
+    struct NetplayDealOffer *mine = &sDeal.mine.offer;
+    struct NetplayDealOffer *theirs = &sDeal.theirs.offer;
+    s32 partyAfter = gPartiesCount[B_TRAINER_PLAYER] - mine->hasMon + theirs->hasMon;
+
+    BufferDealPeerName();
+    BufferOfferText(gStringVar2, theirs);
+    BufferOfferText(gStringVar3, mine);
+    gSpecialVar_Result = (mine->hasMon || mine->money || theirs->hasMon || theirs->money)
+                      && partyAfter >= 1 && partyAfter <= PARTY_SIZE;
+}
+
+// VAR_RESULT: our answer from the yes/no box.
+void Netplay_DealAnswer(void)
+{
+    u16 cmd[CMD_LENGTH] = {gSpecialVar_Result == TRUE};
+
+    sDeal.myAnswerSent = SendPacket(NETPLAY_PACKET_DEAL_ANSWER, cmd);
+}
+
+// Waits for the other player's answer. VAR_RESULT: TRUE if both said yes.
+void Netplay_DealWaitForAnswer(void)
+{
+    u8 taskId = CreateTask(Task_WaitForDealAnswer, 80);
+    gTasks[taskId].tTimer = 0;
+}
+
+static void Task_WaitForDealAnswer(u8 taskId)
+{
+    s16 *data = gTasks[taskId].data;
+
+    ReceiveDealPackets();
+    if (sDeal.theirAnswer != DEAL_ANSWER_NONE)
+        gSpecialVar_Result = sDeal.myAnswerSent && sDeal.theirAnswer == DEAL_ANSWER_YES;
+    else if (!sSession.active || ++tTimer > DEAL_TIMEOUT)
+        gSpecialVar_Result = FALSE;
+    else
+        return;
+    DestroyTask(taskId);
+    ScriptContext_Enable();
+}
+
+#undef tTimer
+
+// Both said yes: hand over our side and take theirs, then save.
+void Netplay_DealApply(void)
+{
+    const struct NetplayDealOffer *mine = &sDeal.mine.offer;
+    const struct NetplayDealOffer *theirs = &sDeal.theirs.offer;
+
+    if (mine->hasMon)
+    {
+        ZeroMonData(&gParties[B_TRAINER_PLAYER][sDeal.mySlot]);
+        CompactPartySlots();
+        CalculatePlayerPartyCount();
+    }
+    if (theirs->hasMon && gPartiesCount[B_TRAINER_PLAYER] < PARTY_SIZE)
+    {
+        struct Pokemon *mon = &gParties[B_TRAINER_PLAYER][gPartiesCount[B_TRAINER_PLAYER]];
+        u16 species;
+
+        *mon = theirs->mon;
+        mon->mail = MAIL_NONE; // their mail slots aren't ours
+        species = GetMonData(mon, MON_DATA_SPECIES);
+        if (!GetMonData(mon, MON_DATA_IS_EGG))
+        {
+            GetSetPokedexFlag(SpeciesToNationalPokedexNum(species), FLAG_SET_SEEN);
+            GetSetPokedexFlag(SpeciesToNationalPokedexNum(species), FLAG_SET_CAUGHT);
+        }
+        CalculatePlayerPartyCount();
+    }
+    RemoveMoney(&gSaveBlock1Ptr->money, mine->money);
+    AddMoney(&gSaveBlock1Ptr->money, theirs->money);
+    TrySavingData(SAVE_NORMAL);
+}
+
+void Netplay_DealEnd(void)
+{
+    Netplay_EndSession();
 }

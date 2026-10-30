@@ -142,6 +142,11 @@ function tests.forwards_requests_once_per_seq()
     mem.write8(BASE + 0xC0, 2)
     bridge:onFrame()
     eq(list(net.take()), "RESULT 12 loss", "result")
+    mem.write8(BASE + 0xC1, 7)      -- deal
+    mem.write16(BASE + 0xC2, 9)
+    mem.write8(BASE + 0xC0, 3)
+    bridge:onFrame()
+    eq(list(net.take()), "REQ deal 9", "deal")
 end
 
 function tests.delivers_events_one_at_a_time()

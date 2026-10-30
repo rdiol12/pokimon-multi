@@ -33,7 +33,8 @@ Tests: `python3 -m unittest discover -s server` and
 End-to-end: `python3 tools/netplay_bridge/e2e/run_e2e.py` (needs a built
 `pokeemerald.gba`, `libmgba-dev` 0.10 and gcc). It runs two headless games
 against a fresh server: they meet in Oldale Town, battle (player 1 forfeits),
-then trade their lead Pokémon, and it checks the leaderboard. Screenshots and
+trade their lead Pokémon, and then player 2 sells a Pokémon to player 1 for
+¥1,000. It checks the leaderboard, both parties and both wallets. Screenshots and
 logs go to `--out`.
 
 ## Mailbox layout (version 1)
@@ -87,9 +88,10 @@ most once per frame; the bridge acts once per new `seq`.
 | 4 | decline invite | session id |
 | 5 | report battle result | session id, arg: 1 won, 2 lost, 3 draw |
 | 6 | leave or cancel a session | session id |
+| 7 | offer a deal (buy/sell) | target id |
 
 **Event (bridge → ROM, 8 bytes):** u8 seq, u8 type, u16 peer id,
-u16 session id, u8 kind (1 battle, 2 trade), u8 role (0 host, 1 guest). The
+u16 session id, u8 kind (1 battle, 2 trade, 3 deal), u8 role (0 host, 1 guest). The
 bridge writes a new event only after the ROM has acked the previous one.
 
 | type | meaning |
@@ -101,8 +103,9 @@ bridge writes a new event only after the ROM has acked the previous one.
 | 5 | our invite was sent; this is its session id |
 
 **Link rings:** a packet is 20 bytes: u8 kind (1 data, 2 handshake,
-3 handshake ack), 3 bytes padding, then one link command (`CMD_LENGTH` = 8
-u16). A ring is empty when `head == tail`; indices wrap at 16. The writer
+3 handshake ack, 4 deal offer chunk, 5 deal answer), u8 chunk index (deal
+offers only), 2 bytes padding, then 16 bytes: one link command (`CMD_LENGTH`
+= 8 u16), a chunk of a deal offer, or a deal answer (first u16: 1 yes, 0 no). A ring is empty when `head == tail`; indices wrap at 16. The writer
 fills `packets[head]`, then advances `head`; the reader consumes
 `packets[tail]`, then advances `tail`. On `START` the bridge empties both rings.
 
@@ -124,6 +127,17 @@ Battles and trades then run on Emerald's own link code: a battle uses each
 player's whole party (healed, and restored afterwards like a cable club
 battle), and a trade uses the normal trade screen.
 
+## Deals (buy/sell)
+
+"Buy/Sell" in the talk menu starts a deal session. It doesn't open a link.
+Each player picks a Pokémon to offer (or none) and an amount of money (or
+none). Each game sends its offer as 7 deal offer chunks: u32 money, u8 has
+Pokémon, 3 padding, then the 100-byte `struct Pokemon`. Both players see both
+offers and answer yes or no with a deal answer packet. When both say yes,
+each game removes what it gave, adds what it got (marking the Pokémon as
+caught in the Pokédex), and saves. A deal that would leave a party empty or
+with more than 6 Pokémon is refused. Deals never touch the leaderboard.
+
 ## Server protocol
 
 TCP, one command per line, fields separated by single spaces.
@@ -133,7 +147,7 @@ Client → server:
 ```
 HELLO <name> <trainer id>
 POS <map group> <map num> <x> <y> <facing> <elevation> <gfx>
-REQ <battle|trade> <target id>      (answered with PENDING, then START or DECLINED)
+REQ <battle|trade|deal> <target id>      (answered with PENDING, then START or DECLINED)
 ACCEPT <session id>
 DECLINE <session id>
 LINK <session id> <hex>
@@ -149,8 +163,8 @@ WELCOME <id>
 PENDING <session id>
 PLAYER <id> <name> <map group> <map num> <x> <y> <facing> <elevation> <gfx>
 GONE <id>
-INVITE <session id> <battle|trade> <from id>
-START <session id> <battle|trade> <peer id> <0 host|1 guest>
+INVITE <session id> <battle|trade|deal> <from id>
+START <session id> <battle|trade|deal> <peer id> <0 host|1 guest>
 DECLINED <session id>
 ENDED <session id>
 LINK <session id> <hex>
@@ -167,4 +181,4 @@ ERR <message>
 - Mismatched reports are recorded as disputed and do not change ratings.
 - If a player disconnects during a battle, the remaining player's report is
   accepted on its own, so leaving a losing battle counts as a loss.
-- Trades never touch the leaderboard.
+- Trades and deals never touch the leaderboard.
