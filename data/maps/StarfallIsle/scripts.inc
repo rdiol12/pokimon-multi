@@ -161,3 +161,29 @@ StarfallIsle_Text_PondBoy:
 	.string "grass up on that ledge.\p"
 	.string "You can't climb up from here.\n"
 	.string "Go around through the village!$"
+
+StarfallIsle_EventScript_Boatman::
+	lock
+	faceplayer
+	msgbox StarfallIsle_Text_BoatmanOffer, MSGBOX_YESNO
+	goto_if_eq VAR_RESULT, NO, StarfallIsle_EventScript_BoatmanNo
+	msgbox StarfallIsle_Text_BoatmanGo, MSGBOX_DEFAULT
+	closemessage
+	warp MAP_AMBERWOOD_HOLLOW, 19, 30
+	waitstate
+	release
+	end
+
+StarfallIsle_EventScript_BoatmanNo::
+	msgbox StarfallIsle_Text_BoatmanNo, MSGBOX_DEFAULT
+	release
+	end
+
+StarfallIsle_Text_BoatmanOffer:
+	.string "My rowboat goes to AMBERWOOD\nHOLLOW, a lake in an autumn forest.\pNobody's mapped it but me.\nWant to row over?$"
+
+StarfallIsle_Text_BoatmanGo:
+	.string "Hop in! Mind the leaves.$"
+
+StarfallIsle_Text_BoatmanNo:
+	.string "Suit yourself. The hollow will wait.$"
