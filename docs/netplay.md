@@ -4,6 +4,8 @@ Online multiplayer for the game: players see each other on the overworld, can
 challenge each other to battles or trade, and battle results feed a league
 leaderboard.
 
+![Two players meeting, battling, trading and making a deal](images/netplay-overview.png)
+
 ```
  ROM (gNetplayMailbox in EWRAM)  <->  mGBA Lua bridge  <->  TCP  <->  server/
 ```

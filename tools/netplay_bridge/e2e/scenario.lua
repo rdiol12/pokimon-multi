@@ -141,7 +141,7 @@ D.run(function()
     D.shot("deal-confirm")
     D.press(K.A, 60) -- YES
     D.waitFor("the deal", 1800, function() return D.partyCount() ~= count end)
-    D.wait(200)
+    D.wait(500) -- the save, then the fanfare and "The deal is done!"
     D.shot("deal-done")
     D.press(K.A, 60)
     D.log(string.format("after the deal: ¥%d, %d Pokémon", D.money(), D.partyCount()))
