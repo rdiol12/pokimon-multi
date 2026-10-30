@@ -176,6 +176,16 @@ class ServerTest(unittest.IsolatedAsyncioTestCase):
         status = self.league.db.execute("SELECT status FROM matches").fetchone()[0]
         self.assertEqual(status, "disputed")
 
+    async def test_deal_session_relays_and_does_not_count(self):
+        a, b, sid = await self.start_session("deal")
+        await a.send(f"LINK {sid} 04")
+        self.assertEqual(await b.recv(), f"LINK {sid} 04")
+        await a.send(f"RESULT {sid} win")
+        self.assertTrue((await a.recv()).startswith("ERR"))
+        await a.send(f"QUIT {sid}")
+        self.assertEqual(await b.recv(), f"ENDED {sid}")
+        self.assertEqual(await self.board(b), [])
+
     async def test_second_quit_is_silent(self):
         a, b, sid = await self.start_session()
         await a.send(f"QUIT {sid}")

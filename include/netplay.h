@@ -35,6 +35,7 @@ enum NetplayRequestType
     NETPLAY_REQ_DECLINE,
     NETPLAY_REQ_RESULT,
     NETPLAY_REQ_LEAVE,
+    NETPLAY_REQ_DEAL,
 };
 
 enum NetplayEventType
@@ -61,6 +62,8 @@ enum NetplayPacketKind
     NETPLAY_PACKET_DATA,
     NETPLAY_PACKET_HANDSHAKE,
     NETPLAY_PACKET_HANDSHAKE_ACK,
+    NETPLAY_PACKET_DEAL_OFFER,  // filler1: chunk index; cmd: 16 bytes of the offer
+    NETPLAY_PACKET_DEAL_ANSWER, // cmd[0]: TRUE to accept
 };
 
 struct NetplayRemotePlayer

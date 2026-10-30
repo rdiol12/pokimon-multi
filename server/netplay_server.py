@@ -15,7 +15,7 @@ START_RATING = 1000
 ELO_K = 32
 NAME_RE = re.compile(r"^[A-Za-z0-9]{1,7}$")
 HEX_RE = re.compile(r"^[0-9a-fA-F]{2,64}$")
-KINDS = ("battle", "trade")
+KINDS = ("battle", "trade", "deal")
 OUTCOMES = ("win", "loss", "draw")
 MAX_LINE = 256
 

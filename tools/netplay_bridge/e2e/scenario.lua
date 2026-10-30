@@ -1,5 +1,6 @@
--- Two players meet in Oldale Town, battle (player 1 forfeits), then trade
--- their lead Pokémon. Run with run_e2e.py.
+-- Two players meet in Oldale Town, battle (player 1 forfeits), trade their
+-- lead Pokémon, then player 2 sells a Pokémon to player 1 for ¥1,000.
+-- Run with run_e2e.py.
 
 dofile(INSTANCE_DIR .. "/../driver_lib.lua")
 local D = Driver
@@ -102,5 +103,57 @@ D.run(function()
         end
     end)
     D.wait(60)
+    D.shot("after-trade-overworld")
+    D.waitFor("the trade session to end", 600, function() return D.mb8(0x0D0) == D.mb8(0x0C8) end)
+
+    -- Deal: player 2 sells its second Pokémon to player 1 for ¥1,000 -----
+    local money, count = D.money(), D.partyCount()
+    D.log(string.format("before the deal: ¥%d, %d Pokémon", money, count))
+    seq = D.mb8(0x0C8)
+    if INSTANCE == 2 then
+        D.wait(120)
+        -- The player must be able to move again after a trade.
+        D.press(K.RIGHT, 40)
+        if select(3, D.pos()) ~= D.DIR.EAST then D.fail("can't turn after the trade") end
+        D.press(K.LEFT, 40)
+        talkToOtherPlayer(3)
+    else
+        acceptInvite(seq)
+    end
+    D.wait(200)
+    D.shot("deal-choose-mon")
+    D.press(K.A, 120) -- dismiss "Choose a Pokémon to offer", party menu opens
+    D.shot("deal-party")
+    if INSTANCE == 2 then
+        D.press(K.DOWN, 20)
+        D.press(K.A, 120)
+    else
+        D.press(K.B, 120)
+    end
+    D.shot("deal-money")
+    if INSTANCE == 1 then
+        for _ = 1, 3 do D.press(K.DOWN, 15) end -- ¥1,000
+    end
+    D.press(K.A, 30)
+    D.wait(300)
+    D.shot("deal-offers")
+    D.press(K.A, 60) -- "<name> offers ..." -> "You offer ... Make this deal?"
+    D.shot("deal-confirm")
+    D.press(K.A, 60) -- YES
+    D.waitFor("the deal", 1800, function() return D.partyCount() ~= count end)
+    D.wait(500) -- the save, then the fanfare and "The deal is done!"
+    D.shot("deal-done")
+    D.press(K.A, 60)
+    D.log(string.format("after the deal: ¥%d, %d Pokémon", D.money(), D.partyCount()))
+    local wantMoney = INSTANCE == 1 and money - 1000 or money + 1000
+    local wantCount = INSTANCE == 1 and count + 1 or count - 1
+    if D.money() ~= wantMoney or D.partyCount() ~= wantCount then
+        D.fail(string.format("expected ¥%d and %d Pokémon", wantMoney, wantCount))
+    end
+    if INSTANCE == 1 then
+        local bought = D.partyMon(wantCount - 1)
+        D.log("bought: " .. bought.nickname .. " (OT " .. bought.ot .. ")")
+    end
+    D.waitFor("the overworld after the deal", 600, D.inOverworld)
     D.shot("done")
 end)

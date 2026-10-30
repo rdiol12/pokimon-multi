@@ -20,7 +20,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
 SYMBOLS = ["gNetplayMailbox", "gMain", "gParties", "CB2_Overworld", "BattleMainCB2",
            "gLink", "gLinkStatus", "gReceivedRemoteLinkPlayers", "gLinkCallback",
-           "gReadyToCloseLink"]
+           "gReadyToCloseLink", "gPartiesCount", "gSaveBlock1Ptr", "gSaveBlock2Ptr"]
 
 
 def read_symbols(map_path):

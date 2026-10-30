@@ -2071,6 +2071,9 @@ void CB2_ReturnToFieldFromMultiplayer(void)
     if (Netplay_InSession())
     {
         // Online trades happen wherever the players met, not in a link room.
+        FieldClearVBlankHBlankCallbacks();
+        SetMainCallback1(CB1_Overworld);
+        gFieldCallback = FieldCB_ReturnToFieldNoScriptCheckMusic;
         ScriptContext_Init();
         UnlockPlayerFieldControls();
         CB2_ReturnToField();
