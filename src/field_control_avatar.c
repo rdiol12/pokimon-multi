@@ -44,6 +44,7 @@
 #include "constants/metatile_behaviors.h"
 #include "constants/songs.h"
 #include "constants/trainer_hill.h"
+#include "netplay.h"
 
 static EWRAM_DATA u8 sWildEncounterImmunitySteps = 0;
 static EWRAM_DATA u16 sPrevMetatileBehavior = 0;
@@ -409,6 +410,8 @@ static const u8 *GetInteractedObjectEventScript(struct MapPosition *position, u8
         script = GetOverworlWildEncounterScript(objectEventId);
     else if (gObjectEvents[objectEventId].localId == OBJ_EVENT_ID_FOLLOWER)
         script = EventScript_Follower;
+    else if (Netplay_IsNetplayObjectEvent(&gObjectEvents[objectEventId]))
+        script = Netplay_GetTalkScript(objectEventId);
     else if (InTrainerHill() == TRUE)
         script = GetTrainerHillTrainerScript();
     else

@@ -40,6 +40,7 @@
 #include "title_screen.h"
 #include "window.h"
 #include "mystery_gift_menu.h"
+#include "netplay.h"
 
 /*
  * Main menu state machine
@@ -1089,6 +1090,11 @@ static void Task_HandleMainMenuAPressed(u8 taskId)
                 return;
             }
 
+            if (Netplay_TryTestBoot(taskId))
+            {
+                FreeAllWindowBuffers();
+                return;
+            }
             gPlttBufferUnfaded[0] = RGB_BLACK;
             gPlttBufferFaded[0] = RGB_BLACK;
             gTasks[taskId].func = Task_NewGameBirchSpeech_Init;

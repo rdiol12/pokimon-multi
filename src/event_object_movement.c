@@ -1,5 +1,6 @@
 #include "global.h"
 #include "malloc.h"
+#include "netplay.h"
 #include "battle_anim.h"
 #include "battle_pyramid.h"
 #include "battle_util.h"
@@ -2936,6 +2937,8 @@ void RemoveObjectEventsOutsideView(void)
             if (objectEvent->localId == OBJ_EVENT_ID_NPC_FOLLOWER || objectEvent->localId == OBJ_EVENT_ID_FOLLOWER)
                 continue;
             if (IsOWEDespawnExempt(objectEvent))
+                continue;
+            if (Netplay_IsNetplayObjectEvent(objectEvent))
                 continue;
 
             RemoveObjectEventIfOutsideView(objectEvent);

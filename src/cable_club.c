@@ -34,6 +34,7 @@
 #include "constants/cable_club.h"
 #include "constants/songs.h"
 #include "constants/trainers.h"
+#include "netplay.h"
 
 static const struct WindowTemplate sWindowTemplate_LinkPlayerCount = {
     .bg = 0,
@@ -1012,7 +1013,9 @@ void CB2_ReturnFromCableClubBattle(void)
         }
     }
 
-    if (InUnionRoom() == TRUE)
+    Netplay_OnBattleEnd(gBattleOutcome);
+
+    if (InUnionRoom() == TRUE || Netplay_InSession())
         gMain.savedCallback = CB2_ReturnFromUnionRoomBattle;
     else
         gMain.savedCallback = CB2_ReturnToFieldFromMultiplayer;

@@ -638,3 +638,10 @@ gSpecials::
 	def_special UpdateTrainerCardPhotoIcons
 	def_special StickerManGetBragFlags
 	def_special CheckAddCoins
+	def_special Netplay_GetTalkedPlayer
+	def_special Netplay_SendInvite
+	def_special Netplay_WaitForResponse, waitstate=1
+	def_special Netplay_BufferInvite
+	def_special Netplay_AnswerInvite
+	def_special Netplay_WaitForStart, waitstate=1
+	def_special Netplay_StartActivity, waitstate=1
