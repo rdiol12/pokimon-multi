@@ -295,28 +295,71 @@ static const u8 sRSAvatarGfxIds[GENDER_COUNT] =
     [FEMALE] = OBJ_EVENT_GFX_LINK_RS_MAY
 };
 
-static const struct PACKED
+static const u16 sPlayerStyleAvatarGfxIds[PLAYER_STYLE_COUNT][PLAYER_AVATAR_STATE_VSSEEKER + 1] =
 {
-    u16 graphicsId;
-    u8 playerFlag;
-} sPlayerAvatarGfxToStateFlag[GENDER_COUNT][5] =
-{
-    [MALE] =
+    [PLAYER_STYLE_BRENDAN] =
     {
-        {PLAYER_AVATAR_GFX_MALE_NORMAL,     PLAYER_AVATAR_FLAG_ON_FOOT},
-        {PLAYER_AVATAR_GFX_MALE_MACH_BIKE,  PLAYER_AVATAR_FLAG_MACH_BIKE},
-        {PLAYER_AVATAR_GFX_MALE_ACRO_BIKE,  PLAYER_AVATAR_FLAG_ACRO_BIKE},
-        {PLAYER_AVATAR_GFX_MALE_SURFING,    PLAYER_AVATAR_FLAG_SURFING},
-        {PLAYER_AVATAR_GFX_MALE_UNDERWATER, PLAYER_AVATAR_FLAG_UNDERWATER},
+        [PLAYER_AVATAR_STATE_NORMAL]     = OBJ_EVENT_GFX_BRENDAN_NORMAL,
+        [PLAYER_AVATAR_STATE_MACH_BIKE]  = OBJ_EVENT_GFX_BRENDAN_MACH_BIKE,
+        [PLAYER_AVATAR_STATE_ACRO_BIKE]  = OBJ_EVENT_GFX_BRENDAN_ACRO_BIKE,
+        [PLAYER_AVATAR_STATE_SURFING]    = OBJ_EVENT_GFX_BRENDAN_SURFING,
+        [PLAYER_AVATAR_STATE_UNDERWATER] = OBJ_EVENT_GFX_BRENDAN_UNDERWATER,
+        [PLAYER_AVATAR_STATE_FIELD_MOVE] = OBJ_EVENT_GFX_BRENDAN_FIELD_MOVE,
+        [PLAYER_AVATAR_STATE_FISHING]    = OBJ_EVENT_GFX_BRENDAN_FISHING,
+        [PLAYER_AVATAR_STATE_WATERING]   = OBJ_EVENT_GFX_BRENDAN_WATERING,
+        [PLAYER_AVATAR_STATE_VSSEEKER]   = OBJ_EVENT_GFX_BRENDAN_FIELD_MOVE,
     },
-    [FEMALE] =
+    [PLAYER_STYLE_MAY] =
     {
-        {PLAYER_AVATAR_GFX_FEMALE_NORMAL,         PLAYER_AVATAR_FLAG_ON_FOOT},
-        {PLAYER_AVATAR_GFX_FEMALE_MACH_BIKE,      PLAYER_AVATAR_FLAG_MACH_BIKE},
-        {PLAYER_AVATAR_GFX_FEMALE_ACRO_BIKE,      PLAYER_AVATAR_FLAG_ACRO_BIKE},
-        {PLAYER_AVATAR_GFX_FEMALE_SURFING,        PLAYER_AVATAR_FLAG_SURFING},
-        {PLAYER_AVATAR_GFX_FEMALE_UNDERWATER,     PLAYER_AVATAR_FLAG_UNDERWATER},
-    }
+        [PLAYER_AVATAR_STATE_NORMAL]     = OBJ_EVENT_GFX_MAY_NORMAL,
+        [PLAYER_AVATAR_STATE_MACH_BIKE]  = OBJ_EVENT_GFX_MAY_MACH_BIKE,
+        [PLAYER_AVATAR_STATE_ACRO_BIKE]  = OBJ_EVENT_GFX_MAY_ACRO_BIKE,
+        [PLAYER_AVATAR_STATE_SURFING]    = OBJ_EVENT_GFX_MAY_SURFING,
+        [PLAYER_AVATAR_STATE_UNDERWATER] = OBJ_EVENT_GFX_MAY_UNDERWATER,
+        [PLAYER_AVATAR_STATE_FIELD_MOVE] = OBJ_EVENT_GFX_MAY_FIELD_MOVE,
+        [PLAYER_AVATAR_STATE_FISHING]    = OBJ_EVENT_GFX_MAY_FISHING,
+        [PLAYER_AVATAR_STATE_WATERING]   = OBJ_EVENT_GFX_MAY_WATERING,
+        [PLAYER_AVATAR_STATE_VSSEEKER]   = OBJ_EVENT_GFX_MAY_FIELD_MOVE,
+    },
+    // Red and Leaf have one bike and no diving sprite.
+    [PLAYER_STYLE_RED] =
+    {
+        [PLAYER_AVATAR_STATE_NORMAL]     = OBJ_EVENT_GFX_RED_NORMAL,
+        [PLAYER_AVATAR_STATE_MACH_BIKE]  = OBJ_EVENT_GFX_RED_BIKE,
+        [PLAYER_AVATAR_STATE_ACRO_BIKE]  = OBJ_EVENT_GFX_RED_BIKE,
+        [PLAYER_AVATAR_STATE_SURFING]    = OBJ_EVENT_GFX_RED_SURF,
+        [PLAYER_AVATAR_STATE_UNDERWATER] = OBJ_EVENT_GFX_RED_SURF,
+        [PLAYER_AVATAR_STATE_FIELD_MOVE] = OBJ_EVENT_GFX_RED_FIELD_MOVE,
+        [PLAYER_AVATAR_STATE_FISHING]    = OBJ_EVENT_GFX_RED_FISH,
+        [PLAYER_AVATAR_STATE_WATERING]   = OBJ_EVENT_GFX_RED_FIELD_MOVE,
+        [PLAYER_AVATAR_STATE_VSSEEKER]   = OBJ_EVENT_GFX_RED_VS_SEEKER,
+    },
+    [PLAYER_STYLE_LEAF] =
+    {
+        [PLAYER_AVATAR_STATE_NORMAL]     = OBJ_EVENT_GFX_GREEN_NORMAL,
+        [PLAYER_AVATAR_STATE_MACH_BIKE]  = OBJ_EVENT_GFX_GREEN_BIKE,
+        [PLAYER_AVATAR_STATE_ACRO_BIKE]  = OBJ_EVENT_GFX_GREEN_BIKE,
+        [PLAYER_AVATAR_STATE_SURFING]    = OBJ_EVENT_GFX_GREEN_SURF,
+        [PLAYER_AVATAR_STATE_UNDERWATER] = OBJ_EVENT_GFX_GREEN_SURF,
+        [PLAYER_AVATAR_STATE_FIELD_MOVE] = OBJ_EVENT_GFX_GREEN_FIELD_MOVE,
+        [PLAYER_AVATAR_STATE_FISHING]    = OBJ_EVENT_GFX_GREEN_FISH,
+        [PLAYER_AVATAR_STATE_WATERING]   = OBJ_EVENT_GFX_GREEN_FIELD_MOVE,
+        [PLAYER_AVATAR_STATE_VSSEEKER]   = OBJ_EVENT_GFX_GREEN_VS_SEEKER,
+    },
+};
+
+// The avatar states that are kept in gPlayerAvatar.flags, in lookup order.
+static const struct
+{
+    u8 state;
+    u8 playerFlag;
+} sPlayerAvatarStateFlags[] =
+{
+    {PLAYER_AVATAR_STATE_NORMAL,     PLAYER_AVATAR_FLAG_ON_FOOT},
+    {PLAYER_AVATAR_STATE_MACH_BIKE,  PLAYER_AVATAR_FLAG_MACH_BIKE},
+    {PLAYER_AVATAR_STATE_ACRO_BIKE,  PLAYER_AVATAR_FLAG_ACRO_BIKE},
+    {PLAYER_AVATAR_STATE_SURFING,    PLAYER_AVATAR_FLAG_SURFING},
+    {PLAYER_AVATAR_STATE_UNDERWATER, PLAYER_AVATAR_FLAG_UNDERWATER},
 };
 
 static bool8 (*const sArrowWarpMetatileBehaviorChecks2[])(u8) =  //Duplicate of sArrowWarpMetatileBehaviorChecks
@@ -1585,7 +1628,47 @@ u16 GetRSAvatarGraphicsIdByGender(enum Gender gender)
 
 u16 GetPlayerAvatarGraphicsIdByStateId(u8 state)
 {
-    return GetPlayerAvatarGraphicsIdByStateIdAndGender(state, gPlayerAvatar.gender);
+    return sPlayerStyleAvatarGfxIds[GetPlayerStyle()][state];
+}
+
+enum PlayerStyle GetPlayerStyle(void)
+{
+    u8 style = gSaveBlock2Ptr->playerStyle;
+
+    if (style != 0 && style <= PLAYER_STYLE_COUNT)
+        return style - 1;
+    // Not picked yet: the look that comes with the player's gender.
+    if (IS_FRLG)
+        return gSaveBlock2Ptr->playerGender == FEMALE ? PLAYER_STYLE_LEAF : PLAYER_STYLE_RED;
+    return gSaveBlock2Ptr->playerGender == FEMALE ? PLAYER_STYLE_MAY : PLAYER_STYLE_BRENDAN;
+}
+
+void SetPlayerStyle(enum PlayerStyle style)
+{
+    gSaveBlock2Ptr->playerStyle = style + 1;
+}
+
+enum Gender GetPlayerStyleGender(enum PlayerStyle style)
+{
+    return (style == PLAYER_STYLE_MAY || style == PLAYER_STYLE_LEAF) ? FEMALE : MALE;
+}
+
+// Which game's trainer pictures go with the style.
+enum GameVersion GetPlayerStyleVersion(enum PlayerStyle style)
+{
+    return (style == PLAYER_STYLE_RED || style == PLAYER_STYLE_LEAF) ? VERSION_FIRE_RED : VERSION_EMERALD;
+}
+
+// Redraws the player in the current style, keeping what they are doing
+// (walking, biking, surfing).
+void ApplyPlayerStyleToAvatar(void)
+{
+    struct ObjectEvent *player = &gObjectEvents[gPlayerAvatar.objectEventId];
+    u16 graphicsId = GetPlayerAvatarGraphicsIdByCurrentState();
+
+    gPlayerAvatar.gender = GetPlayerStyleGender(GetPlayerStyle());
+    if (graphicsId != 0)
+        ObjectEventSetGraphicsId(player, graphicsId);
 }
 
 enum Gender GetPlayerAvatarGenderByGraphicsId(u16 gfxId)
@@ -1667,11 +1750,12 @@ void SetPlayerAvatarStateMask(u8 flags)
 static u8 GetPlayerAvatarStateTransitionByGraphicsId(u16 graphicsId, u8 gender)
 {
     u8 i;
+    enum PlayerStyle style = GetPlayerStyle();
 
-    for (i = 0; i < ARRAY_COUNT(sPlayerAvatarGfxToStateFlag[0]); i++)
+    for (i = 0; i < ARRAY_COUNT(sPlayerAvatarStateFlags); i++)
     {
-        if (sPlayerAvatarGfxToStateFlag[gender][i].graphicsId == graphicsId)
-            return sPlayerAvatarGfxToStateFlag[gender][i].playerFlag;
+        if (sPlayerStyleAvatarGfxIds[style][sPlayerAvatarStateFlags[i].state] == graphicsId)
+            return sPlayerAvatarStateFlags[i].playerFlag;
     }
     return PLAYER_AVATAR_FLAG_ON_FOOT;
 }
@@ -1680,11 +1764,12 @@ u16 GetPlayerAvatarGraphicsIdByCurrentState(void)
 {
     u8 i;
     u8 flags = gPlayerAvatar.flags;
+    enum PlayerStyle style = GetPlayerStyle();
 
-    for (i = 0; i < ARRAY_COUNT(sPlayerAvatarGfxToStateFlag[0]); i++)
+    for (i = 0; i < ARRAY_COUNT(sPlayerAvatarStateFlags); i++)
     {
-        if (sPlayerAvatarGfxToStateFlag[gPlayerAvatar.gender][i].playerFlag & flags)
-            return sPlayerAvatarGfxToStateFlag[gPlayerAvatar.gender][i].graphicsId;
+        if (sPlayerAvatarStateFlags[i].playerFlag & flags)
+            return sPlayerStyleAvatarGfxIds[style][sPlayerAvatarStateFlags[i].state];
     }
     return 0;
 }
@@ -1704,7 +1789,7 @@ void InitPlayerAvatar(s16 x, s16 y, enum Direction direction, enum Gender gender
     struct ObjectEvent *objectEvent;
 
     playerObjEventTemplate.localId = LOCALID_PLAYER;
-    playerObjEventTemplate.graphicsId = GetPlayerAvatarGraphicsIdByStateIdAndGender(PLAYER_AVATAR_STATE_NORMAL, gender);
+    playerObjEventTemplate.graphicsId = GetPlayerAvatarGraphicsIdByStateId(PLAYER_AVATAR_STATE_NORMAL);
     playerObjEventTemplate.x = x - MAP_OFFSET;
     playerObjEventTemplate.y = y - MAP_OFFSET;
     playerObjEventTemplate.elevation = ELEVATION_TRANSITION;
@@ -1725,7 +1810,7 @@ void InitPlayerAvatar(s16 x, s16 y, enum Direction direction, enum Gender gender
     gPlayerAvatar.tileTransitionState = T_NOT_MOVING;
     gPlayerAvatar.objectEventId = objectEventId;
     gPlayerAvatar.spriteId = objectEvent->spriteId;
-    gPlayerAvatar.gender = gender;
+    gPlayerAvatar.gender = GetPlayerStyleGender(GetPlayerStyle());
     SetPlayerAvatarStateMask(PLAYER_AVATAR_FLAG_CONTROLLABLE | PLAYER_AVATAR_FLAG_ON_FOOT);
     CreateFollowerNPCAvatar();
 }

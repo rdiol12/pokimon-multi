@@ -6,6 +6,7 @@ import argparse
 import asyncio
 import itertools
 import logging
+import os
 import re
 import sqlite3
 
@@ -348,22 +349,35 @@ class Server:
         player.send("BOARDEND")
 
 
-async def serve(host, port, db_path):
+async def serve(host, port, db_path, http_port=0, public_host=""):
     server = Server(League(db_path))
     srv = await asyncio.start_server(server.handle, host, port)
     log.info("listening on %s", ", ".join(str(s.getsockname()) for s in srv.sockets))
-    async with srv:
-        await srv.serve_forever()
+    servers = [srv]
+    if http_port:
+        from web import Web
+
+        web = await asyncio.start_server(Web(server, public_host, port).handle, host, http_port)
+        log.info("web page on %s", ", ".join(str(s.getsockname()) for s in web.sockets))
+        servers.append(web)
+    await asyncio.gather(*(s.serve_forever() for s in servers))
 
 
 def main():
+    env = os.environ.get
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--host", default="0.0.0.0")
-    parser.add_argument("--port", type=int, default=7777)
-    parser.add_argument("--db", default="league.sqlite3")
+    parser.add_argument("--host", default=env("NETPLAY_HOST", "0.0.0.0"))
+    parser.add_argument("--port", type=int, default=int(env("NETPLAY_PORT", "7777")),
+                        help="game port the mGBA bridge connects to")
+    parser.add_argument("--http-port", type=int, default=int(env("NETPLAY_HTTP_PORT", "0")),
+                        help="port for the leaderboard page and bridge download (0: off)")
+    parser.add_argument("--public-host", default=env("NETPLAY_PUBLIC_HOST", ""),
+                        help="address players use to reach this server, written into the"
+                             " downloaded bridge script (default: from the page request)")
+    parser.add_argument("--db", default=env("NETPLAY_DB", "league.sqlite3"))
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
-    asyncio.run(serve(args.host, args.port, args.db))
+    asyncio.run(serve(args.host, args.port, args.db, args.http_port, args.public_host))
 
 
 if __name__ == "__main__":

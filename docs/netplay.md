@@ -25,9 +25,14 @@ leaderboard.
 python3 server/netplay_server.py --port 7777 --db league.sqlite3
 ```
 
+Add `--http-port 8080` for the leaderboard page, which also serves the bridge
+script with the server's address filled in. To run it on a real server
+(Docker or systemd), see `deploy/README.md`.
+
 In mGBA: *Tools → Scripting… → File → Load script*, pick
-`tools/netplay_bridge/netplay_bridge.lua`. Edit `HOST`/`PORT` at the top of the
-script to point at the server.
+`tools/netplay_bridge/netplay_bridge.lua` (or the copy downloaded from the
+leaderboard page). Set `NETPLAY_HOST`/`NETPLAY_PORT` at the top of the script to
+point at the server.
 
 Tests: `python3 -m unittest discover -s server` and
 `lua5.4 tools/netplay_bridge/test_bridge.lua`.
@@ -35,8 +40,8 @@ Tests: `python3 -m unittest discover -s server` and
 End-to-end: `python3 tools/netplay_bridge/e2e/run_e2e.py` (needs a built
 `pokeemerald.gba`, `libmgba-dev` 0.10 and gcc). It runs two headless games
 against a fresh server: they meet in Oldale Town, battle (player 1 forfeits),
-trade their lead Pokémon, and then player 2 sells a Pokémon to player 1 for
-¥1,000. It checks the leaderboard, both parties and both wallets. Screenshots and
+trade their lead Pokémon, and then make a deal on the deal screen: player 2
+gives both its Pokémon for player 1's lead Pokémon and ¥1,000. It checks the leaderboard, both parties and both wallets. Screenshots and
 logs go to `--out`.
 
 ## Mailbox layout (version 1)
@@ -105,9 +110,9 @@ bridge writes a new event only after the ROM has acked the previous one.
 | 5 | our invite was sent; this is its session id |
 
 **Link rings:** a packet is 20 bytes: u8 kind (1 data, 2 handshake,
-3 handshake ack, 4 deal offer chunk, 5 deal answer), u8 chunk index (deal
-offers only), 2 bytes padding, then 16 bytes: one link command (`CMD_LENGTH`
-= 8 u16), a chunk of a deal offer, or a deal answer (first u16: 1 yes, 0 no). A ring is empty when `head == tail`; indices wrap at 16. The writer
+3 handshake ack, 4 deal offer chunk, 5 deal answer, 6 deal commit), u8 and
+u16 used by deal offers (chunk index, revision), then 16 bytes: one link
+command (`CMD_LENGTH` = 8 u16) or deal data (see Deals below). A ring is empty when `head == tail`; indices wrap at 16. The writer
 fills `packets[head]`, then advances `head`; the reader consumes
 `packets[tail]`, then advances `tail`. On `START` the bridge empties both rings.
 
@@ -132,13 +137,23 @@ battle), and a trade uses the normal trade screen.
 ## Deals (buy/sell)
 
 "Buy/Sell" in the talk menu starts a deal session. It doesn't open a link.
-Each player picks a Pokémon to offer (or none) and an amount of money (or
-none). Each game sends its offer as 7 deal offer chunks: u32 money, u8 has
-Pokémon, 3 padding, then the 100-byte `struct Pokemon`. Both players see both
-offers and answer yes or no with a deal answer packet. When both say yes,
-each game removes what it gave, adds what it got (marking the Pokémon as
-caught in the Pokédex), and saves. A deal that would leave a party empty or
-with more than 6 Pokémon is refused. Deals never touch the leaderboard.
+Both players get the deal screen: their own offer on the left, the other
+player's on the right, and ADD / REMOVE / MONEY / ACCEPT / QUIT below. An
+offer is up to 6 Pokémon and any amount of money the player has, and each side
+sees the other's offer change live.
+
+- Every change to an offer bumps its revision and is sent whole as 38 deal
+  offer chunks (filler1: chunk index, filler2: revision): u32 money, u8 count,
+  3 padding, then 6 × the 100-byte `struct Pokemon`.
+- A deal answer packet says whether that player accepts, with both offer
+  revisions they saw. Any change to either offer clears both accepts.
+- When a game sees both players accepting the same two revisions, it sends a
+  deal commit with those revisions and stops taking input. It applies the deal
+  once it has the other player's commit for the same revisions: it removes
+  what it gave, adds what it got (marking the Pokémon as caught in the
+  Pokédex), moves the money, and saves.
+- A deal can't be accepted if it would leave a party empty or with more than
+  6 Pokémon. Deals never touch the leaderboard.
 
 ## Server protocol
 

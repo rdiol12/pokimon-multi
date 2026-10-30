@@ -62,8 +62,9 @@ enum NetplayPacketKind
     NETPLAY_PACKET_DATA,
     NETPLAY_PACKET_HANDSHAKE,
     NETPLAY_PACKET_HANDSHAKE_ACK,
-    NETPLAY_PACKET_DEAL_OFFER,  // filler1: chunk index; cmd: 16 bytes of the offer
-    NETPLAY_PACKET_DEAL_ANSWER, // cmd[0]: TRUE to accept
+    NETPLAY_PACKET_DEAL_OFFER,  // filler1: chunk index, filler2: offer revision; cmd: 16 bytes of the offer
+    NETPLAY_PACKET_DEAL_ANSWER, // cmd: accepted, our revision, their revision we accepted
+    NETPLAY_PACKET_DEAL_COMMIT, // cmd: our revision, their revision
 };
 
 struct NetplayRemotePlayer

@@ -1,0 +1,27 @@
+# systemd unit for running the netplay server without Docker.
+# Install: copy the repository to /opt/pokimon-multi, create the user
+# (useradd --system --home-dir /var/lib/pokimon-netplay pokimon), then
+#   cp deploy/pokimon-netplay.service /etc/systemd/system/
+#   systemctl enable --now pokimon-netplay
+[Unit]
+Description=Pokimon Multi netplay server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=pokimon
+WorkingDirectory=/opt/pokimon-multi
+StateDirectory=pokimon-netplay
+Environment=NETPLAY_PORT=7777
+Environment=NETPLAY_HTTP_PORT=8080
+Environment=NETPLAY_DB=/var/lib/pokimon-netplay/league.sqlite3
+# Environment=NETPLAY_PUBLIC_HOST=play.example.org
+ExecStart=/usr/bin/python3 server/netplay_server.py
+Restart=on-failure
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

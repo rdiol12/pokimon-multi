@@ -1,0 +1,20 @@
+# Runs the whole netplay backend on one machine:
+#   cd deploy && NETPLAY_PUBLIC_HOST=play.example.org docker compose up -d
+# Players connect the game to port 7777; the league page is on port 8080.
+services:
+  netplay:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    image: pokimon-netplay
+    restart: unless-stopped
+    environment:
+      NETPLAY_PUBLIC_HOST: ${NETPLAY_PUBLIC_HOST:-}
+    ports:
+      - "7777:7777"
+      - "8080:8080"
+    volumes:
+      - league-data:/data
+
+volumes:
+  league-data:

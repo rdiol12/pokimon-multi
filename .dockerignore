@@ -1,0 +1,4 @@
+# The image only needs the netplay server and the bridge script it serves.
+*
+!server/*.py
+!tools/netplay_bridge/netplay_bridge.lua

@@ -1,5 +1,6 @@
 -- Two players meet in Oldale Town, battle (player 1 forfeits), trade their
--- lead Pokémon, then player 2 sells a Pokémon to player 1 for ¥1,000.
+-- lead Pokémon, then make a deal: player 2 gives both its Pokémon for player
+-- 1's lead Pokémon and ¥1,000.
 -- Run with run_e2e.py.
 
 dofile(INSTANCE_DIR .. "/../driver_lib.lua")
@@ -21,7 +22,8 @@ local function acceptInvite(lastSeq)
     end)
     D.wait(90)
     D.shot("invite")
-    D.press(K.A, 40) -- finish the text
+    -- Text is fast, so YES/NO is already up; a second A is harmless after a
+    -- battle or trade invite but would press ADD on the deal screen.
     D.press(K.A, 40) -- YES
 end
 
@@ -106,7 +108,8 @@ D.run(function()
     D.shot("after-trade-overworld")
     D.waitFor("the trade session to end", 600, function() return D.mb8(0x0D0) == D.mb8(0x0C8) end)
 
-    -- Deal: player 2 sells its second Pokémon to player 1 for ¥1,000 -----
+    -- Deal: player 2 offers both its Pokémon; player 1 offers its lead and
+    -- ¥1,000. Both accept.
     local money, count = D.money(), D.partyCount()
     D.log(string.format("before the deal: ¥%d, %d Pokémon", money, count))
     seq = D.mb8(0x0C8)
@@ -121,25 +124,34 @@ D.run(function()
         acceptInvite(seq)
     end
     D.wait(200)
-    D.shot("deal-choose-mon")
-    D.press(K.A, 120) -- dismiss "Choose a Pokémon to offer", party menu opens
-    D.shot("deal-party")
+    D.shot("deal-screen")
+    local function addMon(downs)
+        D.press(K.A, 150) -- ADD: party menu
+        for _ = 1, downs do D.press(K.DOWN, 20) end
+        D.press(K.A, 200) -- back on the deal screen
+    end
     if INSTANCE == 2 then
-        D.press(K.DOWN, 20)
-        D.press(K.A, 120)
+        addMon(0)
+        D.shot("deal-party")
+        addMon(1)
+        D.shot("deal-two-mons")
+        D.wait(200)
+        for _ = 1, 3 do D.press(K.RIGHT, 15) end
     else
-        D.press(K.B, 120)
+        addMon(0)
+        D.press(K.RIGHT, 15)
+        D.press(K.RIGHT, 15)
+        D.press(K.A, 30) -- MONEY
+        D.press(K.UP, 20) -- +1000
+        D.shot("deal-money")
+        D.press(K.A, 30)
+        D.wait(400)
+        D.press(K.RIGHT, 15)
     end
-    D.shot("deal-money")
-    if INSTANCE == 1 then
-        for _ = 1, 3 do D.press(K.DOWN, 15) end -- ¥1,000
-    end
-    D.press(K.A, 30)
-    D.wait(300)
+    D.wait(100)
     D.shot("deal-offers")
-    D.press(K.A, 60) -- "<name> offers ..." -> "You offer ... Make this deal?"
-    D.shot("deal-confirm")
-    D.press(K.A, 60) -- YES
+    D.press(K.A, 60) -- ACCEPT
+    D.shot("deal-accepted")
     D.waitFor("the deal", 1800, function() return D.partyCount() ~= count end)
     D.wait(500) -- the save, then the fanfare and "The deal is done!"
     D.shot("deal-done")
