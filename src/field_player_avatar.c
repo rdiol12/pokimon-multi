@@ -1,4 +1,5 @@
 #include "global.h"
+#include "world.h"
 #include "main.h"
 #include "bike.h"
 #include "event_data.h"
@@ -1628,6 +1629,9 @@ u16 GetRSAvatarGraphicsIdByGender(enum Gender gender)
 
 u16 GetPlayerAvatarGraphicsIdByStateId(u8 state)
 {
+    // Riding a Pokémon is the Mach Bike underneath, drawn on foot.
+    if (Mount_IsRiding() && (state == PLAYER_AVATAR_STATE_MACH_BIKE || state == PLAYER_AVATAR_STATE_ACRO_BIKE))
+        state = PLAYER_AVATAR_STATE_NORMAL;
     return sPlayerStyleAvatarGfxIds[GetPlayerStyle()][state];
 }
 

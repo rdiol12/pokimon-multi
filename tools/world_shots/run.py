@@ -70,6 +70,7 @@ function Driver.read32(a) return E.read32(a) end
 function Driver.write8(a, v) return E.write8(a, v) end
 
 -- Sets the clock to `hour` and warps to map {group, num} at x, y.
+-- extra: {give = "RAPIDASH", level = 40, lead = true, shiny = true}
 function Driver.scene(hour, map, x, y, extra)
     local s = Driver.SYM.gWorldShowcase
     E.write8(s + 1, hour)
@@ -77,7 +78,12 @@ function Driver.scene(hour, map, x, y, extra)
     E.write8(s + 3, map[2])
     E.write8(s + 4, x & 0xFF); E.write8(s + 5, (x >> 8) & 0xFF)
     E.write8(s + 6, y & 0xFF); E.write8(s + 7, (y >> 8) & 0xFF)
-    E.write8(s + 8, extra or 0)
+    extra = extra or {}
+    E.write8(s + 8, extra.lead and 1 or 0)
+    E.write8(s + 9, extra.shiny and 1 or 0)
+    local sp = extra.give and SPECIES_ID[extra.give] or 0
+    E.write8(s + 10, sp & 0xFF); E.write8(s + 11, sp >> 8)
+    E.write8(s + 12, extra.level or 30)
     E.write8(s, 1)
     -- B closes whatever message is still open, so the warp can run.
     Driver.waitFor("the warp", 900, function() return E.read8(s) == 0 end, function(i)
@@ -120,6 +126,7 @@ def main():
     maps = re.findall(r"^\s+(MAP_\w+)\s+= \((\d+) \| \((\d+) << 8\)\),", open(os.path.join(root, "include", "constants", "map_groups.h")).read(), re.M)
     prelude = "MAPS = {\n" + "".join(f"    {n} = {{{g}, {num}}},\n" for n, num, g in maps) + "}\n"
     species = re.findall(r"^\s+SPECIES_(\w+) = (\d+),", open(os.path.join(root, "include", "constants", "species.h")).read(), re.M)
+    prelude += "SPECIES_ID = {\n" + "".join(f'    {n} = {v},\n' for n, v in species) + "}\n"
     prelude += "SPECIES_NAME = {\n" + "".join(f'    [{v}] = "{n}",\n' for n, v in species) + "}\n"
     prelude += f'OUT_DIR = "{out}"\n'
     open(os.path.join(out, "p1", "driver.lua"), "w").write(prelude + open(scenario).read())

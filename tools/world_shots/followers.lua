@@ -1,0 +1,20 @@
+-- Following Pokémon: the lead Pokémon walks behind the player.
+dofile(INSTANCE_DIR .. "/../driver_lib.lua")
+local D, K = Driver, Driver.KEY
+
+D.run(function()
+    D.boot()
+    D.wait(60)
+    D.scene(13, MAPS.MAP_ROUTE101, 10, 12)
+    D.hold(K.UP, 40)
+    D.wait(30)
+    D.shot("follower-walk")
+    D.hold(K.RIGHT, 20)
+    D.wait(30)
+    D.hold(K.LEFT, 4)
+    D.wait(30)
+    D.press(K.A, 60)
+    D.shot("follower-talk")
+    D.press(K.A, 60)
+    D.shot("follower-talk-2")
+end)

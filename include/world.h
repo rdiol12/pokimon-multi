@@ -23,4 +23,16 @@ void RoamingWeather_GetForecast(void);
 // Day/night (world_daynight.c).
 void DayNight_UpdateFlags(void);
 
+// Mounts (world_mount.c).
+bool32 Mount_IsRideable(u16 species);
+bool32 Mount_IsRiding(void);
+u16 Mount_GetGfx(void);
+u8 Mount_Attach(u8 objectId, u16 gfx);
+void Mount_Detach(u8 spriteId);
+void Mount_Update(void);
+void Mount_Toggle(void);
+
+// The R button menu.
+bool32 World_TryOpenMenu(void);
+
 #endif // GUARD_WORLD_H

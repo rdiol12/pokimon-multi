@@ -18,6 +18,7 @@
 #include "constants/berry.h"
 #include "constants/cable_club.h"
 #include "constants/netplay.h"
+#include "constants/world.h"
 #include "constants/coins.h"
 #include "constants/comparison_operators.h"
 #include "constants/contest.h"
