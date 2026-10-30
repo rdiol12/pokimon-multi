@@ -32,6 +32,15 @@ void Mount_Detach(u8 spriteId);
 void Mount_Update(void);
 void Mount_Toggle(void);
 
+// Full-screen list window (world_board.c).
+typedef void (*WorldBoardLineFunc)(u16 index, u8 *dest);
+void WorldBoard_Show(const u8 *title, u16 count, WorldBoardLineFunc getLine, WorldBoardLineFunc getDetail);
+void WorldBoard_Refresh(u16 count);
+
+// Battle hooks (battle_setup.c).
+void World_OnWildBattleEnd(void);
+void World_OnTrainerBattleEnd(void);
+
 // The R button menu.
 bool32 World_TryOpenMenu(void);
 

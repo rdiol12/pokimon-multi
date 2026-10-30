@@ -1,5 +1,8 @@
 #include "global.h"
+#include "achievements.h"
+#include "battle.h"
 #include "event_data.h"
+#include "item.h"
 #include "field_screen_effect.h"
 #include "script.h"
 #include "main.h"
@@ -27,6 +30,7 @@ struct WorldShowcase
     u8 shiny;
     u16 giveSpecies;
     u8 giveLevel;
+    u16 giveItem; // 20 of these go in the bag
 };
 
 EWRAM_DATA struct WorldShowcase gWorldShowcase = {0};
@@ -40,6 +44,11 @@ void World_OnMapTransition(void)
 static void RunShowcase(void)
 {
     gWorldShowcase.pending = FALSE;
+    if (gWorldShowcase.giveItem != ITEM_NONE)
+    {
+        AddBagItem(gWorldShowcase.giveItem, 20);
+        gWorldShowcase.giveItem = ITEM_NONE;
+    }
     if (gWorldShowcase.giveSpecies != SPECIES_NONE)
     {
         struct Pokemon mon;
@@ -80,6 +89,7 @@ bool32 World_OverworldUpdate(void)
     }
     RoamingWeather_Update();
     Mount_Update();
+    Achievements_Update();
     return FALSE;
 }
 
@@ -92,4 +102,17 @@ bool32 World_TryOpenMenu(void)
 enum Species World_ModifyWildSpecies(enum Species species, u8 level)
 {
     return RoamingWeather_ModifyWildSpecies(species, level);
+}
+
+// Back from a wild battle, before the field reloads.
+void World_OnWildBattleEnd(void)
+{
+    struct Pokemon *wild = &gEnemyParty[0];
+
+    if (gBattleOutcome == B_OUTCOME_CAUGHT)
+        Achievements_OnCatch(wild);
+}
+
+void World_OnTrainerBattleEnd(void)
+{
 }

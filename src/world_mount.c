@@ -1,4 +1,5 @@
 #include "global.h"
+#include "achievements.h"
 #include "bike.h"
 #include "event_data.h"
 #include "event_object_movement.h"
@@ -240,6 +241,7 @@ void Mount_Toggle(void)
     SetPlayerAvatarTransitionFlags(PLAYER_AVATAR_FLAG_MACH_BIKE);
     sMountSpriteId = Mount_Attach(gPlayerAvatar.objectEventId, sMountGfx);
     UpdateFollowingPokemon();
+    Achievements_Unlock(ACH_RIDER);
     PlayCry_Normal(GetMonData(&gPlayerParty[slot], MON_DATA_SPECIES), 0);
     gSpecialVar_Result = 0;
 }
