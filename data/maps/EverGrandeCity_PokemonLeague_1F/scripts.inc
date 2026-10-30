@@ -135,3 +135,54 @@ EverGrandeCity_PokemonLeague_1F_Text_GoForth:
 	.string "TRAINER! Believe in yourself and your\n"
 	.string "POKéMON, and go forth!$"
 
+
+EverGrandeCity_PokemonLeague_1F_EventScript_BattleLeagueGuide::
+	lock
+	faceplayer
+	goto_if_unset FLAG_SYS_GAME_CLEAR, EverGrandeCity_PokemonLeague_1F_EventScript_BattleLeagueNotYet
+	buffernumberstring STR_VAR_1, VAR_BATTLE_LEAGUE_CLEARS
+	msgbox EverGrandeCity_PokemonLeague_1F_Text_BattleLeagueWelcome, MSGBOX_YESNO
+	goto_if_eq VAR_RESULT, NO, EverGrandeCity_PokemonLeague_1F_EventScript_BattleLeagueDeclined
+	cleartrainerflag TRAINER_LEAGUE_KAI
+	cleartrainerflag TRAINER_LEAGUE_NOVA
+	cleartrainerflag TRAINER_LEAGUE_RYU
+	cleartrainerflag TRAINER_LEAGUE_MORGANA
+	cleartrainerflag TRAINER_LEAGUE_REN
+	special HealPlayerParty
+	msgbox EverGrandeCity_PokemonLeague_1F_Text_BattleLeagueGoodLuck, MSGBOX_DEFAULT
+	closemessage
+	warp MAP_BATTLE_LEAGUE_ROOM1, 6, 7
+	waitstate
+	release
+	end
+
+EverGrandeCity_PokemonLeague_1F_EventScript_BattleLeagueNotYet::
+	msgbox EverGrandeCity_PokemonLeague_1F_Text_BattleLeagueNotYet, MSGBOX_DEFAULT
+	release
+	end
+
+EverGrandeCity_PokemonLeague_1F_EventScript_BattleLeagueDeclined::
+	msgbox EverGrandeCity_PokemonLeague_1F_Text_BattleLeagueDeclined, MSGBOX_DEFAULT
+	release
+	end
+
+EverGrandeCity_PokemonLeague_1F_Text_BattleLeagueNotYet:
+	.string "Beyond this point lies the new\n"
+	.string "BATTLE LEAGUE.\p"
+	.string "Only CHAMPIONS of HOENN may\n"
+	.string "enter. Come back once you've\l"
+	.string "entered the HALL OF FAME!$"
+
+EverGrandeCity_PokemonLeague_1F_Text_BattleLeagueWelcome:
+	.string "Welcome to the BATTLE LEAGUE!\p"
+	.string "Four LEAGUE MASTERS and their\n"
+	.string "CHAMPION use POKéMON from far-off\l"
+	.string "regions. You've won {STR_VAR_1} time(s).\p"
+	.string "Your POKéMON will be healed.\n"
+	.string "Will you take the challenge?$"
+
+EverGrandeCity_PokemonLeague_1F_Text_BattleLeagueGoodLuck:
+	.string "Then step through! Good luck!$"
+
+EverGrandeCity_PokemonLeague_1F_Text_BattleLeagueDeclined:
+	.string "Come back when you're ready.$"
