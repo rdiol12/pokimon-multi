@@ -12,6 +12,7 @@
 #include "link.h"
 #include "load_save.h"
 #include "main.h"
+#include "menu.h"
 #include "money.h"
 #include "new_game.h"
 #include "play_time.h"
@@ -25,8 +26,11 @@
 #include "script_pokemon_util.h"
 #include "sound.h"
 #include "string_util.h"
+#include "strings.h"
 #include "task.h"
+#include "text.h"
 #include "trade.h"
+#include "window.h"
 #include "constants/battle.h"
 #include "constants/cable_club.h"
 #include "constants/characters.h"
@@ -907,127 +911,116 @@ void Netplay_LinkTransfer(void)
 
 // Deals ------------------------------------------------------------------
 //
-// A deal swaps an offer of a Pokémon and/or money for the other player's
-// offer. It doesn't open a link: each game sends its offer over the packet
-// rings in chunks, both players see both offers, and each game applies the
-// deal once both have said yes. See Netplay_EventScript_Deal.
+// A deal swaps any number of Pokémon and an amount of money between the two
+// players, in either direction. Both players edit their offer on the deal
+// screen and see the other's offer live; any change clears both Accepts. The
+// deal happens once both have accepted the same pair of offers: each game
+// then sends a commit and applies the deal when it has the other's commit for
+// the same offers. No link is opened; offers and answers go over the packet
+// rings (see docs/netplay.md).
 
-#define DEAL_ANSWER_NONE 0
-#define DEAL_ANSWER_YES  1
-#define DEAL_ANSWER_NO   2
-
-#define DEAL_TIMEOUT (60 * 60 * 3)
+#define DEAL_MAX_MONS PARTY_SIZE
+#define DEAL_TIMEOUT  (60 * 60 * 10)
 
 struct NetplayDealOffer
 {
     u32 money;
-    u8 hasMon;
+    u8 count;
     u8 filler[3];
-    struct Pokemon mon;
+    struct Pokemon mons[DEAL_MAX_MONS];
 };
 
-#define DEAL_CHUNK_SIZE  (CMD_LENGTH * 2)
-#define DEAL_CHUNKS      ((sizeof(struct NetplayDealOffer) + DEAL_CHUNK_SIZE - 1) / DEAL_CHUNK_SIZE)
-#define DEAL_BUFFER_SIZE (DEAL_CHUNKS * DEAL_CHUNK_SIZE)
+#define DEAL_CHUNK_SIZE (CMD_LENGTH * 2)
+#define DEAL_CHUNKS     ((sizeof(struct NetplayDealOffer) + DEAL_CHUNK_SIZE - 1) / DEAL_CHUNK_SIZE)
 
-STATIC_ASSERT(DEAL_CHUNKS <= 32, NetplayDealChunksFitInMask);
+union NetplayDealBuffer
+{
+    struct NetplayDealOffer offer;
+    u8 bytes[DEAL_CHUNKS * DEAL_CHUNK_SIZE];
+};
+
+enum
+{
+    DEAL_ACTION_ADD,
+    DEAL_ACTION_REMOVE,
+    DEAL_ACTION_MONEY,
+    DEAL_ACTION_ACCEPT,
+    DEAL_ACTION_QUIT,
+    DEAL_ACTION_COUNT,
+};
+
+enum
+{
+    DEAL_STATE_MAIN,
+    DEAL_STATE_REMOVE,
+    DEAL_STATE_MONEY,
+    DEAL_STATE_COMMITTED,
+};
+
+enum
+{
+    DEAL_WIN_MINE,
+    DEAL_WIN_THEIRS,
+    DEAL_WIN_ACTIONS,
+    DEAL_WIN_STATUS,
+    DEAL_WIN_COUNT,
+};
 
 struct NetplayDeal
 {
-    union {
-        struct NetplayDealOffer offer;
-        u8 bytes[DEAL_BUFFER_SIZE];
-    } mine, theirs;
-    u32 chunksReceived; // bit mask
-    u8 chunksSent;
-    u8 mySlot;
-    u8 theirAnswer;
-    bool8 myAnswerSent;
+    union NetplayDealBuffer mine;
+    union NetplayDealBuffer theirs;
+    union NetplayDealBuffer incoming;    // their offer while its chunks arrive
+    u8 incomingChunks[DEAL_CHUNKS];
+    u8 mySlots[DEAL_MAX_MONS];           // party slot of each Pokémon in our offer
+    u16 myRev;
+    u16 theirRev;                        // revision of `theirs`; 0 until we have one
+    u16 incomingRev;
+    u8 chunksSent;                       // of our offer at myRev
+    bool8 iAccepted;
+    bool8 acceptSent;                    // our current accept state reached the ring
+    bool8 peerAccepted;
+    u16 peerAcceptRev;                   // their revision when they accepted
+    u16 peerAcceptSeen;                  // our revision they accepted
+    bool8 peerCommitted;
+    u16 peerCommitRev;
+    u16 peerCommitSeen;
+    bool8 commitSent;
+    u8 state;
+    u8 cursor;
+    u8 removeCursor;
+    u8 moneyDigit;
+    u32 moneyEdit;
+    u8 windowIds[DEAL_WIN_COUNT];
+    const u8 *status;
 };
 
 static EWRAM_DATA struct NetplayDeal sDeal = {0};
 
-static const u32 sDealMoneyChoices[NETPLAY_DEAL_MONEY_CHOICES] =
+static const struct WindowTemplate sDealWindowTemplates[DEAL_WIN_COUNT] =
 {
-    0, 100, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000,
+    [DEAL_WIN_MINE]    = {.bg = 0, .tilemapLeft = 1,  .tilemapTop = 1,  .width = 13, .height = 10, .paletteNum = 15, .baseBlock = 0x008},
+    [DEAL_WIN_THEIRS]  = {.bg = 0, .tilemapLeft = 16, .tilemapTop = 1,  .width = 13, .height = 10, .paletteNum = 15, .baseBlock = 0x08A},
+    [DEAL_WIN_ACTIONS] = {.bg = 0, .tilemapLeft = 1,  .tilemapTop = 13, .width = 28, .height = 2,  .paletteNum = 15, .baseBlock = 0x10C},
+    [DEAL_WIN_STATUS]  = {.bg = 0, .tilemapLeft = 1,  .tilemapTop = 17, .width = 28, .height = 2,  .paletteNum = 15, .baseBlock = 0x144},
 };
 
-static void Task_WaitForDealOffer(u8 taskId);
-static void Task_WaitForDealAnswer(u8 taskId);
-
-// Reads the deal packets that have arrived. Other packets are dropped.
-static void ReceiveDealPackets(void)
+static const u8 *const sDealActionNames[DEAL_ACTION_COUNT] =
 {
-    struct NetplayPacket *packet;
+    [DEAL_ACTION_ADD]    = COMPOUND_STRING("ADD"),
+    [DEAL_ACTION_REMOVE] = COMPOUND_STRING("REMOVE"),
+    [DEAL_ACTION_MONEY]  = COMPOUND_STRING("MONEY"),
+    [DEAL_ACTION_ACCEPT] = COMPOUND_STRING("ACCEPT"),
+    [DEAL_ACTION_QUIT]   = COMPOUND_STRING("QUIT"),
+};
 
-    while ((packet = PeekPacket()) != NULL)
-    {
-        if (packet->kind == NETPLAY_PACKET_DEAL_OFFER && packet->filler1 < DEAL_CHUNKS)
-        {
-            memcpy(&sDeal.theirs.bytes[packet->filler1 * DEAL_CHUNK_SIZE], packet->cmd, DEAL_CHUNK_SIZE);
-            sDeal.chunksReceived |= 1u << packet->filler1;
-        }
-        else if (packet->kind == NETPLAY_PACKET_DEAL_ANSWER)
-        {
-            sDeal.theirAnswer = packet->cmd[0] ? DEAL_ANSWER_YES : DEAL_ANSWER_NO;
-        }
-        PopPacket();
-    }
-}
+static const u8 sDealActionX[DEAL_ACTION_COUNT] = {8, 50, 104, 152, 200};
 
-static bool32 HaveTheirOffer(void)
-{
-    return sDeal.chunksReceived == (1u << DEAL_CHUNKS) - 1;
-}
+#define DEAL_LINE_HEIGHT 10
+#define DEAL_MONEY_DIGITS 6
 
-static void SendDealChunks(void)
-{
-    while (sDeal.chunksSent < DEAL_CHUNKS)
-    {
-        struct NetplayRing *ring = &gNetplayMailbox.tx;
+static void Task_DealScreen(u8 taskId);
 
-        if (!SendPacket(NETPLAY_PACKET_DEAL_OFFER, (const u16 *)&sDeal.mine.bytes[sDeal.chunksSent * DEAL_CHUNK_SIZE]))
-            break;
-        // SendPacket clears filler1; it carries the chunk index here.
-        ring->packets[(ring->head + NETPLAY_RING_SIZE - 1) % NETPLAY_RING_SIZE].filler1 = sDeal.chunksSent;
-        sDeal.chunksSent++;
-    }
-}
-
-static void BufferOfferText(u8 *dest, struct NetplayDealOffer *offer)
-{
-    u8 *end = dest;
-
-    *end = EOS;
-    if (offer->hasMon)
-    {
-        u16 species = GetMonData(&offer->mon, MON_DATA_SPECIES);
-        u8 level = GetMonData(&offer->mon, MON_DATA_LEVEL);
-
-        if (GetMonData(&offer->mon, MON_DATA_IS_EGG))
-        {
-            end = StringCopy(end, COMPOUND_STRING("an EGG"));
-        }
-        else
-        {
-            end = StringCopy(end, GetSpeciesName(species));
-            end = StringCopy(end, COMPOUND_STRING(" Lv"));
-            end = ConvertIntToDecimalStringN(end, level, STR_CONV_MODE_LEFT_ALIGN, 3);
-        }
-        if (offer->money != 0)
-            end = StringCopy(end, COMPOUND_STRING(" and "));
-    }
-    if (offer->money != 0)
-    {
-        end = StringCopy(end, COMPOUND_STRING("¥"));
-        end = ConvertIntToDecimalStringN(end, offer->money, STR_CONV_MODE_LEFT_ALIGN, 7);
-    }
-    if (!offer->hasMon && offer->money == 0)
-        StringCopy(end, COMPOUND_STRING("nothing"));
-}
-
-// gStringVar1: the other player's name. Menus in between can reuse it, so
-// every deal special that shows text sets it again.
 static void BufferDealPeerName(void)
 {
     BufferRemoteName(gStringVar1, sSession.peerId);
@@ -1035,130 +1028,542 @@ static void BufferDealPeerName(void)
         StringCopy(gStringVar1, COMPOUND_STRING("The other player"));
 }
 
+// Packets --------------------------------------------------------------
+
+static void SendDealChunks(void)
+{
+    struct NetplayRing *ring = &gNetplayMailbox.tx;
+
+    while (sDeal.chunksSent < DEAL_CHUNKS)
+    {
+        struct NetplayPacket *packet;
+
+        if (!SendPacket(NETPLAY_PACKET_DEAL_OFFER, (const u16 *)&sDeal.mine.bytes[sDeal.chunksSent * DEAL_CHUNK_SIZE]))
+            break;
+        // SendPacket clears the header; it carries the chunk index and revision.
+        packet = &ring->packets[(ring->head + NETPLAY_RING_SIZE - 1) % NETPLAY_RING_SIZE];
+        packet->filler1 = sDeal.chunksSent;
+        packet->filler2 = sDeal.myRev;
+        sDeal.chunksSent++;
+    }
+    if (sDeal.chunksSent == DEAL_CHUNKS && !sDeal.acceptSent)
+    {
+        // Sent after the offer, so the peer never sees an accept for an
+        // offer it doesn't have yet.
+        u16 cmd[CMD_LENGTH] = {sDeal.iAccepted, sDeal.myRev, sDeal.theirRev};
+
+        sDeal.acceptSent = SendPacket(NETPLAY_PACKET_DEAL_ANSWER, cmd);
+    }
+}
+
+// Our offer changed: send it again and take back both accepts.
+static void OnMyOfferChanged(void)
+{
+    sDeal.myRev++;
+    sDeal.chunksSent = 0;
+    sDeal.iAccepted = FALSE;
+    sDeal.acceptSent = FALSE;
+    sDeal.commitSent = FALSE;
+}
+
+static void SetAccepted(bool8 accepted)
+{
+    sDeal.iAccepted = accepted;
+    sDeal.acceptSent = FALSE;
+}
+
+// Returns TRUE if their offer or answers changed.
+static bool32 ReceiveDealPackets(void)
+{
+    struct NetplayPacket *packet;
+    bool32 changed = FALSE;
+    u32 i;
+
+    while ((packet = PeekPacket()) != NULL)
+    {
+        switch (packet->kind)
+        {
+        case NETPLAY_PACKET_DEAL_OFFER:
+            if (packet->filler1 >= DEAL_CHUNKS)
+                break;
+            if (packet->filler2 != sDeal.incomingRev)
+            {
+                sDeal.incomingRev = packet->filler2;
+                memset(sDeal.incomingChunks, 0, sizeof(sDeal.incomingChunks));
+            }
+            memcpy(&sDeal.incoming.bytes[packet->filler1 * DEAL_CHUNK_SIZE], packet->cmd, DEAL_CHUNK_SIZE);
+            sDeal.incomingChunks[packet->filler1] = TRUE;
+            for (i = 0; i < DEAL_CHUNKS && sDeal.incomingChunks[i]; i++)
+                ;
+            if (i == DEAL_CHUNKS && sDeal.incomingRev != sDeal.theirRev)
+            {
+                sDeal.theirs = sDeal.incoming;
+                if (sDeal.theirs.offer.count > DEAL_MAX_MONS)
+                    sDeal.theirs.offer.count = DEAL_MAX_MONS;
+                sDeal.theirRev = sDeal.incomingRev;
+                // Their offer changed: our accept was for the old one.
+                if (sDeal.iAccepted || sDeal.commitSent)
+                {
+                    SetAccepted(FALSE);
+                    sDeal.commitSent = FALSE;
+                }
+                changed = TRUE;
+            }
+            break;
+        case NETPLAY_PACKET_DEAL_ANSWER:
+            sDeal.peerAccepted = packet->cmd[0];
+            sDeal.peerAcceptRev = packet->cmd[1];
+            sDeal.peerAcceptSeen = packet->cmd[2];
+            changed = TRUE;
+            break;
+        case NETPLAY_PACKET_DEAL_COMMIT:
+            sDeal.peerCommitted = TRUE;
+            sDeal.peerCommitRev = packet->cmd[0];
+            sDeal.peerCommitSeen = packet->cmd[1];
+            break;
+        }
+        PopPacket();
+    }
+    return changed;
+}
+
+static bool32 PeerAcceptsCurrentOffers(void)
+{
+    return sDeal.peerAccepted && sDeal.theirRev != 0
+        && sDeal.peerAcceptRev == sDeal.theirRev && sDeal.peerAcceptSeen == sDeal.myRev;
+}
+
+static bool32 PeerCommittedCurrentOffers(void)
+{
+    return sDeal.peerCommitted && sDeal.peerCommitRev == sDeal.theirRev && sDeal.peerCommitSeen == sDeal.myRev;
+}
+
+// Party size after the deal must stay between 1 and 6.
+static bool32 DealFitsParty(void)
+{
+    s32 after = gPartiesCount[B_TRAINER_PLAYER] - sDeal.mine.offer.count + sDeal.theirs.offer.count;
+
+    return after >= 1 && after <= PARTY_SIZE;
+}
+
+// Drawing --------------------------------------------------------------
+
+static u8 *BufferMonLine(u8 *dest, struct Pokemon *mon)
+{
+    if (GetMonData(mon, MON_DATA_IS_EGG))
+        return StringCopy(dest, COMPOUND_STRING("EGG"));
+    dest = StringCopy(dest, GetSpeciesName(GetMonData(mon, MON_DATA_SPECIES)));
+    dest = StringCopy(dest, COMPOUND_STRING(" Lv"));
+    return ConvertIntToDecimalStringN(dest, GetMonData(mon, MON_DATA_LEVEL), STR_CONV_MODE_LEFT_ALIGN, 3);
+}
+
+static void DrawOffer(u8 win, const u8 *title, struct NetplayDealOffer *offer, bool8 accepted, bool8 known, s8 cursor)
+{
+    u8 windowId = sDeal.windowIds[win];
+    u8 *str;
+    s32 i;
+
+    // Lines are closer together than the font's box, so they are drawn from
+    // the bottom up: each line's empty top would otherwise cut off the
+    // line above.
+    FillWindowPixelBuffer(windowId, PIXEL_FILL(1));
+    if (!known)
+    {
+        AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("…"), 8, DEAL_LINE_HEIGHT, TEXT_SKIP_DRAW, NULL);
+    }
+    else
+    {
+        str = StringCopy(gStringVar4, COMPOUND_STRING("¥"));
+        ConvertIntToDecimalStringN(str, offer->money, STR_CONV_MODE_LEFT_ALIGN, 7);
+        AddTextPrinterParameterized(windowId, FONT_SMALL, gStringVar4, 8, DEAL_LINE_HEIGHT * (DEAL_MAX_MONS + 1), TEXT_SKIP_DRAW, NULL);
+        for (i = offer->count - 1; i >= 0; i--)
+        {
+            BufferMonLine(gStringVar4, &offer->mons[i]);
+            AddTextPrinterParameterized(windowId, FONT_SMALL, gStringVar4, 8, DEAL_LINE_HEIGHT * (i + 1), TEXT_SKIP_DRAW, NULL);
+        }
+        if (offer->count == 0)
+            AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("No POKéMON"), 8, DEAL_LINE_HEIGHT, TEXT_SKIP_DRAW, NULL);
+    }
+    if (cursor >= 0)
+        AddTextPrinterParameterized(windowId, FONT_SMALL, gText_SelectorArrow3, 0, DEAL_LINE_HEIGHT * (cursor + 1), TEXT_SKIP_DRAW, NULL);
+    str = StringCopy(gStringVar4, title);
+    if (accepted)
+        StringAppend(gStringVar4, COMPOUND_STRING(" - OK!"));
+    AddTextPrinterParameterized(windowId, FONT_SMALL, gStringVar4, 2, 0, TEXT_SKIP_DRAW, NULL);
+    CopyWindowToVram(windowId, COPYWIN_FULL);
+}
+
+static void DrawDealOffers(void)
+{
+    u8 *title = gStringVar2;
+
+    DrawOffer(DEAL_WIN_MINE, COMPOUND_STRING("YOUR OFFER"), &sDeal.mine.offer, sDeal.iAccepted, TRUE,
+              sDeal.state == DEAL_STATE_REMOVE ? sDeal.removeCursor : -1);
+    BufferDealPeerName();
+    StringCopy(title, gStringVar1);
+    StringAppend(title, COMPOUND_STRING("'S OFFER"));
+    DrawOffer(DEAL_WIN_THEIRS, title, &sDeal.theirs.offer, PeerAcceptsCurrentOffers(), sDeal.theirRev != 0, -1);
+}
+
+static void DrawDealActions(void)
+{
+    u8 windowId = sDeal.windowIds[DEAL_WIN_ACTIONS];
+    u32 i;
+
+    FillWindowPixelBuffer(windowId, PIXEL_FILL(1));
+    if (sDeal.state == DEAL_STATE_MONEY)
+    {
+        u8 *str = StringCopy(gStringVar4, COMPOUND_STRING("Money: ¥"));
+        u32 x;
+
+        ConvertIntToDecimalStringN(str, sDeal.moneyEdit, STR_CONV_MODE_LEADING_ZEROS, DEAL_MONEY_DIGITS);
+        AddTextPrinterParameterized(windowId, FONT_NORMAL, gStringVar4, 8, 1, TEXT_SKIP_DRAW, NULL);
+        // Underline the digit being changed.
+        x = 8 + GetStringWidth(FONT_NORMAL, COMPOUND_STRING("Money: ¥"), 0) + 6 * (DEAL_MONEY_DIGITS - 1 - sDeal.moneyDigit);
+        FillWindowPixelRect(windowId, PIXEL_FILL(2), x, 14, 6, 1);
+        AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("{UP_ARROW}{DOWN_ARROW} change  A: OK"), 120, 3, TEXT_SKIP_DRAW, NULL);
+    }
+    else
+    {
+        for (i = 0; i < DEAL_ACTION_COUNT; i++)
+            AddTextPrinterParameterized(windowId, FONT_NORMAL, sDealActionNames[i], sDealActionX[i], 1, TEXT_SKIP_DRAW, NULL);
+        if (sDeal.state == DEAL_STATE_MAIN)
+            AddTextPrinterParameterized(windowId, FONT_NORMAL, gText_SelectorArrow3, sDealActionX[sDeal.cursor] - 8, 1, TEXT_SKIP_DRAW, NULL);
+    }
+    CopyWindowToVram(windowId, COPYWIN_FULL);
+}
+
+static void DrawDealStatus(void)
+{
+    u8 windowId = sDeal.windowIds[DEAL_WIN_STATUS];
+    const u8 *status = sDeal.status;
+
+    if (status == NULL)
+    {
+        if (sDeal.state == DEAL_STATE_COMMITTED)
+            status = COMPOUND_STRING("Both accepted! Making the deal…");
+        else if (sDeal.state == DEAL_STATE_REMOVE)
+            status = COMPOUND_STRING("Take back which POKéMON? B: back");
+        else if (sDeal.theirRev == 0)
+            status = COMPOUND_STRING("Waiting for the other offer…");
+        else if (sDeal.iAccepted)
+            status = COMPOUND_STRING("You accepted. Waiting for them…");
+        else if (PeerAcceptsCurrentOffers())
+            status = COMPOUND_STRING("They accepted this deal.");
+        else
+            status = COMPOUND_STRING("Make your offer, then ACCEPT.");
+    }
+    FillWindowPixelBuffer(windowId, PIXEL_FILL(1));
+    AddTextPrinterParameterized(windowId, FONT_NORMAL, status, 4, 1, TEXT_SKIP_DRAW, NULL);
+    CopyWindowToVram(windowId, COPYWIN_FULL);
+}
+
+static void DrawDealScreen(void)
+{
+    DrawDealOffers();
+    DrawDealActions();
+    DrawDealStatus();
+}
+
+static void OpenDealWindows(void)
+{
+    u32 i;
+
+    for (i = 0; i < DEAL_WIN_COUNT; i++)
+    {
+        sDeal.windowIds[i] = AddWindow(&sDealWindowTemplates[i]);
+        DrawStdWindowFrame(sDeal.windowIds[i], FALSE);
+        PutWindowTilemap(sDeal.windowIds[i]);
+    }
+    DrawDealScreen();
+    ScheduleBgCopyTilemapToVram(0);
+}
+
+static void CloseDealWindows(void)
+{
+    u32 i;
+
+    for (i = 0; i < DEAL_WIN_COUNT; i++)
+    {
+        ClearStdWindowAndFrameToTransparent(sDeal.windowIds[i], FALSE);
+        ClearWindowTilemap(sDeal.windowIds[i]);
+        RemoveWindow(sDeal.windowIds[i]);
+    }
+    ScheduleBgCopyTilemapToVram(0);
+}
+
+// Specials ---------------------------------------------------------------
+
 // Both players start here once the session has started.
 void Netplay_DealBegin(void)
 {
-    sDeal = (struct NetplayDeal){0};
+    memset(&sDeal, 0, sizeof(sDeal));
+    sDeal.myRev = 1;
     BufferDealPeerName();
 }
 
-// VAR_0x8004: party slot to offer (PARTY_SIZE or more for none).
-// VAR_0x8005: index into sDealMoneyChoices.
-// VAR_RESULT: FALSE if the player doesn't have that much money.
-void Netplay_DealSendOffer(void)
+// Shows the deal screen until the player picks ADD, the deal is made, the
+// player quits, or the other player leaves. VAR_RESULT: NETPLAY_DEAL_*.
+void Netplay_DealScreen(void)
 {
-    u32 money = gSpecialVar_0x8005 < NETPLAY_DEAL_MONEY_CHOICES ? sDealMoneyChoices[gSpecialVar_0x8005] : 0;
-    struct NetplayDealOffer *offer = &sDeal.mine.offer;
+    u8 taskId = CreateTask(Task_DealScreen, 80);
 
+    gTasks[taskId].data[0] = 0;
+    if (sDeal.state != DEAL_STATE_COMMITTED)
+        sDeal.state = DEAL_STATE_MAIN;
     BufferDealPeerName();
-    gSpecialVar_Result = FALSE;
-    if (!IsEnoughMoney(&gSaveBlock1Ptr->money, money))
-        return;
-    memset(&sDeal.mine, 0, sizeof(sDeal.mine));
-    offer->money = money;
-    sDeal.mySlot = gSpecialVar_0x8004;
-    if (sDeal.mySlot < gPartiesCount[B_TRAINER_PLAYER])
-    {
-        offer->hasMon = TRUE;
-        offer->mon = gParties[B_TRAINER_PLAYER][sDeal.mySlot];
-    }
-    sDeal.chunksSent = 0;
-    SendDealChunks();
-    gSpecialVar_Result = TRUE;
+    OpenDealWindows();
 }
 
-#define tTimer data[0]
-
-// Waits for the other player's offer. VAR_RESULT: TRUE once it's here,
-// FALSE if they left, it timed out, or we pressed B.
-void Netplay_DealWaitForOffer(void)
+static void EndDealScreen(u8 taskId, u16 result)
 {
-    u8 taskId = CreateTask(Task_WaitForDealOffer, 80);
-    gTasks[taskId].tTimer = 0;
-}
-
-static void Task_WaitForDealOffer(u8 taskId)
-{
-    s16 *data = gTasks[taskId].data;
-
-    SendDealChunks();
-    ReceiveDealPackets();
-    if (HaveTheirOffer())
-        gSpecialVar_Result = TRUE;
-    else if (!sSession.active || ++tTimer > DEAL_TIMEOUT || JOY_NEW(B_BUTTON))
-        gSpecialVar_Result = FALSE;
-    else
-        return;
+    CloseDealWindows();
+    gSpecialVar_Result = result;
     DestroyTask(taskId);
     ScriptContext_Enable();
 }
 
-// gStringVar2: their offer, gStringVar3: ours.
-// VAR_RESULT: FALSE if the deal can't happen (nothing offered, or it would
-// leave a party empty or overfull).
-void Netplay_DealBufferOffers(void)
+static void HandleDealMainInput(u8 taskId)
+{
+    if (JOY_NEW(DPAD_LEFT) && sDeal.cursor > 0)
+    {
+        sDeal.cursor--;
+        PlaySE(SE_SELECT);
+        DrawDealActions();
+    }
+    else if (JOY_NEW(DPAD_RIGHT) && sDeal.cursor < DEAL_ACTION_COUNT - 1)
+    {
+        sDeal.cursor++;
+        PlaySE(SE_SELECT);
+        DrawDealActions();
+    }
+    else if (JOY_NEW(B_BUTTON) && sDeal.cursor != DEAL_ACTION_QUIT)
+    {
+        sDeal.cursor = DEAL_ACTION_QUIT;
+        PlaySE(SE_SELECT);
+        DrawDealActions();
+    }
+    else if (JOY_NEW(A_BUTTON))
+    {
+        PlaySE(SE_SELECT);
+        sDeal.status = NULL;
+        switch (sDeal.cursor)
+        {
+        case DEAL_ACTION_ADD:
+            if (sDeal.mine.offer.count >= DEAL_MAX_MONS)
+            {
+                sDeal.status = COMPOUND_STRING("Your offer is full.");
+                break;
+            }
+            // The party menu takes over the screen; we come back after.
+            if (sDeal.iAccepted)
+                SetAccepted(FALSE);
+            EndDealScreen(taskId, NETPLAY_DEAL_ADD_MON);
+            return;
+        case DEAL_ACTION_REMOVE:
+            if (sDeal.mine.offer.count == 0)
+            {
+                sDeal.status = COMPOUND_STRING("You aren't offering any POKéMON.");
+                break;
+            }
+            sDeal.state = DEAL_STATE_REMOVE;
+            sDeal.removeCursor = 0;
+            break;
+        case DEAL_ACTION_MONEY:
+            sDeal.state = DEAL_STATE_MONEY;
+            sDeal.moneyEdit = sDeal.mine.offer.money;
+            sDeal.moneyDigit = 3;
+            break;
+        case DEAL_ACTION_ACCEPT:
+            if (sDeal.theirRev == 0)
+                sDeal.status = COMPOUND_STRING("Wait for the other offer first.");
+            else if (sDeal.mine.offer.count == 0 && sDeal.mine.offer.money == 0
+                  && sDeal.theirs.offer.count == 0 && sDeal.theirs.offer.money == 0)
+                sDeal.status = COMPOUND_STRING("Nobody is offering anything.");
+            else if (!DealFitsParty())
+                sDeal.status = COMPOUND_STRING("Your party would be empty or over 6.");
+            else
+                SetAccepted(!sDeal.iAccepted);
+            break;
+        case DEAL_ACTION_QUIT:
+            EndDealScreen(taskId, NETPLAY_DEAL_QUIT);
+            return;
+        }
+        DrawDealScreen();
+    }
+}
+
+static void RemoveOfferedMon(u8 index)
+{
+    struct NetplayDealOffer *offer = &sDeal.mine.offer;
+    u32 i;
+
+    for (i = index; i + 1 < offer->count; i++)
+    {
+        offer->mons[i] = offer->mons[i + 1];
+        sDeal.mySlots[i] = sDeal.mySlots[i + 1];
+    }
+    offer->count--;
+    memset(&offer->mons[offer->count], 0, sizeof(offer->mons[0]));
+    OnMyOfferChanged();
+}
+
+static void HandleDealRemoveInput(void)
+{
+    if (JOY_NEW(DPAD_UP) && sDeal.removeCursor > 0)
+        sDeal.removeCursor--;
+    else if (JOY_NEW(DPAD_DOWN) && sDeal.removeCursor + 1 < sDeal.mine.offer.count)
+        sDeal.removeCursor++;
+    else if (JOY_NEW(A_BUTTON))
+    {
+        RemoveOfferedMon(sDeal.removeCursor);
+        sDeal.state = DEAL_STATE_MAIN;
+    }
+    else if (JOY_NEW(B_BUTTON))
+        sDeal.state = DEAL_STATE_MAIN;
+    else
+        return;
+    PlaySE(SE_SELECT);
+    DrawDealScreen();
+}
+
+static void HandleDealMoneyInput(void)
+{
+    static const u32 sPowers[DEAL_MONEY_DIGITS] = {1, 10, 100, 1000, 10000, 100000};
+    u32 most = min(GetMoney(&gSaveBlock1Ptr->money), 999999);
+    u32 step = sPowers[sDeal.moneyDigit];
+
+    if (JOY_NEW(DPAD_UP))
+        sDeal.moneyEdit = min(sDeal.moneyEdit + step, most);
+    else if (JOY_NEW(DPAD_DOWN))
+        sDeal.moneyEdit = sDeal.moneyEdit >= step ? sDeal.moneyEdit - step : 0;
+    else if (JOY_NEW(DPAD_LEFT) && sDeal.moneyDigit < DEAL_MONEY_DIGITS - 1)
+        sDeal.moneyDigit++;
+    else if (JOY_NEW(DPAD_RIGHT) && sDeal.moneyDigit > 0)
+        sDeal.moneyDigit--;
+    else if (JOY_NEW(A_BUTTON))
+    {
+        if (sDeal.moneyEdit != sDeal.mine.offer.money)
+        {
+            sDeal.mine.offer.money = sDeal.moneyEdit;
+            OnMyOfferChanged();
+        }
+        sDeal.state = DEAL_STATE_MAIN;
+    }
+    else if (JOY_NEW(B_BUTTON))
+        sDeal.state = DEAL_STATE_MAIN;
+    else
+        return;
+    PlaySE(SE_SELECT);
+    DrawDealScreen();
+}
+
+static void Task_DealScreen(u8 taskId)
+{
+    s16 *data = gTasks[taskId].data;
+    bool32 changed;
+
+    SendDealChunks();
+    changed = ReceiveDealPackets();
+
+    if (!sSession.active || ++data[0] > DEAL_TIMEOUT)
+    {
+        EndDealScreen(taskId, NETPLAY_DEAL_PEER_LEFT);
+        return;
+    }
+
+    // Both accepted the same offers: commit, then wait for their commit.
+    if (sDeal.state != DEAL_STATE_COMMITTED && sDeal.iAccepted && sDeal.acceptSent && PeerAcceptsCurrentOffers())
+    {
+        sDeal.state = DEAL_STATE_COMMITTED;
+        sDeal.commitSent = FALSE;
+        changed = TRUE;
+    }
+    if (sDeal.state == DEAL_STATE_COMMITTED)
+    {
+        if (!sDeal.iAccepted)
+        {
+            // Their offer changed before they committed.
+            sDeal.state = DEAL_STATE_MAIN;
+            changed = TRUE;
+        }
+        else
+        {
+            if (!sDeal.commitSent)
+            {
+                u16 cmd[CMD_LENGTH] = {sDeal.myRev, sDeal.theirRev};
+                sDeal.commitSent = SendPacket(NETPLAY_PACKET_DEAL_COMMIT, cmd);
+            }
+            if (sDeal.commitSent && PeerCommittedCurrentOffers())
+            {
+                EndDealScreen(taskId, NETPLAY_DEAL_DONE);
+                return;
+            }
+        }
+    }
+
+    switch (sDeal.state)
+    {
+    case DEAL_STATE_MAIN:
+        HandleDealMainInput(taskId);
+        if (!gTasks[taskId].isActive)
+            return;
+        break;
+    case DEAL_STATE_REMOVE:
+        HandleDealRemoveInput();
+        break;
+    case DEAL_STATE_MONEY:
+        HandleDealMoneyInput();
+        break;
+    }
+    if (changed)
+    {
+        sDeal.status = NULL;
+        DrawDealScreen();
+    }
+}
+
+// After the party menu: VAR_0x8004 is the chosen slot (PARTY_SIZE or more
+// if none).
+void Netplay_DealAddMon(void)
+{
+    struct NetplayDealOffer *offer = &sDeal.mine.offer;
+    u8 slot = gSpecialVar_0x8004;
+    u32 i;
+
+    sDeal.status = NULL;
+    if (slot >= gPartiesCount[B_TRAINER_PLAYER] || offer->count >= DEAL_MAX_MONS)
+        return;
+    for (i = 0; i < offer->count; i++)
+    {
+        if (sDeal.mySlots[i] == slot)
+        {
+            sDeal.status = COMPOUND_STRING("That POKéMON is already offered.");
+            return;
+        }
+    }
+    sDeal.mySlots[offer->count] = slot;
+    offer->mons[offer->count++] = gParties[B_TRAINER_PLAYER][slot];
+    OnMyOfferChanged();
+}
+
+// Both committed: hand over our side and take theirs, then save.
+void Netplay_DealApply(void)
 {
     struct NetplayDealOffer *mine = &sDeal.mine.offer;
     struct NetplayDealOffer *theirs = &sDeal.theirs.offer;
-    s32 partyAfter = gPartiesCount[B_TRAINER_PLAYER] - mine->hasMon + theirs->hasMon;
+    u32 i;
 
-    BufferDealPeerName();
-    BufferOfferText(gStringVar2, theirs);
-    BufferOfferText(gStringVar3, mine);
-    gSpecialVar_Result = (mine->hasMon || mine->money || theirs->hasMon || theirs->money)
-                      && partyAfter >= 1 && partyAfter <= PARTY_SIZE;
-}
-
-// VAR_RESULT: our answer from the yes/no box.
-void Netplay_DealAnswer(void)
-{
-    u16 cmd[CMD_LENGTH] = {gSpecialVar_Result == TRUE};
-
-    sDeal.myAnswerSent = SendPacket(NETPLAY_PACKET_DEAL_ANSWER, cmd);
-}
-
-// Waits for the other player's answer. VAR_RESULT: TRUE if both said yes.
-void Netplay_DealWaitForAnswer(void)
-{
-    u8 taskId = CreateTask(Task_WaitForDealAnswer, 80);
-    gTasks[taskId].tTimer = 0;
-}
-
-static void Task_WaitForDealAnswer(u8 taskId)
-{
-    s16 *data = gTasks[taskId].data;
-
-    ReceiveDealPackets();
-    if (sDeal.theirAnswer != DEAL_ANSWER_NONE)
-        gSpecialVar_Result = sDeal.myAnswerSent && sDeal.theirAnswer == DEAL_ANSWER_YES;
-    else if (!sSession.active || ++tTimer > DEAL_TIMEOUT)
-        gSpecialVar_Result = FALSE;
-    else
-        return;
-    DestroyTask(taskId);
-    ScriptContext_Enable();
-}
-
-#undef tTimer
-
-// Both said yes: hand over our side and take theirs, then save.
-void Netplay_DealApply(void)
-{
-    const struct NetplayDealOffer *mine = &sDeal.mine.offer;
-    const struct NetplayDealOffer *theirs = &sDeal.theirs.offer;
-
-    if (mine->hasMon)
-    {
-        ZeroMonData(&gParties[B_TRAINER_PLAYER][sDeal.mySlot]);
-        CompactPartySlots();
-        CalculatePlayerPartyCount();
-    }
-    if (theirs->hasMon && gPartiesCount[B_TRAINER_PLAYER] < PARTY_SIZE)
+    for (i = 0; i < mine->count; i++)
+        ZeroMonData(&gParties[B_TRAINER_PLAYER][sDeal.mySlots[i]]);
+    CompactPartySlots();
+    CalculatePlayerPartyCount();
+    for (i = 0; i < theirs->count && gPartiesCount[B_TRAINER_PLAYER] < PARTY_SIZE; i++)
     {
         struct Pokemon *mon = &gParties[B_TRAINER_PLAYER][gPartiesCount[B_TRAINER_PLAYER]];
         u16 species;
 
-        *mon = theirs->mon;
+        *mon = theirs->mons[i];
         mon->mail = MAIL_NONE; // their mail slots aren't ours
         species = GetMonData(mon, MON_DATA_SPECIES);
         if (!GetMonData(mon, MON_DATA_IS_EGG))
