@@ -199,6 +199,30 @@ class ServerTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(await b.recv(), f"START {sid} {kind} {a.id} 1")
         return a, b, sid
 
+    async def test_spectate(self):
+        a, b, sid = await self.start_session()
+        c = await self.connect("Brock", 33, map_key=(3, 4))
+        state = "258 30 3 90 2 2 263 30 2 70 2 2"
+        await a.send(f"BSTATE {sid} {state}")
+        await a.send(f"BTEXT {sid} Go! MUDKIP!")
+        await c.send("LIVE")
+        self.assertEqual(await c.recv(), f"LIVE {sid} Ash Misty")
+        self.assertEqual(await c.recv(), "LIVEEND")
+        await c.send(f"WATCH {sid}")
+        self.assertEqual(await c.recv(), f"WATCHING {sid}")
+        self.assertEqual(await c.recv(), f"WSTATE {sid} {state}", "caught up")
+        self.assertEqual(await c.recv(), f"WTEXT {sid} Go! MUDKIP!")
+        await a.send(f"BTEXT {sid} MUDKIP used TACKLE!")
+        self.assertEqual(await c.recv(), f"WTEXT {sid} MUDKIP used TACKLE!")
+        await b.send(f"BTEXT {sid} only the host reports")
+        self.assertTrue((await b.recv()).startswith("ERR"))
+        await b.send(f"WATCH {sid}")
+        self.assertEqual(await b.recv(), f"WEND {sid}", "players can't watch their own battle")
+        await a.send(f"QUIT {sid}")
+        self.assertEqual(await c.recv(), f"WEND {sid}")
+        await c.send("LIVE")
+        self.assertEqual(await c.recv(), "LIVEEND")
+
     async def test_link_relay(self):
         a, b, sid = await self.start_session("trade")
         await a.send(f"LINK {sid} 00112233445566778899aabbccddeeff")

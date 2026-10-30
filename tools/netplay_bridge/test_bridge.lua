@@ -249,6 +249,60 @@ function tests.market_board()
     eq(mem.read16(M + 6), 2, "sales")
 end
 
+function tests.reports_the_battle_it_hosts()
+    local bridge, mem, net = online()
+    net.push("START 7 battle 8 0")
+    bridge:onFrame()
+    net.take()
+    local R = BASE + 0x5E0
+    mem.write16(R + 4, 258); mem.write8(R + 6, 30); mem.write8(R + 7, 2)
+    mem.write16(R + 8, 45); mem.write16(R + 10, 90); mem.write8(R + 12, 2)
+    mem.write16(R + 16, 263); mem.write8(R + 18, 30); mem.write8(R + 19, 1)
+    mem.write16(R + 20, 0); mem.write16(R + 22, 70); mem.write8(R + 24, 2)
+    -- "Go! A!" with a newline and a color code in it
+    local text = { 0xC1, 0xE3, 0xAB, 0xFE, 0xFC, 0x01, 0xBB, 0xAB, 0xFF }
+    for i, c in ipairs(text) do mem.write8(R + 0x1C + i - 1, c) end
+    mem.write8(R, 1)
+    bridge:onFrame()
+    local sent = net.take()
+    eq(sent[1], "BSTATE 7 258 30 45 90 2 2 263 30 0 70 1 2", "state")
+    eq(sent[2], "BTEXT 7 Go! A!", "text")
+end
+
+function tests.watches_a_battle()
+    local bridge, mem, net = online()
+    local W = BASE + 0x63C
+    local V = W + 0x68
+    request(mem, 20, 0, 0) -- REQ_LIVE
+    bridge:onFrame()
+    eq(net.take()[1], "LIVE", "asked for live battles")
+    net.push("LIVE 7 Misty Brock")
+    net.push("LIVEEND")
+    bridge:onFrame()
+    eq(mem.read8(W), 1, "list published")
+    eq(mem.read8(W + 1), 1, "count")
+    eq(mem.read16(W + 4), 7, "session")
+    eq(mem.read8(W + 6), 0xC7, "host starts with M")
+    eq(mem.read8(W + 14), 0xBC, "guest starts with B")
+    request(mem, 21, 0, 0) -- REQ_WATCH, first
+    bridge:onFrame()
+    eq(net.take()[1], "WATCH 7", "watch")
+    net.push("WATCHING 7")
+    net.push("WSTATE 7 258 30 45 90 2 2 263 30 0 70 1 2")
+    net.push("WTEXT 7 Go! A!")
+    bridge:onFrame()
+    eq(mem.read16(V + 4), 258, "host species")
+    eq(mem.read16(V + 8), 45, "host hp")
+    eq(mem.read8(V + 7), 2, "host alive")
+    eq(mem.read16(V + 22), 70, "guest max hp")
+    eq(mem.read8(V + 0x1C), 0xC1, "G")
+    eq(mem.read8(V + 0x1C + 2), 0xAB, "!")
+    eq(mem.read8(V + 0x1C + 6), 0xFF, "end of text")
+    net.push("WEND 7")
+    bridge:onFrame()
+    eq(mem.read8(W + 2), 1, "ended")
+end
+
 function tests.hooks_see_lines_and_frames()
     local bridge, mem, net = online()
     local seen, frames = nil, 0

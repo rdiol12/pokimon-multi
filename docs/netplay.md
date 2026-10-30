@@ -66,6 +66,13 @@ new features add a row there):
   route (not while they are surfing or in a battle, trade or deal); SELECT
   twice removes one. Add friends by talking to a player → *Add friend*. The
   list is one-way, like following, and kept by the server.
+- **WATCH**: PvP battles going on right now (the list refreshes itself). A
+  watches one: both trainers' active Pokémon with level and HP, a ball per
+  party Pokémon (red while it can still fight), and the battle's messages as
+  they happen. The host of each battle reports it, so spectators see the
+  host's side of the text ("What will Treecko do?").
+
+  ![The live battle list, watching a battle, and its end](images/netplay-watch.png)
 
 **L** opens the emote menu: eight emotes that pop up above your head (happy, love, music,
 wow, huh, angry, sad, hmm) and six quick phrases (HI!, GG!, BATTLE?, TRADE?,
@@ -143,7 +150,9 @@ says who writes the field; the other side only reads it.
 | 0x43C | 204 | bridge | friend list (below) |
 | 0x508 | 16 | bridge | ladder season (below) |
 | 0x518 | 200 | both | market board (below) |
-| 0x5E0 | | | end; 0x5E0–0x5FF reserved here |
+| 0x5E0 | 92 | ROM | battle report, by the host of a PvP battle (below) |
+| 0x63C | 196 | bridge | spectating: live battles and the battle watched (below) |
+| 0x700 | | | end |
 
 The C definition is `struct NetplayMailbox` in `include/netplay.h`.
 
@@ -177,6 +186,9 @@ most once per frame; the bridge acts once per new `seq`.
 | 17 | buy a listing | arg: index on the page |
 | 18 | take back your listing | arg: index on the page |
 | 19 | collect money from sales | — |
+| 20 | list live battles | — |
+| 21 | watch a battle | arg: index in the live list |
+| 22 | stop watching | — |
 
 **Ladder (bridge → ROM):** u8 seq (bumped when a new ladder is in place),
 u8 count, u16 my rank (0 = no rated battles yet), my entry, then 10 entries.
@@ -202,6 +214,17 @@ u8 level, u8 mine, u32 price, u8 seller[8]); then, written by the ROM
 before a sell: u32 price, u16 species, u8 level, 1 pad; then a
 `struct Pokemon` (100 bytes) holding the Pokémon being sold, or the one
 bought or taken back.
+
+**Battle report (ROM → bridge):** u8 seq (bumped on each change), 3 pad,
+two sides (host, then guest) of 12 bytes: u16 species, u8 level, u8 Pokémon
+still able to fight, u16 HP, u16 max HP, u8 party size, 3 pad; then the
+latest battle message, 64 bytes in the game charset. Only the host of a PvP
+battle writes it.
+
+**Spectating (bridge → ROM):** u8 list seq, u8 count, u8 ended (the watched
+battle is over), 1 pad, 5 live battles of 20 bytes (u16 session id,
+u8 host[8], u8 guest[8], 2 pad), then the watched battle, laid out like the
+battle report; its seq is bumped on every change.
 
 **Event (bridge → ROM, 8 bytes):** u8 seq, u8 type, u16 peer id,
 u16 session id, u8 kind (1 battle, 2 trade, 3 deal), u8 role (0 host, 1 guest). The
@@ -288,6 +311,11 @@ MARKET SELL <species> <level> <price> <mon hex>   (answered with MLISTED)
 MARKET BUY <listing id>             (answered with MBOUGHT)
 MARKET CANCEL <listing id>          (answered with MCANCELED)
 MARKET COLLECT                      (answered with MCOLLECT)
+LIVE                                (answered with LIVE lines, then LIVEEND)
+WATCH <session id>                  (answered with WATCHING, WSTATE, WTEXT, ... WEND)
+UNWATCH
+BSTATE <session id> <host: species level hp max-hp alive party> <guest: same>   (battle host only)
+BTEXT <session id> <text>           (battle host only)
 SEASON                              (answered with SEASON)
 CLAIM                               (answered with CLAIMED)
 ```
@@ -312,6 +340,12 @@ RANK <position> <name> <rating> <wins> <losses> <draws>
 BOARDEND
 SEASON <season> <days left> <rated 0|1> <rating> <reward tier or -1> <reward season>
 CLAIMED <tier or -1> <season>
+LIVE <session id> <host> <guest>
+LIVEEND
+WATCHING <session id>
+WSTATE <session id> <same fields as BSTATE>
+WTEXT <session id> <text>
+WEND <session id>
 MITEM <listing id> <seller> <species> <level> <price> <mine 0|1>
 MARKETEND <page> <pages>
 MLISTED <ok|full> <listing id>

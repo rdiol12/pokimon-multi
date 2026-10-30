@@ -52,6 +52,9 @@ enum NetplayRequestType
     NETPLAY_REQ_MARKET_BUY,  // arg: index on the current page
     NETPLAY_REQ_MARKET_CANCEL, // arg: index on the current page
     NETPLAY_REQ_MARKET_COLLECT, // money from sales while away
+    NETPLAY_REQ_LIVE,        // list live PvP battles
+    NETPLAY_REQ_WATCH,       // arg: index in the live list
+    NETPLAY_REQ_UNWATCH,
 };
 
 enum NetplayEventType
@@ -223,6 +226,49 @@ struct NetplayMarket
     /*0x64*/ struct Pokemon mon; // sell: written by the ROM; buy/cancel: by the bridge
 }; // size 0xC8
 
+#define NETPLAY_BATTLE_TEXT_LENGTH 64
+#define NETPLAY_MAX_LIVE_BATTLES   5
+
+struct NetplayBattleSide
+{
+    /*0x00*/ u16 species;
+    /*0x02*/ u8 level;
+    /*0x03*/ u8 alive;     // party Pokémon that can still fight
+    /*0x04*/ u16 hp;
+    /*0x06*/ u16 maxHP;
+    /*0x08*/ u8 partySize;
+    /*0x09*/ u8 filler[3];
+}; // size 0x0C
+
+// A PvP battle as spectators see it: the active Pokémon of the host (side 0)
+// and the guest (side 1), and the battle's latest message.
+struct NetplayBattleReport
+{
+    /*0x00*/ u8 seq;  // bumped on each change
+    /*0x01*/ u8 filler[3];
+    /*0x04*/ struct NetplayBattleSide sides[2];
+    /*0x1C*/ u8 text[NETPLAY_BATTLE_TEXT_LENGTH]; // game charset, EOS-terminated
+}; // size 0x5C
+
+struct NetplayLiveBattle
+{
+    /*0x00*/ u16 sessionId;
+    /*0x02*/ u8 host[PLAYER_NAME_LENGTH + 1];
+    /*0x0A*/ u8 guest[PLAYER_NAME_LENGTH + 1];
+    /*0x12*/ u16 filler;
+}; // size 0x14
+
+// Spectating: the live battle list, and the battle being watched.
+struct NetplayWatch
+{
+    /*0x00*/ u8 listSeq;
+    /*0x01*/ u8 count;
+    /*0x02*/ u8 ended;   // the watched battle is over
+    /*0x03*/ u8 filler;
+    /*0x04*/ struct NetplayLiveBattle list[NETPLAY_MAX_LIVE_BATTLES];
+    /*0x68*/ struct NetplayBattleReport view;
+}; // size 0xC4
+
 struct NetplayMailbox
 {
     /*0x000*/ char magic[8];
@@ -254,8 +300,9 @@ struct NetplayMailbox
     /*0x43C*/ struct NetplayFriends friends;
     /*0x508*/ struct NetplaySeason season;
     /*0x518*/ struct NetplayMarket market;
-    // 0x5E0-0x5FF: reserved for this file's features.
-}; // size 0x5E0
+    /*0x5E0*/ struct NetplayBattleReport battleReport; // written by the host of a PvP battle
+    /*0x63C*/ struct NetplayWatch watch;
+}; // size 0x700
 
 extern struct NetplayMailbox gNetplayMailbox;
 
@@ -282,6 +329,7 @@ void ShowNetplayLadder(void);
 bool32 Netplay_TryOpenEmoteMenu(void);
 void ShowNetplayFriends(void);
 void ShowNetplaySeason(void);
+void ShowNetplayWatch(void);
 bool32 Netplay_MarketAvailable(void);
 bool32 Netplay_IsOnline(void);
 

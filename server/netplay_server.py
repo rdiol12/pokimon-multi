@@ -19,7 +19,9 @@ log = logging.getLogger("netplay")
 
 START_RATING = 1000
 ELO_K = 32
-MAX_EMOTE = 32  # emote ids the ROM may send (see Emotes in src/netplay.c)
+MAX_EMOTE = 32
+MAX_LIVE = 5
+MAX_BATTLE_TEXT = 80  # emote ids the ROM may send (see Emotes in src/netplay.c)
 EMOTE_BURST = 4  # emotes a player can send at once; one more each EMOTE_REFILL seconds
 EMOTE_REFILL = 1.0
 NAME_RE = re.compile(r"^[A-Za-z0-9]{1,7}$")
@@ -136,6 +138,7 @@ class Player:
         self.map = None
         self.pos = (0, 0, 0, 0, 0)  # x, y, facing, elevation, gfx
         self.session = None
+        self.watching = None  # the battle session this player spectates
         self.emote_tokens = EMOTE_BURST
         self.emote_time = time.monotonic()
 
@@ -160,6 +163,11 @@ class Session:
         self.started = False
         self.reports = {}
         self.recorded = False
+        # Spectating: who watches, and the host's latest report to replay
+        # to anyone who starts watching.
+        self.watchers = set()
+        self.state = None
+        self.text = None
 
     def peer(self, player):
         return self.guest if player is self.host else self.host
@@ -207,6 +215,7 @@ class Server:
         if self.players.pop(player.id, None) is None:
             return
         log.info("player %d (%s) disconnected", player.id, player.name)
+        self.stop_watching(player)
         for session in list(self.sessions.values()):
             if player in (session.host, session.guest):
                 self.end_session(session, player)
@@ -235,6 +244,11 @@ class Server:
         for p in (session.host, session.guest):
             if p.session is session:
                 p.session = None
+        for watcher in session.watchers:
+            watcher.watching = None
+            if watcher.id in self.players:
+                watcher.send(f"WEND {session.id}")
+        session.watchers.clear()
         if session.kind == "battle" and session.started and not session.recorded:
             self.pending[session.id] = session
             self.settle_pending(leaver)
@@ -448,6 +462,65 @@ class Server:
             player.send(f"MCOLLECT {money} {sales}")
         else:
             raise ValueError("bad MARKET")
+
+    # --- spectating -----------------------------------------------------
+
+    def stop_watching(self, player):
+        if player.watching is not None:
+            player.watching.watchers.discard(player)
+            player.watching = None
+
+    def live_battle(self, sid):
+        session = self.sessions.get(int(sid))
+        if session is None or session.kind != "battle" or not session.started:
+            return None
+        return session
+
+    def cmd_live(self, player):
+        """LIVE <session id> <host> <guest> per running battle, then LIVEEND."""
+        battles = [s for s in self.sessions.values() if self.live_battle(s.id)]
+        for session in battles[:MAX_LIVE]:
+            player.send(f"LIVE {session.id} {session.host.name} {session.guest.name}")
+        player.send("LIVEEND")
+
+    def cmd_watch(self, player, sid):
+        self.stop_watching(player)
+        session = self.live_battle(sid)
+        if session is None or player in (session.host, session.guest):
+            player.send(f"WEND {int(sid)}")
+            return
+        session.watchers.add(player)
+        player.watching = session
+        player.send(f"WATCHING {session.id}")
+        if session.state:
+            player.send(f"WSTATE {session.id} {session.state}")
+        if session.text:
+            player.send(f"WTEXT {session.id} {session.text}")
+
+    def cmd_unwatch(self, player):
+        self.stop_watching(player)
+
+    def battle_report(self, player, sid):
+        """The battle `player` hosts, which only the host reports on."""
+        session = self.require_session(player, sid, started=True)
+        if session.kind != "battle" or player is not session.host:
+            raise ValueError("not the host of a battle")
+        return session
+
+    def cmd_bstate(self, player, sid, *fields):
+        """BSTATE <sid>, then for the host and the guest: species level hp max-hp alive party-size."""
+        session = self.battle_report(player, sid)
+        if len(fields) != 12:
+            raise ValueError("bad BSTATE")
+        session.state = " ".join(str(int(f)) for f in fields)
+        for watcher in session.watchers:
+            watcher.send(f"WSTATE {session.id} {session.state}")
+
+    def cmd_btext(self, player, sid, *words):
+        session = self.battle_report(player, sid)
+        session.text = " ".join(words)[:MAX_BATTLE_TEXT]
+        for watcher in session.watchers:
+            watcher.send(f"WTEXT {session.id} {session.text}")
 
     def cmd_myrank(self, player):
         rank, rating, w, l, d = self.league.rank_of((player.name, player.tid))

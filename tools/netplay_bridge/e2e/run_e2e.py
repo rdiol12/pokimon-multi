@@ -80,7 +80,7 @@ def main():
     shutil.copy(os.path.join(HERE, "driver_lib.lua"), out)
 
     dirs = []
-    for n in (1, 2):
+    for n in (1, 2, 3):  # player 3 watches the battle
         d = os.path.join(out, f"p{n}")
         os.makedirs(d)
         shutil.copy(os.path.join(HERE, "scenario.lua"), os.path.join(d, "driver.lua"))

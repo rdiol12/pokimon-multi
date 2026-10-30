@@ -277,6 +277,8 @@ static void ReceiveEvent(void)
     gNetplayMailbox.eventAck = gNetplayMailbox.event.seq;
 }
 
+static void ReportBattle(void);
+
 // Called once per frame from the main loop.
 void Netplay_Update(void)
 {
@@ -293,6 +295,7 @@ void Netplay_Update(void)
     }
     ReceiveEvent();
     FlushRequest();
+    ReportBattle();
 
     if (sSession.peerLeft && gReceivedRemoteLinkPlayers && sSession.peerLeftTimer != 0
      && --sSession.peerLeftTimer == 0)
@@ -744,7 +747,8 @@ static void Task_Linkup(u8 taskId)
 // For automated tests (tools/netplay_bridge/e2e): a test driver writes
 // NETPLAY_TEST_BOOT_MAGIC | n into the mailbox's first padding byte on the
 // title screen, and "New Game" then skips the intro and drops player TESTn
-// with a small party in front of the Oldale Town Pokémon Center.
+// with a small party in front of the Oldale Town Pokémon Center (or inside
+// it, from player 3 on).
 
 #define NETPLAY_TEST_BOOT_MAGIC 0xB0
 
@@ -768,7 +772,11 @@ static void CB2_TestNewGame(void)
     ScriptGiveMon(n & 1 ? SPECIES_MUDKIP : SPECIES_TREECKO, 30, ITEM_NONE);
     ScriptGiveMon(n & 1 ? SPECIES_POOCHYENA : SPECIES_ZIGZAGOON, 30, ITEM_NONE);
 
-    SetWarpDestination(MAP_GROUP(MAP_OLDALE_TOWN), MAP_NUM(MAP_OLDALE_TOWN), WARP_ID_NONE, 4 + 2 * n, 17);
+    // Players 1 and 2 meet outside; any more (spectators) wait indoors.
+    if (n <= 2)
+        SetWarpDestination(MAP_GROUP(MAP_OLDALE_TOWN), MAP_NUM(MAP_OLDALE_TOWN), WARP_ID_NONE, 4 + 2 * n, 17);
+    else
+        SetWarpDestination(MAP_GROUP(MAP_OLDALE_TOWN_POKEMON_CENTER_1F), MAP_NUM(MAP_OLDALE_TOWN_POKEMON_CENTER_1F), WARP_ID_NONE, 7, 6);
     WarpIntoMap();
     gFieldCallback = FieldCB_WarpExitFadeFromBlack;
     SetMainCallback2(CB2_LoadMap);
@@ -3005,3 +3013,275 @@ static void Task_MarketScreen(u8 taskId)
         break;
     }
 }
+
+// Spectating -------------------------------------------------------------
+//
+// The host of a PvP battle reports both active Pokémon and the battle's
+// messages (ReportBattle); the server passes them on to anyone watching from
+// START > ONLINE > WATCH.
+
+static void FillBattleSide(struct NetplayBattleSide *side, u32 position, u32 party)
+{
+    const struct BattlePokemon *mon = &gBattleMons[GetBattlerAtPosition(position)];
+    u32 i;
+
+    side->species = mon->species;
+    side->level = mon->level;
+    side->hp = mon->hp;
+    side->maxHP = mon->maxHP;
+    side->alive = 0;
+    side->partySize = 0;
+    for (i = 0; i < PARTY_SIZE; i++)
+    {
+        struct Pokemon *partyMon = &gParties[party][i];
+
+        if (GetMonData(partyMon, MON_DATA_SPECIES) == SPECIES_NONE || GetMonData(partyMon, MON_DATA_IS_EGG))
+            continue;
+        side->partySize++;
+        if (GetMonData(partyMon, MON_DATA_HP) != 0)
+            side->alive++;
+    }
+}
+
+static void ReportBattle(void)
+{
+    struct NetplayBattleReport *report = &gNetplayMailbox.battleReport;
+    struct NetplayBattleSide sides[2];
+    u8 text[NETPLAY_BATTLE_TEXT_LENGTH];
+    u32 i;
+
+    if (!sSession.active || sSession.kind != NETPLAY_KIND_BATTLE || sSession.role != 0
+     || !gMain.inBattle || gBattleMons[0].species == SPECIES_NONE)
+        return;
+
+    memset(sides, 0, sizeof(sides));
+    FillBattleSide(&sides[0], B_POSITION_PLAYER_LEFT, B_TRAINER_PLAYER);
+    FillBattleSide(&sides[1], B_POSITION_OPPONENT_LEFT, B_TRAINER_OPPONENT_A);
+    // The healthboxes print nicknames through the same buffer; a battle
+    // message has a space or a line break.
+    memcpy(text, report->text, sizeof(text));
+    text[NETPLAY_BATTLE_TEXT_LENGTH - 1] = EOS;
+    for (i = 0; i < NETPLAY_BATTLE_TEXT_LENGTH - 1 && gDisplayedStringBattle[i] != EOS; i++)
+    {
+        if (gDisplayedStringBattle[i] == CHAR_SPACE || gDisplayedStringBattle[i] == CHAR_NEWLINE)
+            break;
+    }
+    if (i < NETPLAY_BATTLE_TEXT_LENGTH - 1 && gDisplayedStringBattle[i] != EOS)
+    {
+        for (i = 0; i < NETPLAY_BATTLE_TEXT_LENGTH - 1 && gDisplayedStringBattle[i] != EOS; i++)
+            text[i] = gDisplayedStringBattle[i];
+        text[i] = EOS;
+    }
+    if (memcmp(sides, report->sides, sizeof(sides)) == 0 && memcmp(text, report->text, sizeof(text)) == 0)
+        return;
+    memcpy(report->sides, sides, sizeof(sides));
+    memcpy(report->text, text, sizeof(text));
+    report->seq++;
+}
+
+#define WATCH_REFRESH (2 * 60)
+
+enum
+{
+    WATCH_STATE_LIST,
+    WATCH_STATE_VIEW,
+};
+
+#define tState     data[0]
+#define tWindowId  data[1]
+#define tSeq       data[2]
+#define tTimer     data[3]
+#define tCursor    data[4]
+#define tViewSeq   data[5]
+#define tLoaded    data[6]
+#define tWatching  data[7]
+
+static void Task_Watch(u8 taskId);
+
+static void BufferWatchName(u8 *dest, const u8 *name)
+{
+    StringCopyN(dest, name, PLAYER_NAME_LENGTH);
+    dest[PLAYER_NAME_LENGTH] = EOS;
+}
+
+static void DrawBattleSide(u8 windowId, const struct NetplayBattleSide *side, const u8 *trainer, u32 y)
+{
+    u8 *str;
+    u32 width, barWidth = 64, i;
+
+    AddTextPrinterParameterized(windowId, FONT_SMALL, trainer, 8, y, TEXT_SKIP_DRAW, NULL);
+    // One ball per party Pokémon: filled while it can still fight.
+    for (i = 0; i < side->partySize; i++)
+        FillWindowPixelRect(windowId, PIXEL_FILL(i < side->alive ? 4 : 13), 64 + i * 8, y + 4, 6, 6);
+    if (side->species == SPECIES_NONE)
+        return;
+    AddTextPrinterParameterized(windowId, FONT_NORMAL, GetSpeciesName(side->species), 8, y + 12, TEXT_SKIP_DRAW, NULL);
+    str = StringCopy(gStringVar4, COMPOUND_STRING("Lv"));
+    ConvertIntToDecimalStringN(str, side->level, STR_CONV_MODE_LEFT_ALIGN, 3);
+    AddTextPrinterParameterized(windowId, FONT_SMALL, gStringVar4, 84, y + 14, TEXT_SKIP_DRAW, NULL);
+
+    // HP bar: green, yellow under half, red under a fifth.
+    width = side->maxHP ? side->hp * barWidth / side->maxHP : 0;
+    if (side->hp != 0 && width == 0)
+        width = 1;
+    FillWindowPixelRect(windowId, PIXEL_FILL(2), 108, y + 17, barWidth + 2, 6);
+    FillWindowPixelRect(windowId, PIXEL_FILL(1), 109, y + 18, barWidth, 4);
+    if (width != 0)
+        FillWindowPixelRect(windowId, PIXEL_FILL(side->hp * 5 <= side->maxHP ? 4 : side->hp * 2 <= side->maxHP ? 12 : 6),
+                            109, y + 18, width, 4);
+    str = ConvertIntToDecimalStringN(gStringVar4, side->hp, STR_CONV_MODE_LEFT_ALIGN, 4);
+    str = StringCopy(str, COMPOUND_STRING("/"));
+    ConvertIntToDecimalStringN(str, side->maxHP, STR_CONV_MODE_LEFT_ALIGN, 4);
+    AddTextPrinterParameterized(windowId, FONT_SMALL, gStringVar4, 178, y + 14, TEXT_SKIP_DRAW, NULL);
+}
+
+static void DrawWatch(struct Task *task)
+{
+    const struct NetplayWatch *watch = &gNetplayMailbox.watch;
+    u8 windowId = task->tWindowId;
+    u32 i;
+
+    FillWindowPixelBuffer(windowId, PIXEL_FILL(1));
+    if (task->tState == WATCH_STATE_LIST)
+    {
+        AddTextPrinterParameterized(windowId, FONT_NORMAL, COMPOUND_STRING("LIVE BATTLES"), 4, 0, TEXT_SKIP_DRAW, NULL);
+        if (!task->tLoaded)
+            AddTextPrinterParameterized(windowId, FONT_NORMAL, COMPOUND_STRING("Loading…"), 12, 20, TEXT_SKIP_DRAW, NULL);
+        else if (watch->count == 0)
+            AddTextPrinterParameterized(windowId, FONT_NORMAL, COMPOUND_STRING("No one is battling right now."), 12, 20, TEXT_SKIP_DRAW, NULL);
+        for (i = 0; task->tLoaded && i < watch->count; i++)
+        {
+            BufferWatchName(gStringVar1, watch->list[i].host);
+            BufferWatchName(gStringVar2, watch->list[i].guest);
+            StringExpandPlaceholders(gStringVar4, COMPOUND_STRING("{STR_VAR_1}  vs  {STR_VAR_2}"));
+            if (i == task->tCursor)
+                AddTextPrinterParameterized(windowId, FONT_NORMAL, gText_SelectorArrow3, 2, 20 + i * 16, TEXT_SKIP_DRAW, NULL);
+            AddTextPrinterParameterized(windowId, FONT_NORMAL, gStringVar4, 12, 20 + i * 16, TEXT_SKIP_DRAW, NULL);
+        }
+        AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("A: watch  B: back"), 4, 122, TEXT_SKIP_DRAW, NULL);
+    }
+    else
+    {
+        const struct NetplayLiveBattle *battle = &watch->list[task->tWatching];
+        const struct NetplayBattleReport *view = &watch->view;
+
+        BufferWatchName(gStringVar1, battle->host);
+        BufferWatchName(gStringVar2, battle->guest);
+        StringExpandPlaceholders(gStringVar4, COMPOUND_STRING("WATCHING {STR_VAR_1} vs {STR_VAR_2}"));
+        AddTextPrinterParameterized(windowId, FONT_NORMAL, gStringVar4, 4, 0, TEXT_SKIP_DRAW, NULL);
+        DrawBattleSide(windowId, &view->sides[1], gStringVar2, 18);
+        DrawBattleSide(windowId, &view->sides[0], gStringVar1, 52);
+        FillWindowPixelRect(windowId, PIXEL_FILL(2), 4, 88, 216, 1);
+        if (watch->ended)
+            AddTextPrinterParameterized(windowId, FONT_NORMAL, COMPOUND_STRING("The battle is over."), 8, 92, TEXT_SKIP_DRAW, NULL);
+        else if (view->text[0] != EOS)
+            AddTextPrinterParameterized(windowId, FONT_NORMAL, view->text, 8, 92, TEXT_SKIP_DRAW, NULL);
+        else
+            AddTextPrinterParameterized(windowId, FONT_NORMAL, COMPOUND_STRING("Waiting for the battle…"), 8, 92, TEXT_SKIP_DRAW, NULL);
+        AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("B: stop watching"), 4, 122, TEXT_SKIP_DRAW, NULL);
+    }
+    CopyWindowToVram(windowId, COPYWIN_FULL);
+}
+
+static void RefreshLiveBattles(struct Task *task)
+{
+    task->tSeq = gNetplayMailbox.watch.listSeq;
+    task->tTimer = 0;
+    QueueRequest(NETPLAY_REQ_LIVE, 0, 0, 0);
+}
+
+void ShowNetplayWatch(void)
+{
+    u8 taskId = CreateTask(Task_Watch, 80);
+    struct Task *task = &gTasks[taskId];
+
+    task->tWindowId = AddWindow(&sLadderWindowTemplate);
+    DrawStdWindowFrame(task->tWindowId, FALSE);
+    PutWindowTilemap(task->tWindowId);
+    task->tState = WATCH_STATE_LIST;
+    task->tCursor = 0;
+    task->tLoaded = FALSE;
+    RefreshLiveBattles(task);
+    DrawWatch(task);
+    ScheduleBgCopyTilemapToVram(0);
+}
+
+static void Task_Watch(u8 taskId)
+{
+    struct Task *task = &gTasks[taskId];
+    const struct NetplayWatch *watch = &gNetplayMailbox.watch;
+
+    if (task->tState == WATCH_STATE_VIEW)
+    {
+        if (watch->view.seq != (u8)task->tViewSeq)
+        {
+            task->tViewSeq = watch->view.seq;
+            DrawWatch(task);
+        }
+        if (JOY_NEW(B_BUTTON) || !IsOnline())
+        {
+            PlaySE(SE_SELECT);
+            QueueRequest(NETPLAY_REQ_UNWATCH, 0, 0, 0);
+            task->tState = WATCH_STATE_LIST;
+            task->tLoaded = FALSE;
+            RefreshLiveBattles(task);
+            DrawWatch(task);
+        }
+        return;
+    }
+
+    if (watch->listSeq != (u8)task->tSeq)
+    {
+        task->tSeq = watch->listSeq;
+        task->tLoaded = TRUE;
+        if (task->tCursor >= watch->count)
+            task->tCursor = watch->count ? watch->count - 1 : 0;
+        DrawWatch(task);
+    }
+    else if (++task->tTimer > WATCH_REFRESH && IsOnline())
+    {
+        RefreshLiveBattles(task);
+    }
+
+    if (JOY_NEW(DPAD_UP) && task->tCursor > 0)
+    {
+        PlaySE(SE_SELECT);
+        task->tCursor--;
+        DrawWatch(task);
+    }
+    else if (JOY_NEW(DPAD_DOWN) && task->tCursor + 1 < watch->count)
+    {
+        PlaySE(SE_SELECT);
+        task->tCursor++;
+        DrawWatch(task);
+    }
+    else if (JOY_NEW(A_BUTTON) && task->tLoaded && task->tCursor < watch->count)
+    {
+        PlaySE(SE_SELECT);
+        task->tWatching = task->tCursor;
+        task->tViewSeq = watch->view.seq;
+        task->tState = WATCH_STATE_VIEW;
+        QueueRequest(NETPLAY_REQ_WATCH, 0, 0, task->tCursor);
+        DrawWatch(task);
+    }
+    else if (JOY_NEW(B_BUTTON))
+    {
+        PlaySE(SE_SELECT);
+        ClearStdWindowAndFrameToTransparent(task->tWindowId, FALSE);
+        ClearWindowTilemap(task->tWindowId);
+        RemoveWindow(task->tWindowId);
+        ScheduleBgCopyTilemapToVram(0);
+        DestroyTask(taskId);
+        ScriptUnfreezeObjectEvents();
+        UnlockPlayerFieldControls();
+    }
+}
+
+#undef tState
+#undef tWindowId
+#undef tSeq
+#undef tTimer
+#undef tCursor
+#undef tViewSeq
+#undef tLoaded
+#undef tWatching

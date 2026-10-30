@@ -46,6 +46,14 @@ local FRIEND_SIZE = 20
 local FRIEND_ADD_RESULTS = { ok = 1, full = 2 }
 local OFF_SEASON = 0x508
 local OFF_MARKET = 0x518
+local OFF_REPORT = 0x5E0
+local OFF_WATCH = 0x63C
+local OFF_WATCH_VIEW = OFF_WATCH + 0x68
+local MAX_LIVE = 5
+local LIVE_SIZE = 20
+local SIDE_SIZE = 12
+local OFF_TEXT = 0x1C -- in a battle report
+local BATTLE_TEXT_LENGTH = 64
 local MARKET_PAGE_SIZE = 5
 local MARKET_LISTING_SIZE = 16
 local MON_SIZE = 100
@@ -60,6 +68,7 @@ local STATE_OFFLINE, STATE_CONNECTING, STATE_ONLINE = 0, 1, 2
 local REQ_CHALLENGE, REQ_TRADE, REQ_ACCEPT, REQ_DECLINE, REQ_RESULT, REQ_LEAVE, REQ_DEAL, REQ_LADDER, REQ_EMOTE = 1, 2, 3, 4, 5, 6, 7, 8, 9
 local REQ_FRIENDS, REQ_FRIEND_ADD, REQ_FRIEND_DEL, REQ_SEASON, REQ_CLAIM = 10, 11, 12, 13, 14
 local REQ_MARKET, REQ_MARKET_SELL, REQ_MARKET_BUY, REQ_MARKET_CANCEL, REQ_MARKET_COLLECT = 15, 16, 17, 18, 19
+local REQ_LIVE, REQ_WATCH, REQ_UNWATCH = 20, 21, 22
 local EV_INVITE, EV_START, EV_DECLINED, EV_ENDED, EV_PENDING, EV_EMOTE = 1, 2, 3, 4, 5, 6
 local KIND_IDS = { battle = 1, trade = 2, deal = 3 }
 local RESULTS = { "win", "loss", "draw" }
@@ -81,6 +90,42 @@ local function asciiToChar(ch)
     if b >= 65 and b <= 90 then return b - 65 + 0xBB end
     if b >= 97 and b <= 122 then return b - 97 + 0xD5 end
     return 0x00 -- space
+end
+
+-- Battle text both ways: punctuation too, and control codes dropped.
+local TEXT_TO_ASCII = {
+    [0x00] = " ", [0x1B] = "e", [0x2D] = "&", [0x2E] = "+", [0x35] = "=", [0x5B] = "%", [0x5C] = "(", [0x5D] = ")",
+    [0xAB] = "!", [0xAC] = "?", [0xAD] = ".", [0xAE] = "-", [0xB0] = "...", [0xB1] = '"', [0xB2] = '"',
+    [0xB3] = "'", [0xB4] = "'", [0xB8] = ",", [0xBA] = "/", [0xF0] = ":",
+    [0x39] = " ", [0xFA] = " ", [0xFB] = " ", [0xFE] = " ",
+}
+local ASCII_TO_TEXT = {
+    [" "] = 0x00, ["&"] = 0x2D, ["+"] = 0x2E, ["="] = 0x35, ["%"] = 0x5B, ["("] = 0x5C, [")"] = 0x5D,
+    ["!"] = 0xAB, ["?"] = 0xAC, ["."] = 0xAD, ["-"] = 0xAE, ['"'] = 0xB1, ["'"] = 0xB4, [","] = 0xB8,
+    ["/"] = 0xBA, [":"] = 0xF0,
+}
+
+local function textToAscii(bytes)
+    local out, i = {}, 1
+    while i <= #bytes do
+        local c = bytes[i]
+        if c == 0xFF then break end
+        if c == 0xFC or c == 0xFD then
+            i = i + 1 -- a control code and its argument
+        else
+            out[#out + 1] = charToAscii(c) or TEXT_TO_ASCII[c] or ""
+        end
+        i = i + 1
+    end
+    return (table.concat(out):gsub("%s+", " "):gsub("^ ", ""):gsub(" $", ""))
+end
+
+local function asciiToText(str)
+    local out = {}
+    for ch in str:gmatch(".") do
+        out[#out + 1] = ASCII_TO_TEXT[ch] or asciiToChar(ch)
+    end
+    return out
 end
 
 local function s16(v)
@@ -119,6 +164,10 @@ function Bridge:resetConnection()
     self.friendList = {}  -- the last friend list given to the ROM
     self.marketRows = nil -- rows of the market page being received
     self.marketIds = {}   -- listing ids of the last market page given to the ROM
+    self.liveRows = nil   -- live battles being received
+    self.liveIds = {}     -- session ids of the last live list given to the ROM
+    self.reportSeq = nil  -- the ROM's battle report we last sent
+    self.reportText = nil
     self.nextConnect = self.frame
 end
 
@@ -304,6 +353,35 @@ function Bridge:handleLine(line)
     elseif cmd == "MCOLLECT" then
         self:w16(OFF_MARKET + 6, tonumber(args[3]))
         self:marketAnswer("ok", tonumber(args[2]))
+    elseif cmd == "LIVE" and self.liveRows then
+        table.insert(self.liveRows, { sid = tonumber(args[2]), host = args[3], guest = args[4] })
+    elseif cmd == "LIVEEND" and self.liveRows then
+        self:writeLive(self.liveRows)
+        self.liveRows = nil
+    elseif cmd == "WATCHING" then
+        self:w8(OFF_WATCH + 2, 0)
+    elseif cmd == "WSTATE" then
+        for side = 0, 1 do
+            local off = OFF_WATCH_VIEW + 4 + side * SIDE_SIZE
+            local f = function(i) return tonumber(args[3 + side * 6 + i]) end
+            self:w16(off, f(0))
+            self:w8(off + 2, f(1))
+            self:w16(off + 4, f(2))
+            self:w16(off + 6, f(3))
+            self:w8(off + 3, f(4))
+            self:w8(off + 8, f(5))
+        end
+        self:w8(OFF_WATCH_VIEW, self:r8(OFF_WATCH_VIEW) + 1)
+    elseif cmd == "WTEXT" then
+        local text = asciiToText(line:match("^WTEXT %d+ (.*)$") or "")
+        for i = 0, BATTLE_TEXT_LENGTH - 1 do
+            self:w8(OFF_WATCH_VIEW + OFF_TEXT + i, text[i + 1] or 0xFF)
+        end
+        self:w8(OFF_WATCH_VIEW + OFF_TEXT + BATTLE_TEXT_LENGTH - 1, 0xFF)
+        self:w8(OFF_WATCH_VIEW, self:r8(OFF_WATCH_VIEW) + 1)
+    elseif cmd == "WEND" then
+        self:w8(OFF_WATCH + 2, 1)
+        self:w8(OFF_WATCH_VIEW, self:r8(OFF_WATCH_VIEW) + 1)
     elseif cmd == "EMOTE" then
         self:queueEvent(EV_EMOTE, tonumber(args[2]), 0, tonumber(args[3]))
     elseif cmd == "RANK" and self.ladder then
@@ -457,6 +535,23 @@ function Bridge:handleRequest()
         end
     elseif type == REQ_MARKET_COLLECT then
         self.net.send("MARKET COLLECT")
+    elseif type == REQ_LIVE then
+        self.liveRows = {}
+        self.net.send("LIVE")
+    elseif type == REQ_WATCH then
+        -- Start from a blank view: the server catches us up.
+        for i = 1, OFF_TEXT - 1 do self:w8(OFF_WATCH_VIEW + i, 0) end
+        self:w8(OFF_WATCH_VIEW + OFF_TEXT, 0xFF)
+        self:w8(OFF_WATCH + 2, 0)
+        self:w8(OFF_WATCH_VIEW, self:r8(OFF_WATCH_VIEW) + 1)
+        local sid = self.liveIds[arg + 1]
+        if sid then
+            self.net.send("WATCH " .. sid)
+        else
+            self:w8(OFF_WATCH + 2, 1)
+        end
+    elseif type == REQ_UNWATCH then
+        self.net.send("UNWATCH")
     elseif type == REQ_EMOTE then
         self.net.send("EMOTE " .. arg)
     elseif type == REQ_LADDER then
@@ -538,6 +633,51 @@ function Bridge:marketAnswer(answer, money, monHex)
     self:w16(OFF_MARKET + 10, money >> 16)
     self:w8(OFF_MARKET + 5, MARKET_ANSWERS[answer] or MARKET_ANSWERS.gone)
     self:w8(OFF_MARKET + 4, self:r8(OFF_MARKET + 4) + 1) -- publish
+end
+
+function Bridge:writeLive(rows)
+    local count = math.min(#rows, MAX_LIVE)
+    self.liveIds = {}
+    for i = 1, count do
+        local r = rows[i]
+        local off = OFF_WATCH + 4 + (i - 1) * LIVE_SIZE
+        self.liveIds[i] = r.sid
+        self:w16(off, r.sid)
+        for c = 0, NAME_LENGTH - 1 do
+            local h, g = r.host:sub(c + 1, c + 1), r.guest:sub(c + 1, c + 1)
+            self:w8(off + 2 + c, h == "" and 0xFF or asciiToChar(h))
+            self:w8(off + 10 + c, g == "" and 0xFF or asciiToChar(g))
+        end
+    end
+    self:w8(OFF_WATCH + 1, count)
+    self:w8(OFF_WATCH, self:r8(OFF_WATCH) + 1) -- publish
+end
+
+-- The ROM reports the battle it hosts; pass changes on for spectators.
+function Bridge:sendBattleReport()
+    local seq = self:r8(OFF_REPORT)
+    if seq == self.reportSeq then return end
+    self.reportSeq = seq
+    if not self.session then return end
+    local fields = {}
+    for side = 0, 1 do
+        local off = OFF_REPORT + 4 + side * SIDE_SIZE
+        fields[#fields + 1] = string.format("%d %d %d %d %d %d", self:r16(off), self:r8(off + 2),
+            self:r16(off + 4), self:r16(off + 6), self:r8(off + 3), self:r8(off + 8))
+    end
+    self.net.send("BSTATE " .. self.session .. " " .. table.concat(fields, " "))
+    local bytes = {}
+    for i = 0, BATTLE_TEXT_LENGTH - 1 do bytes[#bytes + 1] = self:r8(OFF_REPORT + OFF_TEXT + i) end
+    local text = textToAscii(bytes)
+    if os.getenv("NETPLAY_TRACE") then
+        local hex = {}
+        for i = 1, #bytes do hex[i] = string.format("%02x", bytes[i]) end
+        self:log("report " .. table.concat(hex))
+    end
+    if text ~= self.reportText and text ~= "" then
+        self.reportText = text
+        self.net.send("BTEXT " .. self.session .. " " .. text)
+    end
 end
 
 function Bridge:writeLadderTop(rows)
@@ -631,6 +771,7 @@ function Bridge:onFrame()
     if self.localId ~= 0 then
         self:sendPosition()
         self:handleRequest()
+        self:sendBattleReport()
     end
     self:deliverEvent()
     self:writeRemotes()

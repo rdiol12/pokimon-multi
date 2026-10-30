@@ -6,7 +6,8 @@
 -- walks off to Route 101, travels to it from the friend list. Player 2 claims
 -- a ladder season reward. Last, both go to the Oldale Poké Mart: player 1
 -- puts a Pokémon on the market board, player 2 buys it, and player 1 collects
--- the money.
+-- the money. Player 3 starts inside the Pokémon Center and watches the battle
+-- from START > ONLINE > WATCH.
 -- Run with run_e2e.py.
 
 dofile(INSTANCE_DIR .. "/../driver_lib.lua")
@@ -82,8 +83,41 @@ end
 
 TRACE_LINK = true
 
+-- Player 3: waits on the live battle list for the battle, then watches it.
+local function spectate()
+    D.waitFor("the server", 600, D.online)
+    D.wait(60)
+    D.press(K.START, 40)
+    for _ = 1, 4 do D.press(K.DOWN, 10) end
+    D.press(K.A, 30) -- ONLINE
+    for _ = 1, 3 do D.press(K.DOWN, 10) end
+    D.press(K.A, 60) -- WATCH
+    D.shot("watch-none")
+    D.waitFor("a live battle", 6000, function() return D.mb8(0x63D) > 0 end)
+    D.wait(20)
+    D.shot("watch-list")
+    D.press(K.A, 10)
+    D.waitFor("the battle view", 600, function() return D.mb16(0x6A8) ~= 0 end)
+    D.wait(10)
+    D.shot("watching")
+    local lastSeq, shots = D.mb8(0x6A4), 0
+    D.waitFor("the battle to end", 20000, function() return D.mb8(0x63E) == 1 end, function()
+        if D.mb8(0x6A4) ~= lastSeq and shots < 6 then
+            lastSeq = D.mb8(0x6A4)
+            shots = shots + 1
+            D.shot("watching")
+        end
+    end)
+    D.wait(10)
+    D.shot("watch-ended")
+    D.log(string.format("watched %d updates", shots))
+    D.press(K.B, 30)
+    D.press(K.B, 30)
+end
+
 D.run(function()
     D.boot()
+    if INSTANCE == 3 then return spectate() end
     D.waitFor("the server", 600, D.online)
     D.waitFor("the other player", 600, function() return D.remoteCount() > 0 end)
     D.wait(30)
