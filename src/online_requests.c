@@ -47,4 +47,13 @@ const struct OnlineRequest gOnlineRequests[ONL_REQ_COUNT] =
     [ONL_REQ_MENTOR_CHEER]     = {"MENTOR CHEER", .flags = ONL_ARG_CHOSEN, .build = Online_AddBadgeCount},
     [ONL_REQ_MENTOR_GIFTS]     = {"MENTOR GIFTS", .build = Online_AddBadgeCount},
     [ONL_REQ_MENTOR_LEAVE]     = {"MENTOR LEAVE", .build = Online_AddBadgeCount},
+    [ONL_REQ_PQUEST_LIST]   = {"PQUEST LIST"},
+    [ONL_REQ_PQUEST_SHOW]   = {"PQUEST SHOW", .flags = ONL_ARG_CHOSEN},
+    [ONL_REQ_PQUEST_TAKE]   = {"PQUEST TAKE", .flags = ONL_ARG_CHOSEN, .after = Online_PollStatusSoon},
+    [ONL_REQ_PQUEST_DROP]   = {"PQUEST DROP", .after = Online_PollStatusSoon},
+    [ONL_REQ_PQUEST_HINTS]  = {"PQUEST HINTS"},
+    [ONL_REQ_PQUEST_MAKE]   = {"PQUEST MAKE", 2, ONL_ARG_CHOSEN},
+    [ONL_REQ_PQUEST_MINE]   = {"PQUEST MINE"},
+    [ONL_REQ_PQUEST_CANCEL] = {"PQUEST CANCEL", .flags = ONL_ARG_CHOSEN},
+    [ONL_REQ_PQUEST_FIND]   = {"PQUEST FIND", .after = Online_PollStatusSoon},
 };

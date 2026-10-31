@@ -775,6 +775,13 @@ static bool32 RunShowcase(void)
     return FALSE;
 }
 
+// Asks for the status within a few frames (after a request that changes it).
+void Online_PollStatusSoon(void)
+{
+    if (sOnline.statusTimer < STATUS_INTERVAL - 10)
+        sOnline.statusTimer = STATUS_INTERVAL - 10;
+}
+
 // Called every overworld frame. Returns TRUE if it started a script.
 bool32 Online_OverworldUpdate(void)
 {
@@ -796,6 +803,9 @@ bool32 Online_OverworldUpdate(void)
         return RunShowcase();
 
     if (!ArePlayerFieldControlsLocked() && Online_TryCoFishInvite())
+        return TRUE;
+
+    if (!ArePlayerFieldControlsLocked() && IsPlayerStandingStill() && Online_PlayerQuestUpdate())
         return TRUE;
 
     if (sOnline.noticeCount != 0 && !ArePlayerFieldControlsLocked() && IsPlayerStandingStill())

@@ -13,6 +13,7 @@ import online_fishing  # noqa: E402
 import online_goals  # noqa: E402
 import online_mentors  # noqa: E402
 import online_pageant  # noqa: E402
+import online_pquests  # noqa: E402
 import online_shops  # noqa: E402
 import online_sightings  # noqa: E402
 import online_web  # noqa: E402
@@ -31,7 +32,8 @@ class OnlineTest(unittest.IsolatedAsyncioTestCase):
         self.server = ns.Server(self.league)
         self.online = online.Online(self.server, ext.install(self.server),
                                     [online_goals, online_sightings, online_web, online_fishing, online_coopfish, online_shops,
-                                     online_pageant, online_duo, online_mentors], clock=lambda: self.now)
+                                     online_pageant, online_duo, online_mentors,
+                                     online_pquests], clock=lambda: self.now)
         self.srv = await asyncio.start_server(self.server.handle, "127.0.0.1", 0)
         self.port = self.srv.sockets[0].getsockname()[1]
         self.clients = []
@@ -381,6 +383,42 @@ class MentorTest(OnlineTest):
         self.assertEqual(rows((await self.ask(b, "MENTOR VIEW 8"))[1])[0][1], "3")
         status, out = await self.ask(a, "MENTOR VIEW 8")
         self.assertIn("1 graduated", rows(out)[0][0])
+
+
+class PlayerQuestTest(OnlineTest):
+    async def test_hide_take_and_find(self):
+        a = await self.connect("Ann", 1)
+        b = await self.connect("Ben", 2)
+        potion = ITEMS["POTION"]
+        self.assertEqual((await self.ask(a, f"PQUEST MAKE {potion} 3 1"))[0], 1)  # no position yet
+        await a.send("POS 0 9 12 7 1 3 0")
+        status, out = await self.ask(a, f"PQUEST MAKE {potion} 3 1")
+        self.assertEqual(rows(out)[1], ["-ITEM", str(potion), "3"])
+        status, out = await self.ask(b, "PQUEST LIST")
+        qid = rows(out)[1][1]
+        self.assertIn("Hint: In the tall grass", rows((await self.ask(b, f"PQUEST SHOW {qid}"))[1])[0][0])
+        await self.ask(b, f"PQUEST TAKE {qid}")
+        status, out = await self.ask(b, "OSTAT")
+        self.assertIn(["S", "PQUEST", qid, "0", "9", "12", "7"], rows(out))
+        self.assertEqual(rows((await self.ask(b, "PQUEST LIST"))[1])[0][1], "1")  # busy with it
+        # Too far, then on the spot.
+        await b.send("POS 0 9 20 7 1 3 0")
+        self.assertEqual((await self.ask(b, "PQUEST FIND"))[0], 1)
+        await b.send("POS 0 9 13 7 1 3 0")
+        status, out = await self.ask(b, "PQUEST FIND")
+        self.assertEqual(rows(out)[1], ["+ITEM", str(potion), "3"])
+        status, out = await self.ask(a, "PQUEST MINE")
+        self.assertIn("Found by others: 1", rows(out)[0][0])
+        self.assertIn("N", [r[0] for r in rows(out)])
+        self.assertNotIn("PQUEST", [r[1] for r in rows((await self.ask(b, "OSTAT"))[1]) if r[0] == "S"])
+
+    async def test_cancel_gives_items_back(self):
+        a = await self.connect("Ann", 1)
+        await a.send("POS 0 9 12 7 1 3 0")
+        await self.ask(a, f"PQUEST MAKE {ITEMS['ULTRA_BALL']} 2 0")
+        status, out = await self.ask(a, "PQUEST MINE")
+        status, out = await self.ask(a, f"PQUEST CANCEL {rows(out)[1][1]}")
+        self.assertEqual(rows(out)[1], ["+ITEM", str(ITEMS["ULTRA_BALL"]), "2"])
 
 
 if __name__ == "__main__":
