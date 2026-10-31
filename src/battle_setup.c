@@ -16,6 +16,7 @@
 #include "battle_tower.h"
 #include "battle_transition.h"
 #include "event_data.h"
+#include "field_ability.h"
 #include "event_object_movement.h"
 #include "event_scripts.h"
 #include "fieldmap.h"
@@ -282,6 +283,7 @@ static void CreateBattleStartTask(enum BattleTransition transition, u16 song)
     u8 taskId = CreateTask(Task_BattleStart, 1);
 
     Pastime_OnBattleStart();
+    FieldAbility_OnBattleStart();
     gTasks[taskId].tTransition = transition;
     PlayMapChosenOrBattleBGM(song);
 }

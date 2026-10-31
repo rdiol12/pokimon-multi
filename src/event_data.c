@@ -1,5 +1,6 @@
 #include "global.h"
 #include "event_data.h"
+#include "field_ability.h"
 #include "pokedex.h"
 
 #define SPECIAL_FLAGS_SIZE  (NUM_SPECIAL_FLAGS / 8)  // 8 flags per byte
@@ -68,6 +69,7 @@ void ClearTempFieldEventData(void)
 
 void ClearDailyFlags(void)
 {
+    FieldAbility_ResetDaily();
     memset(&gSaveBlock1Ptr->flags[DAILY_FLAGS_START / 8], 0, DAILY_FLAGS_SIZE);
 }
 

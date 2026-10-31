@@ -225,7 +225,7 @@ EventScript_StrengthBoulder::
 	lockall
 	goto_if_set FLAG_SYS_USE_STRENGTH, EventScript_CheckActivatedBoulder
 	checkfieldmove FIELD_MOVE_STRENGTH, TRUE
-	goto_if_eq VAR_RESULT, PARTY_SIZE, EventScript_CantStrength
+	goto_if_eq VAR_RESULT, PARTY_SIZE, EventScript_StrengthTryAbility
 	setfieldeffectargument 0, VAR_RESULT
 	msgbox Text_WantToStrength, MSGBOX_YESNO
 	goto_if_eq VAR_RESULT, NO, EventScript_CancelStrength
@@ -248,6 +248,11 @@ EventScript_ActivateStrength::
 	releaseall
 	end
 
+@ No Strength: a Fighting type, Guts, Huge Power or Pure Power will do
+@ (src/field_ability.c).
+EventScript_StrengthTryAbility:
+	callnative FieldAbility_FindStrongMon
+	goto_if_ne VAR_RESULT, PARTY_SIZE, FieldAbility_EventScript_StrongArms
 EventScript_CantStrength::
 	msgbox Text_CantStrength, MSGBOX_DEFAULT
 	releaseall

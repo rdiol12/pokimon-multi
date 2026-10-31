@@ -122,6 +122,10 @@ extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_EclipseMemb
 extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_EclipseMemberF;
 extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_EclipseAdmin;
 extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_EclipseLeader;
+extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_FieldIceBlock;
+extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_FieldGenerator;
+extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_FieldGeneratorOn;
+extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_FieldDigSpot;
 extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_MagmaMemberF;
 extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_Sidney;
 extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_Phoebe;
@@ -801,6 +805,10 @@ const struct ObjectEventGraphicsInfo *const gObjectEventGraphicsInfoPointers[NUM
     [OBJ_EVENT_GFX_ECLIPSE_MEMBER_F] =        &gObjectEventGraphicsInfo_EclipseMemberF,
     [OBJ_EVENT_GFX_ECLIPSE_ADMIN] =           &gObjectEventGraphicsInfo_EclipseAdmin,
     [OBJ_EVENT_GFX_ECLIPSE_LEADER] =          &gObjectEventGraphicsInfo_EclipseLeader,
+    [OBJ_EVENT_GFX_FIELD_ICE_BLOCK] =         &gObjectEventGraphicsInfo_FieldIceBlock,
+    [OBJ_EVENT_GFX_FIELD_GENERATOR] =         &gObjectEventGraphicsInfo_FieldGenerator,
+    [OBJ_EVENT_GFX_FIELD_GENERATOR_ON] =      &gObjectEventGraphicsInfo_FieldGeneratorOn,
+    [OBJ_EVENT_GFX_FIELD_DIG_SPOT] =          &gObjectEventGraphicsInfo_FieldDigSpot,
 };
 
 const struct ObjectEventGraphicsInfo *const gMauvilleOldManGraphicsInfoPointers[] = {

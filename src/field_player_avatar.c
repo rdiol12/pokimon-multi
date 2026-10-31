@@ -3,6 +3,7 @@
 #include "main.h"
 #include "bike.h"
 #include "event_data.h"
+#include "field_ability.h"
 #include "event_object_movement.h"
 #include "field_camera.h"
 #include "field_control_avatar.h"
@@ -943,6 +944,11 @@ static void PlayerNotOnBikeMoving(enum Direction direction, u16 heldKeys)
         {
             gPlayerAvatar.creeping = TRUE;
             PlayerWalkSlow(direction);
+        }
+        else if (FieldAbility_SurfsFast())
+        {
+            // Swift Swim / Water Veil lead (src/field_ability.c)
+            PlayerWalkFaster(direction);
         }
         else
         {
