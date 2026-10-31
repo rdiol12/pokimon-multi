@@ -32,6 +32,8 @@ function Driver.mech(t)
     E.write8(s + 13, t.variant or 0)
     E.write8(s + 14, t.wild and 1 or 0)
     E.write8(s + 15, t.persona and t.persona + 1 or 0)
+    E.write8(s + 16, t.badges or 0)
+    E.write8(s + 17, t.hurt and 1 or 0)
     for i = 1, 4 do
         local m = t.moves and MOVE_ID[t.moves[i]] or 0
         E.write16(s + 2 + (i - 1) * 2, m)
@@ -121,10 +123,15 @@ world_run.HELPERS += "MOVE_ID = {\n" + "".join(f"    {n} = {v},\n" for n, v in _
 
 # Static functions aren't in pokeemerald.map; take them from the ELF.
 _statics = {"CB2_UpdatePartyMenu": 0, "HandleInputChooseAction": 0, "HandleInputChooseMove": 0}
+_all = {}
 for _line in os.popen("arm-none-eabi-nm " + os.path.join(here, "..", "..", "pokeemerald.elf")):
     _parts = _line.split()
     if len(_parts) == 3 and _parts[2] in _statics:
-        _statics[_parts[2]] = int(_parts[0], 16) & ~1
+        _all.setdefault(_parts[2], []).append(int(_parts[0], 16) & ~1)
+# Several controllers have a static HandleInputChooseAction: take the
+# player's, the one next to HandleInputChooseMove.
+for _k, _v in _all.items():
+    _statics[_k] = min(_v, key=lambda a: abs(a - _all["HandleInputChooseMove"][0]))
 world_run.HELPERS += "".join(f"STATIC_{k} = 0x{v:08X}\n" for k, v in _statics.items())
 
 if __name__ == "__main__":

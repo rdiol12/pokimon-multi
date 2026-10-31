@@ -164,5 +164,6 @@ void World_OnTrainerBattleEnd(void)
 {
     Adventure_OnTrainerBattleEnd();
     Hardcore_OnBattleEnd(FALSE);
+    Mechanics_OnTrainerBattleEnd();
 }
 

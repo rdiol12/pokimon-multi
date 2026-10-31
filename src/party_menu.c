@@ -1,5 +1,6 @@
 #include "global.h"
 #include "malloc.h"
+#include "mechanics.h"
 #include "battle.h"
 #include "battle_anim.h"
 #include "battle_controllers.h"
@@ -4857,7 +4858,7 @@ void ItemUseCB_BattleScript(u8 taskId, TaskFunc task)
         gBattleStruct->itemPartyIndex[gBattlerInMenuId] = GetPartyIdFromBattleSlot(gPartyMenu.slotId);
         gPartyMenuUseExitCallback = TRUE;
         PlaySE(SE_SELECT);
-        if (!IsItemFlute(gSpecialVar_ItemId))
+        if (!IsItemFlute(gSpecialVar_ItemId) && !Mechanics_TryKeepBattleItem(gSpecialVar_ItemId)) // FIELD MEDIC skill
             RemoveBagItem(gSpecialVar_ItemId, 1);
         ScheduleBgCopyTilemapToVram(2);
         gTasks[taskId].func = task;

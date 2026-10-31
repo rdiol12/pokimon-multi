@@ -21,6 +21,7 @@ extern const u8 Mechanics_EventScript_MoveTutor[];
 extern const u8 Mechanics_EventScript_Referee[];
 extern const u8 Mechanics_EventScript_CupHost[];
 extern const u8 Mechanics_EventScript_StyleMaster[];
+extern const u8 Mechanics_EventScript_SkillTeacher[];
 
 struct MechNpc
 {
@@ -52,6 +53,11 @@ static bool32 InVerdanturfTent(void)
     return IsMap(MAP_VERDANTURF_TOWN_BATTLE_TENT_LOBBY);
 }
 
+static bool32 InPokemonSchool(void)
+{
+    return IsMap(MAP_RUSTBORO_CITY_POKEMON_SCHOOL);
+}
+
 static bool32 InFallarborTent(void)
 {
     return IsMap(MAP_FALLARBOR_TOWN_BATTLE_TENT_LOBBY);
@@ -64,6 +70,7 @@ static const struct MechNpc sMechNpcs[] =
     {InSlateportTent, 9, 6, OBJ_EVENT_GFX_GENTLEMAN, MOVEMENT_TYPE_FACE_DOWN, Mechanics_EventScript_Referee},
     {InVerdanturfTent, 4, 6, OBJ_EVENT_GFX_REPORTER_M, MOVEMENT_TYPE_FACE_DOWN, Mechanics_EventScript_CupHost},
     {InFallarborTent, 4, 6, OBJ_EVENT_GFX_EXPERT_F, MOVEMENT_TYPE_FACE_DOWN, Mechanics_EventScript_StyleMaster},
+    {InPokemonSchool, 11, 3, OBJ_EVENT_GFX_WOMAN_2, MOVEMENT_TYPE_FACE_DOWN, Mechanics_EventScript_SkillTeacher},
 };
 
 static EWRAM_DATA u8 sTimer = 0;
@@ -80,6 +87,8 @@ struct MechanicsShowcase
     u8 variant;   // ...with this COLOR_* variant...
     u8 wild;      // ...given as the lead (0) or met in a wild battle (1)
     u8 persona;   // PERSONA_* + 1, or 0 for any
+    u8 badges;    // sets the first this many badge flags
+    u8 hurt;      // brings the lead down to a third of its HP
 };
 
 EWRAM_DATA struct MechanicsShowcase gMechanicsShowcase = {0};
@@ -89,6 +98,15 @@ static void RunShowcase(void)
     u32 i;
 
     gMechanicsShowcase.pending = FALSE;
+    for (i = 0; i < gMechanicsShowcase.badges; i++)
+        FlagSet(FLAG_BADGE01_GET + i);
+    if (gMechanicsShowcase.hurt)
+    {
+        u32 hp = max(1, GetMonData(&gParties[B_TRAINER_PLAYER][0], MON_DATA_MAX_HP) / 3);
+
+        SetMonData(&gParties[B_TRAINER_PLAYER][0], MON_DATA_HP, &hp);
+        gMechanicsShowcase.hurt = FALSE;
+    }
     for (i = 0; gMechanicsShowcase.fixMoves && i < gPartiesCount[B_TRAINER_PLAYER]; i++)
     {
         if (GetMonData(&gParties[B_TRAINER_PLAYER][i], MON_DATA_MOVE1) == MOVE_NONE)
@@ -160,6 +178,7 @@ void Mechanics_Update(void)
     if (gMechanicsShowcase.pending)
         RunShowcase();
     Mechanics_UpdatePersonaFollower();
+    Mechanics_UpdateSkills();
     if (++sTimer < 8 || ArePlayerFieldControlsLocked())
         return;
     sTimer = 0;

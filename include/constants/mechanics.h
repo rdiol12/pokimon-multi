@@ -10,6 +10,7 @@
 #define LOCALID_MECH_REFEREE 191 // the rules referee in the Slateport Battle Tent
 #define LOCALID_MECH_CUP_HOST 192 // the tournament host in the Verdanturf Battle Tent
 #define LOCALID_MECH_STYLE_MASTER 193 // the battle style master in the Fallarbor Battle Tent
+#define LOCALID_MECH_SKILL_TEACHER 194 // the trainer skills teacher in the Rustboro Pokémon School
 
 // Battle rule sets (Mechanics_SetBattleRules). The Slateport Battle Tent's
 // referee offers them against Battle Frontier trainers; online PvP can use
@@ -55,6 +56,14 @@
 #define STYLE_RET_SHIFT 5
 #define STYLE_RET_MASK  (3 << STYLE_RET_SHIFT)
 
+// Trainer skills (src/mechanics_skills.c): one is on at a time.
+#define SKILL_NONE        0
+#define SKILL_FIELD_MEDIC 1 // the first item used from the Bag in each battle isn't used up
+#define SKILL_BALL_EXPERT 2 // Poké Balls catch more easily
+#define SKILL_BIG_EARNER  3 // +25% prize money
+#define SKILL_SECOND_WIND 4 // the party gets back 20% HP after each trainer battle won
+#define SKILL_COUNT       4
+
 // Messages printed with STRINGID_MECH_MESSAGE; the id goes in
 // gBattleTextBuff3[0] so it reaches both games in a link battle.
 #define MECH_MSG_STYLE_AGILE  0
@@ -66,5 +75,6 @@
 #define FLAG_MECH_MET_REFEREE  FLAG_UNUSED_0x883
 #define FLAG_MECH_MET_CUP_HOST FLAG_UNUSED_0x884
 #define FLAG_MECH_BATTLE_STYLES FLAG_UNUSED_0x885 // learned from the style master
+#define FLAG_MECH_MET_SKILL_TEACHER FLAG_UNUSED_0x886
 
 #endif // GUARD_CONSTANTS_MECHANICS_H

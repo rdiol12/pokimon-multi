@@ -152,6 +152,25 @@ clearing (battle_main.c), base power (battle_util.c), PP (battle_move_resolution
 `STRINGID_MECH_MESSAGE` prints `Mechanics_GetBattleMessage(gBattleTextBuff3[0])`
 through `BattleScript_MechanicsMessage`; later mechanics reuse it.
 
+## Trainer skills
+
+![The skills teacher, turning FIELD MEDIC on, and a Potion that stays in the Bag (20, 20, then 19)](images/mechanics-trainer-skills.png)
+
+The teacher in the Rustboro Pokémon School teaches a skill for every second
+badge (`src/mechanics_skills.c`). One skill is on at a time
+(`MechanicsSaveData.skill`); talk to her to switch.
+
+| Skill | Badge | Effect |
+| --- | --- | --- |
+| FIELD MEDIC | 1 | in each battle, the first item used on a Pokémon from the Bag isn't used up |
+| BALL EXPERT | 3 | Poké Ball catch odds x1.25 |
+| BIG EARNER | 5 | prize money x1.25 |
+| SECOND WIND | 7 | after each trainer battle won, the party gets back 20% HP |
+
+Skills are off in link battles. Hooks: `ItemUseCB_BattleScript`
+(party_menu.c), the catch odds and `Cmd_getmoneyreward`
+(battle_script_commands.c), `World_OnTrainerBattleEnd` (world.c).
+
 ## Screenshots
 
 ```sh
@@ -161,6 +180,7 @@ python3 tools/mechanics_shots/run.py tools/mechanics_shots/cups.lua out/ 300000
 python3 tools/mechanics_shots/run.py tools/mechanics_shots/colors.lua out/
 python3 tools/mechanics_shots/run.py tools/mechanics_shots/personality.lua out/ 100000
 python3 tools/mechanics_shots/run.py tools/mechanics_shots/styles.lua out/ 200000
+python3 tools/mechanics_shots/run.py tools/mechanics_shots/skills.lua out/ 60000
 ```
 
 The runner is `tools/world_shots/run.py` plus `Driver.fastText()` and
