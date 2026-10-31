@@ -177,4 +177,24 @@ void Orchestra_Play(void);
 void Orchestra_Finish(void);
 void Orchestra_ShowList(void);
 
+// Art studio (pastime_art.c).
+void Art_PushPaintingMenu(void);
+void Art_Paint(void);
+void Art_Judge(void);
+void Art_ShowList(void);
+
+// Detective cases (pastime_detective.c).
+void Detective_GetState(void);
+void Detective_OpenCase(void);
+void Detective_TalkToWitness(void);
+void Detective_PushSuspects(void);
+void Detective_Accuse(void);
+void Detective_ShowList(void);
+
+// Monthly reward track (pastime_track.c).
+void Track_Update(void);
+void Track_OnCatch(void);
+void Track_OnTrainerBattleEnd(void);
+void Track_ShowList(void);
+
 #endif // GUARD_PASTIME_H

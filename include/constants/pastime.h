@@ -25,6 +25,9 @@
 #define PASTIME_MENU_STARS      15
 #define PASTIME_MENU_CARNIVAL   16
 #define PASTIME_MENU_ORCHESTRA  17
+#define PASTIME_MENU_ART        18
+#define PASTIME_MENU_DETECTIVE  19
+#define PASTIME_MENU_TRACK      20
 #define PASTIME_MENU_CLOSE      31
 
 // NPCs and objects the activities place on maps from code (src/pastime.c)
@@ -214,5 +217,27 @@
 // Pokémon orchestra in Verdanturf (src/pastime_orchestra.c).
 #define ORCHESTRA_FIRST_NOTES  3
 #define ORCHESTRA_MAX_NOTES    12
+
+// Art studio at the Lilycove Museum (src/pastime_art.c).
+#define ART_PAINTINGS          5
+#define ART_SIZE               12 // cells a side
+#define ART_MENU_CANCEL        15
+
+// Detective cases from Mauville (src/pastime_detective.c).
+#define DETECTIVE_CASES        4
+#define DETECTIVE_CLUES        3
+#define DETECTIVE_SUSPECTS     3
+#define DETECTIVE_MENU_NOT_YET 15
+#define DETECTIVE_OPEN         0 // VAR_RESULT of Detective_GetState
+#define DETECTIVE_NEW          1
+#define DETECTIVE_ALL_SOLVED   2
+
+// Monthly reward track (src/pastime_track.c).
+#define TRACK_TIERS            10
+#define TRACK_COUNT            3  // tracks that take turns, a month each
+#define TRACK_MONTH_DAYS       30
+#define TRACK_DAILY_POINTS     5
+#define TRACK_CATCH_POINTS     2
+#define TRACK_TRAINER_POINTS   3
 
 #endif // GUARD_CONSTANTS_PASTIME_H

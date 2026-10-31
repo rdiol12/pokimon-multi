@@ -19,6 +19,9 @@ Pastime_EventScript_Menu::
 	dynmultipush Pastime_Text_MenuStars, PASTIME_MENU_STARS
 	dynmultipush Pastime_Text_MenuCarnival, PASTIME_MENU_CARNIVAL
 	dynmultipush Pastime_Text_MenuOrchestra, PASTIME_MENU_ORCHESTRA
+	dynmultipush Pastime_Text_MenuArt, PASTIME_MENU_ART
+	dynmultipush Pastime_Text_MenuDetective, PASTIME_MENU_DETECTIVE
+	dynmultipush Pastime_Text_MenuTrack, PASTIME_MENU_TRACK
 	dynmultipush Pastime_Text_MenuClose, PASTIME_MENU_CLOSE
 	dynmultistack 0, 0, FALSE, 6, FALSE, PASTIME_MENU_LOST_FOUND, DYN_MULTICHOICE_CB_NONE
 	switch VAR_RESULT
@@ -40,6 +43,9 @@ Pastime_EventScript_Menu::
 	case PASTIME_MENU_STARS, Pastime_EventScript_Stars
 	case PASTIME_MENU_CARNIVAL, Pastime_EventScript_CarnivalList
 	case PASTIME_MENU_ORCHESTRA, Pastime_EventScript_Orchestra
+	case PASTIME_MENU_ART, Pastime_EventScript_Art
+	case PASTIME_MENU_DETECTIVE, Pastime_EventScript_Detective
+	case PASTIME_MENU_TRACK, Pastime_EventScript_Track
 Pastime_EventScript_MenuDone::
 	releaseall
 	end
@@ -167,6 +173,21 @@ Pastime_EventScript_Orchestra:
 	releaseall
 	end
 
+Pastime_EventScript_Art:
+	callnative Art_ShowList, waitstate=1
+	releaseall
+	end
+
+Pastime_EventScript_Detective:
+	callnative Detective_ShowList, waitstate=1
+	releaseall
+	end
+
+Pastime_EventScript_Track:
+	callnative Track_ShowList, waitstate=1
+	releaseall
+	end
+
 Pastime_Text_MenuLostFound:
 	.string "LOST & FOUND$"
 Pastime_Text_MenuMuseum:
@@ -213,5 +234,11 @@ Pastime_Text_MenuCarnival:
 	.string "CARNIVAL$"
 Pastime_Text_MenuOrchestra:
 	.string "ORCHESTRA$"
+Pastime_Text_MenuArt:
+	.string "ART STUDIO$"
+Pastime_Text_MenuDetective:
+	.string "CASE FILES$"
+Pastime_Text_MenuTrack:
+	.string "REWARD TRACK$"
 Pastime_Text_MenuClose:
 	.string "CLOSE$"

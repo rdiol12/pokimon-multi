@@ -404,3 +404,48 @@ ends the concert. The longest tune is the record; reaching 5, 8 and 12 notes
 gives a Metronome, a Soothe Bell and a Throat Spray. **R > PASTIMES >
 ORCHESTRA** shows the quartet, the record and concerts played.
 Screenshots: `tools/pastime_shots/orchestra.lua`.
+
+## Art studio
+
+![Art studio](images/pastime-art.png)
+
+A painter at the Lilycove Museum (1F, 5,8) runs paint-by-numbers classes:
+POKé BALL, ORAN BERRY, HEART, LEAF and MUSHROOM, each a 12 x 12 picture
+(original pixel art in `src/pastime_art.c`). The canvas window shows a dot
+of the right color in every blank cell; the + Control Pad moves the brush,
+A paints (hold it to paint while moving), L and R (or SELECT) pick the
+color, with white as the eraser, and START finishes. 90% right or better
+and the painting is hung in the gallery and the museum pays ¥20 per
+percent; hanging all five gives a Shiny Stone. **R > PASTIMES > ART
+STUDIO** shows each painting's best score. Screenshots:
+`tools/pastime_shots/art.lua`.
+
+## Detective cases
+
+![Detective cases](images/pastime-detective.png)
+
+The DETECTIVE in Mauville City (17,10) hands out four cases in turn: THE
+VANISHED PIE (Petalburg), THE LOST WIND CHIME (Fortree), THE SOAKED
+LAUNDRY (Slateport) and THE MIDNIGHT HOWL (Lavaridge). Opening a case
+brings out three witnesses in its town (only while it's open); each gives a
+clue, and a toast counts them. Back at the agency the player names the
+culprit from three suspects. Right solves the case (Nugget, PP Up, Big
+Pearl, Lucky Egg) and raises the rank (ROOKIE, SLEUTH, INSPECTOR, ACE
+DETECTIVE); wrong closes it unsolved, to be opened again from the start.
+**R > PASTIMES > CASE FILES** shows each case and the clues found.
+Screenshots: `tools/pastime_shots/detective.lua`.
+
+## Monthly reward track
+
+![Reward track](images/pastime-track.png)
+
+Everything earns Track Points: the first visit of each day (5), each
+Pokémon caught (2) and each trainer beaten (3). The month's track has ten
+tiers, from 10 to 325 points, and each one pays out as it's reached,
+straight to the bag with a toast (if the bag is full it waits for room).
+A month is 30 days of the game clock; when it turns the points start over
+on the next track: the EXPLORER'S (Poké Balls up to a Master Ball), the
+BATTLER'S (potions, vitamins, Bottle Caps) and the COLLECTOR'S (Stardust,
+Pearls, a Gold Bottle Cap) take turns. **R > PASTIMES > REWARD TRACK**
+lists the tiers, what's been paid and the days left. Screenshots:
+`tools/pastime_shots/track.lua`.

@@ -120,6 +120,21 @@ struct PastimeSaveData
     u8 orchestraBest;    // longest tune played back
     u8 orchestraPrizes;  // a bit per prize given
     u16 orchestraPlays;
+    // Art studio (src/pastime_art.c)
+    u8 artBest[ART_PAINTINGS]; // best percent right, per painting
+    u8 artFiller;
+    u16 artPaintings;
+    // Detective cases (src/pastime_detective.c)
+    u8 detectiveCase;    // index + 1 of the open case, 0: none
+    u8 detectiveClues;   // a bit per clue of the open case
+    u8 detectiveSolved;  // a bit per case
+    u8 detectiveFiller;
+    // Monthly reward track (src/pastime_track.c)
+    u16 trackMonth;      // month + 1 of trackPoints
+    u16 trackPoints;
+    u8 trackTier;        // tiers paid out
+    u8 trackFiller;
+    u16 trackDay;        // day + 1 of the last daily visit points
 };
 
 #endif // GUARD_PASTIME_SAVE_H
