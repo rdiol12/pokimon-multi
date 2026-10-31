@@ -990,3 +990,71 @@ Level: 43
 Xatu
 Level: 44
 /* end NimbusCity */
+
+/* begin MtFrostcrown */
+=== AREA_TRAINER_FROST_BRAM ===
+Name: BRAM
+Class: Hiker
+Pic: Hiker
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Smart Trainer
+
+Piloswine
+Level: 38
+
+Golem
+Level: 39
+
+=== AREA_TRAINER_FROST_MAREN ===
+Name: MAREN
+Class: Expert
+Pic: Expert F
+Gender: Female
+Music: Intense
+Double Battle: No
+AI: Smart Trainer
+
+Froslass
+Level: 39
+
+Glalie
+Level: 39
+
+Absol
+Level: 40
+
+=== AREA_TRAINER_FROST_ROALD ===
+Name: ROALD
+Class: Cooltrainer
+Pic: Cooltrainer M
+Gender: Male
+Music: Cool
+Double Battle: No
+AI: Smart Trainer
+
+Weavile
+Level: 40
+
+Abomasnow
+Level: 41
+
+=== AREA_TRAINER_FROST_ELSA ===
+Name: ELSA
+Class: Cooltrainer
+Pic: Cooltrainer F
+Gender: Female
+Music: Cool
+Double Battle: No
+AI: Smart Trainer
+
+Vanilluxe
+Level: 41
+
+Avalugg
+Level: 41
+
+Beartic
+Level: 42
+/* end MtFrostcrown */

@@ -1702,6 +1702,14 @@
     {
       "id": "MAPSEC_NIMBUS_ISLES",
       "name": "NIMBUS ISLES"
+    },
+    {
+      "id": "MAPSEC_MT_FROSTCROWN",
+      "name": "MT. FROSTCROWN"
+    },
+    {
+      "id": "MAPSEC_SNOWDRIFT_VILLAGE",
+      "name": "SNOWDRIFT VILLAGE"
     }
   ]
 }

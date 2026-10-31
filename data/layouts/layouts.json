@@ -9645,6 +9645,26 @@
       "secondary_tileset": "gTileset_Sky",
       "border_filepath": "data/layouts/NimbusIsle/border.bin",
       "blockdata_filepath": "data/layouts/NimbusIsle/map.bin"
+    },
+    {
+      "id": "LAYOUT_MT_FROSTCROWN",
+      "name": "MtFrostcrown_Layout",
+      "width": 48,
+      "height": 88,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Frost",
+      "border_filepath": "data/layouts/MtFrostcrown/border.bin",
+      "blockdata_filepath": "data/layouts/MtFrostcrown/map.bin"
+    },
+    {
+      "id": "LAYOUT_SNOWDRIFT_VILLAGE",
+      "name": "SnowdriftVillage_Layout",
+      "width": 48,
+      "height": 32,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Frost",
+      "border_filepath": "data/layouts/SnowdriftVillage/border.bin",
+      "blockdata_filepath": "data/layouts/SnowdriftVillage/map.bin"
     }
   ]
 }

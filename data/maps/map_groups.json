@@ -174,7 +174,12 @@
     "Cobblerock_AssayOffice",
     "Cobblerock_MinersRest",
     "NimbusCity_WeatherHouse",
-    "NimbusCity_Mart"
+    "NimbusCity_Mart",
+    "MtFrostcrown",
+    "SnowdriftVillage",
+    "SnowdriftVillage_Lodge",
+    "SnowdriftVillage_WestCabin",
+    "SnowdriftVillage_EastCabin"
   ],
   "gMapGroup_IndoorLittleroot": [
     "LittlerootTown_BrendansHouse_1F",

@@ -107,6 +107,17 @@ const struct Tileset gTileset_Sky =
     .callback = InitTilesetAnim_Petalburg,
 };
 
+const struct Tileset gTileset_Frost =
+{
+    .isCompressed = TRUE,
+    .isSecondary = TRUE,
+    .tiles = gTilesetTiles_Frost,
+    .palettes = gTilesetPalettes_Frost,
+    .metatiles = gMetatiles_Frost,
+    .metatileAttributes = gMetatileAttributes_Frost,
+    .callback = InitTilesetAnim_Fallarbor,
+};
+
 const struct Tileset gTileset_Plant =
 {
     .isCompressed = TRUE,

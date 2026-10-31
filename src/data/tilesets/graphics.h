@@ -112,6 +112,29 @@ const u16 gTilesetPalettes_Sky[][16] =
     INCGFX_U16("data/tilesets/secondary/sky/palettes/15.pal", ".gbapal"),
 };
 
+// Mt. Frostcrown (tools/areas/frost_art.py): Fallarbor's tiles plus new art.
+const u32 gTilesetTiles_Frost[] = INCGFX_U32("data/tilesets/secondary/frost/tiles.png", ".4bpp.fastSmol", "-num_tiles 448 -Wnum_tiles");
+
+const u16 gTilesetPalettes_Frost[][16] =
+{
+    INCGFX_U16("data/tilesets/secondary/frost/palettes/00.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/frost/palettes/01.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/frost/palettes/02.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/frost/palettes/03.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/frost/palettes/04.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/frost/palettes/05.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/frost/palettes/06.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/frost/palettes/07.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/frost/palettes/08.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/frost/palettes/09.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/frost/palettes/10.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/frost/palettes/11.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/frost/palettes/12.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/frost/palettes/13.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/frost/palettes/14.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/frost/palettes/15.pal", ".gbapal"),
+};
+
 // Voltspire Power Plant (tools/areas/plant_art.py): New Mauville's tiles plus new art.
 const u32 gTilesetTiles_Plant[] = INCGFX_U32("data/tilesets/secondary/plant/tiles.png", ".4bpp.fastSmol", "-num_tiles 512 -Wnum_tiles");
 
