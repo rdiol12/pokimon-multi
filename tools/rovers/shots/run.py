@@ -14,8 +14,17 @@ here = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(here, "..", "..", "world_shots"))
 import run  # noqa: E402
 
-run.SYMBOLS += ["gRoverShowcase", "gNetplayExtMailbox", "gBattleOutcome", "gLifeShowcase", "gSpecialVar_Result"]
+run.SYMBOLS += ["gSaveBlock2Ptr", "gAdventureShowcase", "gRoverShowcase", "gNetplayExtMailbox", "gBattleOutcome", "gLifeShowcase", "gSpecialVar_Result"]
+run.HELPERS += 'ROVERS_SHOTS = "%s"\n' % here.replace("\\", "/")
 run.HELPERS += """
+-- The Rift Below's next floor is this one (src/adventure.c showcase).
+function Driver.riftFloor(n)
+    local s = Driver.SYM.gAdventureShowcase
+    E.write8(s + 37, n)
+    E.write8(s, 1)
+    Driver.waitFor("the adventure scene", 1800, function() return E.read8(s) == 0 end)
+    Driver.wait(10)
+end
 -- Summer (the seasons feature would otherwise follow the clock).
 function Driver.summer() E.write8(Driver.SYM.gLifeShowcase + 2, 2) end
 
@@ -36,7 +45,15 @@ end
 -- Puts rovers on the current map (src/rovers.c RunShowcase).
 -- scene: 1 wander, 2 duel, 3 vs the map's trainer, 4 wild, 5 charger,
 -- 6 rampaging Pokémon, 7 catch.
-function Driver.rovers(scene, ids, level, teamSize, offline, talk, levelB)
+-- The next Driver.rovers' first rover leads with a fusion (or 0, 0).
+function Driver.roverLead(species, fusion)
+    local s = Driver.SYM.gRoverShowcase
+    local a, b = SPECIES_ID[species] or 0, SPECIES_ID[fusion] or 0
+    E.write8(s + 14, a & 0xFF); E.write8(s + 15, a >> 8)
+    E.write8(s + 16, b & 0xFF); E.write8(s + 17, b >> 8)
+end
+
+function Driver.rovers(scene, ids, level, teamSize, offline, talk, levelB, bond)
     local s = Driver.SYM.gRoverShowcase
     E.write8(s + 1, scene)
     for i = 1, 4 do E.write8(s + 1 + i, ids[i] or 0) end
@@ -46,6 +63,7 @@ function Driver.rovers(scene, ids, level, teamSize, offline, talk, levelB)
     E.write8(s + 9, offline == false and 0 or 1)
     E.write8(s + 10, talk or 0)
     E.write8(s + 11, levelB or 0)
+    E.write8(s + 12, bond or 0) -- 1 rival, 2 friend
     E.write8(s, 1)
     Driver.wait(2)
 end

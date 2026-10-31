@@ -1,6 +1,7 @@
 #include "global.h"
 #include "trainer_look.h"
 #include "netplay.h"
+#include "rovers.h"
 #include "battle.h"
 #include "battle_frontier.h"
 #include "battle_setup.h"
@@ -727,6 +728,11 @@ static void PrepareCoopOpponent(struct Pokemon *mon, u8 level)
 static bool32 IsTestBoot(void)
 {
     return (gNetplayMailbox.testBoot & 0xF0) == NETPLAY_TEST_BOOT_MAGIC;
+}
+
+bool32 Netplay_IsTestBoot(void)
+{
+    return IsTestBoot();
 }
 
 static void SetUpCoopBattle(void)
@@ -3025,6 +3031,7 @@ static void AddMarketMonToParty(void)
     u16 species;
 
     *mon = gNetplayMailbox.market.mon;
+    Rovers_FromListing(mon); // a roaming trainer's Pokémon
     mon->mail = MAIL_NONE;
     species = GetMonData(mon, MON_DATA_SPECIES);
     GetSetPokedexFlag(SpeciesToNationalPokedexNum(species), FLAG_SET_SEEN);

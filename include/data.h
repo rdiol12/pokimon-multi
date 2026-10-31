@@ -280,6 +280,12 @@ static inline u16 GetPartnerIdFromTrainerId(u16 trainerId)
 // A trainer that isn't in gTrainers, for the battle in progress
 // (src/life_battle.c).
 extern const struct Trainer *gLifeTrainer;
+// A tag battle with a roaming trainer (src/rovers.c): [0] the partner,
+// [1] and [2] the two opponents, while one is on; else NULL.
+extern struct Trainer *gRoverTagTrainers;
+extern u16 gPartnerTrainerId;
+#define ROVER_TAG_FOE_A (MAX_TRAINERS_COUNT - 2)
+#define ROVER_TAG_FOE_B (MAX_TRAINERS_COUNT - 1)
 extern const struct Trainer gAreaTrainers[DIFFICULTY_COUNT][AREA_TRAINERS_COUNT];
 
 static inline bool32 IsAreaTrainerId(u16 trainerId)
@@ -291,6 +297,15 @@ static inline const struct Trainer *GetTrainerStructFromId(u16 trainerId)
 {
     if (gIsDebugBattle) return GetDebugAiTrainer();
     if (gLifeTrainer != NULL) return gLifeTrainer;
+    if (gRoverTagTrainers != NULL)
+    {
+        if (trainerId == ROVER_TAG_FOE_A)
+            return &gRoverTagTrainers[1];
+        if (trainerId == ROVER_TAG_FOE_B)
+            return &gRoverTagTrainers[2];
+        if (trainerId == gPartnerTrainerId)
+            return &gRoverTagTrainers[0];
+    }
     enum DifficultyLevel difficulty;
 
     if (IsAreaTrainerId(trainerId))

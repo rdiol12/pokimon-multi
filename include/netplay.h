@@ -319,6 +319,7 @@ bool32 Netplay_InSession(void);
 void Netplay_OnBattleEnd(u8 battleOutcome);
 void Netplay_EndSession(void);
 bool32 Netplay_TryTestBoot(u8 taskId);
+bool32 Netplay_IsTestBoot(void);
 
 // Link transport used by link.c instead of the serial port while a session is active.
 bool32 Netplay_IsLinkActive(void);

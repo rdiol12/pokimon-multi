@@ -412,6 +412,12 @@ static void DoStandardWildBattle(bool32 isDouble)
     {
         gBattleTypeFlags |= BATTLE_TYPE_MULTI | BATTLE_TYPE_INGAME_PARTNER | BATTLE_TYPE_DOUBLE;
     }
+    else if (isDouble && Rovers_HasBuddy())
+    {
+        // A rover exploring the cave with the player fights beside them.
+        gBattleTypeFlags |= BATTLE_TYPE_MULTI | BATTLE_TYPE_INGAME_PARTNER | BATTLE_TYPE_DOUBLE;
+        Rovers_PrepareBuddyBattle();
+    }
     else if (isDouble)
         gBattleTypeFlags |= BATTLE_TYPE_DOUBLE;
     if (CurrentBattlePyramidLocation() != PYRAMID_LOCATION_NONE)
@@ -714,6 +720,7 @@ static void CB2_EndWildBattle(void)
     CpuFill16(0, (void *)(BG_PLTT), BG_PLTT_SIZE);
     ResetOamRange(0, 128);
     World_OnWildBattleEnd();
+    Rovers_AfterBuddyBattle();
 
     if (IsNPCFollowerWildBattle())
     {

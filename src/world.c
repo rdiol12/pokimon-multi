@@ -73,6 +73,7 @@ static void RunShowcase(void)
         CreateMonWithIVs(&mon, gWorldShowcase.giveSpecies, gWorldShowcase.giveLevel,
             GetMonPersonality(gWorldShowcase.giveSpecies, MON_GENDER_RANDOM, NATURE_RANDOM, RANDOM_UNOWN_LETTER),
             OTID_STRUCT_PLAYER_ID, USE_RANDOM_IVS);
+        GiveMonInitialMoveset(&mon);
         if (gWorldShowcase.shiny)
         {
             bool32 shiny = TRUE;
