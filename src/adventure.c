@@ -1,6 +1,7 @@
 #include "global.h"
 #include "adventure.h"
 #include "battle.h"
+#include "item.h"
 #include "script.h"
 #include "daily_quest.h"
 #include "trainer_level.h"
@@ -16,13 +17,22 @@ struct AdventureShowcase
     u8 outfit;   // OUTFIT_* + 1, 0 = leave as is
     u8 filler[2];
     u32 setXp;   // trainer XP + 1, 0 = leave as is
+    u16 items[8]; // 10 of each go in the bag
 };
 
 EWRAM_DATA struct AdventureShowcase gAdventureShowcase = {0};
 
 static void RunShowcase(void)
 {
+    u32 i;
+
     gAdventureShowcase.pending = FALSE;
+    for (i = 0; i < ARRAY_COUNT(gAdventureShowcase.items); i++)
+    {
+        if (gAdventureShowcase.items[i] != ITEM_NONE)
+            AddBagItem(gAdventureShowcase.items[i], 10);
+        gAdventureShowcase.items[i] = ITEM_NONE;
+    }
     if (gAdventureShowcase.setXp != 0)
         TrainerLevel_SetXp(gAdventureShowcase.setXp - 1);
     if (gAdventureShowcase.outfit != 0)

@@ -9,7 +9,11 @@
 #define ADVENTURE_MENU_TRAINER_LEVEL 0
 #define ADVENTURE_MENU_OUTFITS       1
 #define ADVENTURE_MENU_DAILY_QUESTS  2
+#define ADVENTURE_MENU_CRAFTING      3
 #define ADVENTURE_MENU_CLOSE         15
+
+// Flags (FLAG_UNUSED_0x264-0x27C and 0x281-0x28D are this batch's).
+#define FLAG_ADVENTURE_CRAFTING FLAG_UNUSED_0x264 // the Rustboro crafter showed how to craft
 
 // Trainer levels (src/trainer_level.c).
 #define TRAINER_LEVEL_MAX 30

@@ -26,6 +26,9 @@ struct AdventureSaveData
     u16 lastTrades;
     // Daily quests, one per giver.
     struct DailyQuestSlot dailyQuests[DAILY_QUEST_GIVERS];
+    // Crafting.
+    u16 itemsCrafted;
+    u16 filler;
 };
 
 #endif // GUARD_ADVENTURE_SAVE_H
