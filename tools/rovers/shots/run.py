@@ -14,7 +14,8 @@ here = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(here, "..", "..", "world_shots"))
 import run  # noqa: E402
 
-run.SYMBOLS += ["gAdventureShowcase", "gRoverShowcase", "gNetplayExtMailbox", "gBattleOutcome", "gLifeShowcase", "gSpecialVar_Result"]
+run.SYMBOLS += ["gSaveBlock2Ptr", "gAdventureShowcase", "gRoverShowcase", "gNetplayExtMailbox", "gBattleOutcome", "gLifeShowcase", "gSpecialVar_Result"]
+run.HELPERS += 'ROVERS_SHOTS = "%s"\n' % here.replace("\\", "/")
 run.HELPERS += """
 -- The Rift Below's next floor is this one (src/adventure.c showcase).
 function Driver.riftFloor(n)

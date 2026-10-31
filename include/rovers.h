@@ -58,6 +58,7 @@ bool32 Rovers_IsRoverObject(struct ObjectEvent *objectEvent);
 bool32 Rovers_IsWatching(void);
 bool32 Rovers_IsTrading(void);
 bool32 Rovers_HasBuddy(void);
+bool32 Rovers_FromListing(struct Pokemon *mon);
 void Rovers_PrepareBuddyBattle(void);
 void Rovers_AfterBuddyBattle(void);
 const u8 *Rovers_TradeName(void);

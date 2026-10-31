@@ -1,4 +1,5 @@
 #include "global.h"
+#include "rovers.h"
 #include "event_data.h"
 #include "main.h"
 #include "menu.h"
@@ -149,6 +150,7 @@ static void ReceiveMon(const u8 *data)
     u16 species;
 
     memcpy(&mon, data, sizeof(mon));
+    Rovers_FromListing(&mon); // a roaming trainer's Pokémon
     mon.mail = MAIL_NONE;
     species = GetMonData(&mon, MON_DATA_SPECIES);
     if (!GetMonData(&mon, MON_DATA_IS_EGG))

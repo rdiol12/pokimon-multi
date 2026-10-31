@@ -34,6 +34,14 @@ heal at Pokémon Centers. The player meets them anywhere and can:
   in-game partner), and when the player leaves the floor it says goodbye and shares a find
   (a Shard, Mushroom, Stardust, Escape Rope, now and then a Star Piece).
   Rovers dive in the Rift Below more often than they walk other caves.
+- **buy from them and sell to them** on the market board and at the
+  auction house (online). In towns with a Poké Mart, a rover with Pokémon
+  at its ranch now and then lists one on the market at a fair price for
+  its level, or puts one up for auction, and collects what it earned. A
+  rover with money to spare buys players' listings and bids on their
+  auctions when the price is fair, and gets its money back when outbid.
+  Rovers don't buy from each other, and at most 8 of their listings and 4
+  of their auctions are up at once, so the boards stay the players'.
 
 Also here:
 
@@ -107,6 +115,13 @@ Watching a battle puts the left rover's team in the player's party for the
 battle (the player's own team, name, gender and money are saved and put back
 afterwards) and turns on the expansion's AI-vs-AI mode (`IsAiVsAiBattle`). No
 experience is given and nothing is saved.
+
+A rover's Pokémon on the market or at auction is a short note, not a
+real `struct Pokemon` (the server can't build one, the game encrypts it):
+"RVR", 1, the rover id, its 16-byte Pokémon, zeros up to 100 bytes
+(`server/rovers_trade.py`). The game turns it into the real Pokémon, the
+rover as its trainer, when it arrives (`Rovers_FromListing`, called from
+`AddMarketMonToParty` in netplay.c and `ReceiveMon` in life_auction.c).
 
 ## Ids and hooks
 

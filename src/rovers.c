@@ -2532,31 +2532,63 @@ void Rovers_TradeCheck(void)
 }
 
 // Puts the rover's Pokémon where the in-game trade scene looks for it.
-void Rovers_PrepareTrade(void)
+// A rover's Pokémon as a real one: the rover is its trainer.
+static void MakeRoverMon(struct Pokemon *mon, u32 roverId, const struct RoverMon *m, metloc_u8_t met)
 {
-    struct RoverActor *a = &sRovers.actors[sRovers.talk];
-    const struct RoverMon *m = &a->w.mons[sRovers.tradeSlot];
-    struct Pokemon *mon = &gParties[B_TRAINER_OPPONENT_A][0];
-    metloc_u8_t met = METLOC_IN_GAME_TRADE;
-    u8 gender = Look(a)->female ? FEMALE : MALE;
+    const struct RoverCast *c = &gRoverCast[roverId % ROVER_COUNT];
+    u8 gender = sRoverLooks[c->look % ARRAY_COUNT(sRoverLooks)].female ? FEMALE : MALE;
     u32 i;
 
-    CreateMon(mon, m->species, m->level, Random32(), OTID_STRUCT_PRESET(ROVER_OT_ID_BASE + a->w.id));
-    for (i = 0; i < MAX_MON_MOVES; i++)
+    CreateMon(mon, m->species, m->level, Random32(), OTID_STRUCT_PRESET(ROVER_OT_ID_BASE + roverId));
+    if (m->moves[0] == MOVE_NONE)
+        GiveMonInitialMoveset(mon);
+    else
     {
-        u16 move = m->moves[i] < MOVES_COUNT ? m->moves[i] : MOVE_NONE;
-        u8 pp = move != MOVE_NONE ? GetMovePP(move) : 0;
-        SetMonData(mon, MON_DATA_MOVE1 + i, &move);
-        SetMonData(mon, MON_DATA_PP1 + i, &pp);
+        for (i = 0; i < MAX_MON_MOVES; i++)
+        {
+            u16 move = m->moves[i] < MOVES_COUNT ? m->moves[i] : MOVE_NONE;
+            u8 pp = move != MOVE_NONE ? GetMovePP(move) : 0;
+            SetMonData(mon, MON_DATA_MOVE1 + i, &move);
+            SetMonData(mon, MON_DATA_PP1 + i, &pp);
+        }
     }
-    SetMonData(mon, MON_DATA_OT_NAME, Cast(a)->name);
+    SetMonData(mon, MON_DATA_OT_NAME, c->name);
     SetMonData(mon, MON_DATA_OT_GENDER, &gender);
     SetMonData(mon, MON_DATA_MET_LOCATION, &met);
     if (m->injuryPart || m->lostParts || m->injuryFlags)
         Injury_Set(mon, m->injuryPart, m->injuryDamage * INJURY_DAMAGE_UNIT, m->lostParts, m->injuryFlags & INJURY_FLAG_SCAR);
     CalculateMonStats(mon);
+}
+
+void Rovers_PrepareTrade(void)
+{
+    struct RoverActor *a = &sRovers.actors[sRovers.talk];
+
+    MakeRoverMon(&gParties[B_TRAINER_OPPONENT_A][0], a->w.id, &a->w.mons[sRovers.tradeSlot], METLOC_IN_GAME_TRADE);
     gSpecialVar_0x8005 = 0;
     sRovers.trading = TRUE;
+}
+
+// A Pokémon a rover sold on the market or at the auction house comes as a
+// short note instead of a real one (server/rovers_trade.py): "RVR", 1, the
+// rover id, then its RoverMon. Turns it into the real Pokémon.
+bool32 Rovers_FromListing(struct Pokemon *mon)
+{
+    const u8 *raw = (const u8 *)mon;
+    struct RoverMon m;
+    u32 id;
+
+    if (raw[0] != 'R' || raw[1] != 'V' || raw[2] != 'R' || raw[3] != 1)
+        return FALSE;
+    id = raw[4];
+    memcpy(&m, raw + 5, sizeof(m));
+    if (id >= ROVER_COUNT || m.species == SPECIES_NONE || m.species >= NUM_SPECIES || m.level == 0 || m.level > MAX_LEVEL)
+    {
+        ZeroMonData(mon);
+        return FALSE;
+    }
+    MakeRoverMon(mon, id, &m, METLOC_IN_GAME_TRADE);
+    return TRUE;
 }
 
 // The trade scene uses these instead of its own table's names.

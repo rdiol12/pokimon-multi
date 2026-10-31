@@ -35,6 +35,7 @@ import time
 
 from ext import Refused, text
 import rovers_life as life
+import rovers_trade
 
 try:  # the shared day/night clock (server/world.py, day/night branch), if this server has it
     import world
@@ -380,6 +381,7 @@ class Sim:
     def __init__(self, db, league, server=None):
         self.db, self.league, self.server = db, league, server
         self.rivals = set()
+        self.trader = rovers_trade.Trader(db, TID_BASE, news, new_mon, pack_mon, species_name, self.keep)
 
     def keep(self, r, m):
         """A Pokémon the rover can't carry goes to its ranch, or to the
@@ -565,6 +567,9 @@ class Sim:
                 news(self.db, f"{r.name}'s {species_name(mon['species'])} came back from a job with {pay} money.")
         if here["center"]:
             life.shop(r.life)
+            # The market board and the auction house, like players.
+            self.trader.market_errands(r, rng, MAX_TEAM)
+            self.trader.auction_errands(r, rng, MAX_TEAM)
         town = life.QUEST_TOWNS.get(here["name"])
         if town and not r.life["quest"] and rng.random() < 0.5:
             q = life.take_quest(r.life, town, rng)

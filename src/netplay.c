@@ -1,5 +1,6 @@
 #include "global.h"
 #include "netplay.h"
+#include "rovers.h"
 #include "battle.h"
 #include "battle_frontier.h"
 #include "battle_setup.h"
@@ -2991,6 +2992,7 @@ static void AddMarketMonToParty(void)
     u16 species;
 
     *mon = gNetplayMailbox.market.mon;
+    Rovers_FromListing(mon); // a roaming trainer's Pokémon
     mon->mail = MAIL_NONE;
     species = GetMonData(mon, MON_DATA_SPECIES);
     GetSetPokedexFlag(SpeciesToNationalPokedexNum(species), FLAG_SET_SEEN);
