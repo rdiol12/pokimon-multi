@@ -45,6 +45,7 @@
 #include "constants/songs.h"
 #include "constants/trainer_hill.h"
 #include "netplay.h"
+#include "pastime.h"
 #include "world.h"
 #include "life.h"
 
@@ -426,6 +427,8 @@ static const u8 *GetInteractedObjectEventScript(struct MapPosition *position, u8
         script = Netplay_GetTalkScript(objectEventId);
     else if (LifePhoto_IsPhotoMon(&gObjectEvents[objectEventId]))
         script = Life_EventScript_PhotoMon;
+    else if (Pastime_IsPastimeObjectEvent(&gObjectEvents[objectEventId]))
+        script = Pastime_GetTalkScript(objectEventId);
     else if (InTrainerHill() == TRUE)
         script = GetTrainerHillTrainerScript();
     else
