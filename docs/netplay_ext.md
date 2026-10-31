@@ -3,7 +3,7 @@
 ![The Online Plaza and its ten features](images/netplay-ext-overview.png)
 
 The **Online Plaza** gathers ten online features on one screen. Open it from
-the START menu once you've picked JOIN ONLINE on the title screen.
+START → ONLINE → PLAZA once you've picked JOIN ONLINE on the title screen.
 
 | Feature | What it does |
 | --- | --- |
@@ -29,7 +29,8 @@ mailbox. The game makes one request at a time:
 
 1. The game writes the request text (`WONDER SEND 25`) and any binary data (a
    100-byte Pokémon, a secret base, a replay part) and bumps `reqSeq`.
-2. The bridge (`tools/netplay_bridge/netplay_bridge.lua`) sends the data as
+2. The bridge extension (`tools/netplay_bridge/netplay_ext.lua`, loaded by
+   the bridge through `extensions.txt`) sends the data as
    `XD <hex>` lines of 100 bytes, then `X <seq> <request>`.
 3. The server answers `XR <seq> <status> <hex>`: status 0 is ok, 1 is a refusal
    whose text the game shows, 2 is a malformed request. Text answers are rows

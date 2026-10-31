@@ -2,6 +2,7 @@
 #define GUARD_NETPLAY_H
 
 #include "link.h"
+#include "pokemon.h"
 #include "constants/netplay.h"
 
 struct ObjectEvent;
@@ -10,12 +11,13 @@ struct ObjectEvent;
 // gNetplayMailbox, which tools/netplay_bridge/netplay_bridge.lua copies to
 // and from the netplay server every frame. See docs/netplay.md.
 
-#define NETPLAY_MAILBOX_VERSION 2
+#define NETPLAY_MAILBOX_VERSION 3
 #define NETPLAY_MAX_REMOTES     8
 #define NETPLAY_NAME_LENGTH     8
 #define NETPLAY_RING_SIZE       16
 #define NETPLAY_HOST_LENGTH     40
 #define NETPLAY_LADDER_SIZE     10
+#define NETPLAY_MAX_FRIENDS     10
 
 // Object event local ids used for other players on the overworld.
 #define LOCALID_NETPLAY_PLAYER_START 228
@@ -40,6 +42,20 @@ enum NetplayRequestType
     NETPLAY_REQ_DEAL,
     NETPLAY_REQ_LADDER,
     NETPLAY_REQ_EMOTE,
+    NETPLAY_REQ_FRIENDS,     // fetch the friend list
+    NETPLAY_REQ_FRIEND_ADD,  // targetId: player to add
+    NETPLAY_REQ_FRIEND_DEL,  // arg: index in the last friend list
+    NETPLAY_REQ_SEASON,      // fetch the current season
+    NETPLAY_REQ_CLAIM,       // claim the oldest unclaimed season reward
+    NETPLAY_REQ_MARKET,      // arg: page of the market board
+    NETPLAY_REQ_MARKET_SELL, // list market.mon for market.sellPrice
+    NETPLAY_REQ_MARKET_BUY,  // arg: index on the current page
+    NETPLAY_REQ_MARKET_CANCEL, // arg: index on the current page
+    NETPLAY_REQ_MARKET_COLLECT, // money from sales while away
+    NETPLAY_REQ_LIVE,        // list live PvP battles
+    NETPLAY_REQ_WATCH,       // arg: index in the live list
+    NETPLAY_REQ_UNWATCH,
+    NETPLAY_REQ_COOP,        // target: the player to team up with
 };
 
 enum NetplayEventType
@@ -139,6 +155,121 @@ struct NetplayLadder
     /*0x14*/ struct NetplayLadderEntry top[NETPLAY_LADDER_SIZE];
 }; // size 0xB4
 
+struct NetplayFriend
+{
+    /*0x00*/ u8 name[NETPLAY_NAME_LENGTH];
+    /*0x08*/ u16 playerId; // 0: offline
+    /*0x0A*/ u8 mapGroup;
+    /*0x0B*/ u8 mapNum;
+    /*0x0C*/ s16 x;
+    /*0x0E*/ s16 y;
+    /*0x10*/ u16 graphicsId;
+    /*0x12*/ u8 busy; // in a battle, trade or deal
+    /*0x13*/ u8 filler;
+}; // size 0x14
+
+// Written by the bridge after NETPLAY_REQ_FRIENDS / NETPLAY_REQ_FRIEND_ADD.
+struct NetplayFriends
+{
+    /*0x00*/ u8 seq;       // bumped when the list below is new
+    /*0x01*/ u8 count;
+    /*0x02*/ u8 addSeq;    // bumped when the server answers a FRIEND_ADD
+    /*0x03*/ u8 addResult; // NETPLAY_FRIEND_ADD_*
+    /*0x04*/ struct NetplayFriend list[NETPLAY_MAX_FRIENDS];
+}; // size 0xCC
+
+#define NETPLAY_NO_TIER 0xFF
+
+// Written by the bridge after NETPLAY_REQ_SEASON / NETPLAY_REQ_CLAIM.
+struct NetplaySeason
+{
+    /*0x00*/ u8 seq;         // bumped when the fields below are new
+    /*0x01*/ u8 rewardTier;  // unclaimed reward, or NETPLAY_NO_TIER
+    /*0x02*/ u16 season;
+    /*0x04*/ u16 daysLeft;
+    /*0x06*/ u16 rating;
+    /*0x08*/ u8 rated;       // played a rated battle this season
+    /*0x09*/ u8 claimSeq;    // bumped when the server answers a claim
+    /*0x0A*/ u8 claimedTier; // the reward just claimed, or NETPLAY_NO_TIER
+    /*0x0B*/ u8 filler;
+    /*0x0C*/ u16 rewardSeason;
+    /*0x0E*/ u16 filler2;
+}; // size 0x10
+
+#define NETPLAY_MARKET_PAGE_SIZE 5
+
+struct NetplayMarketListing
+{
+    /*0x00*/ u16 species;
+    /*0x02*/ u8 level;
+    /*0x03*/ u8 mine;
+    /*0x04*/ u32 price;
+    /*0x08*/ u8 seller[PLAYER_NAME_LENGTH + 1];
+}; // size 0x10
+
+// The market board (Poké Marts). The bridge publishes a page with seq; the
+// answer to a sell, buy, cancel or collect comes with answerSeq.
+struct NetplayMarket
+{
+    /*0x00*/ u8 seq;
+    /*0x01*/ u8 count;
+    /*0x02*/ u8 page;
+    /*0x03*/ u8 pages;
+    /*0x04*/ u8 answerSeq;
+    /*0x05*/ u8 answer;      // NETPLAY_MARKET_*
+    /*0x06*/ u16 sales;      // collect: listings sold while away
+    /*0x08*/ u32 money;      // buy: price paid; collect: money earned
+    /*0x0C*/ struct NetplayMarketListing listings[NETPLAY_MARKET_PAGE_SIZE];
+    /*0x5C*/ u32 sellPrice;  // written by the ROM before a sell
+    /*0x60*/ u16 sellSpecies;
+    /*0x62*/ u8 sellLevel;
+    /*0x63*/ u8 filler;
+    /*0x64*/ struct Pokemon mon; // sell: written by the ROM; buy/cancel: by the bridge
+}; // size 0xC8
+
+#define NETPLAY_BATTLE_TEXT_LENGTH 64
+#define NETPLAY_MAX_LIVE_BATTLES   5
+
+struct NetplayBattleSide
+{
+    /*0x00*/ u16 species;
+    /*0x02*/ u8 level;
+    /*0x03*/ u8 alive;     // party Pokémon that can still fight
+    /*0x04*/ u16 hp;
+    /*0x06*/ u16 maxHP;
+    /*0x08*/ u8 partySize;
+    /*0x09*/ u8 filler[3];
+}; // size 0x0C
+
+// A PvP battle as spectators see it: the active Pokémon of the host (side 0)
+// and the guest (side 1), and the battle's latest message.
+struct NetplayBattleReport
+{
+    /*0x00*/ u8 seq;  // bumped on each change
+    /*0x01*/ u8 filler[3];
+    /*0x04*/ struct NetplayBattleSide sides[2];
+    /*0x1C*/ u8 text[NETPLAY_BATTLE_TEXT_LENGTH]; // game charset, EOS-terminated
+}; // size 0x5C
+
+struct NetplayLiveBattle
+{
+    /*0x00*/ u16 sessionId;
+    /*0x02*/ u8 host[PLAYER_NAME_LENGTH + 1];
+    /*0x0A*/ u8 guest[PLAYER_NAME_LENGTH + 1];
+    /*0x12*/ u16 filler;
+}; // size 0x14
+
+// Spectating: the live battle list, and the battle being watched.
+struct NetplayWatch
+{
+    /*0x00*/ u8 listSeq;
+    /*0x01*/ u8 count;
+    /*0x02*/ u8 ended;   // the watched battle is over
+    /*0x03*/ u8 filler;
+    /*0x04*/ struct NetplayLiveBattle list[NETPLAY_MAX_LIVE_BATTLES];
+    /*0x68*/ struct NetplayBattleReport view;
+}; // size 0xC4
+
 struct NetplayMailbox
 {
     /*0x000*/ char magic[8];
@@ -167,7 +298,12 @@ struct NetplayMailbox
     /*0x384*/ u16 serverPort;
     /*0x386*/ u16 filler2;
     /*0x388*/ struct NetplayLadder ladder;
-}; // size 0x43C
+    /*0x43C*/ struct NetplayFriends friends;
+    /*0x508*/ struct NetplaySeason season;
+    /*0x518*/ struct NetplayMarket market;
+    /*0x5E0*/ struct NetplayBattleReport battleReport; // written by the host of a PvP battle
+    /*0x63C*/ struct NetplayWatch watch;
+}; // size 0x700
 
 extern struct NetplayMailbox gNetplayMailbox;
 
@@ -192,5 +328,11 @@ void Netplay_JoinOnline(void);
 bool32 Netplay_HasJoined(void);
 void ShowNetplayLadder(void);
 bool32 Netplay_TryOpenEmoteMenu(void);
+void ShowNetplayFriends(void);
+void ShowNetplaySeason(void);
+void ShowNetplayWatch(void);
+bool32 Netplay_IsCoopBattle(void);
+bool32 Netplay_MarketAvailable(void);
+bool32 Netplay_IsOnline(void);
 
 #endif // GUARD_NETPLAY_H

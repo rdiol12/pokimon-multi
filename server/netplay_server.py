@@ -11,16 +11,22 @@ import re
 import sqlite3
 import time
 
+from friends import Friends
+from market import Market
+from seasons import Seasons
+
 log = logging.getLogger("netplay")
 
 START_RATING = 1000
 ELO_K = 32
-MAX_EMOTE = 32  # emote ids the ROM may send (see Emotes in src/netplay.c)
+MAX_EMOTE = 32
+MAX_LIVE = 5
+MAX_BATTLE_TEXT = 80  # emote ids the ROM may send (see Emotes in src/netplay.c)
 EMOTE_BURST = 4  # emotes a player can send at once; one more each EMOTE_REFILL seconds
 EMOTE_REFILL = 1.0
 NAME_RE = re.compile(r"^[A-Za-z0-9]{1,7}$")
 HEX_RE = re.compile(r"^[0-9a-fA-F]{2,64}$")
-KINDS = ("battle", "trade", "deal")
+KINDS = ("battle", "trade", "deal", "coop")
 OUTCOMES = ("win", "loss", "draw")
 MAX_LINE = 256
 
@@ -132,6 +138,7 @@ class Player:
         self.map = None
         self.pos = (0, 0, 0, 0, 0)  # x, y, facing, elevation, gfx
         self.session = None
+        self.watching = None  # the battle session this player spectates
         self.emote_tokens = EMOTE_BURST
         self.emote_time = time.monotonic()
 
@@ -156,14 +163,22 @@ class Session:
         self.started = False
         self.reports = {}
         self.recorded = False
+        # Spectating: who watches, and the host's latest report to replay
+        # to anyone who starts watching.
+        self.watchers = set()
+        self.state = None
+        self.text = None
 
     def peer(self, player):
         return self.guest if player is self.host else self.host
 
 
 class Server:
-    def __init__(self, league):
+    def __init__(self, league, season_days=28, clock=time.time):
         self.league = league
+        self.friends = Friends(league.db)
+        self.seasons = Seasons(league.db, START_RATING, season_days, clock)
+        self.market = Market(league.db)
         self.players = {}
         self.sessions = {}
         # Battles that ended before both players reported a result.
@@ -202,6 +217,7 @@ class Server:
         if self.players.pop(player.id, None) is None:
             return
         log.info("player %d (%s) disconnected", player.id, player.name)
+        self.stop_watching(player)
         for session in list(self.sessions.values()):
             if player in (session.host, session.guest):
                 self.end_session(session, player)
@@ -230,6 +246,11 @@ class Server:
         for p in (session.host, session.guest):
             if p.session is session:
                 p.session = None
+        for watcher in session.watchers:
+            watcher.watching = None
+            if watcher.id in self.players:
+                watcher.send(f"WEND {session.id}")
+        session.watchers.clear()
         if session.kind == "battle" and session.started and not session.recorded:
             self.pending[session.id] = session
             self.settle_pending(leaver)
@@ -277,6 +298,7 @@ class Server:
             return self.cmd_hello(player, *args)
         if player.name is None:
             raise ValueError("say HELLO first")
+        self.seasons.roll_if_due()
         handler = getattr(self, "cmd_" + cmd.lower(), None)
         if handler is None and cmd in self.extra_commands:
             extra = self.extra_commands[cmd]
@@ -379,6 +401,132 @@ class Server:
         player.emote_tokens -= 1
         self.broadcast_map(player.map, f"EMOTE {player.id} {emote}", exclude=player)
 
+    def online_player(self, key):
+        return next((p for p in self.players.values() if p.key == key), None)
+
+    def cmd_friend(self, player, action, *args):
+        """FRIEND ADD <player id> | FRIEND DEL <name> <tid>"""
+        if action == "ADD" and len(args) == 1:
+            other = self.players.get(int(args[0]))
+            if other is None or other.name is None:
+                raise ValueError("no such player")
+            ok = self.friends.add(player.key, other.key)
+            player.send(f"FRIENDADD {'ok' if ok else 'full'} {other.name}")
+        elif action == "DEL" and len(args) == 2:
+            self.friends.remove(player.key, (args[0], int(args[1])))
+        else:
+            raise ValueError("bad FRIEND")
+
+    def cmd_friends(self, player):
+        """One FRIEND line per friend: where they are when online, else 0s."""
+        for name, tid in self.friends.list(player.key):
+            other = self.online_player((name, tid))
+            if other is not None and other.map is not None:
+                x, y, _, _, gfx = other.pos
+                busy = 1 if other.session is not None else 0
+                player.send(f"FRIEND {name} {tid} {other.id} {other.map[0]} {other.map[1]} {x} {y} {gfx} {busy}")
+            else:
+                player.send(f"FRIEND {name} {tid} 0 0 0 0 0 0 0")
+        player.send("FRIENDSEND")
+
+    def cmd_season(self, player):
+        """SEASON <number> <days left> <rated 0|1> <rating> <reward tier or -1> <reward season or 0>"""
+        season, _ = self.seasons.current()
+        rank, rating, *_ = self.league.rank_of(player.key)
+        reward = self.seasons.pending_reward(player.key)
+        reward_season, reward_tier = reward if reward else (0, -1)
+        player.send(f"SEASON {season} {self.seasons.days_left()} {1 if rank else 0} {round(rating)}"
+                    f" {reward_tier} {reward_season}")
+
+    def cmd_claim(self, player):
+        """CLAIMED <tier> <season>, or CLAIMED -1 0 when there is nothing to claim."""
+        reward = self.seasons.claim(player.key)
+        season, tier = reward if reward else (0, -1)
+        player.send(f"CLAIMED {tier} {season}")
+
+    def cmd_market(self, player, action, *args):
+        """The market board: LIST <page>, SELL <species> <level> <price> <mon hex>,
+        BUY <id>, CANCEL <id>, COLLECT."""
+        if action == "LIST" and len(args) == 1:
+            rows, page, pages = self.market.page(int(args[0]))
+            for listing_id, name, tid, species, level, price in rows:
+                mine = 1 if (name, tid) == player.key else 0
+                player.send(f"MITEM {listing_id} {name} {species} {level} {price} {mine}")
+            player.send(f"MARKETEND {page} {pages}")
+        elif action == "SELL" and len(args) == 4:
+            listing_id = self.market.sell(player.key, int(args[0]), int(args[1]), int(args[2]), args[3].lower())
+            player.send(f"MLISTED ok {listing_id}" if listing_id else "MLISTED full 0")
+        elif action == "BUY" and len(args) == 1:
+            result, price, mon = self.market.buy(player.key, int(args[0]))
+            player.send(f"MBOUGHT {result} {price} {mon or '-'}")
+        elif action == "CANCEL" and len(args) == 1:
+            mon = self.market.cancel(player.key, int(args[0]))
+            player.send(f"MCANCELED ok {mon}" if mon else "MCANCELED gone -")
+        elif action == "COLLECT" and not args:
+            money, sales = self.market.collect(player.key)
+            player.send(f"MCOLLECT {money} {sales}")
+        else:
+            raise ValueError("bad MARKET")
+
+    # --- spectating -----------------------------------------------------
+
+    def stop_watching(self, player):
+        if player.watching is not None:
+            player.watching.watchers.discard(player)
+            player.watching = None
+
+    def live_battle(self, sid):
+        session = self.sessions.get(int(sid))
+        if session is None or session.kind != "battle" or not session.started:
+            return None
+        return session
+
+    def cmd_live(self, player):
+        """LIVE <session id> <host> <guest> per running battle, then LIVEEND."""
+        battles = [s for s in self.sessions.values() if self.live_battle(s.id)]
+        for session in battles[:MAX_LIVE]:
+            player.send(f"LIVE {session.id} {session.host.name} {session.guest.name}")
+        player.send("LIVEEND")
+
+    def cmd_watch(self, player, sid):
+        self.stop_watching(player)
+        session = self.live_battle(sid)
+        if session is None or player in (session.host, session.guest):
+            player.send(f"WEND {int(sid)}")
+            return
+        session.watchers.add(player)
+        player.watching = session
+        player.send(f"WATCHING {session.id}")
+        if session.state:
+            player.send(f"WSTATE {session.id} {session.state}")
+        if session.text:
+            player.send(f"WTEXT {session.id} {session.text}")
+
+    def cmd_unwatch(self, player):
+        self.stop_watching(player)
+
+    def battle_report(self, player, sid):
+        """The battle `player` hosts, which only the host reports on."""
+        session = self.require_session(player, sid, started=True)
+        if session.kind != "battle" or player is not session.host:
+            raise ValueError("not the host of a battle")
+        return session
+
+    def cmd_bstate(self, player, sid, *fields):
+        """BSTATE <sid>, then for the host and the guest: species level hp max-hp alive party-size."""
+        session = self.battle_report(player, sid)
+        if len(fields) != 12:
+            raise ValueError("bad BSTATE")
+        session.state = " ".join(str(int(f)) for f in fields)
+        for watcher in session.watchers:
+            watcher.send(f"WSTATE {session.id} {session.state}")
+
+    def cmd_btext(self, player, sid, *words):
+        session = self.battle_report(player, sid)
+        session.text = " ".join(words)[:MAX_BATTLE_TEXT]
+        for watcher in session.watchers:
+            watcher.send(f"WTEXT {session.id} {session.text}")
+
     def cmd_myrank(self, player):
         rank, rating, w, l, d = self.league.rank_of((player.name, player.tid))
         player.send(f"MYRANK {rank} {round(rating)} {w} {l} {d}")
@@ -389,8 +537,8 @@ class Server:
         player.send("BOARDEND")
 
 
-async def serve(host, port, db_path, http_port=0, public_host=""):
-    server = Server(League(db_path))
+async def serve(host, port, db_path, http_port=0, public_host="", season_days=28):
+    server = Server(League(db_path), season_days)
     import ext
 
     ext.install(server)
@@ -418,9 +566,11 @@ def main():
                         help="address players use to reach this server, written into the"
                              " downloaded bridge script (default: from the page request)")
     parser.add_argument("--db", default=env("NETPLAY_DB", "league.sqlite3"))
+    parser.add_argument("--season-days", type=float, default=float(env("NETPLAY_SEASON_DAYS", "28")),
+                        help="length of a ladder season")
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
-    asyncio.run(serve(args.host, args.port, args.db, args.http_port, args.public_host))
+    asyncio.run(serve(args.host, args.port, args.db, args.http_port, args.public_host, args.season_days))
 
 
 if __name__ == "__main__":

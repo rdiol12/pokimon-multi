@@ -3038,3 +3038,25 @@ const u16 ALIGNED(4) gTilesetPalettes_General_Frlg[][16] =
 const u32 gTilesetTiles_General_Frlg[] = INCGFX_U32("data/tilesets/primary/general_frlg/tiles.png", ".4bpp.smol");
 
 #endif // IS_FRLG
+
+const u32 gTilesetTiles_Amberwood[] = INCGFX_U32("data/tilesets/secondary/amberwood/tiles.png", ".4bpp.fastSmol");
+
+const u16 gTilesetPalettes_Amberwood[][16] =
+{
+    INCGFX_U16("data/tilesets/secondary/amberwood/palettes/00.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/amberwood/palettes/01.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/amberwood/palettes/02.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/amberwood/palettes/03.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/amberwood/palettes/04.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/amberwood/palettes/05.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/amberwood/palettes/06.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/amberwood/palettes/07.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/amberwood/palettes/08.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/amberwood/palettes/09.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/amberwood/palettes/10.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/amberwood/palettes/11.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/amberwood/palettes/12.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/amberwood/palettes/13.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/amberwood/palettes/14.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/amberwood/palettes/15.pal", ".gbapal"),
+};

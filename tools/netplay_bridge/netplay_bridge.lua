@@ -11,7 +11,7 @@ local EWRAM_START = 0x02000000
 local EWRAM_END = 0x02040000
 local MAGIC_LO = 0x4E4D4B50 -- "PKMN"
 local MAGIC_HI = 0x3154454E -- "NET1"
-local MAILBOX_VERSION = 2
+local MAILBOX_VERSION = 3
 
 local OFF_VERSION = 0x008
 local OFF_STATE = 0x009
@@ -40,6 +40,25 @@ local OFF_SERVER_PORT = 0x384
 local OFF_LADDER = 0x388
 local LADDER_SIZE = 10
 local LADDER_ENTRY_SIZE = 16
+local OFF_FRIENDS = 0x43C
+local MAX_FRIENDS = 10
+local FRIEND_SIZE = 20
+local FRIEND_ADD_RESULTS = { ok = 1, full = 2 }
+local OFF_SEASON = 0x508
+local OFF_MARKET = 0x518
+local OFF_REPORT = 0x5E0
+local OFF_WATCH = 0x63C
+local OFF_WATCH_VIEW = OFF_WATCH + 0x68
+local MAX_LIVE = 5
+local LIVE_SIZE = 20
+local SIDE_SIZE = 12
+local OFF_TEXT = 0x1C -- in a battle report
+local BATTLE_TEXT_LENGTH = 64
+local MARKET_PAGE_SIZE = 5
+local MARKET_LISTING_SIZE = 16
+local MON_SIZE = 100
+local MARKET_ANSWERS = { ok = 1, gone = 2, full = 3, self = 4 }
+local NO_TIER = 0xFF
 local RING_SIZE = 16
 local PACKET_SIZE = 20
 local NAME_LENGTH = 8
@@ -47,28 +66,12 @@ local NAME_LENGTH = 8
 local STATE_OFFLINE, STATE_CONNECTING, STATE_ONLINE = 0, 1, 2
 
 local REQ_CHALLENGE, REQ_TRADE, REQ_ACCEPT, REQ_DECLINE, REQ_RESULT, REQ_LEAVE, REQ_DEAL, REQ_LADDER, REQ_EMOTE = 1, 2, 3, 4, 5, 6, 7, 8, 9
+local REQ_FRIENDS, REQ_FRIEND_ADD, REQ_FRIEND_DEL, REQ_SEASON, REQ_CLAIM = 10, 11, 12, 13, 14
+local REQ_MARKET, REQ_MARKET_SELL, REQ_MARKET_BUY, REQ_MARKET_CANCEL, REQ_MARKET_COLLECT = 15, 16, 17, 18, 19
+local REQ_LIVE, REQ_WATCH, REQ_UNWATCH, REQ_COOP = 20, 21, 22, 23
 local EV_INVITE, EV_START, EV_DECLINED, EV_ENDED, EV_PENDING, EV_EMOTE = 1, 2, 3, 4, 5, 6
-local KIND_IDS = { battle = 1, trade = 2, deal = 3 }
+local KIND_IDS = { battle = 1, trade = 2, deal = 3, coop = 4 }
 local RESULTS = { "win", "loss", "draw" }
-
--- Second mailbox (gNetplayExtMailbox): one request at a time for the
--- online features in docs/netplay_ext.md, passed through to the server as
--- XD/X lines and answered with XR.
-local EXT_MAGIC_LO = 0x4E4D4B50 -- "PKMN"
-local EXT_MAGIC_HI = 0x31545845 -- "EXT1"
-local EXT_REQ_SEQ = 0x009
-local EXT_RESP_SEQ = 0x00A
-local EXT_STATUS = 0x00B
-local EXT_REQ_LEN = 0x00C
-local EXT_RESP_LEN = 0x00E
-local EXT_REQ_TEXT = 0x010
-local EXT_TEXT_LENGTH = 64
-local EXT_REQ_DATA = 0x050
-local EXT_DATA_SIZE = 1024
-local EXT_RESP = 0x450
-local EXT_RESP_SIZE = 1536
-local EXT_NOTES = 0xA50
-local EXT_CHUNK = 100 -- bytes of data per XD line
 
 local SCAN_INTERVAL = 60
 local RECONNECT_INTERVAL = 180
@@ -89,6 +92,42 @@ local function asciiToChar(ch)
     return 0x00 -- space
 end
 
+-- Battle text both ways: punctuation too, and control codes dropped.
+local TEXT_TO_ASCII = {
+    [0x00] = " ", [0x1B] = "e", [0x2D] = "&", [0x2E] = "+", [0x35] = "=", [0x5B] = "%", [0x5C] = "(", [0x5D] = ")",
+    [0xAB] = "!", [0xAC] = "?", [0xAD] = ".", [0xAE] = "-", [0xB0] = "...", [0xB1] = '"', [0xB2] = '"',
+    [0xB3] = "'", [0xB4] = "'", [0xB8] = ",", [0xBA] = "/", [0xF0] = ":",
+    [0x39] = " ", [0xFA] = " ", [0xFB] = " ", [0xFE] = " ",
+}
+local ASCII_TO_TEXT = {
+    [" "] = 0x00, ["&"] = 0x2D, ["+"] = 0x2E, ["="] = 0x35, ["%"] = 0x5B, ["("] = 0x5C, [")"] = 0x5D,
+    ["!"] = 0xAB, ["?"] = 0xAC, ["."] = 0xAD, ["-"] = 0xAE, ['"'] = 0xB1, ["'"] = 0xB4, [","] = 0xB8,
+    ["/"] = 0xBA, [":"] = 0xF0,
+}
+
+local function textToAscii(bytes)
+    local out, i = {}, 1
+    while i <= #bytes do
+        local c = bytes[i]
+        if c == 0xFF then break end
+        if c == 0xFC or c == 0xFD then
+            i = i + 1 -- a control code and its argument
+        else
+            out[#out + 1] = charToAscii(c) or TEXT_TO_ASCII[c] or ""
+        end
+        i = i + 1
+    end
+    return (table.concat(out):gsub("%s+", " "):gsub("^ ", ""):gsub(" $", ""))
+end
+
+local function asciiToText(str)
+    local out = {}
+    for ch in str:gmatch(".") do
+        out[#out + 1] = ASCII_TO_TEXT[ch] or asciiToChar(ch)
+    end
+    return out
+end
+
 local function s16(v)
     if v >= 0x8000 then return v - 0x10000 end
     return v
@@ -105,6 +144,7 @@ function Bridge.new(mem, net)
     self.net = net
     self.frame = 0
     self.base = nil
+    self.hooks = {}
     self:resetConnection()
     return self
 end
@@ -120,7 +160,14 @@ function Bridge:resetConnection()
     self.session = nil
     self.lastPos = nil
     self.ladder = nil     -- rows of the ladder being received
-    self.extSeq = nil     -- ext request the server is answering
+    self.friendRows = nil -- rows of the friend list being received
+    self.friendList = {}  -- the last friend list given to the ROM
+    self.marketRows = nil -- rows of the market page being received
+    self.marketIds = {}   -- listing ids of the last market page given to the ROM
+    self.liveRows = nil   -- live battles being received
+    self.liveIds = {}     -- session ids of the last live list given to the ROM
+    self.reportSeq = nil  -- the ROM's battle report we last sent
+    self.reportText = nil
     self.nextConnect = self.frame
 end
 
@@ -132,7 +179,6 @@ function Bridge:onReset()
         self:resetConnection()
     end
     self.base = nil
-    self.ext = nil
 end
 
 function Bridge:log(msg)
@@ -150,15 +196,6 @@ function Bridge:findMailbox()
     for addr = EWRAM_START, EWRAM_END - 8, 4 do
         if self.mem.read32(addr) == MAGIC_LO and self.mem.read32(addr + 4) == MAGIC_HI
             and self.mem.read8(addr + OFF_VERSION) == MAILBOX_VERSION then
-            return addr
-        end
-    end
-    return nil
-end
-
-function Bridge:findExtMailbox()
-    for addr = EWRAM_START, EWRAM_END - 8, 4 do
-        if self.mem.read32(addr) == EXT_MAGIC_LO and self.mem.read32(addr + 4) == EXT_MAGIC_HI then
             return addr
         end
     end
@@ -216,9 +253,20 @@ function Bridge:queueEvent(type, peer, sid, kind, role)
     table.insert(self.events, { type = type, peer = peer, sid = sid, kind = kind or 0, role = role or 0 })
 end
 
+-- Extensions (other netplay features with their own mailbox) add hooks:
+--   onLine(args, line) -> true when it handled a server line
+--   onFrame(mem)       -> each frame while connected and welcomed
+function Bridge:addHook(hook)
+    table.insert(self.hooks, hook)
+end
+
 function Bridge:handleLine(line)
+    if os.getenv("NETPLAY_TRACE") then self:log("<< " .. line:sub(1, 60)) end
     local args = {}
     for word in line:gmatch("%S+") do table.insert(args, word) end
+    for _, hook in ipairs(self.hooks) do
+        if hook.onLine and hook.onLine(args, line) then return end
+    end
     local cmd = args[1]
     if cmd == "WELCOME" then
         self.localId = tonumber(args[2])
@@ -261,6 +309,79 @@ function Bridge:handleLine(line)
             local bytes = hex:gsub("%x%x", function(h) return string.char(tonumber(h, 16)) end)
             table.insert(self.rxQueue, bytes)
         end
+    elseif cmd == "FRIEND" and self.friendRows then
+        table.insert(self.friendRows, {
+            name = args[2], tid = args[3], id = tonumber(args[4]),
+            group = tonumber(args[5]), num = tonumber(args[6]),
+            x = tonumber(args[7]), y = tonumber(args[8]), gfx = tonumber(args[9]), busy = tonumber(args[10]),
+        })
+    elseif cmd == "FRIENDSEND" and self.friendRows then
+        self:writeFriends(self.friendRows)
+        self.friendRows = nil
+    elseif cmd == "FRIENDADD" then
+        self:w8(OFF_FRIENDS + 3, FRIEND_ADD_RESULTS[args[2]] or 0)
+        self:w8(OFF_FRIENDS + 2, self:r8(OFF_FRIENDS + 2) + 1)
+    elseif cmd == "SEASON" then
+        -- SEASON <n> <days left> <rated> <rating> <reward tier or -1> <reward season>
+        local tier = tonumber(args[6])
+        self:w8(OFF_SEASON + 1, tier >= 0 and tier or NO_TIER)
+        self:w16(OFF_SEASON + 2, tonumber(args[2]))
+        self:w16(OFF_SEASON + 4, tonumber(args[3]))
+        self:w16(OFF_SEASON + 6, math.min(tonumber(args[5]), 0xFFFF))
+        self:w8(OFF_SEASON + 8, tonumber(args[4]))
+        self:w16(OFF_SEASON + 0x0C, tonumber(args[7]))
+        self:w8(OFF_SEASON, self:r8(OFF_SEASON) + 1)
+    elseif cmd == "CLAIMED" then
+        local tier = tonumber(args[2])
+        self:w8(OFF_SEASON + 0x0A, tier >= 0 and tier or NO_TIER)
+        if tier >= 0 then self:w8(OFF_SEASON + 1, NO_TIER) end
+        self:w8(OFF_SEASON + 9, self:r8(OFF_SEASON + 9) + 1)
+    elseif cmd == "MITEM" and self.marketRows then
+        table.insert(self.marketRows, {
+            id = tonumber(args[2]), seller = args[3], species = tonumber(args[4]),
+            level = tonumber(args[5]), price = tonumber(args[6]), mine = tonumber(args[7]),
+        })
+    elseif cmd == "MARKETEND" and self.marketRows then
+        self:writeMarket(self.marketRows, tonumber(args[2]), tonumber(args[3]))
+        self.marketRows = nil
+    elseif cmd == "MLISTED" then
+        self:marketAnswer(args[2])
+    elseif cmd == "MBOUGHT" then
+        self:marketAnswer(args[2], tonumber(args[3]), args[4])
+    elseif cmd == "MCANCELED" then
+        self:marketAnswer(args[2], 0, args[3])
+    elseif cmd == "MCOLLECT" then
+        self:w16(OFF_MARKET + 6, tonumber(args[3]))
+        self:marketAnswer("ok", tonumber(args[2]))
+    elseif cmd == "LIVE" and self.liveRows then
+        table.insert(self.liveRows, { sid = tonumber(args[2]), host = args[3], guest = args[4] })
+    elseif cmd == "LIVEEND" and self.liveRows then
+        self:writeLive(self.liveRows)
+        self.liveRows = nil
+    elseif cmd == "WATCHING" then
+        self:w8(OFF_WATCH + 2, 0)
+    elseif cmd == "WSTATE" then
+        for side = 0, 1 do
+            local off = OFF_WATCH_VIEW + 4 + side * SIDE_SIZE
+            local f = function(i) return tonumber(args[3 + side * 6 + i]) end
+            self:w16(off, f(0))
+            self:w8(off + 2, f(1))
+            self:w16(off + 4, f(2))
+            self:w16(off + 6, f(3))
+            self:w8(off + 3, f(4))
+            self:w8(off + 8, f(5))
+        end
+        self:w8(OFF_WATCH_VIEW, self:r8(OFF_WATCH_VIEW) + 1)
+    elseif cmd == "WTEXT" then
+        local text = asciiToText(line:match("^WTEXT %d+ (.*)$") or "")
+        for i = 0, BATTLE_TEXT_LENGTH - 1 do
+            self:w8(OFF_WATCH_VIEW + OFF_TEXT + i, text[i + 1] or 0xFF)
+        end
+        self:w8(OFF_WATCH_VIEW + OFF_TEXT + BATTLE_TEXT_LENGTH - 1, 0xFF)
+        self:w8(OFF_WATCH_VIEW, self:r8(OFF_WATCH_VIEW) + 1)
+    elseif cmd == "WEND" then
+        self:w8(OFF_WATCH + 2, 1)
+        self:w8(OFF_WATCH_VIEW, self:r8(OFF_WATCH_VIEW) + 1)
     elseif cmd == "EMOTE" then
         self:queueEvent(EV_EMOTE, tonumber(args[2]), 0, tonumber(args[3]))
     elseif cmd == "RANK" and self.ladder then
@@ -276,10 +397,6 @@ function Bridge:handleLine(line)
             name = self:readName(), rating = tonumber(args[3]),
             wins = tonumber(args[4]), losses = tonumber(args[5]), draws = tonumber(args[6]),
         })
-    elseif cmd == "XR" then
-        self:writeExtResponse(tonumber(args[2]), tonumber(args[3]), args[4] or "")
-    elseif cmd == "XNOTE" and self.ext then
-        self.mem.write8(self.ext + EXT_NOTES, (self.mem.read8(self.ext + EXT_NOTES) + 1) & 0xFF)
     elseif cmd == "ERR" then
         self:log("server: " .. line)
     end
@@ -382,12 +499,61 @@ function Bridge:handleRequest()
         self.net.send("REQ trade " .. target)
     elseif type == REQ_DEAL then
         self.net.send("REQ deal " .. target)
+    elseif type == REQ_COOP then
+        self.net.send("REQ coop " .. target)
     elseif type == REQ_ACCEPT then
         self.net.send("ACCEPT " .. sid)
     elseif type == REQ_DECLINE then
         self.net.send("DECLINE " .. sid)
     elseif type == REQ_RESULT and RESULTS[arg] then
         self.net.send("RESULT " .. sid .. " " .. RESULTS[arg])
+    elseif type == REQ_FRIENDS then
+        self.friendRows = {}
+        self.net.send("FRIENDS")
+    elseif type == REQ_FRIEND_ADD then
+        self.net.send("FRIEND ADD " .. target)
+    elseif type == REQ_FRIEND_DEL then
+        local f = self.friendList[arg + 1]
+        if f then self.net.send("FRIEND DEL " .. f.name .. " " .. f.tid) end
+    elseif type == REQ_SEASON then
+        self.net.send("SEASON")
+    elseif type == REQ_CLAIM then
+        self.net.send("CLAIM")
+    elseif type == REQ_MARKET then
+        self.marketRows = {}
+        self.net.send("MARKET LIST " .. arg)
+    elseif type == REQ_MARKET_SELL then
+        local hex = {}
+        for i = 0, MON_SIZE - 1 do hex[#hex + 1] = string.format("%02x", self:r8(OFF_MARKET + 0x64 + i)) end
+        local price = self:r16(OFF_MARKET + 0x5C) | (self:r16(OFF_MARKET + 0x5E) << 16)
+        self.net.send(string.format("MARKET SELL %d %d %d %s",
+            self:r16(OFF_MARKET + 0x60), self:r8(OFF_MARKET + 0x62), price, table.concat(hex)))
+    elseif type == REQ_MARKET_BUY or type == REQ_MARKET_CANCEL then
+        local id = self.marketIds[arg + 1]
+        if id then
+            self.net.send((type == REQ_MARKET_BUY and "MARKET BUY " or "MARKET CANCEL ") .. id)
+        else
+            self:marketAnswer("gone")
+        end
+    elseif type == REQ_MARKET_COLLECT then
+        self.net.send("MARKET COLLECT")
+    elseif type == REQ_LIVE then
+        self.liveRows = {}
+        self.net.send("LIVE")
+    elseif type == REQ_WATCH then
+        -- Start from a blank view: the server catches us up.
+        for i = 1, OFF_TEXT - 1 do self:w8(OFF_WATCH_VIEW + i, 0) end
+        self:w8(OFF_WATCH_VIEW + OFF_TEXT, 0xFF)
+        self:w8(OFF_WATCH + 2, 0)
+        self:w8(OFF_WATCH_VIEW, self:r8(OFF_WATCH_VIEW) + 1)
+        local sid = self.liveIds[arg + 1]
+        if sid then
+            self.net.send("WATCH " .. sid)
+        else
+            self:w8(OFF_WATCH + 2, 1)
+        end
+    elseif type == REQ_UNWATCH then
+        self.net.send("UNWATCH")
     elseif type == REQ_EMOTE then
         self.net.send("EMOTE " .. arg)
     elseif type == REQ_LADDER then
@@ -411,6 +577,111 @@ function Bridge:writeLadderEntry(off, e)
     self:w16(off + 14, math.min(e.draws, 0xFFFF))
 end
 
+function Bridge:writeFriends(rows)
+    local count = math.min(#rows, MAX_FRIENDS)
+    self.friendList = {}
+    for i = 1, count do
+        local f = rows[i]
+        local off = OFF_FRIENDS + 4 + (i - 1) * FRIEND_SIZE
+        self.friendList[i] = f
+        for c = 0, NAME_LENGTH - 1 do
+            local ch = f.name:sub(c + 1, c + 1)
+            self:w8(off + c, ch == "" and 0xFF or asciiToChar(ch))
+        end
+        self:w16(off + 8, f.id)
+        self:w8(off + 10, f.group)
+        self:w8(off + 11, f.num)
+        self:w16(off + 12, f.x)
+        self:w16(off + 14, f.y)
+        self:w16(off + 16, f.gfx)
+        self:w8(off + 18, f.busy)
+    end
+    self:w8(OFF_FRIENDS + 1, count)
+    self:w8(OFF_FRIENDS, self:r8(OFF_FRIENDS) + 1) -- publish
+end
+
+function Bridge:writeMarket(rows, page, pages)
+    local count = math.min(#rows, MARKET_PAGE_SIZE)
+    self.marketIds = {}
+    for i = 1, count do
+        local r = rows[i]
+        local off = OFF_MARKET + 0x0C + (i - 1) * MARKET_LISTING_SIZE
+        self.marketIds[i] = r.id
+        self:w16(off, r.species)
+        self:w8(off + 2, r.level)
+        self:w8(off + 3, r.mine)
+        self:w16(off + 4, r.price & 0xFFFF)
+        self:w16(off + 6, r.price >> 16)
+        for c = 0, NAME_LENGTH - 1 do
+            local ch = r.seller:sub(c + 1, c + 1)
+            self:w8(off + 8 + c, ch == "" and 0xFF or asciiToChar(ch))
+        end
+    end
+    self:w8(OFF_MARKET + 1, count)
+    self:w8(OFF_MARKET + 2, page)
+    self:w8(OFF_MARKET + 3, pages)
+    self:w8(OFF_MARKET, self:r8(OFF_MARKET) + 1) -- publish
+end
+
+-- The answer to a sell, buy, cancel or collect, with the Pokémon handed back.
+function Bridge:marketAnswer(answer, money, monHex)
+    if monHex and #monHex == MON_SIZE * 2 then
+        for i = 0, MON_SIZE - 1 do
+            self:w8(OFF_MARKET + 0x64 + i, tonumber(monHex:sub(i * 2 + 1, i * 2 + 2), 16))
+        end
+    end
+    money = money or 0
+    self:w16(OFF_MARKET + 8, money & 0xFFFF)
+    self:w16(OFF_MARKET + 10, money >> 16)
+    self:w8(OFF_MARKET + 5, MARKET_ANSWERS[answer] or MARKET_ANSWERS.gone)
+    self:w8(OFF_MARKET + 4, self:r8(OFF_MARKET + 4) + 1) -- publish
+end
+
+function Bridge:writeLive(rows)
+    local count = math.min(#rows, MAX_LIVE)
+    self.liveIds = {}
+    for i = 1, count do
+        local r = rows[i]
+        local off = OFF_WATCH + 4 + (i - 1) * LIVE_SIZE
+        self.liveIds[i] = r.sid
+        self:w16(off, r.sid)
+        for c = 0, NAME_LENGTH - 1 do
+            local h, g = r.host:sub(c + 1, c + 1), r.guest:sub(c + 1, c + 1)
+            self:w8(off + 2 + c, h == "" and 0xFF or asciiToChar(h))
+            self:w8(off + 10 + c, g == "" and 0xFF or asciiToChar(g))
+        end
+    end
+    self:w8(OFF_WATCH + 1, count)
+    self:w8(OFF_WATCH, self:r8(OFF_WATCH) + 1) -- publish
+end
+
+-- The ROM reports the battle it hosts; pass changes on for spectators.
+function Bridge:sendBattleReport()
+    local seq = self:r8(OFF_REPORT)
+    if seq == self.reportSeq then return end
+    self.reportSeq = seq
+    if not self.session then return end
+    local fields = {}
+    for side = 0, 1 do
+        local off = OFF_REPORT + 4 + side * SIDE_SIZE
+        fields[#fields + 1] = string.format("%d %d %d %d %d %d", self:r16(off), self:r8(off + 2),
+            self:r16(off + 4), self:r16(off + 6), self:r8(off + 3), self:r8(off + 8))
+    end
+    self.net.send("BSTATE " .. self.session .. " " .. table.concat(fields, " "))
+    local bytes = {}
+    for i = 0, BATTLE_TEXT_LENGTH - 1 do bytes[#bytes + 1] = self:r8(OFF_REPORT + OFF_TEXT + i) end
+    local text = textToAscii(bytes)
+    if os.getenv("NETPLAY_TRACE") then
+        local hex = {}
+        for i = 1, #bytes do hex[i] = string.format("%02x", bytes[i]) end
+        self:log("report " .. table.concat(hex))
+    end
+    if text ~= self.reportText and text ~= "" then
+        self.reportText = text
+        self.net.send("BTEXT " .. self.session .. " " .. text)
+    end
+end
+
 function Bridge:writeLadderTop(rows)
     local count = math.min(#rows, LADDER_SIZE)
     for i = 1, count do
@@ -424,46 +695,6 @@ function Bridge:writeLadderMe(rank, me)
     self:w16(OFF_LADDER + 2, rank)
     if rank ~= 0 then self:writeLadderEntry(OFF_LADDER + 4, me) end
     self:w8(OFF_LADDER, self:r8(OFF_LADDER) + 1)
-end
-
--- Second mailbox ---------------------------------------------------------
-
-function Bridge:handleExtRequest()
-    local ext = self.ext
-    if not ext then return end
-    local seq = self.mem.read8(ext + EXT_REQ_SEQ)
-    if seq == self.lastExtSeq then return end
-    self.lastExtSeq = seq
-    local text = {}
-    for i = 0, EXT_TEXT_LENGTH - 1 do
-        local b = self.mem.read8(ext + EXT_REQ_TEXT + i)
-        if b == 0 then break end
-        -- Keep the line to printable ASCII so it can't split into two commands.
-        text[#text + 1] = (b >= 32 and b < 127) and string.char(b) or " "
-    end
-    local len = math.min(self.mem.read16(ext + EXT_REQ_LEN), EXT_DATA_SIZE)
-    for start = 0, len - 1, EXT_CHUNK do
-        local hex = {}
-        for i = start, math.min(start + EXT_CHUNK, len) - 1 do
-            hex[#hex + 1] = string.format("%02x", self.mem.read8(ext + EXT_REQ_DATA + i))
-        end
-        self.net.send("XD " .. table.concat(hex))
-    end
-    self.extSeq = seq
-    self.net.send("X " .. seq .. " " .. table.concat(text))
-end
-
-function Bridge:writeExtResponse(seq, status, hex)
-    local ext = self.ext
-    if not ext or seq ~= self.extSeq then return end
-    self.extSeq = nil
-    local n = math.min(#hex // 2, EXT_RESP_SIZE)
-    for i = 0, n - 1 do
-        self.mem.write8(ext + EXT_RESP + i, tonumber(hex:sub(2 * i + 1, 2 * i + 2), 16))
-    end
-    self.mem.write16(ext + EXT_RESP_LEN, n)
-    self.mem.write8(ext + EXT_STATUS, status)
-    self.mem.write8(ext + EXT_RESP_SEQ, seq) -- seq last: publishes the answer
 end
 
 function Bridge:deliverEvent()
@@ -512,11 +743,7 @@ function Bridge:onFrame()
     if not self.base then
         if self.frame % SCAN_INTERVAL == 1 then
             local addr = self:findMailbox()
-            if addr then
-                self:attach(addr)
-                self.ext = self:findExtMailbox()
-                self.lastExtSeq = self.ext and self.mem.read8(self.ext + EXT_REQ_SEQ)
-            end
+            if addr then self:attach(addr) end
         end
         if not self.base then return end
     end
@@ -546,10 +773,15 @@ function Bridge:onFrame()
     if self.localId ~= 0 then
         self:sendPosition()
         self:handleRequest()
-        self:handleExtRequest()
+        self:sendBattleReport()
     end
     self:deliverEvent()
     self:writeRemotes()
+    if self.localId ~= 0 then
+        for _, hook in ipairs(self.hooks) do
+            if hook.onFrame then hook.onFrame(self.mem) end
+        end
+    end
 end
 
 -- mGBA glue --------------------------------------------------------------
@@ -597,6 +829,26 @@ if emu ~= nil and callbacks ~= nil and socket ~= nil then
     }
     local bridge = Bridge.new(mem, net)
     bridge.logger = function(msg) console:log(msg) end
+
+    -- The API extensions see. Each file named in extensions.txt (one per
+    -- line, next to this script) is loaded after the bridge starts.
+    NetplayBridge = {
+        addHook = function(hook) bridge:addHook(hook) end,
+        send = function(line) if bridge.connected then net.send(line) end end,
+        connected = function() return bridge.connected and bridge.localId ~= 0 end,
+    }
+    local dir = (script and script.dir) or "."
+    local list = io.open(dir .. "/extensions.txt", "r")
+    if list then
+        for name in list:lines() do
+            name = name:match("^%s*(.-)%s*$")
+            if name ~= "" and name:sub(1, 1) ~= "#" then
+                local ok, err = pcall(dofile, dir .. "/" .. name)
+                console:log(ok and ("netplay: loaded " .. name) or ("netplay: cannot load " .. name .. ": " .. tostring(err)))
+            end
+        end
+        list:close()
+    end
     local failed = false
     callbacks:add("frame", function()
         if failed then return end

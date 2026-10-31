@@ -75,7 +75,10 @@ def main():
         env = dict(os.environ, NETPLAY_PORT=str(port))
         bridge = os.path.join(ROOT, "tools", "netplay_bridge", "netplay_bridge.lua")
         with open(os.path.join(out, "harness.log"), "w") as log:
+            # The harness has no `script.dir`, so the bridge finds
+            # extensions.txt (and netplay_ext.lua) in the working directory.
             proc = subprocess.Popen([harness, rom, bridge, str(args.frames), *dirs], env=env,
+                                    cwd=os.path.dirname(bridge),
                                     stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
             for line in proc.stdout:
                 log.write(line)

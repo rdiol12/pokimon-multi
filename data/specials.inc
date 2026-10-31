@@ -650,6 +650,11 @@ gSpecials::
 	def_special Netplay_DealAddMon
 	def_special Netplay_DealApply
 	def_special Netplay_DealEnd
+	def_special Netplay_MarketAvailable
+	def_special Netplay_MarketBegin
+	def_special Netplay_MarketScreen, waitstate=1
+	def_special Netplay_MarketPickedMon
+	def_special Netplay_AddFriend, waitstate=1
 	def_special NetplayExt_OpenPlaza, waitstate=1
 	def_special NetplayExt_Request, waitstate=1
 	def_special NetplayExt_ShowBoard, waitstate=1
