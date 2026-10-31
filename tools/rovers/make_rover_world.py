@@ -25,7 +25,8 @@ OUT = os.path.join(ROOT, "server", "data", "rovers_world.json.gz")
 # Story and legendary places a trainer wouldn't wander into.
 SKIP = ("MagmaHideout", "AquaHideout", "SkyPillar", "MirageTower", "TerraCave", "MarineCave", "AbandonedShip",
         "SafariZone", "AncientTomb", "DesertRuins", "IslandCave", "SealedChamber", "GraniteCave_StevensRoom",
-        "MeteorFalls_StevensCave", "Underwater", "SouthernIsland", "FarawayIsland", "BirthIsland", "NavelRock")
+        "MeteorFalls_StevensCave", "Underwater", "SouthernIsland", "FarawayIsland", "BirthIsland", "NavelRock",
+        "HavenReserve")
 KINDS = {"MAP_TYPE_ROUTE": "route", "MAP_TYPE_TOWN": "town", "MAP_TYPE_CITY": "town",
          "MAP_TYPE_UNDERGROUND": "cave", "MAP_TYPE_OCEAN_ROUTE": "sea"}
 

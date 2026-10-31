@@ -35,6 +35,11 @@ import time
 
 from ext import Refused, text
 
+try:  # the Haven Reserve (server/community_reserve.py), if this server has it
+    import community_reserve
+except ImportError:
+    community_reserve = None
+
 HERE_DIR = os.path.dirname(os.path.abspath(__file__))
 with open(os.path.join(HERE_DIR, "data", "rovers_cast.json")) as f:
     CAST = json.load(f)
@@ -281,8 +286,28 @@ def fight(db, a, b, winner_a):
 
 
 class Sim:
-    def __init__(self, db, league):
-        self.db, self.league = db, league
+    def __init__(self, db, league, server=None):
+        self.db, self.league, self.server = db, league, server
+
+    def release(self, r, m):
+        """A Pokémon a rover lets go goes to the Haven Reserve."""
+        if community_reserve is not None and self.server is not None:
+            try:
+                community_reserve.drop_off(self.server, "ROVER " + r.name, m["species"], m["level"])
+            except Exception:  # the reserve is optional; never break the sim
+                pass
+
+    def visit_reserve(self, r):
+        """Near Verdanturf a rover may catch one of the reserve's Pokémon."""
+        if community_reserve is None or self.server is None or len(r.team) >= MAX_TEAM:
+            return
+        try:
+            got = community_reserve.pick_for_rover(self.server, "ROVER " + r.name, max_level=r.lead_level() + 5)
+        except Exception:
+            return
+        if got:
+            r.team.append(new_mon(got["species"], max(1, min(100, got["level"]))))
+            news(self.db, f"{r.name} caught a {species_name(got['species'])} at the Haven Reserve.")
 
     def step(self, r, others):
         here = WORLD.get(r.map)
@@ -305,7 +330,9 @@ class Sim:
                 if len(r.team) < MAX_TEAM:
                     r.team.append(baby)
                 elif r.cast["style"] == "BREEDER":
-                    r.team[min(range(len(r.team)), key=lambda i: r.team[i]["level"])] = baby
+                    weakest = min(range(len(r.team)), key=lambda i: r.team[i]["level"])
+                    self.release(r, r.team[weakest])
+                    r.team[weakest] = baby
                 news(self.db, f"{r.name}'s egg hatched into {species_name(r.egg)}!")
                 r.egg = 0
         # Gyms.
@@ -349,6 +376,8 @@ class Sim:
         if dest is not None:
             r.map = dest
             return
+        if here["name"] == "VerdanturfTown" and rng.random() < 0.3:
+            self.visit_reserve(r)
         if not here["wild"]:
             return
         # Training and catching.
@@ -369,6 +398,7 @@ class Sim:
             elif style == "COLLECTOR":
                 weakest = min(range(len(r.team)), key=lambda i: r.team[i]["level"])
                 if r.team[weakest]["level"] < level + 5:
+                    self.release(r, r.team[weakest])
                     r.team[weakest] = new_mon(sid, level)
                     news(self.db, f"{r.name} caught a {species_name(sid)} and sent one home.")
         # Quest board jobs.
@@ -438,7 +468,7 @@ def cmd_here(ctx, args, data):
     in from next door, so routes don't stay empty) and its major wild
     Pokémon. Answer: count|majorId|majorSpecies|majorLevel, NUL, the rovers."""
     key, most = map_key(args, 1), max(0, min(int(args[3]), MAX_HERE))
-    rovers = Sim(ctx.db, ctx.league).run()
+    rovers = Sim(ctx.db, ctx.league, ctx.server).run()
     here = [r for r in rovers if r.map == key]
     if key in WORLD and WORLD[key]["kind"] != "sea":
         nearby = [r for r in rovers if r.map in WORLD[key]["links"]]
@@ -526,7 +556,7 @@ def cmd_leave(ctx, args, data):
 def cmd_board(ctx, args, data):
     """ROVER BOARD: the 10 best rovers (name|badges|wins|losses|lead species|
     lead level), then the latest news, one line each after a '-' row."""
-    rovers = Sim(ctx.db, ctx.league).run()
+    rovers = Sim(ctx.db, ctx.league, ctx.server).run()
     rovers.sort(key=lambda r: (-r.badges, -(r.wins - r.losses), -r.lead_level(), r.id))
     rows = []
     for r in rovers[:10]:
@@ -549,7 +579,7 @@ def cmd_majors(ctx, args, data):
     open job within four maps: id|species|level|map name|maps away; then
     up to three cleared ones: 0|species|level|map name|cleared by."""
     key = map_key(args, 1)
-    Sim(ctx.db, ctx.league).run()
+    Sim(ctx.db, ctx.league, ctx.server).run()
     due = ctx.db.execute("SELECT COALESCE(SUM(level), 0) FROM majors WHERE cleared_by = ? AND cleared_tid = ?"
                          " AND paid = 0", ctx.key).fetchone()[0]
     reward = (due * MAJOR_REWARD) // 10
