@@ -30,7 +30,7 @@ tests link the harness against `build/emulator/headless/libmgba.so`.
 | Address      | Access | Value                                                        |
 | ------------ | ------ | ------------------------------------------------------------ |
 | `0x04FFF7F0` | read   | `0x504B` ("PK") on our hardware                              |
-| `0x04FFF7F2` | read   | hardware version, currently `2`                              |
+| `0x04FFF7F2` | read   | hardware version, currently `3`                              |
 | `0x04FFF7F4` | write  | `0x4558` ("EX") unlocks extended EWRAM until the next reset  |
 | `0x04FFF7F4` | write  | `0x4F41` turns extended sprites on, `0x4F40` turns them off  |
 | `0x04FFF7F4` | read   | bit 0: extended EWRAM unlocked; bit 1: extended sprites on   |
@@ -95,7 +95,24 @@ In the game:
 - Fades, time-of-day blending and weather apply to the extra palettes whenever they
   apply to all 16 normal sprite palettes.
 
+### Extended save (version 3)
+
+- `0x01100000`–`0x011FFFFF` is 1 MiB of battery-backed RAM: read and write it like SRAM,
+  8, 16 or 32 bits at a time. It is only there for flash-save games (Emerald is one).
+- It lives in the same `.sav` file: 128 KiB of flash, then the RTC data, then the 1 MiB at
+  file offset `0x21000`. The file only grows once the game first writes there, and older
+  saves just read as zeros. Writes reach the file shortly after the game stops writing,
+  like flash saves.
+- Exporting or importing a save (the phone app's save backup) includes it.
+- DMA and the BIOS copy functions (`CpuSet`, `CpuFastSet`) can't read from it, like any
+  address below EWRAM on a real GBA. Writing to it with them is fine. Read it with a plain loop.
+
+In the game, `gSaveBlockExt` (include/save_ext.h, in extended EWRAM) is saved there with
+every save and loaded with the save. To save new data, add a field at the end of
+`struct SaveBlockExt`; saves made before the field existed load it as zero. Two slots of
+512 KiB alternate like the flash save slots, and a header ties each slot to its flash save
+(save counter, trainer ID, checksum). If the newest one doesn't check out, the older one is used.
+
 ## Planned (later versions)
 
-More background palettes, more VRAM, a CPU overclock, a ROM larger than 32 MiB and a
-larger save.
+More background palettes, more VRAM, a CPU overclock and a ROM larger than 32 MiB.

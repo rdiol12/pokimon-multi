@@ -63,6 +63,9 @@
 #define PKX_OAM_ATTR         (PKX_VIDEO + 0x2000) // one byte per OAM entry 0..511: bits 0-1 = palette bank
 #define PKX_OBJ_PALETTES     64
 #define PKX_OAM_ENTRIES      512
+// Version 3: 1 MiB of battery-backed RAM saved with the flash save. CPU access only (no DMA).
+#define PKX_SAVE             (PKX_VIDEO + 0x100000)
+#define PKX_SAVE_SIZE        0x100000
 #define IWRAM_START 0x03000000
 #define IWRAM_END   (IWRAM_START + 0x8000)
 
