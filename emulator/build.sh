@@ -18,10 +18,10 @@ SRC="$OUT/src"
 JOBS="${JOBS:-$(getconf _NPROCESSORS_ONLN 2>/dev/null || echo 4)}"
 
 MGBA_REPO="${MGBA_REPO:-https://github.com/mgba-emu/mgba.git}"
-MGBA_COMMIT="$(tr -d ' \n' < "$HERE/MGBA_COMMIT")"
+MGBA_COMMIT="$(tr -d ' \r\n' < "$HERE/MGBA_COMMIT")"
 # The phone app's wasm build script comes from @wasm-gaming/mgba-wasm (MPL-2.0).
 WASM_REPO="${WASM_REPO:-https://github.com/wasm-gaming/mGBA-wasm.git}"
-WASM_COMMIT="$(tr -d ' \n' < "$HERE/WASM_COMMIT")"
+WASM_COMMIT="$(tr -d ' \r\n' < "$HERE/WASM_COMMIT")"
 
 fetch() { # repo commit dir
     if [ ! -d "$3/.git" ]; then
@@ -47,8 +47,8 @@ cmake_build() { # build-dir target extra-cmake-args...
     local dir="$1" target="$2"
     shift 2
     cmake -S "$SRC" -B "$dir" -DCMAKE_BUILD_TYPE=Release \
-        -DUSE_FFMPEG=OFF -DUSE_DISCORD_RPC=OFF -DUSE_EDITLINE=OFF -DBUILD_SUITE=OFF -DBUILD_CINEMA=OFF \
-        "$@" > "$dir.cmake.log"
+        -DUSE_FFMPEG=OFF -DUSE_LIBZIP=OFF -DUSE_DISCORD_RPC=OFF -DUSE_EDITLINE=OFF -DBUILD_SUITE=OFF -DBUILD_CINEMA=OFF \
+        "$@" > "$dir.cmake.log" 2>&1 || { cat "$dir.cmake.log"; exit 1; }
     cmake --build "$dir" --target "$target" -j "$JOBS"
 }
 

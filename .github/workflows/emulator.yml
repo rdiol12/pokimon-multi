@@ -25,7 +25,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends cmake qtbase5-dev qtmultimedia5-dev qttools5-dev-tools \
-            libsdl2-dev liblua5.4-dev libpng-dev zlib1g-dev libzip-dev libsqlite3-dev libelf-dev libedit-dev
+            libsdl2-dev liblua5.4-dev libpng-dev zlib1g-dev libsqlite3-dev libelf-dev libedit-dev
       - name: Headless (tests) and Qt player
         run: |
           emulator/build.sh headless
