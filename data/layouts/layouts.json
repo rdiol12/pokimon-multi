@@ -9665,6 +9665,46 @@
       "secondary_tileset": "gTileset_Frost",
       "border_filepath": "data/layouts/SnowdriftVillage/border.bin",
       "blockdata_filepath": "data/layouts/SnowdriftVillage/map.bin"
+    },
+    {
+      "id": "LAYOUT_METRO_MAUVILLE",
+      "name": "MetroMauville_Layout",
+      "width": 36,
+      "height": 18,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Subway",
+      "border_filepath": "data/layouts/MetroMauville/border.bin",
+      "blockdata_filepath": "data/layouts/MetroMauville/map.bin"
+    },
+    {
+      "id": "LAYOUT_METRO_SLATEPORT",
+      "name": "MetroSlateport_Layout",
+      "width": 30,
+      "height": 18,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Subway",
+      "border_filepath": "data/layouts/MetroSlateport/border.bin",
+      "blockdata_filepath": "data/layouts/MetroSlateport/map.bin"
+    },
+    {
+      "id": "LAYOUT_METRO_VERDANTURF",
+      "name": "MetroVerdanturf_Layout",
+      "width": 30,
+      "height": 18,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Subway",
+      "border_filepath": "data/layouts/MetroVerdanturf/border.bin",
+      "blockdata_filepath": "data/layouts/MetroVerdanturf/map.bin"
+    },
+    {
+      "id": "LAYOUT_METRO_OLD_LINE",
+      "name": "MetroOldLine_Layout",
+      "width": 52,
+      "height": 16,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Subway",
+      "border_filepath": "data/layouts/MetroOldLine/border.bin",
+      "blockdata_filepath": "data/layouts/MetroOldLine/map.bin"
     }
   ]
 }

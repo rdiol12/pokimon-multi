@@ -1710,6 +1710,10 @@
     {
       "id": "MAPSEC_SNOWDRIFT_VILLAGE",
       "name": "SNOWDRIFT VILLAGE"
+    },
+    {
+      "id": "MAPSEC_HOENN_METRO",
+      "name": "HOENN METRO"
     }
   ]
 }

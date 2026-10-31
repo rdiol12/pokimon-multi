@@ -1058,3 +1058,68 @@ Level: 41
 Beartic
 Level: 42
 /* end MtFrostcrown */
+
+/* begin MetroMauville */
+=== AREA_TRAINER_METRO_STRUM ===
+Name: STRUM
+Class: Guitarist
+Pic: Guitarist
+Gender: Male
+Music: Intense
+Double Battle: No
+AI: Basic Trainer
+
+Toxel
+Level: 23
+
+Electrike
+Level: 24
+
+=== AREA_TRAINER_METRO_DIGBY ===
+Name: DIGBY
+Class: Ruin Maniac
+Pic: Ruin Maniac
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Basic Trainer
+
+Drilbur
+Level: 25
+
+Boldore
+Level: 25
+
+=== AREA_TRAINER_METRO_GEARS ===
+Name: GEARS
+Class: Pokemaniac
+Pic: Pokemaniac
+Gender: Male
+Music: Suspicious
+Double Battle: No
+AI: Basic Trainer
+
+Klink
+Level: 25
+
+Magneton
+Level: 26
+
+=== AREA_TRAINER_METRO_ODETTE ===
+Name: ODETTE
+Class: Hex Maniac
+Pic: Hex Maniac
+Gender: Female
+Music: Suspicious
+Double Battle: No
+AI: Basic Trainer
+
+Litwick
+Level: 25
+
+Haunter
+Level: 26
+
+Sinistea
+Level: 27
+/* end MetroMauville */

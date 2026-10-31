@@ -129,6 +129,17 @@ const struct Tileset gTileset_Plant =
     .callback = InitTilesetAnim_BikeShop,
 };
 
+const struct Tileset gTileset_Subway =
+{
+    .isCompressed = TRUE,
+    .isSecondary = TRUE,
+    .tiles = gTilesetTiles_Subway,
+    .palettes = gTilesetPalettes_Subway,
+    .metatiles = gMetatiles_Subway,
+    .metatileAttributes = gMetatileAttributes_Subway,
+    .callback = InitTilesetAnim_BikeShop,
+};
+
 const struct Tileset gTileset_Mine =
 {
     .isCompressed = TRUE,

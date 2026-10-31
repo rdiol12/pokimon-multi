@@ -357,6 +357,33 @@ sections all year (IsSnowboundMap() in src/life_seasons.c).
   Ball, Ice Stone and hidden items.
 - Map ids: MAP_MT_FROSTCROWN, MAP_SNOWDRIFT_VILLAGE. Done flag FLAG_FROST_RESCUE_DONE.
 
+## Hoenn Metro
+
+An underground line under Mauville, Slateport and Verdanturf, for after the
+third badge (trainers Lv23–27, wild Pokémon Lv22–26 on the old line). A
+Metro attendant in each of the three cities (beside the Pokémon Center)
+takes you down once you have Wattson's badge; each station's stairs bring
+you back up beside them. Talk to the train's doors to ride to either of
+the other stations (a dynamic multichoice). The halls are learned from New
+Mauville (styles.plant()); the track, the trains (silver, and an old
+rusted pair), the platform edge, turnstiles, ticket machines, benches,
+station boards, stamp stands, stairs, the shutter and the tunnel mouth are
+drawn by tools/areas/subway_art.py into gTileset_Subway.
+
+- The stamp rally: each station's platform has a stamp stand. With all
+  three stamps, the station master at Mauville Central opens the shutter
+  at the east end of the platform (`setmetatile` on load) to the old line.
+- The old line: a disused tunnel with a signal room, a depot office and a
+  store cupboard beside the track, a rusted train, and the forgotten Ghost
+  Station at the end, where a conductor punches your card and vanishes.
+  Its stamp completes the card, and the station master gives you a Lv25
+  Klink.
+- Also: Guitarist Strum (busking at Slateport), Ruin Maniac Digby,
+  Pokémaniac Gears, Hex Maniac Odette, TM Thunderbolt, Magnet, Metal Coat,
+  Spell Tag, Hyper Potion and hidden items.
+- Map ids: MAP_METRO_MAUVILLE, MAP_METRO_SLATEPORT, MAP_METRO_VERDANTURF,
+  MAP_METRO_OLD_LINE. Done flag FLAG_METRO_RALLY_DONE.
+
 ## How the maps are made
 
 - `tools/areas/tiles.py` renders any tileset or layout to PNG.
