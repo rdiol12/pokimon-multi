@@ -172,7 +172,9 @@ void InitBattleControllers(void)
     else
         RecordedBattle_Init(B_RECORD_MODE_PLAYBACK);
 
-    if (!(gBattleTypeFlags & BATTLE_TYPE_RECORDED))
+    // Only a link battle's parties are needed afterwards (its replay). Other
+    // battles leave them alone, so a replay still uploading stays whole.
+    if (!(gBattleTypeFlags & BATTLE_TYPE_RECORDED) && (gBattleTypeFlags & BATTLE_TYPE_LINK))
         RecordedBattle_SaveParties();
 
     InitBtlControllersInternal();
