@@ -441,6 +441,36 @@ tools/areas/crystal_art.py into gTileset_Crystal.
 - Map ids: MAP_PRISM_CAVERNS, MAP_PRISM_CAVERNS_DEPTHS. Done flag
   FLAG_PRISM_SEAL_OPEN.
 
+## Mirage Dunes and the Mirage Oasis
+
+A sea of dunes and a hidden oasis village for after the eighth badge
+(trainers Lv49–52). A caravan master on Route 111, south of the desert,
+takes you there once you have Juan's badge; the caravan's scout at the
+south end of the dunes takes you back. The ground is Route 111's desert
+style; gTileset_Oasis is the Mauville tiles Route 111 uses (the city's
+are cleared to make room, `pack(..., keep=...)`) plus palms, mirages,
+tents, market stalls, the well, the dry pond bed, quicksand pits, pillars,
+the altar and the oasis gate from tools/areas/oasis_art.py.
+
+- The mirages: three pools with palms shimmer in the dunes. Walk into one
+  and it melts away (coord events, then setmetatile), leaving a hidden
+  item where it stood. See through all three and the heat haze across the
+  north pass lifts, showing the gate to the real oasis.
+- The spring: the oasis is dry and its pond is cracked mud. The elder says
+  the Spring Stone was swallowed with the thieves' court, "where three
+  stones stand". The quicksand pit ringed by three stones (MB_MT_PYRE_HOLE)
+  drops you into the sunken court's altar room; the other two pits drop you
+  into side courts with items and a trainer. Each court has stairs back up.
+  Put the stone in the well and the spring flows, the pond fills (the
+  synthesised water is put back cell by cell), the elder gives a Lv45
+  Larvesta and Landorus (Lv55) comes to rest on the mesa.
+- Also: a bazaar (Ultra Balls, Max Potions, weather rocks), a berry stall,
+  a fortune teller with a hint, an inn tent that heals, Hiker Rashid,
+  Cooltrainer Zahra, Ruin Maniac Dunstan, Hex Maniac Nefera, Expert Omar,
+  TM Earthquake, a Big Nugget, PP Max and hidden items.
+- Map ids: MAP_MIRAGE_DUNES, MAP_MIRAGE_OASIS, MAP_MIRAGE_OASIS_INN,
+  MAP_MIRAGE_OASIS_SUNKEN_COURT. Done flag FLAG_MIRAGE_SPRING_DONE.
+
 ## How the maps are made
 
 - `tools/areas/tiles.py` renders any tileset or layout to PNG.

@@ -1722,6 +1722,10 @@
     {
       "id": "MAPSEC_PRISM_CAVERNS",
       "name": "PRISM CAVERNS"
+    },
+    {
+      "id": "MAPSEC_MIRAGE_OASIS",
+      "name": "MIRAGE OASIS"
     }
   ]
 }

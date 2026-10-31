@@ -40106,6 +40106,144 @@
               }
             ]
           }
+        },
+        {
+          "map": "MAP_MIRAGE_DUNES",
+          "base_label": "gMirageDunes",
+          "land_mons": {
+            "encounter_rate": 12,
+            "mons": [
+              {
+                "min_level": 46,
+                "max_level": 48,
+                "species": "SPECIES_KROKOROK"
+              },
+              {
+                "min_level": 46,
+                "max_level": 48,
+                "species": "SPECIES_SANDSLASH"
+              },
+              {
+                "min_level": 46,
+                "max_level": 48,
+                "species": "SPECIES_CACTURNE"
+              },
+              {
+                "min_level": 46,
+                "max_level": 48,
+                "species": "SPECIES_VIBRAVA"
+              },
+              {
+                "min_level": 47,
+                "max_level": 48,
+                "species": "SPECIES_MARACTUS"
+              },
+              {
+                "min_level": 47,
+                "max_level": 48,
+                "species": "SPECIES_DUGTRIO"
+              },
+              {
+                "min_level": 47,
+                "max_level": 49,
+                "species": "SPECIES_HIPPOWDON"
+              },
+              {
+                "min_level": 47,
+                "max_level": 49,
+                "species": "SPECIES_SANDACONDA"
+              },
+              {
+                "min_level": 48,
+                "max_level": 49,
+                "species": "SPECIES_CRUSTLE"
+              },
+              {
+                "min_level": 48,
+                "max_level": 50,
+                "species": "SPECIES_SIGILYPH"
+              },
+              {
+                "min_level": 49,
+                "max_level": 50,
+                "species": "SPECIES_KROOKODILE"
+              },
+              {
+                "min_level": 49,
+                "max_level": 50,
+                "species": "SPECIES_FLYGON"
+              }
+            ]
+          }
+        },
+        {
+          "map": "MAP_MIRAGE_OASIS_SUNKEN_COURT",
+          "base_label": "gMirageOasisSunkenCourt",
+          "land_mons": {
+            "encounter_rate": 8,
+            "mons": [
+              {
+                "min_level": 47,
+                "max_level": 49,
+                "species": "SPECIES_COFAGRIGUS"
+              },
+              {
+                "min_level": 47,
+                "max_level": 49,
+                "species": "SPECIES_SIGILYPH"
+              },
+              {
+                "min_level": 47,
+                "max_level": 49,
+                "species": "SPECIES_CLAYDOL"
+              },
+              {
+                "min_level": 46,
+                "max_level": 48,
+                "species": "SPECIES_KROKOROK"
+              },
+              {
+                "min_level": 46,
+                "max_level": 48,
+                "species": "SPECIES_SANDSLASH"
+              },
+              {
+                "min_level": 47,
+                "max_level": 49,
+                "species": "SPECIES_CRUSTLE"
+              },
+              {
+                "min_level": 48,
+                "max_level": 49,
+                "species": "SPECIES_BRONZONG"
+              },
+              {
+                "min_level": 48,
+                "max_level": 49,
+                "species": "SPECIES_DUSCLOPS"
+              },
+              {
+                "min_level": 48,
+                "max_level": 50,
+                "species": "SPECIES_GOLURK"
+              },
+              {
+                "min_level": 48,
+                "max_level": 50,
+                "species": "SPECIES_RUNERIGUS"
+              },
+              {
+                "min_level": 49,
+                "max_level": 50,
+                "species": "SPECIES_HIPPOWDON"
+              },
+              {
+                "min_level": 49,
+                "max_level": 50,
+                "species": "SPECIES_KROOKODILE"
+              }
+            ]
+          }
         }
       ]
     },

@@ -72,7 +72,7 @@ def _u16s(path):
     return list(struct.unpack(f'<{os.path.getsize(path) // 2}H', open(path, 'rb').read()))
 
 
-def pack(src, out, objects, palettes, ground, table_path, fill_free=False):
+def pack(src, out, objects, palettes, ground, table_path, fill_free=False, keep=None):
     """Copies the secondary tileset in src to out and adds the drawn objects.
 
     objects: {name: (draw, palette, options)}, where draw() returns a Canvas
@@ -84,6 +84,9 @@ def pack(src, out, objects, palettes, ground, table_path, fill_free=False):
     (an object's options can name its own, e.g. water under a ship).
     fill_free: put new tiles in slots no metatile uses (for full tilesets
     whose animations need every tile to stay where it is) before appending.
+    keep: for a tileset that is already full, the metatile ids to keep (the
+    ones the new maps use); every other metatile and the tiles only they
+    used are cleared, and the new art goes into their slots.
     Writes table_path: object name -> rows of metatile ids (-1 where the
     object is see-through) and the blocks you can walk on.
     """
@@ -100,7 +103,17 @@ def pack(src, out, objects, palettes, ground, table_path, fill_free=False):
     n_base = len(tiles)
     meta = _u16s(f'{src}/metatiles.bin')
     attrs = _u16s(f'{src}/metatile_attributes.bin')
+    free_mt = []
+    if keep is not None:
+        free_mt = [i for i in range(len(attrs)) if NUM_PRIMARY + i not in keep]
+        for i in free_mt:
+            meta[i * 8:i * 8 + 8] = [0] * 8
+            attrs[i] = 0
     used = {(v & 0x3FF) - NUM_PRIMARY for v in meta if (v & 0x3FF) >= NUM_PRIMARY}
+    if keep is not None:
+        for i in range(1, n_base):
+            if i not in used:
+                tiles[i][:] = 0
     free = [i for i in range(1, n_base) if i not in used and not tiles[i].any()] if fill_free else []
     lookup = {}
     added = 0
@@ -154,13 +167,20 @@ def pack(src, out, objects, palettes, ground, table_path, fill_free=False):
                         continue
                     i, hf, vf = add_tile(t)
                     top.append((NUM_PRIMARY + i) | hf << 10 | vf << 11 | pal << 12)
-                meta += ground_bottom + top
                 r, c = by // 16, bx // 16
                 beh = MB_COUNTER if counter(r, c) else MB_NON_ANIMATED_DOOR if door(r, c) else int(other(r, c))
-                attrs.append((LAYER_NORMAL if over(r, c) else LAYER_COVERED) << 12 | beh)
+                entry = (LAYER_NORMAL if over(r, c) else LAYER_COVERED) << 12 | beh
+                if free_mt:
+                    slot = free_mt.pop(0)
+                    meta[slot * 8:slot * 8 + 8] = ground_bottom + top
+                    attrs[slot] = entry
+                else:
+                    slot = len(attrs)
+                    meta += ground_bottom + top
+                    attrs.append(entry)
                 if can_walk(r, c) or door(r, c) or other(r, c):
                     walk[name].append([r, c])
-                row.append(NUM_PRIMARY + len(attrs) - 1)
+                row.append(NUM_PRIMARY + slot)
             rows.append(row)
         table[name] = rows
     assert len(tiles) <= 512, f'{len(tiles)} tiles'
