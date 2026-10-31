@@ -123,7 +123,12 @@ class RoverTest(unittest.IsolatedAsyncioTestCase):
         owls = [r for r in moved if r.id % rovers.NIGHT_OWL == 0]
         self.assertEqual(len(moved), len(owls))  # only night owls on the move
         self.assertTrue(owls)
-        self.assertFalse(rovers.is_night(0))
+        # Without the day/night code it is never night.
+        old, rovers.world = rovers.world, None
+        try:
+            self.assertFalse(rovers.is_night(0))
+        finally:
+            rovers.world = old
 
     async def test_rivals_and_friends(self):
         a = await self.connect("Ash", 1)
