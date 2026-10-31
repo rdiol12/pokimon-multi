@@ -359,3 +359,33 @@ routes are Pokémon from space (Clefairy, Minior, Beldum, Elgyem, Solrock,
 Lunatone). **R > PASTIMES > STAR MAP** lists the constellations found, the
 next shower and the meteorites found. Screenshots:
 `tools/pastime_shots/stars.lua`.
+
+## Carnival games
+
+![Carnival games](images/pastime-carnival.png)
+
+Four games at the Sunfair Carnival (the map comes from the areas work,
+`tools/areas/carnival.py`; its hosts' scripts in
+`data/scripts/areas/carnival_games.inc` go to `Pastime_EventScript_<game>`).
+Bowling, golf and soccer play on the timing meter, now with
+`TimingMeter_GetLastOffset` (how far from the middle of the zone the needle
+stopped), and draw the lane, green or goal in a small window as the game
+goes.
+
+- **Bowling** (host at 9,13): five frames, two balls each. Dead centre is a
+  strike, in the zone 7 to 9 pins, near it 4 to 6. Strikes add 10, spares 5.
+  80 or more wins a Muscle Band once, 50 or more a Protein.
+- **Mini golf** (39,26): three holes of 120, 160 and 200 yards, par 3. A
+  perfect shot from 130 yards or closer is a hole in one; putts from 8
+  yards. Missing the meter on the third hole lands in the pond (a penalty
+  stroke). Under par wins a Scope Lens once, par an Iron.
+- **Soccer shootout** (12,26): five kicks each. Pick LEFT, MIDDLE or RIGHT
+  and stop the needle; a perfect shot beats any keeper. Then dive to save.
+  A win gives a Quick Claw once, a draw a Carbos.
+- **Ferris wheel** (29,12): ¥100 a ride. The camera rises over the wheel;
+  from the top you spot one of the carnival's hidden items (and the lights
+  at night).
+
+**R > PASTIMES > CARNIVAL** shows the best scores, wins and rides.
+Screenshots: `tools/pastime_shots/carnival.lua` (this branch's R menu has
+the extra BOND, JOBS and ALBUM rows, so it sets `Driver.PASTIMES_ROW`).

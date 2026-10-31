@@ -134,6 +134,15 @@ s32 TimingMeter_GetResult(void)
     return sMeter.result;
 }
 
+// After the last round: how many pixels from the middle of the zone the
+// needle stopped (-1 if the round ran out without A).
+s32 TimingMeter_GetLastOffset(void)
+{
+    if (sMeter.passes >= PASSES_PER_ROUND)
+        return -1;
+    return abs(sMeter.needle - (sMeter.zoneX + sMeter.zoneTiles * 4));
+}
+
 static void DestroyMeter(void)
 {
     u32 i;

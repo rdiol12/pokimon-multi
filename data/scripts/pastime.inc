@@ -17,3 +17,4 @@
 	.include "data/scripts/pastime/garden.inc"
 	.include "data/scripts/pastime/weather.inc"
 	.include "data/scripts/pastime/stars.inc"
+	.include "data/scripts/pastime/carnival.inc"
