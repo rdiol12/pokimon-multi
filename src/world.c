@@ -8,6 +8,7 @@
 #include "field_screen_effect.h"
 #include "script.h"
 #include "main.h"
+#include "mechanics.h"
 #include "overworld.h"
 #include "pokemon.h"
 #include "rtc.h"
@@ -121,13 +122,14 @@ bool32 World_OverworldUpdate(void)
     WorldOnline_Update();
     Achievements_Update();
     Adventure_Update();
+    Mechanics_Update();
     return Hardcore_Update();
 }
 
 // A pressed facing (x, y), map coordinates with MAP_OFFSET.
 bool32 World_TryInteract(s16 x, s16 y)
 {
-    return Legends_TryInteract(x, y) || House_TryInteract(x, y);
+    return Legends_TryInteract(x, y) || House_TryInteract(x, y) || Mechanics_TryInteract(x, y);
 }
 
 bool32 World_TryOpenMenu(void)
