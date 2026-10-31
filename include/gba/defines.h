@@ -10,6 +10,10 @@
 #define EWRAM_DATA __attribute__((section(".sbss")))
 #define IWRAM_INIT __attribute__((section(".iwram")))
 #define EWRAM_INIT __attribute__((section(".ewram")))
+// Zero-initialised data in the 16 MiB extended EWRAM of our emulator fork (emulator/README.md).
+// Never use it for anything the netplay bridge scans for (mailboxes): those stay in EWRAM_DATA,
+// inside the first 256 KiB, where the bridge and the phone app look.
+#define EWRAM_EXT_DATA __attribute__((section(".pkx_ewram")))
 #define COMMON_DATA __attribute__((section("common_data")))
 #define UNUSED __attribute__((unused))
 #define USED __attribute__((used))
@@ -39,6 +43,16 @@
 
 #define EWRAM_START 0x02000000
 #define EWRAM_END   (EWRAM_START + 0x40000)
+#define EWRAM_EXT_START EWRAM_END
+#define EWRAM_EXT_END   (EWRAM_START + 0x1000000)
+
+// Pokimon extended hardware registers (emulator/README.md)
+#define REG_ADDR_PKX_ID      0x04FFF7F0
+#define REG_ADDR_PKX_VERSION 0x04FFF7F2
+#define REG_ADDR_PKX_CONTROL 0x04FFF7F4
+#define PKX_ID               0x504B
+#define PKX_UNLOCK_EWRAM     0x4558
+#define PKX_CONTROL_EWRAM    0x0001
 #define IWRAM_START 0x03000000
 #define IWRAM_END   (IWRAM_START + 0x8000)
 

@@ -37,7 +37,12 @@ env:
   DEPRECATED_ERROR: 0
 
 jobs:
+  # Our mGBA fork (emulator/README.md): the game needs its extended hardware.
+  emulator:
+    uses: ./.github/workflows/emulator.yml
+
   build-emerald:
+    needs: emulator
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -102,6 +107,13 @@ jobs:
           make -C ../pokeemerald -j$(nproc)
           echo "f3ae088181bf583e55daf962a92bb46f4f1d07b7  ../pokeemerald/pokeemerald.gba" | sha1sum -c -
 
+      - name: Emulator downloads
+        uses: actions/download-artifact@v4
+        with:
+          pattern: emulator-*
+          path: emulator
+          merge-multiple: true
+
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -114,8 +126,11 @@ jobs:
           cat > release/notes.md <<EOF
           1. Patch your own Pokémon Emerald (USA) ROM with \`pokimon-multi-$VERSION.bps\`,
              for example on https://www.marcrobledo.com/RomPatcher.js/ or with Flips.
-          2. Open the patched ROM in mGBA 0.10 or newer.
-          3. Tools > Scripting... > File > Load script, and pick \`netplay_bridge.lua\`.
+          2. Download the Pokimon emulator for your computer (\`pokimon-emulator-windows.zip\`,
+             \`-macos.zip\` or \`-linux.tar.gz\`) and unpack it. The game needs this emulator:
+             it gives the game 16 MB of RAM, and stock mGBA only shows a red screen.
+          3. Start it with \`Pokimon Multi.bat\` (Windows), \`Pokimon Multi.command\` (macOS)
+             or \`pokimon-multi.sh\` (Linux), which loads the online bridge, then open the patched ROM.
           4. Pick JOIN ONLINE on the title menu.
 
           Server: ${SERVER:-as set in include/config/netplay.h}
@@ -127,7 +142,7 @@ jobs:
           pick your own Emerald ROM in the app. Online play works in the app; no
           script to load. See mobile/README.md.
           EOF
-          gh release create "$VERSION" release/*.bps release/netplay_bridge.lua \
+          gh release create "$VERSION" release/*.bps release/netplay_bridge.lua emulator/pokimon-emulator-* \
             --target "$GITHUB_SHA" --title "Pokimon Multi $VERSION" --notes-file release/notes.md
 
       - name: Keep the patch for the phone apps
@@ -162,10 +177,15 @@ jobs:
         with:
           name: patch
           path: patch
+      - uses: actions/download-artifact@v4
+        with:
+          name: emulator-wasm
+          path: emulator-wasm
       - name: Web app
         env:
           POKIMON_VERSION: ${{ inputs.version }}
         run: |
+          export MGBA_WASM_DIR="$PWD/emulator-wasm"
           cd mobile
           npm ci
           node scripts/assemble.mjs ../patch/*.bps
@@ -206,10 +226,15 @@ jobs:
         with:
           name: patch
           path: patch
+      - uses: actions/download-artifact@v4
+        with:
+          name: emulator-wasm
+          path: emulator-wasm
       - name: Web app
         env:
           POKIMON_VERSION: ${{ inputs.version }}
         run: |
+          export MGBA_WASM_DIR="$PWD/emulator-wasm"
           cd mobile
           npm ci
           node scripts/assemble.mjs ../patch/*.bps

@@ -91,8 +91,22 @@ void EnableVCountIntrAtLine150(void);
 
 #define B_START_SELECT (B_BUTTON | START_BUTTON | SELECT_BUTTON)
 
+// The game keeps data in the 16 MiB extended EWRAM of our emulator fork (emulator/README.md).
+// On a real GBA or a stock emulator those addresses mirror the first 256 KiB, so running on would
+// corrupt memory. Stop on a red screen instead.
+static void CheckExtendedHardware(void)
+{
+    if (*(vu16 *)REG_ADDR_PKX_ID == PKX_ID && (*(vu16 *)REG_ADDR_PKX_CONTROL & PKX_CONTROL_EWRAM))
+        return;
+    *(vu16 *)BG_PLTT = RGB_RED;
+    REG_DISPCNT = 0;
+    for (;;)
+        ;
+}
+
 void AgbMain(void)
 {
+    CheckExtendedHardware();
     *(vu16 *)BG_PLTT = RGB_WHITE; // Set the backdrop to white on startup
     InitGpuRegManager();
     REG_WAITCNT = WAITCNT_PREFETCH_ENABLE

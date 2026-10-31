@@ -18,6 +18,27 @@ import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
+
+
+def mgba_flags():
+    """Link the harness against our mGBA fork (emulator/build.sh headless): the game needs its
+    extended EWRAM and stops on a red screen under a stock libmgba. MGBA_DIR overrides the
+    location; MGBA_DIR=system uses the system libmgba-dev."""
+    base = os.environ.get("MGBA_DIR", os.path.join(ROOT, "build", "emulator"))
+    if base == "system":
+        return ["-lmgba"]
+    lib = os.path.join(base, "headless")
+    if not os.path.exists(os.path.join(lib, "libmgba.so")):
+        sys.exit(f"no mGBA fork in {base}: run emulator/build.sh headless first")
+    # struct mCore changes shape with the feature defines, so use exactly the ones libmgba was built with
+    defines = []
+    with open(os.path.join(lib, "CMakeFiles", "mgba.dir", "flags.make")) as f:
+        for line in f:
+            if line.startswith("C_DEFINES"):
+                defines = [d for d in line.split("=", 1)[1].split() if d.startswith("-D") and "MGBA_DLL" not in d]
+                break
+    return defines + ["-I", os.path.join(base, "src", "include"), "-I", os.path.join(lib, "include"),
+                      "-L", lib, "-Wl,-rpath," + lib, "-lmgba"]
 SYMBOLS = ["gNetplayMailbox", "gMain", "gParties", "CB2_Overworld", "BattleMainCB2",
            "gLink", "gLinkStatus", "gReceivedRemoteLinkPlayers", "gLinkCallback",
            "gReadyToCloseLink", "gPartiesCount", "gSaveBlock1Ptr", "gSaveBlock2Ptr",
@@ -87,7 +108,7 @@ def main():
     os.makedirs(out)
 
     harness = os.path.join(out, "harness")
-    subprocess.check_call(["gcc", "-O1", "-o", harness, os.path.join(HERE, "harness.c"), "-lmgba"])
+    subprocess.check_call(["gcc", "-O1", "-o", harness, os.path.join(HERE, "harness.c")] + mgba_flags())
 
     syms = read_symbols(os.path.join(ROOT, "pokeemerald.map"))
     with open(os.path.join(out, "symbols.lua"), "w") as f:

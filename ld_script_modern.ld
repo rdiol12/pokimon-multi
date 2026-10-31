@@ -7,6 +7,7 @@ gInitialMainCB2 = CB2_InitCopyrightScreenAfterBootup;
 MEMORY
 {
     EWRAM (rwx) : ORIGIN = 0x2000000, LENGTH = 256K
+    EWRAM_EXT (rwx) : ORIGIN = 0x2040000, LENGTH = 16M - 256K
     IWRAM (rwx) : ORIGIN = 0x3000000, LENGTH = 32K
     ROM    (rx) : ORIGIN = 0x8000000, LENGTH = 32M
 }
@@ -28,6 +29,18 @@ SECTIONS {
     {
         *.o(.sbss);
     } > EWRAM
+
+    /* Extended EWRAM: only exists on our own emulator fork (emulator/README.md).
+       Zeroed by the RegisterRamReset in crt0, never loaded from ROM.
+       Its input section must not start with ".ewram", or .ewram above takes it. */
+    .ewram_ext (NOLOAD) :
+    ALIGN(4)
+    {
+        __ewram_ext_start = .;
+        *.o(.pkx_ewram);
+        . = ALIGN(4);
+        __ewram_ext_end = .;
+    } > EWRAM_EXT
 
     .iwram ORIGIN(IWRAM) : AT (__iwram_lma)
     ALIGN(4)
