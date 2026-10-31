@@ -137,3 +137,20 @@ def abyss():
         st.secondary = 'gTileset_Abyss'
         _cache['abyss'] = st
     return _cache['abyss']
+
+
+MINE_LADDER_DOWN, MINE_LADDER_UP = 0x23F, 0x23E
+
+
+def mine():
+    """Granite Cave's brown rock: tunnels and caverns, drawn with
+    gTileset_Mine (the same tiles plus the rails, carts and timber of
+    tools/areas/mine_art.py)."""
+    if 'mine' not in _cache:
+        st = Style('gTileset_General', 'gTileset_Cave',
+                   ['LAYOUT_GRANITE_CAVE_1F', 'LAYOUT_GRANITE_CAVE_B1F', 'LAYOUT_GRANITE_CAVE_B2F'])
+        st.min_count = 1
+        st.secondary = 'gTileset_Mine'
+        st.exclude = {0x23F, 0x23E, 0x23D, 0x23C, 0x207, 0x22F, 0x0E8, 0x209, 0x252, 0x246, 0x23B, 0x23A, 0x242}
+        _cache['mine'] = st
+    return _cache['mine']

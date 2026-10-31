@@ -420,3 +420,6 @@ const u16 gMetatileAttributes_HallOfFame[] = INCBIN_U16("data/tilesets/secondary
 
 const u16 gMetatiles_Amberwood[] = INCBIN_U16("data/tilesets/secondary/amberwood/metatiles.bin");
 const u16 gMetatileAttributes_Amberwood[] = INCBIN_U16("data/tilesets/secondary/amberwood/metatile_attributes.bin");
+
+const u16 gMetatiles_Mine[] = INCBIN_U16("data/tilesets/secondary/mine/metatiles.bin");
+const u16 gMetatileAttributes_Mine[] = INCBIN_U16("data/tilesets/secondary/mine/metatile_attributes.bin");

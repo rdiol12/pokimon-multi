@@ -163,7 +163,13 @@
     "CorallineReef_Wreck",
     "GullwingPoint_PirateHold",
     "WhisperstemValley",
-    "WhisperstemValley_Teahouse"
+    "WhisperstemValley_Teahouse",
+    "Cobblerock",
+    "CobblerockMine_1F",
+    "CobblerockMine_B1F",
+    "CobblerockMine_OldShaft",
+    "Cobblerock_AssayOffice",
+    "Cobblerock_MinersRest"
   ],
   "gMapGroup_IndoorLittleroot": [
     "LittlerootTown_BrendansHouse_1F",
