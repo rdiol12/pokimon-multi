@@ -85,12 +85,33 @@ Frontier sets. Cups won are marked WON (`gSaveBlock3Ptr->mechanics.cupsWon`).
 **Online PvP.** `Mechanics_ApplyLevelCap(level)` caps the party for a
 battle and `Mechanics_RestoreParty()` puts it back.
 
+## Rare color variants
+
+![Zigzagoon, Altaria and Gardevoir in normal, AURORA, DUSK and MIDNIGHT colors, and a DUSK Gardevoir of your own](images/mechanics-color-variants.png)
+
+About 1 Pokémon in 340 has rare colors, separate from (and rarer to stack
+with) being shiny (`src/mechanics_colors.c`):
+
+| Variant | Look |
+| --- | --- |
+| AURORA | hues turned a third of the way round |
+| DUSK | warm sepia gold |
+| MIDNIGHT | hues turned the other way, darker |
+
+The variant comes from the personality value, so it never changes, is kept
+through trades and needs no save data. `GetMonSpritePalFromSpeciesAndPersonality`
+(src/pokemon.c) returns the shifted palette, so it shows in battle (front
+and back), the summary screen, the PC, evolution, hatching and contests. A
+wild one is announced: "Its colors are unusual…". Overworld followers and
+party icons keep their normal colors (they don't know the personality).
+
 ## Screenshots
 
 ```sh
 python3 tools/mechanics_shots/run.py tools/mechanics_shots/move_tutor.lua out/
 python3 tools/mechanics_shots/run.py tools/mechanics_shots/rules.lua out/ 120000
 python3 tools/mechanics_shots/run.py tools/mechanics_shots/cups.lua out/ 300000
+python3 tools/mechanics_shots/run.py tools/mechanics_shots/colors.lua out/
 ```
 
 The runner is `tools/world_shots/run.py` plus `Driver.fastText()` and

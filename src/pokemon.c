@@ -1,6 +1,7 @@
 #include "global.h"
 #include "world.h"
 #include "malloc.h"
+#include "mechanics.h"
 #include "apprentice.h"
 #include "battle.h"
 #include "battle_ai_util.h"
@@ -5218,12 +5219,14 @@ const u16 *GetMonFrontSpritePal(struct Pokemon *mon)
 
 const u16 *GetMonSpritePalFromSpeciesAndPersonality(enum Species species, bool32 isShiny, u32 personality)
 {
-    return GetMonSpritePalFromSpeciesIsEgg(species, isShiny, IsPersonalityFemale(species, personality), FALSE);
+    return Mechanics_ApplyColorVariant(GetMonSpritePalFromSpeciesIsEgg(species, isShiny, IsPersonalityFemale(species, personality), FALSE), personality);
 }
 
 const u16 *GetMonSpritePalFromSpeciesAndPersonalityIsEgg(enum Species species, bool32 isShiny, u32 personality, bool32 isEgg)
 {
-    return GetMonSpritePalFromSpeciesIsEgg(species, isShiny, IsPersonalityFemale(species, personality), isEgg);
+    const u16 *palette = GetMonSpritePalFromSpeciesIsEgg(species, isShiny, IsPersonalityFemale(species, personality), isEgg);
+
+    return isEgg ? palette : Mechanics_ApplyColorVariant(palette, personality);
 }
 
 const u16 *GetMonSpritePalFromSpecies(enum Species species, bool32 isShiny, bool32 isFemale)

@@ -32,4 +32,9 @@ void Mechanics_PrepareOpponentMon(struct Pokemon *mon);
 void Mechanics_ApplyLevelCap(u8 level);
 void Mechanics_RestoreParty(void);
 
+// Rare color variants (src/mechanics_colors.c).
+u8 Mechanics_GetColorVariant(u32 personality);
+const u8 *Mechanics_GetColorVariantName(u8 variant);
+const u16 *Mechanics_ApplyColorVariant(const u16 *palette, u32 personality);
+
 #endif // GUARD_MECHANICS_H

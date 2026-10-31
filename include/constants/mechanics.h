@@ -27,6 +27,13 @@
 #define CUP_PRIME  2 // level 50
 #define CUP_COUNT  3
 
+// Rare color variants (src/mechanics_colors.c).
+#define COLOR_NORMAL        0
+#define COLOR_AURORA        1
+#define COLOR_DUSK          2
+#define COLOR_MIDNIGHT      3
+#define COLOR_VARIANT_COUNT 3
+
 // Flags (FLAG_UNUSED_0x881-0x887 and 0x8E5-0x8EF belong to the mechanics).
 #define FLAG_MECH_MET_TUTOR    FLAG_UNUSED_0x881
 #define FLAG_MECH_RULE_INVERSE FLAG_UNUSED_0x882 // B_FLAG_INVERSE_BATTLE

@@ -1,10 +1,12 @@
 #include "global.h"
+#include "battle_setup.h"
 #include "event_data.h"
 #include "event_object_movement.h"
 #include "field_player_avatar.h"
 #include "fieldmap.h"
 #include "mechanics.h"
 #include "pokemon.h"
+#include "random.h"
 #include "script.h"
 #include "constants/event_object_movement.h"
 #include "constants/event_objects.h"
@@ -66,6 +68,10 @@ struct MechanicsShowcase
     u8 pending;
     u8 fixMoves; // give party Pokémon without moves their level-up moves
     u16 moves[MAX_MON_MOVES]; // if set, the lead's moves
+    u16 species;  // if set, a Pokémon of this species...
+    u8 level;
+    u8 variant;   // ...with this COLOR_* variant...
+    u8 wild;      // ...given as the lead (0) or met in a wild battle (1)
 };
 
 EWRAM_DATA struct MechanicsShowcase gMechanicsShowcase = {0};
@@ -83,6 +89,28 @@ static void RunShowcase(void)
     for (i = 0; gMechanicsShowcase.moves[0] && i < MAX_MON_MOVES; i++)
         SetMonMoveSlot(&gParties[B_TRAINER_PLAYER][0], gMechanicsShowcase.moves[i], i);
     gMechanicsShowcase.moves[0] = MOVE_NONE;
+    if (gMechanicsShowcase.species != SPECIES_NONE)
+    {
+        struct Pokemon *mon = gMechanicsShowcase.wild ? &gParties[B_TRAINER_OPPONENT_A][0] : &gParties[B_TRAINER_PLAYER][0];
+        u32 personality;
+
+        do
+            personality = Random32();
+        while (Mechanics_GetColorVariant(personality) != gMechanicsShowcase.variant);
+        if (gMechanicsShowcase.wild)
+        {
+            ZeroEnemyPartyMons();
+        }
+        else if (gPartiesCount[B_TRAINER_PLAYER] < PARTY_SIZE)
+        {
+            memmove(&gParties[B_TRAINER_PLAYER][1], &gParties[B_TRAINER_PLAYER][0], sizeof(struct Pokemon) * (PARTY_SIZE - 1));
+        }
+        CreateMonWithIVsPersonality(mon, gMechanicsShowcase.species, gMechanicsShowcase.level, Random32() & 0x3FFFFFFF, personality);
+        CalculatePlayerPartyCount();
+        gMechanicsShowcase.species = SPECIES_NONE;
+        if (gMechanicsShowcase.wild)
+            BattleSetup_StartWildBattle();
+    }
 }
 
 static bool32 IsShown(u32 i)
