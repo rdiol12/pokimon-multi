@@ -6,3 +6,6 @@ android/app/build/
 android/local.properties
 ios/build/
 ios/*.xcodeproj
+
+# The phone app is JavaScript
+!www/*.js
