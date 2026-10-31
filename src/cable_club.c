@@ -35,6 +35,7 @@
 #include "constants/songs.h"
 #include "constants/trainers.h"
 #include "netplay.h"
+#include "netplay_ext.h"
 
 static const struct WindowTemplate sWindowTemplate_LinkPlayerCount = {
     .bg = 0,
@@ -1013,6 +1014,7 @@ void CB2_ReturnFromCableClubBattle(void)
         }
     }
 
+    NetplayExt_OnLinkBattleEnd(gBattleOutcome);
     Netplay_OnBattleEnd(gBattleOutcome);
 
     if (InUnionRoom() == TRUE || Netplay_InSession())

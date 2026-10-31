@@ -56,6 +56,7 @@
 #include "test_runner.h"
 #include "text.h"
 #include "trainer.h"
+#include "trainer_level.h"
 #include "trainer_hill.h"
 #include "util.h"
 #include "constants/abilities.h"
@@ -895,6 +896,7 @@ bool32 ComputePlayerShinyOdds(u32 personality, u32 value)
         totalRerolls += CalculateDexNavShinyRolls();
 
     totalRerolls += ShinyChain_ExtraRolls();
+    totalRerolls += TrainerLevel_ShinyRolls();
 
     while (GET_SHINY_VALUE(value, personality) >= SHINY_ODDS && totalRerolls > 0)
     {

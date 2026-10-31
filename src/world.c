@@ -1,4 +1,5 @@
 #include "global.h"
+#include "adventure.h"
 #include "achievements.h"
 #include "battle.h"
 #include "berry.h"
@@ -119,6 +120,7 @@ bool32 World_OverworldUpdate(void)
     House_Update();
     WorldOnline_Update();
     Achievements_Update();
+    Adventure_Update();
     return Hardcore_Update();
 }
 
@@ -149,6 +151,7 @@ void World_OnWildBattleEnd(void)
     {
         Achievements_OnCatch(gBattleResults.caughtMonSpecies, gBattleResults.shinyWildMon);
         WorldOnline_OnCatch();
+        Adventure_OnCatch();
     }
     ShinyChain_OnWildBattleEnd();
     Records_OnWildBattleEnd();
@@ -157,6 +160,7 @@ void World_OnWildBattleEnd(void)
 
 void World_OnTrainerBattleEnd(void)
 {
+    Adventure_OnTrainerBattleEnd();
     Hardcore_OnBattleEnd(FALSE);
 }
 

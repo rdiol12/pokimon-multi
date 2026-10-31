@@ -293,6 +293,10 @@ static inline const struct Trainer *GetTrainerStructFromId(u16 trainerId)
     }
     else
     {
+        // Secret base, link and Union Room opponents aren't in gTrainers;
+        // callers that don't check for them get the blank trainer.
+        if (IsSpecialTrainer(trainerId))
+            trainerId = TRAINER_NONE;
         difficulty = GetTrainerDifficultyLevel(trainerId);
         return &gTrainers[difficulty][SanitizeTrainerId(trainerId)];
     }

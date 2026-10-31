@@ -25,6 +25,7 @@
 #include "sprite.h"
 #include "strings.h"
 #include "task.h"
+#include "trainer_level.h"
 #include "tv.h"
 #include "wild_encounter.h"
 #include "constants/abilities.h"
@@ -1627,12 +1628,20 @@ u16 GetRSAvatarGraphicsIdByGender(enum Gender gender)
     return sRSAvatarGfxIds[gender];
 }
 
+// The style's graphics, or its trainer-level outfit's (src/trainer_level.c).
+static const u16 *GetStyleGfxIds(enum PlayerStyle style)
+{
+    const u16 *outfit = TrainerLevel_GetOutfitGfxIds(style);
+
+    return outfit != NULL ? outfit : sPlayerStyleAvatarGfxIds[style];
+}
+
 u16 GetPlayerAvatarGraphicsIdByStateId(u8 state)
 {
     // Riding a Pokémon is the Mach Bike underneath, drawn on foot.
     if (Mount_IsRiding() && (state == PLAYER_AVATAR_STATE_MACH_BIKE || state == PLAYER_AVATAR_STATE_ACRO_BIKE))
         state = PLAYER_AVATAR_STATE_NORMAL;
-    return sPlayerStyleAvatarGfxIds[GetPlayerStyle()][state];
+    return GetStyleGfxIds(GetPlayerStyle())[state];
 }
 
 // Whether graphicsId is any style's surfing or diving sprite.
@@ -1646,7 +1655,7 @@ bool32 IsPlayerSurfingGraphicsId(u16 graphicsId)
          || sPlayerStyleAvatarGfxIds[style][PLAYER_AVATAR_STATE_UNDERWATER] == graphicsId)
             return TRUE;
     }
-    return FALSE;
+    return TrainerLevel_IsOutfitSurfingGfx(graphicsId);
 }
 
 enum PlayerStyle GetPlayerStyle(void)
@@ -1691,6 +1700,8 @@ void ApplyPlayerStyleToAvatar(void)
 
 enum Gender GetPlayerAvatarGenderByGraphicsId(u16 gfxId)
 {
+    if (gfxId >= OBJ_EVENT_GFX_OUTFIT_FIRST && gfxId <= OBJ_EVENT_GFX_OUTFIT_LAST)
+        return TrainerLevel_GetOutfitGfxGender(gfxId);
     switch (gfxId)
     {
     case OBJ_EVENT_GFX_MAY_NORMAL:
@@ -1772,7 +1783,7 @@ static u8 GetPlayerAvatarStateTransitionByGraphicsId(u16 graphicsId, u8 gender)
 
     for (i = 0; i < ARRAY_COUNT(sPlayerAvatarStateFlags); i++)
     {
-        if (sPlayerStyleAvatarGfxIds[style][sPlayerAvatarStateFlags[i].state] == graphicsId)
+        if (GetStyleGfxIds(style)[sPlayerAvatarStateFlags[i].state] == graphicsId)
             return sPlayerAvatarStateFlags[i].playerFlag;
     }
     return PLAYER_AVATAR_FLAG_ON_FOOT;
@@ -1787,7 +1798,7 @@ u16 GetPlayerAvatarGraphicsIdByCurrentState(void)
     for (i = 0; i < ARRAY_COUNT(sPlayerAvatarStateFlags); i++)
     {
         if (sPlayerAvatarStateFlags[i].playerFlag & flags)
-            return sPlayerStyleAvatarGfxIds[style][sPlayerAvatarStateFlags[i].state];
+            return GetStyleGfxIds(style)[sPlayerAvatarStateFlags[i].state];
     }
     return 0;
 }

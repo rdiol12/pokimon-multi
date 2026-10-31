@@ -495,6 +495,7 @@ const u8 gInitialMovementTypeFacingDirections[NUM_MOVEMENT_TYPES] = {
 #include "data/object_events/object_event_subsprites.h"
 #include "data/object_events/object_event_graphics_info.h"
 #include "data/object_events/object_event_graphics_info_followers.h"
+#include "data/object_events/outfit_graphics_info.h"
 
 static const struct SpritePalette sObjectEventSpritePalettes[] = {
     {gObjectEventPal_Npc1,                  OBJ_EVENT_PAL_TAG_NPC_1},
@@ -532,6 +533,16 @@ static const struct SpritePalette sObjectEventSpritePalettes[] = {
     {gObjectEventPal_Lugia,                 OBJ_EVENT_PAL_TAG_LUGIA},
     {gObjectEventPal_RubySapphireBrendan,   OBJ_EVENT_PAL_TAG_RS_BRENDAN},
     {gObjectEventPal_RubySapphireMay,       OBJ_EVENT_PAL_TAG_RS_MAY},
+    {gObjectEventPal_OutfitAutumnBrendan,     OBJ_EVENT_PAL_TAG_OUTFIT_AUTUMN_BRENDAN},
+    {gObjectEventPal_OutfitAutumnMay,         OBJ_EVENT_PAL_TAG_OUTFIT_AUTUMN_MAY},
+    {gObjectEventPal_OutfitStarlightBrendan,  OBJ_EVENT_PAL_TAG_OUTFIT_STARLIGHT_BRENDAN},
+    {gObjectEventPal_OutfitStarlightMay,      OBJ_EVENT_PAL_TAG_OUTFIT_STARLIGHT_MAY},
+    {gObjectEventPal_OutfitAceBrendan,        OBJ_EVENT_PAL_TAG_OUTFIT_ACE_BRENDAN},
+    {gObjectEventPal_OutfitAceMay,            OBJ_EVENT_PAL_TAG_OUTFIT_ACE_MAY},
+    {gObjectEventPal_OutfitShadowBrendan,     OBJ_EVENT_PAL_TAG_OUTFIT_SHADOW_BRENDAN},
+    {gObjectEventPal_OutfitShadowMay,         OBJ_EVENT_PAL_TAG_OUTFIT_SHADOW_MAY},
+    {gObjectEventPal_OutfitChampionBrendan,   OBJ_EVENT_PAL_TAG_OUTFIT_CHAMPION_BRENDAN},
+    {gObjectEventPal_OutfitChampionMay,       OBJ_EVENT_PAL_TAG_OUTFIT_CHAMPION_MAY},
 #if IS_FRLG || FRLG_OBJECT_EVENTS
     {gObjectEventPal_PlayerFrlg,            OBJ_EVENT_PAL_TAG_PLAYER_RED},
     {gObjectEventPal_PlayerReflectionFrlg,  OBJ_EVENT_PAL_TAG_PLAYER_RED_REFLECTION},

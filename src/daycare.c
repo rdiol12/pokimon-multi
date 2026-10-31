@@ -16,6 +16,7 @@
 #include "script.h"
 #include "strings.h"
 #include "task.h"
+#include "trainer_level.h"
 #include "window.h"
 #include "party_menu.h"
 #include "list_menu.h"
@@ -1124,6 +1125,8 @@ static u32 GetEggCyclesToSubtract(void)
     u32 result = 1;
     if (DoesPartyHaveIncubatorMon())
         result += 1;
+    if (TrainerLevel_HasPerk(PERK_HATCHING))
+        result *= 2;
     return result;
 }
 

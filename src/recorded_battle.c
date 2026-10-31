@@ -50,7 +50,9 @@ EWRAM_DATA static u8 sBattleScene = 0;
 EWRAM_DATA static u8 sTextSpeed = 0;
 EWRAM_DATA static u32 sBattleFlags = 0;
 EWRAM_DATA static u64 sAI_Scripts[MAX_BATTLERS_COUNT] = {0};
-EWRAM_DATA static struct Pokemon *sSavedParties = NULL;
+// Not on the heap: CB2_InitBattle resets the heap, so a copy made before a
+// recorded battle starts (PlayRecordedBattle) wouldn't survive it.
+EWRAM_DATA static struct Pokemon sSavedParties[MAX_BATTLE_TRAINERS][PARTY_SIZE] = {0};
 EWRAM_DATA static u16 sPlayerMonMoves[MAX_BATTLERS_COUNT / 2][MAX_MON_MOVES] = {0};
 EWRAM_DATA static struct PlayerInfo sPlayers[MAX_LINK_PLAYERS] = {0};
 EWRAM_DATA static bool8 sIsPlaybackFinished = 0;
@@ -67,6 +69,8 @@ static u8 GetNextRecordedDataByte(u8 *, u8 *, u8 *);
 static bool32 CopyRecordedBattleFromSave(struct RecordedBattleSave *);
 static void RecordedBattle_RestoreSavedParties(void);
 static void CB2_RecordedBattle(void);
+static void Task_StartAfterCountdown(u8 taskId);
+static bool32 IsRecordedBattleSaveValid(struct RecordedBattleSave *save);
 
 void RecordedBattle_Init(u8 mode)
 {
@@ -280,7 +284,6 @@ static bool32 RecordedBattleToSave(struct RecordedBattleSave *battleSave, struct
 
 bool32 MoveRecordedBattleToSaveData(void)
 {
-    s32 i, j;
     bool32 ret;
     struct RecordedBattleSave *battleSave, *savSection;
     u8 saveAttempts;
@@ -288,6 +291,60 @@ bool32 MoveRecordedBattleToSaveData(void)
     saveAttempts = 0;
     battleSave = AllocZeroed(sizeof(struct RecordedBattleSave));
     savSection = AllocZeroed(SECTOR_SIZE);
+
+    RecordedBattle_BuildSave(battleSave);
+
+    while (1)
+    {
+        ret = RecordedBattleToSave(battleSave, savSection);
+        if (ret == TRUE)
+            break;
+        saveAttempts++;
+        if (saveAttempts >= 3)
+            break;
+    }
+
+    Free(battleSave);
+    Free(savSection);
+    return ret;
+}
+
+// An online battle's recording, with both parties as they were when the
+// battle began (src/netplay_ext_features.c uploads it as a replay).
+void RecordedBattle_BuildLinkReplay(struct RecordedBattleSave *battleSave)
+{
+    s32 i;
+
+    memset(battleSave, 0, sizeof(*battleSave));
+    RecordedBattle_BuildSave(battleSave);
+    memcpy(battleSave->parties, sSavedParties, sizeof(battleSave->parties));
+    // The battlers are recorded before the link sets them; take them now.
+    battleSave->playersBattlers = 0;
+    for (i = 0; i < MAX_LINK_PLAYERS; i++)
+        battleSave->playersBattlers |= ((gLinkPlayers[i].id & 3) << (2 * (i >> 1) + 4 * (i & BIT_SIDE)));
+    battleSave->checksum = CalcByteArraySum((void *)battleSave, sizeof(*battleSave) - 4);
+}
+
+// Plays back a recording that isn't in the save, such as a downloaded replay.
+bool32 PlayRecordedBattleFromSave(struct RecordedBattleSave *battleSave, void (*CB2_After)(void))
+{
+    u8 taskId;
+
+    if (!IsRecordedBattleSaveValid(battleSave))
+        return FALSE;
+    RecordedBattle_SaveParties();
+    SetVariablesForRecordedBattle(battleSave);
+    taskId = CreateTask(Task_StartAfterCountdown, 1);
+    gTasks[taskId].data[0] = 128;
+    sCallback2_AfterRecordedBattle = CB2_After;
+    PlayMapChosenOrBattleBGM(FALSE);
+    SetMainCallback2(CB2_RecordedBattle);
+    return TRUE;
+}
+
+void RecordedBattle_BuildSave(struct RecordedBattleSave *battleSave)
+{
+    s32 i, j;
 
     memcpy(battleSave->parties, gParties, sizeof(struct Pokemon[MAX_BATTLE_TRAINERS][PARTY_SIZE]));
 
@@ -420,20 +477,6 @@ bool32 MoveRecordedBattleToSaveData(void)
     for (i = 0; i < MAX_BATTLERS_COUNT; i++)
         for (j = 0; j < BATTLER_RECORD_SIZE; j++)
             battleSave->battleRecord[i][j] = sBattleRecords[i][j];
-
-    while (1)
-    {
-        ret = RecordedBattleToSave(battleSave, savSection);
-        if (ret == TRUE)
-            break;
-        saveAttempts++;
-        if (saveAttempts >= 3)
-            break;
-    }
-
-    Free(battleSave);
-    Free(savSection);
-    return ret;
 }
 
 static bool32 TryCopyRecordedBattleSaveData(struct RecordedBattleSave *dst, struct SaveSector *saveBuffer)
@@ -588,16 +631,12 @@ u8 GetRecordedBattleFronterBrainSymbol(void)
 
 void RecordedBattle_SaveParties(void)
 {
-    sSavedParties = AllocZeroed(sizeof(struct Pokemon[MAX_BATTLE_TRAINERS][PARTY_SIZE]));
-
-    memcpy(sSavedParties, gParties, sizeof(struct Pokemon[MAX_BATTLE_TRAINERS][PARTY_SIZE]));
+    memcpy(sSavedParties, gParties, sizeof(sSavedParties));
 }
 
 static void RecordedBattle_RestoreSavedParties(void)
 {
-    memcpy(gParties, sSavedParties, sizeof(struct Pokemon[MAX_BATTLE_TRAINERS][PARTY_SIZE]));
-
-    Free(sSavedParties);
+    memcpy(gParties, sSavedParties, sizeof(sSavedParties));
 }
 
 u8 GetBattlerLinkPlayerGender(enum BattlerId battler)

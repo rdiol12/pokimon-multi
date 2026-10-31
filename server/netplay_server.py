@@ -185,6 +185,8 @@ class Server:
         self.pending = {}
         self._ids = itertools.count(1)
         self._sids = itertools.count(1)
+        # Commands added by other modules (server/ext.py): name -> fn(server, player, *args).
+        self.extra_commands = {}
 
     # --- connection lifecycle -------------------------------------------
 
@@ -298,6 +300,9 @@ class Server:
             raise ValueError("say HELLO first")
         self.seasons.roll_if_due()
         handler = getattr(self, "cmd_" + cmd.lower(), None)
+        if handler is None and cmd in self.extra_commands:
+            extra = self.extra_commands[cmd]
+            handler = lambda player, *args: extra(self, player, *args)  # noqa: E731
         if handler is None or cmd == "HELLO":
             raise ValueError("unknown command")
         try:
@@ -541,6 +546,9 @@ world.install(Server)
 async def serve(host, port, db_path, http_port=0, public_host="", season_days=28):
     server = Server(League(db_path), season_days)
     world.attach(server, db_path)
+    import ext
+
+    ext.install(server)
     srv = await asyncio.start_server(server.handle, host, port)
     log.info("listening on %s", ", ".join(str(s.getsockname()) for s in srv.sockets))
     servers = [srv]
