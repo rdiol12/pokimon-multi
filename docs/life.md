@@ -63,18 +63,48 @@ autumn September to November, winter December to February.
 - The first time the player steps outside in a new season, a notice says
   so ("Winter: Snow is falling in Hoenn!").
 
+## Pokémon jobs
+
+![Sending Geodude on a cave survey, the job list, and picking it up](images/life-jobs.png)
+
+A job agent in the **Mauville Pokémon Center** (left of the counter)
+sends a party Pokémon out on a timed errand (`src/life_jobs.c`). Up to
+three Pokémon can be out at once; while out, they are kept in
+`struct LifeSaveData.jobs` and leave the party (you can't send your last
+Pokémon that can battle, or an Egg). R > **JOBS** shows who is out and how
+long is left.
+
+| Job | Hours | Best types | Pay | Can bring back |
+| --- | --- | --- | --- | --- |
+| Berry farm help | 1 | Grass, Bug, Ground | ¥300 | Oran, Pecha, Sitrus, Lum Berries |
+| Parcel delivery | 2 | Flying, Normal, Electric | ¥900 | Poké, Great, Repeat Balls, Potions |
+| Lifeguard duty | 2 | Water, Ice | ¥700 | Pearl, Big Pearl, Heart Scale, Dive Balls |
+| Power plant shift | 4 | Electric, Steel, Fire | ¥1,600 | PP Up, Elixir, Thunder Stone, Cell Battery |
+| Cave survey | 4 | Rock, Ground, Fighting | ¥1,200 | Hard Stone, Nugget, Star Piece, Everstone, Fire/Water/Leaf Stone |
+| Night watch | 8 | Dark, Ghost, Psychic | ¥2,500 | Dusk Balls, Dusk Stone, Moon Stone, Rare Candy, Spell Tag |
+
+When the time is up (by the clock, so it keeps going while the game is
+off), talk to the agent: each Pokémon comes back with the pay, one of the
+job's items (1–4), 3 friendship and EXP (hours × level × 20, plus 100).
+A Pokémon of one of the job's types is "a natural": double items, double
+pay and 1.5× EXP. If the party is full it goes to the PC. Levels gained on
+a job don't teach moves or evolve the Pokémon (use the move relearner, or
+level it once in battle).
+
 ## Screenshots
 
 ```sh
 python3 tools/life_shots/run.py tools/life_shots/bond.lua out/bond
 python3 tools/life_shots/run.py tools/life_shots/seasons.lua out/seasons 400000
+python3 tools/life_shots/run.py tools/life_shots/jobs.lua out/jobs
 ```
 
 `run.py` is `tools/world_shots/run.py` with this batch's symbols added, so
 scenarios use the same Driver (`Driver.scene` and friends). They can also
 write `gLifeShowcase` (`src/life.c`): byte 1 sets the lead's friendship,
 then byte 0 = 1 applies it on the next overworld frame. Byte 2 is the
-season plus one (0 uses the clock); it applies on the next warp.
+season plus one (0 uses the clock); it applies on the next warp. Byte 3
+= 1 finishes every Pokémon job.
 
 Art: `tools/life_shots/draw_art.py` draws this batch's sprites into
 `graphics/life/`.

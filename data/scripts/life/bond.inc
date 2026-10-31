@@ -4,7 +4,6 @@ Life_EventScript_Bond::
 	msgbox Life_Text_BondWho, MSGBOX_DEFAULT
 	closemessage
 	special ChoosePartyMon
-	waitstate
 	goto_if_ge VAR_0x8004, PARTY_SIZE, Life_EventScript_BondDone
 	specialvar VAR_RESULT, ScriptGetPartyMonSpecies
 	goto_if_eq VAR_RESULT, SPECIES_EGG, Life_EventScript_BondEgg

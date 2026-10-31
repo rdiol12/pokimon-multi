@@ -17,6 +17,11 @@ static void RunShowcase(void)
         u32 friendship = gLifeShowcase.friendship;
         SetMonData(&gParties[B_TRAINER_PLAYER][0], MON_DATA_FRIENDSHIP, &friendship);
     }
+    if (gLifeShowcase.finishJobs)
+    {
+        LifeJobs_FinishAll();
+        gLifeShowcase.finishJobs = FALSE;
+    }
 }
 
 bool32 Life_OverworldUpdate(void)

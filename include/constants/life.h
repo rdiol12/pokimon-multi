@@ -12,11 +12,26 @@
 // Rows this batch adds to the R button menu (data/scripts/world/menu.inc);
 // numbered after the world features' own WORLD_MENU_* values.
 #define LIFE_MENU_BOND 16
+#define LIFE_MENU_JOBS 17
 
 // Bonding (src/life_bond.c).
 #define LIFE_BOND_SLOTS        PARTY_SIZE
 #define LIFE_BOND_PET_LIMIT    20 // friendship from petting per Pokémon per day
 #define LIFE_BOND_FEED_LIMIT   3  // treats per Pokémon per day
+
+// Pokémon jobs (src/life_jobs.c).
+#define LIFE_JOB_SLOTS 3
+#define LIFE_JOB_BERRY_FARM  0
+#define LIFE_JOB_DELIVERY    1
+#define LIFE_JOB_LIFEGUARD   2
+#define LIFE_JOB_POWER_PLANT 3
+#define LIFE_JOB_CAVE_SURVEY 4
+#define LIFE_JOB_NIGHT_WATCH 5
+#define LIFE_JOB_COUNT       6
+// LifeJobs_Send results.
+#define LIFE_JOB_SENT     0
+#define LIFE_JOB_LAST_MON 1
+#define LIFE_JOB_EGG      2
 
 // Seasons (src/life_seasons.c), from the real-world month.
 #define SEASON_SPRING 0 // March to May

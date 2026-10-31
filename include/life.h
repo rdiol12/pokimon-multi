@@ -21,6 +21,7 @@ struct LifeShowcase
     u8 pending;
     u8 friendship; // the lead's friendship, if not 0
     u8 season;     // SEASON_* + 1 overrides the clock, 0 uses it
+    u8 finishJobs; // 1: every Pokémon job is done
 };
 extern struct LifeShowcase gLifeShowcase;
 
@@ -34,5 +35,13 @@ void Seasons_TintPrimaryPalettes(bool32 skipFaded);
 void Seasons_OnMapTransition(void);
 void Seasons_Update(void);
 enum Species Seasons_ModifyWildSpecies(enum Species species, u8 level);
+
+// Pokémon jobs (life_jobs.c).
+void LifeJobs_Describe(void);
+void LifeJobs_HasFreeSlot(void);
+void LifeJobs_Send(void);
+void LifeJobs_Collect(void);
+void LifeJobs_ShowList(void);
+void LifeJobs_FinishAll(void);
 
 #endif // GUARD_LIFE_H
