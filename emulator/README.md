@@ -30,10 +30,11 @@ tests link the harness against `build/emulator/headless/libmgba.so`.
 | Address      | Access | Value                                                        |
 | ------------ | ------ | ------------------------------------------------------------ |
 | `0x04FFF7F0` | read   | `0x504B` ("PK") on our hardware                              |
-| `0x04FFF7F2` | read   | hardware version, currently `3`                              |
+| `0x04FFF7F2` | read   | hardware version, currently `4`                              |
 | `0x04FFF7F4` | write  | `0x4558` ("EX") unlocks extended EWRAM until the next reset  |
 | `0x04FFF7F4` | write  | `0x4F41` turns extended sprites on, `0x4F40` turns them off  |
-| `0x04FFF7F4` | read   | bit 0: extended EWRAM unlocked; bit 1: extended sprites on   |
+| `0x04FFF7F4` | write  | `0x4300` + n (n = 1 to 8) runs the CPU n times faster        |
+| `0x04FFF7F4` | read   | bit 0: extended EWRAM unlocked; bit 1: extended sprites on; bits 8–11: CPU multiplier |
 
 These sit next to mGBA's own debug registers (`0x04FFF600`–`0x04FFF780`), in I/O space a
 real GBA leaves unused, so writes there are harmless elsewhere.
@@ -113,6 +114,28 @@ every save and loaded with the save. To save new data, add a field at the end of
 512 KiB alternate like the flash save slots, and a header ties each slot to its flash save
 (save counter, trainer ID, checksum). If the newest one doesn't check out, the older one is used.
 
+### CPU overclock (version 4)
+
+- Write `0x4300 | n` to `0x04FFF7F4` to run the CPU n times faster (n = 1 to 8). Video,
+  sound, timers and DMA keep their normal speed, so only game code gets more time per frame.
+  Bits 8–11 of the control register read back n. A reset sets it back to 1, and savestates
+  keep it.
+- The game sets 4× at boot (`PKX_OVERCLOCK` in include/gba/defines.h). In the three-player
+  online test that cut the frames where the game slowed down from 214 to 95 for the
+  watching player; 8× gave no more.
+- `gLagFrames` (src/main.c) counts frames the main loop missed, for measuring.
+
+### Bigger ROM (version 4)
+
+- A ROM file can be up to 64 MiB. The first 32 MiB work as on a GBA: at `0x08000000`, with
+  mirrors at `0x0A000000` and `0x0C000000`. The game relies on the `0x0A000000` mirror, because
+  pokeemerald-expansion tags script functions with it.
+- In a ROM larger than 32 MiB, the bytes after the first 32 MiB show at `0x0C000000`–`0x0DFFFFFF`
+  instead of the mirror there.
+- In the game, mark big read-only data `ROM2_DATA` (include/gba/defines.h). The linker puts it at
+  `0x0C000000` and right after the first 32 MiB in the file. Nothing uses it yet, so the ROM
+  stays 32 MiB and the .bps patch stays the same size until something does.
+
 ## Planned (later versions)
 
-More background palettes, more VRAM, a CPU overclock and a ROM larger than 32 MiB.
+More background palettes and more VRAM.
