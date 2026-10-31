@@ -22,7 +22,8 @@
 #define RESERVE_SERVER_SHOWN 11
 
 // Pokémon left while offline (kept in the save, SaveBlock3 reserve).
-#define RESERVE_LOCAL_MAX    6
+#define RESERVE_LOCAL_SAVED  6  // in SaveBlock3
+#define RESERVE_LOCAL_MAX    40 // the rest in the extended save (include/save_ext.h)
 // Strays: wild Pokémon that wander in on their own, new ones each day.
 #define RESERVE_STRAYS       3
 

@@ -1,4 +1,5 @@
 #include "global.h"
+#include "save_ext.h"
 #include "battle_setup.h"
 #include "community.h"
 #include "new_game.h"
@@ -58,6 +59,20 @@ static EWRAM_DATA u8 sBattling = 0; // index into sShown of the one being battle
 static EWRAM_DATA u32 sBattlingId = 0; // and its id
 
 #define sSave (gSaveBlock3Ptr->reserve)
+
+// The player's offline drop-offs: the first few in SaveBlock3, the rest in the
+// extended save, which only an emulator with hardware v3 keeps.
+static struct ReserveLocalMon *LocalMon(u32 i)
+{
+    if (i < RESERVE_LOCAL_SAVED)
+        return &sSave.mons[i];
+    return &gSaveBlockExt.reserveMoreMons[i - RESERVE_LOCAL_SAVED];
+}
+
+static u32 LocalMax(void)
+{
+    return SaveExt_IsAvailable() ? RESERVE_LOCAL_MAX : RESERVE_LOCAL_SAVED;
+}
 
 // Strays by badges: two badges per tier.
 static const u16 sStraySpecies[4][8] =
@@ -186,9 +201,9 @@ static void AddLocalAndStrays(void)
 {
     u32 i;
 
-    for (i = 0; i < sSave.count && i < RESERVE_LOCAL_MAX; i++)
+    for (i = 0; i < sSave.count && i < LocalMax(); i++)
     {
-        struct ReserveLocalMon *mon = &sSave.mons[i];
+        struct ReserveLocalMon *mon = LocalMon(i);
         AddShown(ID_LOCAL + i, mon->species, mon->level, mon->personality, LISTED_MINE, gSaveBlock2Ptr->playerName);
     }
     ResetStraysIfNewDay();
@@ -365,7 +380,7 @@ void Reserve_StartBattle(void)
     {
         CreateMon(mon, s->species, s->level, s->personality, OTID_STRUCT_RANDOM_NO_SHINY);
         if (s->id & ID_LOCAL)
-            SetIvs(mon, sSave.mons[s->id - ID_LOCAL].ivs);
+            SetIvs(mon, LocalMon(s->id - ID_LOCAL)->ivs);
         else
             SetIvs(mon, RandomIvs(s->personality));
         HealPokemon(mon);
@@ -381,9 +396,9 @@ static void RemoveLocal(u32 index)
     if (index >= sSave.count)
         return;
     for (i = index; i + 1 < sSave.count; i++)
-        sSave.mons[i] = sSave.mons[i + 1];
+        *LocalMon(i) = *LocalMon(i + 1);
     sSave.count--;
-    memset(&sSave.mons[sSave.count], 0, sizeof(sSave.mons[0]));
+    memset(LocalMon(sSave.count), 0, sizeof(struct ReserveLocalMon));
     // The others moved down one.
     for (i = 0; i < sShownCount; i++)
     {
@@ -512,12 +527,12 @@ void Reserve_LeaveOffline(void)
     struct ReserveLocalMon *local;
     u32 i, ivs = 0;
 
-    if (sSave.count >= RESERVE_LOCAL_MAX)
+    if (sSave.count >= LocalMax())
     {
         gSpecialVar_Result = RESERVE_LEAVE_LOCAL_FULL;
         return;
     }
-    local = &sSave.mons[sSave.count];
+    local = LocalMon(sSave.count);
     local->species = GetMonData(mon, MON_DATA_SPECIES);
     local->level = GetMonData(mon, MON_DATA_LEVEL);
     local->personality = GetMonData(mon, MON_DATA_PERSONALITY);
