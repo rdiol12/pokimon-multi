@@ -20,6 +20,8 @@ extern const struct Tileset gTileset_Mine;
 extern const struct Tileset gTileset_Crystal;
 
 extern const struct Tileset gTileset_Oasis;
+
+extern const struct Tileset gTileset_Jungle;
 extern const struct Tileset gTileset_Plant;
 extern const struct Tileset gTileset_Subway;
 extern const struct Tileset gTileset_Sky;

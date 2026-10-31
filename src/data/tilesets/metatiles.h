@@ -430,6 +430,9 @@ const u16 gMetatileAttributes_Crystal[] = INCBIN_U16("data/tilesets/secondary/cr
 const u16 gMetatiles_Oasis[] = INCBIN_U16("data/tilesets/secondary/oasis/metatiles.bin");
 const u16 gMetatileAttributes_Oasis[] = INCBIN_U16("data/tilesets/secondary/oasis/metatile_attributes.bin");
 
+const u16 gMetatiles_Jungle[] = INCBIN_U16("data/tilesets/secondary/jungle/metatiles.bin");
+const u16 gMetatileAttributes_Jungle[] = INCBIN_U16("data/tilesets/secondary/jungle/metatile_attributes.bin");
+
 const u16 gMetatiles_Plant[] = INCBIN_U16("data/tilesets/secondary/plant/metatiles.bin");
 const u16 gMetatileAttributes_Plant[] = INCBIN_U16("data/tilesets/secondary/plant/metatile_attributes.bin");
 const u16 gMetatiles_Subway[] = INCBIN_U16("data/tilesets/secondary/subway/metatiles.bin");

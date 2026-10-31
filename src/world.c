@@ -42,6 +42,7 @@ struct WorldShowcase
     u16 giveItem; // 20 of these go in the bag; a rod is also registered to SELECT
     u8 ripen;     // 1: the Route 102 Oran Berry tree is ready to pick
     u8 storm;     // 1: pick the hour the thunderstorm is over the map, 2: any rain
+    u8 surf;      // 1: giveSpecies knows Surf (arriving on water starts you surfing)
 };
 
 EWRAM_DATA struct WorldShowcase gWorldShowcase = {0};
@@ -77,6 +78,8 @@ static void RunShowcase(void)
             bool32 shiny = TRUE;
             SetMonData(&mon, MON_DATA_IS_SHINY, &shiny);
         }
+        if (gWorldShowcase.surf)
+            SetMonMoveSlot(&mon, MOVE_SURF, 0);
         if (gWorldShowcase.lead)
         {
             if (gPlayerPartyCount == PARTY_SIZE)
@@ -91,6 +94,7 @@ static void RunShowcase(void)
         }
         CalculatePlayerPartyCount();
         gWorldShowcase.giveSpecies = SPECIES_NONE;
+        gWorldShowcase.surf = FALSE;
     }
     if (gWorldShowcase.ripen)
     {

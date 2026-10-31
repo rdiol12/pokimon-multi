@@ -102,7 +102,7 @@ function Driver.read32(a) return E.read32(a) end
 function Driver.write8(a, v) return E.write8(a, v) end
 
 -- Sets the clock to `hour` and warps to map {group, num} at x, y.
--- extra: {give = "RAPIDASH", level = 40, lead = true, shiny = true, item = "ULTRA_BALL"}
+-- extra: {give = "RAPIDASH", level = 40, lead = true, shiny = true, item = "ULTRA_BALL", surf = true}
 function Driver.scene(hour, map, x, y, extra)
     local s = Driver.SYM.gWorldShowcase
     E.write8(s + 1, hour)
@@ -120,6 +120,7 @@ function Driver.scene(hour, map, x, y, extra)
     E.write8(s + 14, item & 0xFF); E.write8(s + 15, item >> 8)
     E.write8(s + 16, extra.ripen and 1 or 0)
     E.write8(s + 17, extra.storm == "thunder" and 1 or extra.storm == "rain" and 2 or 0)
+    E.write8(s + 18, extra.surf and 1 or 0)
     E.write8(s, 1)
     -- B closes whatever message is still open, so the warp can run.
     Driver.waitFor("the warp", 900, function() return E.read8(s) == 0 end, function(i)

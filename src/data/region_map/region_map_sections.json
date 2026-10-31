@@ -1726,6 +1726,10 @@
     {
       "id": "MAPSEC_MIRAGE_OASIS",
       "name": "MIRAGE OASIS"
+    },
+    {
+      "id": "MAPSEC_VERDANT_RIVER",
+      "name": "VERDANT RIVER"
     }
   ]
 }
