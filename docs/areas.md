@@ -302,6 +302,33 @@ coils) is drawn by tools/areas/plant_art.py into gTileset_Plant.
   Electirizer, Thunder Stone, Super Repel, Hyper Potion and hidden items.
 - Map id: MAP_VOLTSPIRE_PLANT. Done flag FLAG_VOLT_POWER_ON.
 
+## Nimbus Isles
+
+A town and islands above the clouds, for after the seventh badge (trainers
+Lv41–44, wild Pokémon Lv40–45). A balloon pilot at Fortree City's west
+edge flies you up once you have Winona's badge, and the pilot in Nimbus
+City flies you back. Nimbus City is a marble town on a cloud (a chime
+tower, a weather watcher's house, a Sky Mart, a fountain); its rainbow
+bridge leads to the Nimbus Isle, five grassy islands floating in open sky.
+The art (sky, a cloud edge set that joins up in any shape, wind streams,
+rainbows, the marble buildings, the chime tower, columns, a fountain, hot
+air balloons, the summit shrine) is drawn by tools/areas/sky_art.py into
+gTileset_Sky (Petalburg's tiles plus the art).
+
+- Getting around: rainbow bridges join the west island to the north and
+  south ones. Two wind streams (forced-walk tiles) carry you between the
+  west and east islands: east on the upper one, west on the lower one. A
+  third blows down from the summit.
+- The chimes: a storm blew the chime tower's three wind chimes onto the
+  north, south and east islands. Bring them back to the Chime Keeper: the
+  belfry rings (`setmetatile` on load), she gives you a Lv40 Castform, and
+  the wind up from the east island to the summit starts to blow.
+- The summit: Tornadus (Lv50) waits at the shrine.
+- Also: Bird Keeper Corvin, Dragon Tamer Draco, Cooltrainer Aurora,
+  Psychic Zephyr, a Sharp Beak, Wide Lens, Ultra Ball, PP Max, Comet Shard,
+  TM Steel Wing and hidden items.
+- Map ids: MAP_NIMBUS_CITY, MAP_NIMBUS_ISLE. Done flag FLAG_NIMBUS_CHIMES_DONE.
+
 ## How the maps are made
 
 - `tools/areas/tiles.py` renders any tileset or layout to PNG.

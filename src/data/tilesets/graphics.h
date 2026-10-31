@@ -89,6 +89,29 @@ const u16 gTilesetPalettes_Carnival[][16] =
     INCGFX_U16("data/tilesets/secondary/carnival/palettes/15.pal", ".gbapal"),
 };
 
+// The Nimbus Isles (tools/areas/sky_art.py): Petalburg's tiles plus new art.
+const u32 gTilesetTiles_Sky[] = INCGFX_U32("data/tilesets/secondary/sky/tiles.png", ".4bpp.fastSmol", "-num_tiles 352 -Wnum_tiles");
+
+const u16 gTilesetPalettes_Sky[][16] =
+{
+    INCGFX_U16("data/tilesets/secondary/sky/palettes/00.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/sky/palettes/01.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/sky/palettes/02.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/sky/palettes/03.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/sky/palettes/04.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/sky/palettes/05.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/sky/palettes/06.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/sky/palettes/07.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/sky/palettes/08.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/sky/palettes/09.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/sky/palettes/10.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/sky/palettes/11.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/sky/palettes/12.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/sky/palettes/13.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/sky/palettes/14.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/sky/palettes/15.pal", ".gbapal"),
+};
+
 // Voltspire Power Plant (tools/areas/plant_art.py): New Mauville's tiles plus new art.
 const u32 gTilesetTiles_Plant[] = INCGFX_U32("data/tilesets/secondary/plant/tiles.png", ".4bpp.fastSmol", "-num_tiles 512 -Wnum_tiles");
 

@@ -169,8 +169,12 @@
     "CobblerockMine_B1F",
     "CobblerockMine_OldShaft",
     "VoltspirePlant",
+    "NimbusCity",
+    "NimbusIsle",
     "Cobblerock_AssayOffice",
-    "Cobblerock_MinersRest"
+    "Cobblerock_MinersRest",
+    "NimbusCity_WeatherHouse",
+    "NimbusCity_Mart"
   ],
   "gMapGroup_IndoorLittleroot": [
     "LittlerootTown_BrendansHouse_1F",
