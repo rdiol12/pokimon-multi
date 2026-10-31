@@ -143,6 +143,27 @@ they're halfway and one away. When a quest is done both collect its reward
 (Ultra, Dive, Timer or Nest Balls, or Rare Candies, and money) and the next
 one starts. The board shows each partner's share; SPLIT UP ends the pair.
 
+## Mentors
+
+![TEST1 joins the mentor list, TEST2 picks TEST1, TEST1 cheers TEST2 on, TEST2 wins a badge and both collect gifts](images/online-mentors.png)
+
+Trainers with six badges or more can mentor newer ones
+(`server/online_mentors.py`, `src/online_mentors.c`,
+`data/scripts/online/mentors.inc`). In HUB → MENTORS:
+
+- A mentor joins (or leaves) the mentor list and sees their apprentices'
+  badges. Once a day they can **CHEER ON** each apprentice, which sends
+  3 Super Potions with the notice.
+- A trainer with fewer than six badges picks a mentor from the list (up to
+  four apprentices each), and can **SAY GOODBYE** later.
+- Each badge the apprentice wins brings both a gift: Super Potions, Hyper
+  Potions or Ultra Balls for the apprentice, Balls or a Rare Candy for the
+  mentor, plus money. At eight badges the apprentice graduates: 5 Rare
+  Candies for them, 3 for the mentor, and everyone online hears of it.
+
+The game sends its badge count with every MENTOR request and reports it
+(`OEV BADGES n`) whenever it changes.
+
 ## How it talks to the server
 
 These features use the Online Plaza's request channel (`NpxRpc_*` in

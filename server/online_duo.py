@@ -208,7 +208,7 @@ def cmd_duo(ctx, args, data):
             rows += [["+ITEM", ITEMS[item], count], ["+MONEY", money]]
             said.append(f"{prize_name(item, count)} and ${money}")
         duo = duo_of(db, key)
-        return answer(f"{ctx.player.name} got {'; '.join(said)}!", vars=[duo[1][0] if duo else ""], rows=rows)
+        return answer(f"{ctx.player.name} got {', '.join(said)}!", vars=[duo[1][0] if duo else ""], rows=rows)
 
     if word == "LEAVE":
         duo = duo_of(db, key)

@@ -11,6 +11,7 @@ import online_coopfish  # noqa: E402
 import online_duo  # noqa: E402
 import online_fishing  # noqa: E402
 import online_goals  # noqa: E402
+import online_mentors  # noqa: E402
 import online_pageant  # noqa: E402
 import online_shops  # noqa: E402
 import online_sightings  # noqa: E402
@@ -30,7 +31,7 @@ class OnlineTest(unittest.IsolatedAsyncioTestCase):
         self.server = ns.Server(self.league)
         self.online = online.Online(self.server, ext.install(self.server),
                                     [online_goals, online_sightings, online_web, online_fishing, online_coopfish, online_shops,
-                                     online_pageant, online_duo], clock=lambda: self.now)
+                                     online_pageant, online_duo, online_mentors], clock=lambda: self.now)
         self.srv = await asyncio.start_server(self.server.handle, "127.0.0.1", 0)
         self.port = self.srv.sockets[0].getsockname()[1]
         self.clients = []
@@ -342,6 +343,44 @@ class DuoTest(OnlineTest):
         await self.ask(b, "OEV CATCH 7 0 0 9 0")
         status, out = await self.ask(a, "DUO VIEW")
         self.assertEqual(rows(out)[3][4], "2/6")
+
+
+class MentorTest(OnlineTest):
+    async def test_mentor_apprentice_badges_and_graduation(self):
+        a = await self.connect("Ann", 1)  # the mentor
+        b = await self.connect("Ben", 2)
+        self.assertEqual(rows((await self.ask(a, "MENTOR VIEW 8"))[1])[0][1], "3")  # can volunteer
+        self.assertEqual((await self.ask(a, "MENTOR FIND 8"))[0], 1)
+        await self.ask(a, "MENTOR VOLUNTEER 8")
+        self.assertEqual(rows((await self.ask(a, "MENTOR VIEW 8"))[1])[0][1], "2")
+        self.assertEqual(rows((await self.ask(b, "MENTOR VIEW 1"))[1])[0][1], "0")
+        status, out = await self.ask(b, "MENTOR FIND 1")
+        self.assertEqual(rows(out)[1], ["Ann, 8 badges", "Ann:1"])
+        await self.ask(b, "MENTOR PICK Ann:1 1")
+        status, out = await self.ask(b, "MENTOR VIEW 1")
+        self.assertEqual(rows(out)[0][1:3], ["1", "Ann"])
+        # A cheer a day.
+        status, out = await self.ask(a, "MENTOR WHO 8")
+        await self.ask(a, f"MENTOR CHEER {rows(out)[1][1]} 8")
+        self.assertEqual((await self.ask(a, "MENTOR CHEER Ben:2 8"))[0], 1)
+        status, out = await self.ask(a, "MENTOR VIEW 8")
+        self.assertEqual(rows(out)[3], ["Ben", "1 badges", "yes"])
+        # Ben wins a badge (reported in the background): gifts for both.
+        await self.ask(b, "OEV BADGES 2")
+        status, out = await self.ask(b, "MENTOR GIFTS 2")
+        self.assertEqual([r for r in rows(out)[1:] if r[0] != "N"],
+                         [["+ITEM", str(ITEMS["SUPER_POTION"]), "8"], ["+MONEY", "1000"]])
+        self.assertEqual(rows(out)[0][0], "Ben got 8 SUPER POTIONS and $1000!")
+        status, out = await self.ask(a, "MENTOR GIFTS 8")
+        self.assertEqual(rows(out)[1], ["+ITEM", str(ITEMS["GREAT_BALL"]), "3"])
+        # The same count again brings nothing.
+        await self.ask(b, "OEV BADGES 2")
+        self.assertEqual((await self.ask(b, "MENTOR GIFTS 2"))[0], 1)
+        # Eight badges: Ben graduates.
+        await self.ask(b, "MENTOR VIEW 8")
+        self.assertEqual(rows((await self.ask(b, "MENTOR VIEW 8"))[1])[0][1], "3")
+        status, out = await self.ask(a, "MENTOR VIEW 8")
+        self.assertIn("1 graduated", rows(out)[0][0])
 
 
 if __name__ == "__main__":

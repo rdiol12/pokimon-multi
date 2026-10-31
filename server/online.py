@@ -35,9 +35,19 @@ def game_text(s):
     return str(s).replace("é", "#").replace("É", "#")
 
 
-def wrap(message, width=34):
-    """Breaks a message for the game's message box: lines of about `width`
-    characters ("~"), two lines a page ("^"). A "~" already in the message
+# Pixel widths of the game's normal font (src/fonts.c) where they aren't 6.
+NARROW = {" ": 3, "!": 4, "$": 3, ",": 3, ".": 3, ":": 3, ";": 3, "'": 3, "(": 4, ")": 4, "i": 4, "l": 4,
+          "j": 5, "r": 5, "&": 7, "=": 8}
+LINE_PIXELS = 200
+
+
+def text_width(s):
+    return sum(NARROW.get(c, 6) for c in s)
+
+
+def wrap(message, width=LINE_PIXELS):
+    """Breaks a message for the game's message box: lines of at most `width`
+    pixels ("~"), two lines a page ("^"). A "~" already in the message
     forces a line break, a "^" a page break."""
     lines = []
     for page in str(message).split("^"):
@@ -45,7 +55,7 @@ def wrap(message, width=34):
         for part in page.split("~"):
             line = ""
             for word in part.split(" "):
-                if line and len(line) + 1 + len(word) > width:
+                if line and text_width(f"{line} {word}") > width:
                     page_lines.append(line)
                     line = word
                 else:
@@ -157,6 +167,7 @@ def install(server, ext_obj):
     import online_duo
     import online_fishing
     import online_goals
+    import online_mentors
     import online_pageant
     import online_shops
     import online_sightings
@@ -164,4 +175,5 @@ def install(server, ext_obj):
 
     online_web.install(server)
     return Online(server, ext_obj, [online_goals, online_sightings, online_web, online_fishing, online_coopfish,
-                                       online_shops, online_pageant, online_duo])
+                                       online_shops, online_pageant, online_duo,
+                                       online_mentors])

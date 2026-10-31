@@ -173,7 +173,7 @@ def cmd_fisht(ctx, args, data):
             what = what.replace("CANDYS", "CANDIES")
             said.append(f"{what}{f' and ${money}' if money else ''}"
                         f" ({PLACE_NAMES[place] + ' place' if place else 'for entering'})")
-        return answer(f"{ctx.player.name} got {'; '.join(said)}!", rows=rows)
+        return answer(f"{ctx.player.name} got {', '.join(said)}!", rows=rows)
     raise ValueError("bad FISHT")
 
 

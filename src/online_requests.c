@@ -39,4 +39,12 @@ const struct OnlineRequest gOnlineRequests[ONL_REQ_COUNT] =
     [ONL_REQ_DUO_NO]    = {"DUO NO"},
     [ONL_REQ_DUO_CLAIM] = {"DUO CLAIM"},
     [ONL_REQ_DUO_LEAVE] = {"DUO LEAVE"},
+    [ONL_REQ_MENTOR_VIEW]      = {"MENTOR VIEW", .build = Online_AddBadgeCount},
+    [ONL_REQ_MENTOR_FIND]      = {"MENTOR FIND", .build = Online_AddBadgeCount},
+    [ONL_REQ_MENTOR_PICK]      = {"MENTOR PICK", .flags = ONL_ARG_CHOSEN, .build = Online_AddBadgeCount},
+    [ONL_REQ_MENTOR_VOLUNTEER] = {"MENTOR VOLUNTEER", .build = Online_AddBadgeCount},
+    [ONL_REQ_MENTOR_WHO]       = {"MENTOR WHO", .build = Online_AddBadgeCount},
+    [ONL_REQ_MENTOR_CHEER]     = {"MENTOR CHEER", .flags = ONL_ARG_CHOSEN, .build = Online_AddBadgeCount},
+    [ONL_REQ_MENTOR_GIFTS]     = {"MENTOR GIFTS", .build = Online_AddBadgeCount},
+    [ONL_REQ_MENTOR_LEAVE]     = {"MENTOR LEAVE", .build = Online_AddBadgeCount},
 };

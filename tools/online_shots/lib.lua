@@ -108,6 +108,14 @@ function Driver.giveItem(item, count)
     D.waitFor("the item", 300, function() return D.read8(s) == 0 end)
 end
 
+-- Gives the player the first n badges (and takes the others).
+function Driver.badges(n)
+    local s = D.SYM.gOnlineShowcase
+    D.write8(s + 1, n)
+    D.write8(s, 4)
+    D.waitFor("the badges", 300, function() return D.read8(s) == 0 end)
+end
+
 -- Throws the last used Ball until the battle is over (Master Ball: once).
 function Driver.catchThis()
     D.waitFor("the battle", 1200, D.inBattle)

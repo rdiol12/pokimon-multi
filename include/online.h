@@ -20,6 +20,10 @@ bool32 Online_TournamentIsOn(void);
 bool32 Online_TryCoFishInvite(void);
 void Online_TournamentBite(void);
 
+// Mentors (src/online_mentors.c): reports a changed badge count.
+void Online_CheckBadges(void);
+void Online_AddBadgeCount(void);
+
 // Queues a report for the server, sent in the background as
 // "OEV <word> <a> <b> ...". Up to ONLINE_REPORT_ARGS numbers.
 #define ONLINE_REPORT_ARGS 6

@@ -99,6 +99,7 @@ enum
     SHOWCASE_ROAMER, // a roaming species/level battle starts
     SHOWCASE_WILD,   // a wild species/level (shiny if set) battle starts
     SHOWCASE_ITEM,   // `level` of item `species` go in the bag
+    SHOWCASE_BADGES, // the player has the first `level` badges
 };
 
 struct OnlineShowcase
@@ -707,6 +708,7 @@ static void SendBackground(void)
         if (++sOnline.statusTimer < STATUS_INTERVAL || !NpxRpc_Begin("OSTAT"))
             return;
         sOnline.statusTimer = 0;
+        Online_CheckBadges(); // queued for the next round
         sOnline.statusRequest = TRUE;
     }
     NpxRpc_Send();
@@ -757,6 +759,18 @@ static bool32 RunShowcase(void)
     case SHOWCASE_ITEM:
         AddBagItem(gOnlineShowcase.species, gOnlineShowcase.level);
         break;
+    case SHOWCASE_BADGES:
+    {
+        u32 i;
+        for (i = 0; i < NUM_BADGES; i++)
+        {
+            if (i < gOnlineShowcase.level)
+                FlagSet(FLAG_BADGE01_GET + i);
+            else
+                FlagClear(FLAG_BADGE01_GET + i);
+        }
+        break;
+    }
     }
     return FALSE;
 }

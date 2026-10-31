@@ -155,7 +155,7 @@ def cmd_pageant(ctx, args, data):
             said.append(f"{PLACE_NAMES[place]} place: {count} RARE {'CANDIES' if count > 1 else 'CANDY'} and ${money}")
         # Weeks without a prize are settled too.
         db.execute("UPDATE online_pageant SET claimed = 1 WHERE name = ? AND tid = ? AND week < ?", (*key, week))
-        return answer(f"{'; '.join(said)}!", rows=rows)
+        return answer(f"{', '.join(said)}!", rows=rows)
 
     raise ValueError("bad PAGEANT")
 
