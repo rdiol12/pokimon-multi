@@ -24,6 +24,14 @@ void Online_TournamentBite(void);
 void Online_CheckBadges(void);
 void Online_AddBadgeCount(void);
 
+// Player-made quests (src/online_pquests.c): the treasure hunt the player
+// took. TRUE if it started a script.
+bool32 Online_PlayerQuestUpdate(void);
+void Online_PlayerQuestRetry(void);
+
+// Asks for the live features' status within a few frames.
+void Online_PollStatusSoon(void);
+
 // Queues a report for the server, sent in the background as
 // "OEV <word> <a> <b> ...". Up to ONLINE_REPORT_ARGS numbers.
 #define ONLINE_REPORT_ARGS 6

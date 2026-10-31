@@ -56,7 +56,16 @@
 #define ONL_REQ_MENTOR_CHEER 39 // the apprentice picked from MENTOR_WHO
 #define ONL_REQ_MENTOR_GIFTS 40
 #define ONL_REQ_MENTOR_LEAVE 41
-#define ONL_REQ_COUNT       42
+#define ONL_REQ_PQUEST_LIST  42
+#define ONL_REQ_PQUEST_SHOW  43 // the quest picked from PQUEST_LIST
+#define ONL_REQ_PQUEST_TAKE  44 // the same
+#define ONL_REQ_PQUEST_DROP  45
+#define ONL_REQ_PQUEST_HINTS 46
+#define ONL_REQ_PQUEST_MAKE  47 // VAR_0x8005: item, VAR_0x8006: how many; the hint picked
+#define ONL_REQ_PQUEST_MINE  48
+#define ONL_REQ_PQUEST_CANCEL 49 // the quest picked from PQUEST_MINE
+#define ONL_REQ_PQUEST_FIND  50
+#define ONL_REQ_COUNT       51
 
 // The hub's rows (VAR_RESULT of its menu).
 #define ONLINE_HUB_GOALS    0
@@ -67,6 +76,7 @@
 #define ONLINE_HUB_PAGEANT  5
 #define ONLINE_HUB_DUO      6
 #define ONLINE_HUB_MENTORS  7
+#define ONLINE_HUB_PQUESTS  8
 #define ONLINE_HUB_CLOSE    127
 
 // VAR_0x800B of the co-op fishing requests.

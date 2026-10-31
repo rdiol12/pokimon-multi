@@ -164,6 +164,29 @@ Trainers with six badges or more can mentor newer ones
 The game sends its badge count with every MENTOR request and reports it
 (`OEV BADGES n`) whenever it changes.
 
+## Player-made quests
+
+![TEST1 hides 5 Rare Candies on a Lilycove path; TEST2 hears of it, takes the quest, is told it's on this map, that something glints, and finds it](images/online-player-quests.png)
+
+Players hide treasure for each other (`server/online_pquests.py`,
+`src/online_pquests.c`, `data/scripts/online/pquests.inc`). In HUB →
+PLAYER QUESTS:
+
+- **HIDE A TREASURE** puts items from the bag (1, 5 or all of one kind) at
+  the spot where the player stands, with a hint picked from a list ("On
+  the path", "By a tree", "Near the water"…). Up to three at once;
+  everyone online hears where.
+- **FIND A TREASURE** lists the others' treasures by place; taking one
+  shows who hid what, where, and the hint. Once the player is on that map
+  the game says so, then that something glints when they're three steps
+  away or closer, and on the very spot the treasure is theirs. The one who
+  hid it hears who found it.
+- **MY TREASURES** shows how many were found, and digs one up again.
+
+The spot is the server's copy of the hider's position (the POS lines);
+the quest the player took is in the status, so the game checks the spot
+itself.
+
 ## How it talks to the server
 
 These features use the Online Plaza's request channel (`NpxRpc_*` in
