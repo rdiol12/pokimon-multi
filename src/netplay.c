@@ -704,6 +704,14 @@ static void PrepareCoopOpponent(struct Pokemon *mon, u8 level)
     CalculateMonStats(mon);
 }
 
+#define NETPLAY_TEST_BOOT_MAGIC 0xB0
+
+// A test driver booted this game (see Netplay_TryTestBoot).
+static bool32 IsTestBoot(void)
+{
+    return (gNetplayMailbox.testBoot & 0xF0) == NETPLAY_TEST_BOOT_MAGIC;
+}
+
 static void SetUpCoopBattle(void)
 {
     u32 i;
@@ -718,6 +726,17 @@ static void SetUpCoopBattle(void)
     sSavedFrontierLvlMode = gSaveBlock2Ptr->frontier.lvlMode;
     gSaveBlock2Ptr->frontier.lvlMode = FRONTIER_LVL_OPEN;
     FillFrontierTrainersParties(COOP_PARTY_SIZE);
+    // Automated tests (Netplay_TryTestBoot) get a short battle that ends the
+    // same way every time: Magikarp that only Splash.
+    if (IsTestBoot())
+    {
+        level = 5;
+        for (i = 0; i < COOP_PARTY_SIZE; i++)
+        {
+            CreateMonWithIVs(&gParties[B_TRAINER_OPPONENT_A][i], SPECIES_MAGIKARP, level, i, OTID_STRUCT_PRESET(0), 0);
+            CreateMonWithIVs(&gParties[B_TRAINER_OPPONENT_B][i], SPECIES_MAGIKARP, level, i + 8, OTID_STRUCT_PRESET(0), 0);
+        }
+    }
     for (i = 0; i < COOP_PARTY_SIZE; i++)
     {
         PrepareCoopOpponent(&gParties[B_TRAINER_OPPONENT_A][i], level);
@@ -889,8 +908,6 @@ static void Task_Linkup(u8 taskId)
 // with a small party in front of the Oldale Town Pokémon Center (or inside
 // it, from player 3 on).
 
-#define NETPLAY_TEST_BOOT_MAGIC 0xB0
-
 static void CB2_TestNewGame(void)
 {
     u8 n = gNetplayMailbox.testBoot & 0xF;
@@ -923,7 +940,7 @@ static void CB2_TestNewGame(void)
 
 bool32 Netplay_TryTestBoot(u8 taskId)
 {
-    if ((gNetplayMailbox.testBoot & 0xF0) != NETPLAY_TEST_BOOT_MAGIC)
+    if (!IsTestBoot())
         return FALSE;
     Netplay_JoinOnline();
     DestroyTask(taskId);
