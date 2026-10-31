@@ -86,4 +86,6 @@ struct NpxRequest
 
 extern const struct NpxRequest gNpxRequests[NPX_REQ_COUNT];
 
+void NetplayExt_RunRequest(const struct NpxRequest *req);
+
 #endif // GUARD_NETPLAY_EXT_H

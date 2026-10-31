@@ -355,7 +355,20 @@ s32 Npx_ChosenNum(u32 col)
 #define tReq   data[0]
 #define tState data[1]
 
+#define REQ_OTHER 0xFF // tReq for a request from another file (NetplayExt_RunRequest)
+
+static EWRAM_DATA const struct NpxRequest *sOtherRequest = NULL;
+
 static void Task_Request(u8 taskId);
+
+// Like NetplayExt_Request, for a request table kept in another file.
+void NetplayExt_RunRequest(const struct NpxRequest *req)
+{
+    u8 taskId = CreateTask(Task_Request, 80);
+    sOtherRequest = req;
+    gTasks[taskId].tReq = REQ_OTHER;
+    gTasks[taskId].tState = 0;
+}
 
 void NetplayExt_Request(void)
 {
@@ -374,7 +387,7 @@ static void FinishRequest(u8 taskId, u16 result)
 static void Task_Request(u8 taskId)
 {
     s16 *data = gTasks[taskId].data;
-    const struct NpxRequest *req = &gNpxRequests[tReq];
+    const struct NpxRequest *req = tReq == REQ_OTHER ? sOtherRequest : &gNpxRequests[tReq];
 
     switch (tState)
     {
