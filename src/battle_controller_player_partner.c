@@ -203,7 +203,7 @@ static enum TrainerPicID PlayerPartnerGetTrainerBackPicId(enum DifficultyLevel d
     enum TrainerPicID trainerPicId;
 
     if (gBattleTypeFlags & BATTLE_TYPE_INGAME_PARTNER)
-        trainerPicId = gBattlePartners[difficulty][gPartnerTrainerId - TRAINER_PARTNER(PARTNER_NONE)].trainerPic;
+        trainerPicId = GetTrainerStructFromId(gPartnerTrainerId)->trainerPic;
     else
         trainerPicId = GetPlayerTrainerPic(gSaveBlock2Ptr->playerGender, GAME_VERSION);
 
@@ -226,6 +226,13 @@ static void PlayerPartnerHandleDrawTrainerPic(enum BattlerId battler)
         trainerPicId = TRAINER_PIC_STEVEN;
         xPos = 90;
         yPos = (8 - GetTrainerBackPicCoords(trainerPicId)->size) * 4 + 80;
+    }
+    else if (gRoverTagTrainers != NULL)
+    {
+        // A roaming trainer has only a front picture, like the Frontier's
+        // tag partners.
+        BtlController_HandleDrawTrainerPic(battler, gRoverTagTrainers[0].trainerPic, TRUE, 90, 80, -1);
+        return;
     }
     else if (gPartnerTrainerId > TRAINER_PARTNER(PARTNER_NONE))
     {
@@ -326,8 +333,10 @@ static void PlayerPartnerHandleIntroTrainerBallThrow(enum BattlerId battler)
     const u16 *trainerPal;
     enum DifficultyLevel difficulty = GetBattlePartnerDifficultyLevel(gPartnerTrainerId);
 
-    if (gPartnerTrainerId > TRAINER_PARTNER(PARTNER_NONE))
-        trainerPal = GetTrainerBackPicPalette(gBattlePartners[difficulty][gPartnerTrainerId - TRAINER_PARTNER(PARTNER_NONE)].trainerPic);
+    if (gRoverTagTrainers != NULL)
+        trainerPal = GetTrainerFrontPicPalette(gRoverTagTrainers[0].trainerPic);
+    else if (gPartnerTrainerId > TRAINER_PARTNER(PARTNER_NONE))
+        trainerPal = GetTrainerBackPicPalette(GetTrainerStructFromId(gPartnerTrainerId)->trainerPic);
     else if (IsAiVsAiBattle())
         trainerPal = GetTrainerFrontPicPalette(Rovers_AiVsAiTrainerPic());
     else

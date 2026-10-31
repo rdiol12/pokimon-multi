@@ -13,6 +13,11 @@ Rovers_EventScript_Talk::
 Rovers_EventScript_AfterHello:
 	callnative Rovers_BufferTalkStats
 	msgbox gStringVar4, MSGBOX_DEFAULT
+	callnative Rovers_TagOffer
+	goto_if_eq VAR_RESULT, FALSE, Rovers_EventScript_AskBattle
+	msgbox Rovers_Text_TagAsk, MSGBOX_YESNO
+	goto_if_eq VAR_RESULT, YES, Rovers_EventScript_Tag
+Rovers_EventScript_AskBattle:
 	msgbox Rovers_Text_AskBattle, MSGBOX_YESNO
 	goto_if_eq VAR_RESULT, NO, Rovers_EventScript_Bye
 	msgbox Rovers_Text_Go, MSGBOX_DEFAULT
@@ -40,6 +45,14 @@ Rovers_EventScript_Bye:
 	waitstate
 	callnative Rovers_AfterTrade
 	msgbox Rovers_Text_TradeThanks, MSGBOX_DEFAULT
+	release
+	end
+
+Rovers_EventScript_Tag:
+	msgbox Rovers_Text_TagGo, MSGBOX_DEFAULT
+	closemessage
+	callnative Rovers_StartTag, waitstate=1
+	msgbox Rovers_Text_TagAfter, MSGBOX_DEFAULT
 	release
 	end
 
@@ -173,6 +186,20 @@ Rovers_Text_After:
 Rovers_Text_Bye:
 	.string "Maybe next time.\n"
 	.string "I've got Pokémon to catch!$"
+
+Rovers_Text_TagAsk:
+	.string "{STR_VAR_2} and {STR_VAR_3} are\n"
+	.string "around here too.\p"
+	.string "Want to team up and take them on\n"
+	.string "together?$"
+
+Rovers_Text_TagGo:
+	.string "All right, partner! Let's show\n"
+	.string "them how it's done!$"
+
+Rovers_Text_TagAfter:
+	.string "We make a good team!\n"
+	.string "Let's do that again sometime.$"
 
 Rovers_Text_FriendHello:
 	.string "Hey, it's you! Good to see you\n"

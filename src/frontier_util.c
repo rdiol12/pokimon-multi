@@ -3083,7 +3083,7 @@ enum TrainerClassID GetFrontierOpponentClass(u16 trainerId)
     }
     else if (trainerId > TRAINER_PARTNER(PARTNER_NONE))
     {
-        trainerClass = gBattlePartners[difficulty][trainerId - TRAINER_PARTNER(PARTNER_NONE)].trainerClass;
+        trainerClass = GetTrainerStructFromId(trainerId)->trainerClass;
     }
     else if (trainerId < FRONTIER_TRAINERS_COUNT)
     {
@@ -3170,8 +3170,9 @@ void GetFrontierTrainerName(u8 *dst, u16 trainerId)
     }
     else if (trainerId > TRAINER_PARTNER(PARTNER_NONE))
     {
-        for (i = 0; gBattlePartners[difficulty][trainerId - TRAINER_PARTNER(PARTNER_NONE)].trainerName[i] != EOS; i++)
-            dst[i] = gBattlePartners[difficulty][trainerId - TRAINER_PARTNER(PARTNER_NONE)].trainerName[i];
+        const struct Trainer *partner = GetTrainerStructFromId(trainerId);
+        for (i = 0; partner->trainerName[i] != EOS; i++)
+            dst[i] = partner->trainerName[i];
     }
     else if (trainerId < FRONTIER_TRAINERS_COUNT)
     {

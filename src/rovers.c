@@ -205,6 +205,7 @@ struct RoverState
     bool8 trading;
     u8 tradeSlot;
     u8 startRival;     // 1 + the actor walking up to challenge the player
+    u8 tagA, tagB;     // the two rovers a tag battle is against
     // Watching.
     bool8 watching;
     u8 duelResult;     // a watched duel's result, 1 + left won, for the map
@@ -220,6 +221,14 @@ struct RoverState
 static EWRAM_DATA struct RoverState sRovers = {0};
 static EWRAM_DATA struct TrainerMon sRoverParty[PARTY_SIZE] = {0};
 static EWRAM_DATA struct Trainer sRoverTrainer = {0};
+// Tag battles: allocated for the battle (struct RoverTag), NULL otherwise.
+EWRAM_DATA struct Trainer *gRoverTagTrainers = NULL;
+
+// A tag battle's three trainers: partner, opponent A, opponent B. Not on
+// the heap, which battle start resets. Their parties are sRoverParty's two
+// halves and sTagParty.
+static EWRAM_DATA struct Trainer sTagTrainers[3] = {0};
+static EWRAM_DATA struct TrainerMon sTagParty[MULTI_PARTY_SIZE] = {0};
 EWRAM_DATA struct RoverShowcase gRoverShowcase = {0};
 
 #include "data/rovers_cast.h"
@@ -422,6 +431,11 @@ static void Toast(const u8 *title, const u8 *fmt)
     u8 text[64];
     StringExpandPlaceholders(text, fmt);
     World_ShowToast(title, text);
+}
+
+static bool32 IsWildState(u32 state)
+{
+    return state == RS_WILD_APPEAR || state == RS_WILD_FIGHT || state == RS_THROW || state == RS_SHAKE || state == RS_KO;
 }
 
 // Teams --------------------------------------------------------------------------
@@ -2125,16 +2139,17 @@ void Rovers_BufferTalkStats(void)
 
 // Battles -------------------------------------------------------------------------------------
 
-static void BuildTrainer(const struct RoverActor *a)
+static void BuildTrainerInto(const struct RoverActor *a, struct Trainer *trainer, struct TrainerMon *party, u32 most)
 {
     u32 i;
     const struct RoverLook *look = Look(a);
+    u32 count = min(a->w.count, most);
 
-    memset(sRoverParty, 0, sizeof(sRoverParty));
-    for (i = 0; i < a->w.count; i++)
+    memset(party, 0, sizeof(struct TrainerMon) * most);
+    for (i = 0; i < count; i++)
     {
         const struct RoverMon *m = &a->w.mons[i];
-        struct TrainerMon *mon = &sRoverParty[i];
+        struct TrainerMon *mon = &party[i];
         u32 j, iv = 12 + (a->w.id + i) % 20;
         mon->species = m->species;
         mon->lvl = m->level;
@@ -2146,29 +2161,33 @@ static void BuildTrainer(const struct RoverActor *a)
         mon->ball = POKEBALL_COUNT;
         mon->dynamaxLevel = MAX_DYNAMAX_LEVEL;
     }
-    memset(&sRoverTrainer, 0, sizeof(sRoverTrainer));
-    sRoverTrainer.aiFlags = AI_FLAG_BASIC_TRAINER;
-    sRoverTrainer.party = sRoverParty;
-    sRoverTrainer.partySize = a->w.count;
-    sRoverTrainer.trainerClass = look->trainerClass;
-    sRoverTrainer.encounterMusic = look->music;
-    sRoverTrainer.gender = look->female ? TRAINER_GENDER_FEMALE : TRAINER_GENDER_MALE;
-    sRoverTrainer.trainerPic = look->pic;
+    memset(trainer, 0, sizeof(*trainer));
+    trainer->aiFlags = AI_FLAG_BASIC_TRAINER;
+    trainer->party = party;
+    trainer->partySize = count;
+    trainer->trainerClass = look->trainerClass;
+    trainer->encounterMusic = look->music;
+    trainer->gender = look->female ? TRAINER_GENDER_FEMALE : TRAINER_GENDER_MALE;
+    trainer->trainerPic = look->pic;
     // Its crafted and bought medicine, best first.
     {
         static const u16 sMedicine[] = {ITEM_REVIVE, ITEM_SUPER_POTION, ITEM_FULL_HEAL, ITEM_POTION};
         const u8 counts[] = {a->w.revives, a->w.superPotions, a->w.fullHeals, a->w.potions};
         u32 k, n = 0;
-        memset(sRoverTrainer.items, 0, sizeof(sRoverTrainer.items));
         for (k = 0; k < ARRAY_COUNT(sMedicine) && n < MAX_TRAINER_ITEMS; k++)
         {
             u32 c;
             for (c = 0; c < counts[k] && n < MAX_TRAINER_ITEMS; c++)
-                sRoverTrainer.items[n++] = sMedicine[k];
+                trainer->items[n++] = sMedicine[k];
         }
     }
-    StringCopyN(sRoverTrainer.trainerName, Cast(a)->name, TRAINER_NAME_LENGTH);
-    sRoverTrainer.trainerName[TRAINER_NAME_LENGTH] = EOS;
+    StringCopyN(trainer->trainerName, Cast(a)->name, TRAINER_NAME_LENGTH);
+    trainer->trainerName[TRAINER_NAME_LENGTH] = EOS;
+}
+
+static void BuildTrainer(const struct RoverActor *a)
+{
+    BuildTrainerInto(a, &sRoverTrainer, sRoverParty, PARTY_SIZE);
 }
 
 static void ApplyInjuries(struct Pokemon *party, const struct RoverActor *a)
@@ -2196,6 +2215,84 @@ static void ReadInjuries(struct Pokemon *party, struct RoverActor *a)
         m->lostParts = GetMonData(&party[i], MON_DATA_LOST_PARTS);
         m->injuryFlags = GetMonData(&party[i], MON_DATA_INJURY_FLAGS) & INJURY_FLAG_SCAR;
     }
+}
+
+// Tag battles ---------------------------------------------------------------------------------
+
+// Two other rovers wandering here to team up against. VAR_RESULT TRUE if
+// there are; STR_VAR_2 and STR_VAR_3 are their names.
+void Rovers_TagOffer(void)
+{
+    u32 i, found = 0;
+
+    gSpecialVar_Result = FALSE;
+    for (i = 0; i < ROVERS_MAX_HERE && found < 2; i++)
+    {
+        if (i == sRovers.talk || TrainerObj(i) == NULL
+         || (sRovers.actors[i].state != RS_WANDER && !IsWildState(sRovers.actors[i].state)))
+            continue;
+        if (found++ == 0)
+            sRovers.tagA = i;
+        else
+            sRovers.tagB = i;
+    }
+    if (found < 2)
+        return;
+    StringCopy(gStringVar2, Cast(&sRovers.actors[sRovers.tagA])->name);
+    StringCopy(gStringVar3, Cast(&sRovers.actors[sRovers.tagB])->name);
+    gSpecialVar_Result = TRUE;
+}
+
+static void CB2_EndRoverTag(void)
+{
+    bool32 won = (gBattleOutcome == B_OUTCOME_WON);
+
+    gRoverTagTrainers = NULL;
+    gPartnerTrainerId = 0;
+    QueueRequest(REQ_BEAT, sRovers.actors[sRovers.tagA].w.id, !won, 1, 0);
+    QueueRequest(REQ_BEAT, sRovers.actors[sRovers.tagB].w.id, !won, 1, 0);
+    gSpecialVar_Result = won;
+    if (gBattleOutcome == B_OUTCOME_LOST || gBattleOutcome == B_OUTCOME_DREW)
+        SetMainCallback2(CB2_WhiteOut);
+    else
+        SetMainCallback2(CB2_ReturnToFieldContinueScriptPlayMapMusic);
+}
+
+// The player and the rover talked to against the other two (waitstate).
+void Rovers_StartTag(void)
+{
+    struct TrainerMon *parties[3] = {sRoverParty, sRoverParty + MULTI_PARTY_SIZE, sTagParty};
+    const struct RoverActor *side[3] = {&sRovers.actors[sRovers.talk], &sRovers.actors[sRovers.tagA],
+                                        &sRovers.actors[sRovers.tagB]};
+    u32 i;
+
+    for (i = 0; i < 3; i++)
+        BuildTrainerInto(side[i], &sTagTrainers[i], parties[i], MULTI_PARTY_SIZE);
+    // Whatever wild Pokémon they were busy with runs off.
+    for (i = 1; i < 3; i++)
+    {
+        struct RoverActor *a = (struct RoverActor *)side[i];
+        if (IsWildState(a->state))
+        {
+            RemoveLocal(LOCALID_ROVER_WILD);
+            RemoveLocal(LOCALID_ROVER_BALL);
+            a->state = RS_WANDER;
+            a->timer = 30;
+        }
+    }
+    gRoverTagTrainers = sTagTrainers;
+    gPartnerTrainerId = TRAINER_PARTNER(PARTNER_STEVEN);
+    memset(&gTrainerBattleParameter, 0, sizeof(gTrainerBattleParameter));
+    TRAINER_BATTLE_PARAM.opponentA = ROVER_TAG_FOE_A;
+    TRAINER_BATTLE_PARAM.opponentB = ROVER_TAG_FOE_B;
+    TRAINER_BATTLE_PARAM.defeatTextA = (u8 *)COMPOUND_STRING("We'll get you next time!");
+    TRAINER_BATTLE_PARAM.defeatTextB = (u8 *)COMPOUND_STRING("Good teamwork...");
+    gBattleTypeFlags = BATTLE_TYPE_TRAINER | BATTLE_TYPE_DOUBLE | BATTLE_TYPE_TWO_OPPONENTS
+                     | BATTLE_TYPE_MULTI | BATTLE_TYPE_INGAME_PARTNER;
+    CreateNPCTrainerPartyFromTrainer(gParties[B_TRAINER_OPPONENT_A], &sTagTrainers[1]);
+    CreateNPCTrainerPartyFromTrainer(gParties[B_TRAINER_OPPONENT_B], &sTagTrainers[2]);
+    CreateNPCTrainerPartyFromTrainer(gParties[B_TRAINER_PARTNER], &sTagTrainers[0]);
+    BattleSetup_StartRoverWatch(CB2_EndRoverTag);
 }
 
 // Friends' presents (waitstate): VAR_0x8004 the item, VAR_0x8005 how many,
@@ -2653,11 +2750,6 @@ static void RespawnMissing(void)
             a->state = RS_WANDER;
         }
     }
-}
-
-static bool32 IsWildState(u32 state)
-{
-    return state == RS_WILD_APPEAR || state == RS_WILD_FIGHT || state == RS_THROW || state == RS_SHAKE || state == RS_KO;
 }
 
 bool32 Rovers_OverworldUpdate(void)
