@@ -89,7 +89,12 @@
 #define ONL_REQ_RAID_LIST     72
 #define ONL_REQ_RAID_GET      73 // the base picked from RAID_LIST
 #define ONL_REQ_RAID_RESULT   74 // VAR_0x8005: TRUE if the raid won
-#define ONL_REQ_COUNT         75
+#define ONL_REQ_RACE_LIST     75
+#define ONL_REQ_RACE_JOIN     76 // the course picked from RACE_LIST
+#define ONL_REQ_RACE_BOARD    77 // the course picked from RACE_LIST
+#define ONL_REQ_RACE_FINISH   78 // VAR_0x8005 course, VAR_0x8006 time in frames
+#define ONL_REQ_RACE_QUIT     79
+#define ONL_REQ_COUNT         80
 
 // The hub's rows (VAR_RESULT of its menu).
 #define ONLINE_HUB_GOALS    0
@@ -105,6 +110,7 @@
 #define ONLINE_HUB_DOUBLES  10
 #define ONLINE_HUB_TEAMS    11
 #define ONLINE_HUB_GUILD    12
+#define ONLINE_HUB_RACING   13
 #define ONLINE_HUB_CLOSE    127
 
 // VAR_0x800B of the co-op fishing requests.
@@ -136,5 +142,10 @@
 #define GUILD_NONE   0
 #define GUILD_MEMBER 1
 #define GUILD_LEADER 2
+
+// Mount racing (src/online_racing.c).
+#define RACE_COURSES 3
+#define RACE_LANES   4 // racers in a heat
+#define RACE_GATES   4 // the last is the finish
 
 #endif // GUARD_CONSTANTS_ONLINE_H

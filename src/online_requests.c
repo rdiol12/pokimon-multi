@@ -80,4 +80,9 @@ const struct OnlineRequest gOnlineRequests[ONL_REQ_COUNT] =
     [ONL_REQ_RAID_LIST]     = {"RAID LIST"},
     [ONL_REQ_RAID_GET]      = {"RAID GET", .flags = ONL_ARG_CHOSEN, .after = Online_StoreRaidTeam},
     [ONL_REQ_RAID_RESULT]   = {"RAID RESULT", 1},
+    [ONL_REQ_RACE_LIST]   = {"RACE LIST"},
+    [ONL_REQ_RACE_JOIN]   = {"RACE JOIN", .flags = ONL_ARG_CHOSEN},
+    [ONL_REQ_RACE_BOARD]  = {"RACE BOARD", .flags = ONL_ARG_CHOSEN},
+    [ONL_REQ_RACE_FINISH] = {"RACE FINISH", 2},
+    [ONL_REQ_RACE_QUIT]   = {"RACE QUIT"},
 };

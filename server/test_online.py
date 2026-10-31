@@ -17,6 +17,7 @@ import online_guilds  # noqa: E402
 import online_mentors  # noqa: E402
 import online_pageant  # noqa: E402
 import online_pquests  # noqa: E402
+import online_racing  # noqa: E402
 import online_shops  # noqa: E402
 import online_sightings  # noqa: E402
 import online_teams  # noqa: E402
@@ -38,7 +39,7 @@ class OnlineTest(unittest.IsolatedAsyncioTestCase):
                                     [online_goals, online_sightings, online_web, online_fishing, online_coopfish, online_shops,
                                      online_pageant, online_duo, online_mentors,
                                      online_pquests, online_betting,
-                                     online_doubles, online_teams, online_guilds], clock=lambda: self.now)
+                                     online_doubles, online_teams, online_guilds, online_racing], clock=lambda: self.now)
         online_betting.install(self.server)
         online_doubles.install(self.server)
         online_teams.install(self.server)
@@ -682,6 +683,54 @@ class GuildsTest(OnlineTest):
         self.assertEqual((await self.ask(a, "RAID GET BLUE"))[0], 1)
         status, out = await self.ask(b, "WAR BOARD")
         self.assertIn(["*2", "(BLUE) Team BLUE", str(2 * online_guilds.WAR_DEFENDED)], rows(out))
+
+
+
+class RacingTest(OnlineTest):
+    async def test_heat(self):
+        a, b, c = [await self.connect(n, i) for i, n in enumerate(("Ann", "Ben", "Cat"), 1)]
+        status, out = await self.ask(a, "RACE LIST")
+        self.assertEqual(rows(out)[1], ["PETALBURG RUN", "0"])
+        status, out = await self.ask(a, "RACE JOIN 0")
+        self.assertEqual(rows(out)[0][1:3], [str(int(online_racing.HEAT_WAIT)), "PETALBURG RUN"])
+        self.assertEqual(rows(out)[1], ["0"])  # lane
+        self.now += 5
+        status, out = await self.ask(b, "RACE LIST")
+        self.assertEqual(rows(out)[1][0], "PETALBURG RUN 1 waiting")
+        status, out = await self.ask(b, "RACE JOIN 0")
+        self.assertEqual(rows(out)[0][1], str(int(online_racing.HEAT_WAIT) - 5))
+        self.assertEqual(rows(out)[1], ["1"])
+        # Too close to the start: Cat gets a heat of her own.
+        self.now += online_racing.HEAT_WAIT - 6
+        status, out = await self.ask(c, "RACE JOIN 0")
+        self.assertEqual(rows(out)[1], ["0"])
+        self.now += 60
+        status, out = await self.ask(b, "RACE FINISH 0 2400")
+        self.assertIn(["+MONEY", str(online_racing.WIN_MONEY)], rows(out))
+        self.assertIn("0:40.00", rows(out)[0][0])
+        status, out = await self.ask(a, "RACE FINISH 0 2460")
+        self.assertIn("2nd", rows(out)[0][0])
+        self.assertNotIn("+MONEY", [r[0] for r in rows(out)])
+        notes = [r[1].replace("~", " ").replace("^", " ") for r in rows(out) if r[0] == "N"]
+        self.assertTrue(any("results: 1st Ben 0:40.00, 2nd Ann 0:41.00" in n for n in notes), notes)
+        # Alone in a heat: a time, no prize.
+        status, out = await self.ask(c, "RACE FINISH 0 3000")
+        self.assertEqual(rows(out)[0][0].split("^")[0].split("~")[0], "Your time: 0:50.00.")
+        status, out = await self.ask(a, "RACE BOARD 0")
+        self.assertEqual(rows(out)[3:6], [["1", "Ben", "0:40.00"], ["*2", "Ann", "0:41.00"], ["3", "Cat", "0:50.00"]])
+        # Finishing again, outside a race, doesn't count.
+        self.assertEqual((await self.ask(a, "RACE FINISH 0 1000"))[0], 1)
+
+    async def test_quit(self):
+        a, b = await self.connect("Ann", 1), await self.connect("Ben", 2)
+        await self.ask(a, "RACE JOIN 1")
+        await self.ask(b, "RACE JOIN 1")
+        await self.ask(a, "RACE QUIT")
+        self.now += 60
+        status, out = await self.ask(b, "RACE FINISH 1 4000")
+        self.assertIn(["+MONEY", str(online_racing.WIN_MONEY)], rows(out))
+        self.assertTrue(any(r[0] == "N" and "gave up" in r[1] for r in rows(out)))
+        self.assertEqual(self.server.race_heats, [])
 
 
 if __name__ == "__main__":

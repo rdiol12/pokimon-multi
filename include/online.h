@@ -33,6 +33,13 @@ void Online_PlayerQuestRetry(void);
 void Online_AddTeamRecord(void);
 void Online_StoreRaidTeam(void);
 
+// Mount racing (src/online_racing.c). Online_RaceUpdate: TRUE if it
+// started a script.
+bool32 Online_RaceIsOn(void);
+bool32 Online_RaceUpdate(void);
+struct ObjectEvent;
+bool32 Online_RacePassesThrough(const struct ObjectEvent *mover, const struct ObjectEvent *other);
+
 // Asks for the live features' status within a few frames.
 void Online_PollStatusSoon(void);
 
