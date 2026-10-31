@@ -11,7 +11,7 @@ local EWRAM_START = 0x02000000
 local EWRAM_END = 0x02040000
 local MAGIC_LO = 0x4E4D4B50 -- "PKMN"
 local MAGIC_HI = 0x3154454E -- "NET1"
-local MAILBOX_VERSION = 3
+local MAILBOX_VERSION = 4
 
 local OFF_VERSION = 0x008
 local OFF_STATE = 0x009
@@ -27,7 +27,9 @@ local OFF_ELEVATION = 0x01D
 local OFF_GFX = 0x01E
 local OFF_REMOTES = 0x020
 local REMOTE_SIZE = 20
-local MAX_REMOTES = 8
+local MAX_REMOTES = 24 -- NETPLAY_MAX_REMOTES: slots 0-7 at OFF_REMOTES, 8-23 at OFF_MORE_REMOTES
+local MAILBOX_REMOTES = 8
+local OFF_MORE_REMOTES = 0x700
 local OFF_REQUEST = 0x0C0
 local OFF_EVENT = 0x0C8
 local OFF_EVENT_ACK = 0x0D0
@@ -461,7 +463,8 @@ function Bridge:writeRemotes()
         end
     end
     for slot = 0, MAX_REMOTES - 1 do
-        local off = OFF_REMOTES + slot * REMOTE_SIZE
+        local off = slot < MAILBOX_REMOTES and OFF_REMOTES + slot * REMOTE_SIZE
+            or OFF_MORE_REMOTES + (slot - MAILBOX_REMOTES) * REMOTE_SIZE
         local id = self.slots[slot]
         local p = id and self.players[id]
         if p then

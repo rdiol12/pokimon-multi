@@ -49,21 +49,23 @@ end
 function Driver.roverLead(species, fusion)
     local s = Driver.SYM.gRoverShowcase
     local a, b = SPECIES_ID[species] or 0, SPECIES_ID[fusion] or 0
-    E.write8(s + 14, a & 0xFF); E.write8(s + 15, a >> 8)
-    E.write8(s + 16, b & 0xFF); E.write8(s + 17, b >> 8)
+    E.write8(s + 20, a & 0xFF); E.write8(s + 21, a >> 8)
+    E.write8(s + 22, b & 0xFF); E.write8(s + 23, b >> 8)
 end
 
 function Driver.rovers(scene, ids, level, teamSize, offline, talk, levelB, bond)
     local s = Driver.SYM.gRoverShowcase
+    local MAX = 10 -- ROVERS_MAX_HERE (include/constants/rovers.h)
     E.write8(s + 1, scene)
-    for i = 1, 4 do E.write8(s + 1 + i, ids[i] or 0) end
-    E.write8(s + 6, #ids)
-    E.write8(s + 7, level or 20)
-    E.write8(s + 8, teamSize or 3)
-    E.write8(s + 9, offline == false and 0 or 1)
-    E.write8(s + 10, talk or 0)
-    E.write8(s + 11, levelB or 0)
-    E.write8(s + 12, bond or 0) -- 1 rival, 2 friend
+    for i = 1, MAX do E.write8(s + 1 + i, ids[i] or 0) end
+    local o = s + 2 + MAX
+    E.write8(o, #ids)
+    E.write8(o + 1, level or 20)
+    E.write8(o + 2, teamSize or 3)
+    E.write8(o + 3, offline == false and 0 or 1)
+    E.write8(o + 4, talk or 0)
+    E.write8(o + 5, levelB or 0)
+    E.write8(o + 6, bond or 0) -- 1 rival, 2 friend
     E.write8(s, 1)
     Driver.wait(2)
 end

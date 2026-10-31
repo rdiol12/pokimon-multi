@@ -11,16 +11,22 @@ struct ObjectEvent;
 // gNetplayMailbox, which tools/netplay_bridge/netplay_bridge.lua copies to
 // and from the netplay server every frame. See docs/netplay.md.
 
-#define NETPLAY_MAILBOX_VERSION 3
-#define NETPLAY_MAX_REMOTES     8
+#define NETPLAY_MAILBOX_VERSION 4
+// Other players drawn on the overworld. The GBA's 16 objects allowed 8; the
+// extended GBA allows 24. The first 8 slots are remotes[] where they always
+// were, the rest moreRemotes[] at the end (mailbox version 4). Use
+// Netplay_GetRemoteSlot() rather than indexing either array.
+#define NETPLAY_MAX_REMOTES     24
+#define NETPLAY_MAILBOX_REMOTES 8
 #define NETPLAY_NAME_LENGTH     8
 #define NETPLAY_RING_SIZE       16
 #define NETPLAY_HOST_LENGTH     40
 #define NETPLAY_LADDER_SIZE     10
 #define NETPLAY_MAX_FRIENDS     10
 
-// Object event local ids used for other players on the overworld.
-#define LOCALID_NETPLAY_PLAYER_START 228
+// Object event local ids used for other players on the overworld (above the
+// map's own objects, which stay below OBJECT_EVENT_TEMPLATES_COUNT).
+#define LOCALID_NETPLAY_PLAYER_START 70
 #define LOCALID_NETPLAY_PLAYER_END   (LOCALID_NETPLAY_PLAYER_START + NETPLAY_MAX_REMOTES - 1)
 
 enum NetplayBridgeState
@@ -287,7 +293,7 @@ struct NetplayMailbox
     /*0x01C*/ u8 facing;
     /*0x01D*/ u8 elevation;
     /*0x01E*/ u16 graphicsId;
-    /*0x020*/ struct NetplayRemotePlayer remotes[NETPLAY_MAX_REMOTES];
+    /*0x020*/ struct NetplayRemotePlayer remotes[NETPLAY_MAILBOX_REMOTES];
     /*0x0C0*/ struct NetplayRequest request;
     /*0x0C8*/ struct NetplayEvent event;
     /*0x0D0*/ u8 eventAck;
@@ -305,9 +311,17 @@ struct NetplayMailbox
     /*0x518*/ struct NetplayMarket market;
     /*0x5E0*/ struct NetplayBattleReport battleReport; // written by the host of a PvP battle
     /*0x63C*/ struct NetplayWatch watch;
-}; // size 0x700
+    /*0x700*/ struct NetplayRemotePlayer moreRemotes[NETPLAY_MAX_REMOTES - NETPLAY_MAILBOX_REMOTES];
+}; // size 0x840
 
 extern struct NetplayMailbox gNetplayMailbox;
+
+static inline struct NetplayRemotePlayer *Netplay_GetRemoteSlot(u32 slot)
+{
+    if (slot < NETPLAY_MAILBOX_REMOTES)
+        return &gNetplayMailbox.remotes[slot];
+    return &gNetplayMailbox.moreRemotes[slot - NETPLAY_MAILBOX_REMOTES];
+}
 
 void Netplay_Init(void);
 void Netplay_Update(void);

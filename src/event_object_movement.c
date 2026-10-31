@@ -1477,13 +1477,27 @@ u8 GetObjectEventIdByXY(s16 x, s16 y)
     return i;
 }
 
+// The last slot each local id was found in. Looked up many times a frame
+// (every shadow, rover, other player...), and with 64 objects a full scan
+// each time made the overworld lag, so the hint is checked first. It's only
+// a hint: a stale one fails the check and the scan runs as before.
+static EWRAM_DATA u8 sLocalIdHint[256] = {0};
+
 static u8 GetObjectEventIdByLocalIdAndMapInternal(u8 localId, u8 mapNum, u8 mapGroupId)
 {
-    u8 i;
+    u32 i = sLocalIdHint[localId];
+    const struct ObjectEvent *obj = &gObjectEvents[i];
+
+    if (i < OBJECT_EVENTS_COUNT && obj->active && obj->localId == localId && obj->mapNum == mapNum && obj->mapGroup == mapGroupId)
+        return i;
     for (i = 0; i < OBJECT_EVENTS_COUNT; i++)
     {
-        if (gObjectEvents[i].active && gObjectEvents[i].localId == localId && gObjectEvents[i].mapNum == mapNum && gObjectEvents[i].mapGroup == mapGroupId)
+        obj = &gObjectEvents[i];
+        if (obj->active && obj->localId == localId && obj->mapNum == mapNum && obj->mapGroup == mapGroupId)
+        {
+            sLocalIdHint[localId] = i;
             return i;
+        }
     }
 
     return OBJECT_EVENTS_COUNT;

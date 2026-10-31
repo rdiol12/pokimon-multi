@@ -85,8 +85,8 @@ struct LookSheet
 
 #include "data/trainer_look.h"
 
-#define TAG_LOOK_PAL_FIRST  0x5F70 // the palette pool
-#define LOOK_PAL_POOL       10
+#define TAG_LOOK_PAL_FIRST  0x5FA0 // the palette pool
+#define LOOK_PAL_POOL       LOOK_OVERLAYS // one per trainer on screen (was 10 of the GBA's 16 palettes)
 #define TAG_LOOK_TILES      0x5F80 // + overlay slot
 #define LOOK_OVERLAYS       (1 + NETPLAY_MAX_REMOTES) // the player, then the other players
 #define OVERLAY_SIZE        (32 * 32 / 2)
@@ -552,6 +552,8 @@ static struct ObjectEvent *OverlayWearer(u32 slot)
 
     if (slot == 0)
         return &gObjectEvents[gPlayerAvatar.objectEventId];
+    if (Netplay_GetRemoteSlot(slot - 1)->id == 0)
+        return NULL; // nobody in that slot: skip the object search
     objId = GetObjectEventIdByLocalIdAndMap(LOCALID_NETPLAY_PLAYER_START + slot - 1,
                                             gSaveBlock1Ptr->location.mapNum, gSaveBlock1Ptr->location.mapGroup);
     return objId < OBJECT_EVENTS_COUNT ? &gObjectEvents[objId] : NULL;

@@ -17,7 +17,7 @@
 
 // Fusion breeding. See include/breed_fusion.h for the rules. Nothing here
 // needs save data beyond the partner species kept in each Pokémon, and
-// the only EWRAM is a few small caches.
+// the only EWRAM is a few caches.
 //
 // Colors: both parents' front sprites are measured (how many pixels use
 // each palette color) and each palette is split into color families:
@@ -33,8 +33,11 @@
 #define HUE_NEAR         160  // hues closer than this (about 37°) join one family
 #define DARK_LIMIT       44   // lightness below this is an outline, kept as is
 #define GREY_LIMIT       40   // saturation below this is a grey/white
-#define PALETTE_SLOTS    3
-#define PARTNER_SLOTS    4
+// Caches: blended palettes made (each needs a sprite decompressed and
+// measured) and partners looked up in the party and boxes. 3 and 4 on the
+// GBA; extended EWRAM fits enough for a full double battle, party and box.
+#define PALETTE_SLOTS    32
+#define PARTNER_SLOTS    48
 #define FUSION_FOLLOWER_PAL_TAG  0xF000 // + a hash of the pair, below TAG_NONE
 #define FUSION_FOLLOWER_PAL_TAGS 0x0F00
 
@@ -66,9 +69,9 @@ struct PartnerCacheEntry
 
 static void CountPicPixels(const u8 *pic, u32 size, u16 *counts);
 
-static EWRAM_DATA struct FusionPalette sPalettes[PALETTE_SLOTS] = {0};
+static EWRAM_EXT_DATA struct FusionPalette sPalettes[PALETTE_SLOTS] = {0};
 static EWRAM_DATA u8 sNextPalette = 0;
-static EWRAM_DATA struct PartnerCacheEntry sPartners[PARTNER_SLOTS] = {0};
+static EWRAM_EXT_DATA struct PartnerCacheEntry sPartners[PARTNER_SLOTS] = {0};
 static EWRAM_DATA u8 sNextPartner = 0;
 static EWRAM_DATA u8 sRequestState = 0;   // REQUEST_*
 static EWRAM_DATA u8 sRequestFailures = 0;
