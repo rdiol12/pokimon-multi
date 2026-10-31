@@ -46,6 +46,8 @@ class WebTest(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(body.startswith(
             'NETPLAY_HOST = NETPLAY_HOST or "play.example.org"\nNETPLAY_PORT = NETPLAY_PORT or 7777\n'))
         self.assertIn("function Bridge:onFrame", body)
+        # The Online Plaza part comes after the bridge, whose NetplayBridge it uses.
+        self.assertGreater(body.index("NetplayExtLoaded"), body.index("NetplayBridge = {"))
 
     async def test_health_and_404(self):
         status, body = await self.get("/health")

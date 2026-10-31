@@ -238,6 +238,12 @@ static void SetCurSecretBaseId(void)
     sCurSecretBaseId = gSpecialVar_0x8004;
 }
 
+// For visiting a base downloaded from the netplay server.
+void SetCurSecretBaseIdTo(u8 secretBaseId)
+{
+    sCurSecretBaseId = secretBaseId;
+}
+
 void TrySetCurSecretBaseIndex(void)
 {
     u16 i;
