@@ -98,6 +98,7 @@ enum
     SHOWCASE_NONE,
     SHOWCASE_ROAMER, // a roaming species/level battle starts
     SHOWCASE_WILD,   // a wild species/level (shiny if set) battle starts
+    SHOWCASE_ITEM,   // `level` of item `species` go in the bag
 };
 
 struct OnlineShowcase
@@ -153,7 +154,7 @@ static s32 AsciiToNum(const char *s)
 }
 
 // Server text in the game's charset: "~" is a new line, "^" a new page,
-// "#" is "é".
+// "#" is "é", "$" the money sign.
 u8 *Online_CopyText(u8 *dest, const char *src, u32 maxChars)
 {
     char one[2] = {0, 0};
@@ -166,6 +167,8 @@ u8 *Online_CopyText(u8 *dest, const char *src, u32 maxChars)
             *dest++ = CHAR_PROMPT_CLEAR;
         else if (*src == '#')
             *dest++ = CHAR_e_ACUTE;
+        else if (*src == '$')
+            *dest++ = CHAR_CURRENCY;
         else
         {
             one[0] = *src;
@@ -564,57 +567,23 @@ void Online_ShowBoard(void)
 #define tListTaskId data[0]
 #define tWindowId   data[1]
 
-static void Task_Choose(u8 taskId)
-{
-    struct Task *task = &gTasks[taskId];
-    s32 input = ListMenu_ProcessInput(task->tListTaskId);
-
-    if (input == LIST_NOTHING_CHOSEN)
-        return;
-    PlaySE(SE_SELECT);
-    if (input == LIST_CANCEL)
-    {
-        gSpecialVar_Result = ONLINE_CHOSE_NOTHING;
-    }
-    else
-    {
-        gSpecialVar_Result = input;
-        Npx_ChooseAnswerRow(sOnline.dataRows[input]);
-        Online_CopyText(gStringVar3, Online_DataField(input, 0), 30);
-    }
-    DestroyListMenuTask(task->tListTaskId, NULL, NULL);
-    ClearStdWindowAndFrameToTransparent(task->tWindowId, FALSE);
-    ClearWindowTilemap(task->tWindowId);
-    RemoveWindow(task->tWindowId);
-    ScheduleBgCopyTilemapToVram(0);
-    DestroyTask(taskId);
-    ScriptContext_Enable();
-}
-
-void Online_Choose(void)
+// A scrolling list in a window, run by func (which calls
+// ListMenu_ProcessInput on tListTaskId and Online_CloseList when done).
+// items has count rows, the last usually Cancel.
+u8 Online_OpenList(const struct ListMenuItem *items, u32 count, void (*func)(u8 taskId))
 {
     struct ListMenuTemplate template = gMultiuseListMenuTemplate;
     struct WindowTemplate window = {.bg = 0, .tilemapLeft = 4, .tilemapTop = 1, .width = 22, .paletteNum = 15, .baseBlock = 0x008};
-    u8 taskId = CreateTask(Task_Choose, 80);
+    u8 taskId = CreateTask(func, 80);
     struct Task *task = &gTasks[taskId];
-    u32 i, count = min(Online_DataRows(), NPX_MAX_ROWS);
 
-    for (i = 0; i < count; i++)
-    {
-        Online_CopyText(sItemText[i], Online_DataField(i, 0), 24);
-        sItems[i].name = sItemText[i];
-        sItems[i].id = i;
-    }
-    sItems[count].name = gText_Cancel;
-    sItems[count].id = LIST_CANCEL;
-
-    window.height = min(count + 1, LIST_SHOWN) * 2;
+    window.height = min(count, LIST_SHOWN) * 2;
     task->tWindowId = AddWindow(&window);
     DrawStdWindowFrame(task->tWindowId, FALSE);
 
-    template.items = sItems;
-    template.totalItems = count + 1;
-    template.maxShowed = min(count + 1, LIST_SHOWN);
+    template.items = items;
+    template.totalItems = count;
+    template.maxShowed = min(count, LIST_SHOWN);
     template.windowId = task->tWindowId;
     template.header_X = 0;
     template.item_X = 8;
@@ -629,6 +598,55 @@ void Online_Choose(void)
     task->tListTaskId = ListMenuInit(&template, 0, 0);
     CopyWindowToVram(task->tWindowId, COPYWIN_FULL);
     ScheduleBgCopyTilemapToVram(0);
+    return taskId;
+}
+
+void Online_CloseList(u8 taskId)
+{
+    struct Task *task = &gTasks[taskId];
+
+    DestroyListMenuTask(task->tListTaskId, NULL, NULL);
+    ClearStdWindowAndFrameToTransparent(task->tWindowId, FALSE);
+    ClearWindowTilemap(task->tWindowId);
+    RemoveWindow(task->tWindowId);
+    ScheduleBgCopyTilemapToVram(0);
+    DestroyTask(taskId);
+    ScriptContext_Enable();
+}
+
+static void Task_Choose(u8 taskId)
+{
+    s32 input = ListMenu_ProcessInput(gTasks[taskId].tListTaskId);
+
+    if (input == LIST_NOTHING_CHOSEN)
+        return;
+    PlaySE(SE_SELECT);
+    if (input == LIST_CANCEL)
+    {
+        gSpecialVar_Result = ONLINE_CHOSE_NOTHING;
+    }
+    else
+    {
+        gSpecialVar_Result = input;
+        Npx_ChooseAnswerRow(sOnline.dataRows[input]);
+        Online_CopyText(gStringVar3, Online_DataField(input, 0), 30);
+    }
+    Online_CloseList(taskId);
+}
+
+void Online_Choose(void)
+{
+    u32 i, count = min(Online_DataRows(), NPX_MAX_ROWS);
+
+    for (i = 0; i < count; i++)
+    {
+        Online_CopyText(sItemText[i], Online_DataField(i, 0), 24);
+        sItems[i].name = sItemText[i];
+        sItems[i].id = i;
+    }
+    sItems[count].name = gText_Cancel;
+    sItems[count].id = LIST_CANCEL;
+    Online_OpenList(sItems, count + 1, Task_Choose);
 }
 
 #undef tListTaskId
@@ -721,19 +739,22 @@ static bool32 RunShowcase(void)
     case SHOWCASE_ROAMER:
     case SHOWCASE_WILD:
         ZeroEnemyPartyMons();
-        CreateMonWithIVs(&gEnemyParty[0], gOnlineShowcase.species, gOnlineShowcase.level,
+        CreateMonWithIVs(&gParties[B_TRAINER_OPPONENT_A][0], gOnlineShowcase.species, gOnlineShowcase.level,
             GetMonPersonality(gOnlineShowcase.species, MON_GENDER_RANDOM, NATURE_RANDOM, RANDOM_UNOWN_LETTER),
             OTID_STRUCT_PLAYER_ID, USE_RANDOM_IVS);
         if (gOnlineShowcase.shiny)
         {
             bool32 shiny = TRUE;
-            SetMonData(&gEnemyParty[0], MON_DATA_IS_SHINY, &shiny);
+            SetMonData(&gParties[B_TRAINER_OPPONENT_A][0], MON_DATA_IS_SHINY, &shiny);
         }
         if (kind == SHOWCASE_ROAMER)
             BattleSetup_StartRoamerBattle();
         else
             BattleSetup_StartWildBattle();
         return TRUE;
+    case SHOWCASE_ITEM:
+        AddBagItem(gOnlineShowcase.species, gOnlineShowcase.level);
+        break;
     }
     return FALSE;
 }
@@ -781,9 +802,9 @@ void Online_OnWildBattleStart(void)
 
     if (gIsFishingEncounter)
         Online_TournamentBite();
-    species = GetMonData(&gEnemyParty[0], MON_DATA_SPECIES);
+    species = GetMonData(&gParties[B_TRAINER_OPPONENT_A][0], MON_DATA_SPECIES);
     sWild.species = species;
-    sWild.personality = GetMonData(&gEnemyParty[0], MON_DATA_PERSONALITY);
+    sWild.personality = GetMonData(&gParties[B_TRAINER_OPPONENT_A][0], MON_DATA_PERSONALITY);
     sWild.fished = gIsFishingEncounter;
     if (species == SPECIES_NONE || species >= NUM_SPECIES)
         return;

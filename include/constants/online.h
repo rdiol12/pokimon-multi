@@ -27,13 +27,23 @@
 #define ONL_REQ_COFISH_REEL 10 // VAR_0x8005: hits
 #define ONL_REQ_COFISH_RESULT 11
 #define ONL_REQ_COFISH_BOARD 12
-#define ONL_REQ_COUNT       13
+#define ONL_REQ_SHOP_LIST   13
+#define ONL_REQ_SHOP_OPEN   14 // the shop picked from SHOP_LIST
+#define ONL_REQ_SHOP_ITEMS  15 // the shop opened last
+#define ONL_REQ_SHOP_BUY    16 // VAR_0x8005: item, VAR_0x8006: how many; the shelf picked
+#define ONL_REQ_SHOP_MINE   17
+#define ONL_REQ_SHOP_PRICES 18 // VAR_0x8005: item, VAR_0x8006: how many, VAR_0x8007: mart price
+#define ONL_REQ_SHOP_STOCK  19 // VAR_0x8005: item, VAR_0x8006: how many; the price picked
+#define ONL_REQ_SHOP_TAKE   20 // the shelf picked from SHOP_MINE
+#define ONL_REQ_SHOP_COLLECT 21
+#define ONL_REQ_COUNT       22
 
 // The hub's rows (VAR_RESULT of its menu).
 #define ONLINE_HUB_GOALS    0
 #define ONLINE_HUB_SIGHTINGS 1
 #define ONLINE_HUB_FISHING  2
 #define ONLINE_HUB_COFISH   3
+#define ONLINE_HUB_SHOPS    4
 #define ONLINE_HUB_CLOSE    127
 
 // VAR_0x800B of the co-op fishing requests.

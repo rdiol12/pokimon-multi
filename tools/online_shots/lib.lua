@@ -69,6 +69,17 @@ function Driver.wildBattle(species, level, shiny, kind)
     D.write8(s, kind or 2)
 end
 
+-- Puts count of an item (ITEM_ID name) in the bag.
+function Driver.giveItem(item, count)
+    local s = D.SYM.gOnlineShowcase
+    local id = ITEM_ID[item]
+    D.write8(s + 1, count)
+    D.write8(s + 2, id & 0xFF)
+    D.write8(s + 3, id >> 8)
+    D.write8(s, 3)
+    D.waitFor("the item", 300, function() return D.read8(s) == 0 end)
+end
+
 -- Throws the last used Ball until the battle is over (Master Ball: once).
 function Driver.catchThis()
     D.waitFor("the battle", 1200, D.inBattle)

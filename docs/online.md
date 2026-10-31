@@ -92,6 +92,26 @@ rounds of the reeling meter. With four hits or more between them the giant
 and both get one at level 45 (shiny one time in 64). The biggest giants
 landed are on HUB → CO-OP FISHING → GIANT CATCHES.
 
+## Player shops
+
+![TEST1 visits TEST2's shop and buys; TEST2 stocks a shelf, hears of the sale and collects](images/online-shops.png)
+
+Every player can run a shop with up to six shelves of items
+(`server/online_shops.py`, `src/online_shops.c`,
+`data/scripts/online/shops.inc`). HUB → PLAYER SHOPS:
+
+- **VISIT A SHOP** lists the other players' shops, best sellers first.
+  Opening one shows its shelves; pick a shelf, then 1, 5 or ALL. The money
+  is taken and the items go in the bag (if there's room).
+- **MY SHOP** → **STOCK AN ITEM** picks something from the bag's item,
+  ball or berry pockets, how many, and a price: half, the same as, one and
+  a half or twice the mart price. The items leave the bag. **TAKE BACK**
+  empties a shelf, **COLLECT MONEY** pays out what has sold.
+
+Shops stay open while their owner is offline; the money waits on the
+server. An owner who is online hears of each sale. The market board and
+the auction house sell Pokémon; shops sell items.
+
 ## How it talks to the server
 
 These features use the Online Plaza's request channel (`NpxRpc_*` in
@@ -104,7 +124,7 @@ handles every answer the same way:
 
 | Rows of the answer | What the game does |
 | --- | --- |
-| row 0: `message\|code\|var1\|var2\|var3` | message to `gStringVar4` (`~` new line, `^` new page, `#` é), code to `VAR_0x800B`, vars to `gStringVar1`–`3` |
+| row 0: `message\|code\|var1\|var2\|var3` | message to `gStringVar4` (`~` new line, `^` new page, `#` é), code to `VAR_0x800B`, vars to `gStringVar1`–`3`; `$` is the money sign |
 | `+ITEM\|id\|n`, `-ITEM\|id\|n`, `+MONEY\|n`, `-MONEY\|n`, `+MON\|species\|level\|shiny` | applied right away |
 | `N\|text` | a notice, shown once the player is free |
 | `S\|key\|...` | the status of a live feature (`Online_Status`) |

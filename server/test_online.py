@@ -223,10 +223,10 @@ class ShopTest(OnlineTest):
         self.assertEqual(rows(out)[1], ["-ITEM", str(potion), "5"])
         await self.ask(a, f"SHOP STOCK {potion} 2 450")  # same price: same shelf
         status, out = await self.ask(b, "SHOP LIST")
-        self.assertEqual(rows(out)[1][0], "Ann'S SHOP")
+        self.assertEqual(rows(out)[1][0], "Ann's Shop")
         shop = rows(out)[1][1]
         status, out = await self.ask(b, f"SHOP OPEN {shop}")
-        self.assertEqual(rows(out)[3], ["POTION", "7", "$450"])
+        self.assertEqual(rows(out)[3], ["Potion", "7", "$450"])
         status, out = await self.ask(b, "SHOP ITEMS")
         shelf = rows(out)[1][1]
         # Not enough money, then 3 of them.
@@ -252,7 +252,7 @@ class ShopTest(OnlineTest):
         status, out = await self.ask(a, f"SHOP STOCK {ITEMS['ETHER']} 1 100")
         self.assertEqual(status, 1)
         status, out = await self.ask(a, "SHOP MINE")
-        self.assertEqual(rows(out)[3][0], "POK# BALL x1 $100")
+        self.assertEqual(rows(out)[3][0], "Pok# Ball x1 $100")
         status, out = await self.ask(a, f"SHOP TAKE {rows(out)[1][1]}")
         self.assertEqual(rows(out)[1], ["+ITEM", str(ITEMS["POTION"]), "1"])
 

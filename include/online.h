@@ -53,4 +53,9 @@ const char *Online_DataField(u32 row, u32 col);
 s32 Online_DataNum(u32 row, u32 col);
 u8 *Online_CopyText(u8 *dest, const char *src, u32 maxChars);
 
+// A scrolling list for a task of your own (src/online.c).
+struct ListMenuItem;
+u8 Online_OpenList(const struct ListMenuItem *items, u32 count, void (*func)(u8 taskId));
+void Online_CloseList(u8 taskId);
+
 #endif // GUARD_ONLINE_H

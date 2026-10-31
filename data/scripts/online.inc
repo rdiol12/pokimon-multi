@@ -26,6 +26,7 @@ Online_EventScript_Hub::
 	dynmultipush Online_Text_HubSightings, ONLINE_HUB_SIGHTINGS
 	dynmultipush Online_Text_HubFishing, ONLINE_HUB_FISHING
 	dynmultipush Online_Text_HubCoFish, ONLINE_HUB_COFISH
+	dynmultipush Online_Text_HubShops, ONLINE_HUB_SHOPS
 	dynmultipush Online_Text_HubClose, ONLINE_HUB_CLOSE
 	dynmultistack 0, 0, FALSE, 6, FALSE, 0, DYN_MULTICHOICE_CB_NONE
 	switch VAR_RESULT
@@ -33,6 +34,7 @@ Online_EventScript_Hub::
 	case ONLINE_HUB_SIGHTINGS, Online_EventScript_Sightings
 	case ONLINE_HUB_FISHING, Online_EventScript_Fishing
 	case ONLINE_HUB_COFISH, Online_EventScript_CoFish
+	case ONLINE_HUB_SHOPS, Online_EventScript_Shops
 	releaseall
 	end
 
@@ -76,6 +78,9 @@ Online_Text_HubFishing:
 Online_Text_HubCoFish:
 	.string "CO-OP FISHING$"
 
+Online_Text_HubShops:
+	.string "PLAYER SHOPS$"
+
 Online_Text_HubClose:
 	.string "CLOSE$"
 
@@ -83,3 +88,4 @@ Online_Text_HubClose:
 	.include "data/scripts/online/sightings.inc"
 	.include "data/scripts/online/fishing.inc"
 	.include "data/scripts/online/coop_fishing.inc"
+	.include "data/scripts/online/shops.inc"
