@@ -24,6 +24,7 @@
 #define PASTIME_MENU_WEATHER    14
 #define PASTIME_MENU_STARS      15
 #define PASTIME_MENU_CARNIVAL   16
+#define PASTIME_MENU_ORCHESTRA  17
 #define PASTIME_MENU_CLOSE      31
 
 // NPCs and objects the activities place on maps from code (src/pastime.c)
@@ -209,5 +210,9 @@
 #define SOCCER_DRAW            1
 #define SOCCER_LOST            2
 #define FERRIS_WHEEL_FARE      100
+
+// Pokémon orchestra in Verdanturf (src/pastime_orchestra.c).
+#define ORCHESTRA_FIRST_NOTES  3
+#define ORCHESTRA_MAX_NOTES    12
 
 #endif // GUARD_CONSTANTS_PASTIME_H

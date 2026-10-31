@@ -172,4 +172,9 @@ void Soccer_Finish(void);
 void Ferris_Ride(void);
 void Carnival_ShowList(void);
 
+// Pokémon orchestra (pastime_orchestra.c).
+void Orchestra_Play(void);
+void Orchestra_Finish(void);
+void Orchestra_ShowList(void);
+
 #endif // GUARD_PASTIME_H

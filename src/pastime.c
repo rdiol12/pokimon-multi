@@ -46,6 +46,7 @@ static const struct PastimeSpotList sSpotLists[] =
     {gGardenSpots, 1 + GARDEN_PLOTS},
     {gWeatherSpots, 1},
     {gStarSpots, 1 + STAR_CONSTELLATIONS + STAR_METEORITES},
+    {gOrchestraSpots, 1},
 };
 
 #define MAX_SHOWN (LOCALID_PASTIME_LAST - LOCALID_PASTIME_FIRST + 1)
