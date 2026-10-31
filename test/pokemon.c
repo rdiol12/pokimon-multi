@@ -738,9 +738,12 @@ TEST("BoxPokemon encryption works")
     EXPECT_EQ(GetMonData(&mon, MON_DATA_CHAMPION_RIBBON), 1);
     EXPECT_EQ(GetMonData(&mon, MON_DATA_VICTORY_RIBBON), 1);
     EXPECT_EQ(GetMonData(&mon, MON_DATA_EFFORT_RIBBON), 1);
-    EXPECT_EQ(GetMonData(&mon, MON_DATA_LAND_RIBBON), 1);
-    EXPECT_EQ(GetMonData(&mon, MON_DATA_COUNTRY_RIBBON), 1);
-    EXPECT_EQ(GetMonData(&mon, MON_DATA_EARTH_RIBBON), 1);
+    // The Land, Country and Earth ribbon bits of this data now hold fusion
+    // breeding's partner species (src/breed_fusion.c): bits 1, 3 and 5.
+    EXPECT_EQ(GetMonData(&mon, MON_DATA_LAND_RIBBON), 0);
+    EXPECT_EQ(GetMonData(&mon, MON_DATA_COUNTRY_RIBBON), 0);
+    EXPECT_EQ(GetMonData(&mon, MON_DATA_EARTH_RIBBON), 0);
+    EXPECT_EQ(GetMonData(&mon, MON_DATA_FUSION_PARTNER), (1 << 1) | (1 << 3) | (1 << 5));
     EXPECT_EQ(GetMonData(&mon, MON_DATA_HYPER_TRAINED_HP), 1);
     EXPECT_EQ(GetMonData(&mon, MON_DATA_HYPER_TRAINED_ATK), 1);
     EXPECT_EQ(GetMonData(&mon, MON_DATA_HYPER_TRAINED_DEF), 1);
