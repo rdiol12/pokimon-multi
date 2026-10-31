@@ -74,7 +74,8 @@
     "gMapGroup_IndoorFiveIslandRoute_Frlg",
     "gMapGroup_IndoorTwoIslandRoute_Frlg",
     "gMapGroup_IndoorSixIslandRoute_Frlg",
-    "gMapGroup_IndoorSevenIslandRoute_Frlg"
+    "gMapGroup_IndoorSevenIslandRoute_Frlg",
+    "gMapGroup_Adventure"
   ],
   "gMapGroup_TownsAndRoutes": [
     "PetalburgCity",
@@ -312,7 +313,8 @@
     "StarfallIsle_Cave",
     "StarfallIsle_EldersHouse",
     "StarfallIsle_ExplorersHouse",
-    "StarfallIsle_PlayerHouse"
+    "StarfallIsle_PlayerHouse",
+    "StarfallIsle_Hotel"
   ],
   "gMapGroup_IndoorMossdeep": [
     "MossdeepCity_Gym",
@@ -1192,5 +1194,9 @@
   ],
   "gMapGroup_IndoorSevenIslandRoute_Frlg": [
     "SevenIsland_SevaultCanyon_House_Frlg"
+  ],
+  "gMapGroup_Adventure": [
+    "AdventureRanch",
+    "AdventureDungeon"
   ]
 }

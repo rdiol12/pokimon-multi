@@ -1,6 +1,26 @@
 #ifndef GUARD_ADVENTURE_SAVE_H
 #define GUARD_ADVENTURE_SAVE_H
 
+#include "constants/adventure.h"
+
+struct DailyQuestSlot
+{
+    u16 day;   // RTC day it was taken or turned in
+    u8 quest;  // index in the giver's list
+    u8 state;
+    u16 base;  // the counter when it was taken
+    u16 count; // catches or trainers counted since
+};
+
+// A team member as it goes on the Hall of Fame wall; the server reads the
+// same 4 bytes (server/adventure_hof.py).
+struct HofWallMon
+{
+    u16 species;
+    u8 level;
+    u8 shiny;
+};
+
 // Saved state of the fourth-batch game features (docs/adventure.md). Lives
 // at the end of SaveBlock3.
 
@@ -13,6 +33,38 @@ struct AdventureSaveData
     u16 lastPvpWins;    // game stats already counted for XP
     u16 lastPvpBattles;
     u16 lastTrades;
+    // Daily quests, one per giver.
+    struct DailyQuestSlot dailyQuests[DAILY_QUEST_GIVERS];
+    // Crafting.
+    u16 itemsCrafted;
+    // Ranch.
+    u16 ranchItemsGathered;
+    u32 ranchLastHour;          // the clock (days * 24 + hours) when finds were last counted
+    u8 ranchStarted;
+    u8 ranchShown[RANCH_SHOWN]; // box positions of the Pokémon in the pasture
+    u8 filler;
+    // Dungeon.
+    u32 dungeonSeed;  // the current floor's layout
+    u8 dungeonFloor;  // 1 = B1F
+    u8 dungeonBest;
+    u16 dungeonRuns;
+    // Treasure hunts.
+    u16 treasureDay;    // RTC day of the map in hand
+    u8 treasureSpot;
+    u8 treasureState;
+    u16 treasuresFound;
+    u16 filler2;
+    // Online Battle Frontier: the Factory, Arena and Pyramid streaks added up,
+    // last time they were looked at.
+    u16 frontierWins[FRONTIER_ONLINE_FACILITIES];
+    u8 frontierStarted;
+    u8 filler3;
+    // Hall of Fame wall: the last team that entered, kept until the server
+    // has it.
+    struct HofWallMon hofTeam[PARTY_SIZE];
+    u8 hofPending;
+    u8 filler4;
+    u16 hofEntry; // its number on the wall, 0 = not up yet
 };
 
 #endif // GUARD_ADVENTURE_SAVE_H

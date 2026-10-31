@@ -28,6 +28,9 @@
 #include "config/save.h"
 #include "world_save.h"
 #include "adventure_save.h"
+#include "life_save.h"
+#include "mechanics_save.h"
+#include "pastime_save.h"
 #include "area_save.h"
 
 // Prevent cross-jump optimization.
@@ -277,6 +280,9 @@ struct SaveBlock3
 #endif
     struct WorldSaveData world;
     struct AdventureSaveData adventure;
+    struct LifeSaveData life;
+    struct MechanicsSaveData mechanics;
+    struct PastimeSaveData pastime;
     struct AreaSaveData areas;
 }; /* max size 1624 bytes */
 

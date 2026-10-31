@@ -1,12 +1,16 @@
 #include "global.h"
 #include "world.h"
+#include "online.h"
+#include "pastime.h"
 #include "data.h"
+#include "life.h"
 #include "main.h"
 #include "battle.h"
 #include "battle_frontier.h"
 #include "battle_pike.h"
 #include "battle_pyramid.h"
 #include "battle_setup.h"
+#include "community.h"
 #include "battle_special.h"
 #include "battle_partner.h"
 #include "battle_tower.h"
@@ -277,6 +281,7 @@ static void CreateBattleStartTask(enum BattleTransition transition, u16 song)
 {
     u8 taskId = CreateTask(Task_BattleStart, 1);
 
+    Pastime_OnBattleStart();
     gTasks[taskId].tTransition = transition;
     PlayMapChosenOrBattleBGM(song);
 }
@@ -413,6 +418,7 @@ static void DoStandardWildBattle(bool32 isDouble)
     }
     CreateBattleStartTask(GetWildBattleTransition(), 0);
     IncrementGameStat(GAME_STAT_TOTAL_BATTLES);
+    Online_OnWildBattleStart();
     World_OnWildBattleStart();
     IncrementGameStat(GAME_STAT_WILD_BATTLES);
     IncrementDailyWildBattles();
@@ -447,6 +453,7 @@ void BattleSetup_StartRoamerBattle(void)
     gBattleTypeFlags = BATTLE_TYPE_ROAMER;
     CreateBattleStartTask(GetWildBattleTransition(), 0);
     IncrementGameStat(GAME_STAT_TOTAL_BATTLES);
+    Online_OnWildBattleStart();
     IncrementGameStat(GAME_STAT_WILD_BATTLES);
     IncrementDailyWildBattles();
     TryUpdateGymLeaderRematchFromWild();
@@ -472,6 +479,7 @@ static void DoGhostBattle(void)
     CreateBattleStartTask(GetWildBattleTransition(), 0);
     SetMonData(&gParties[B_TRAINER_OPPONENT_A][0], MON_DATA_NICKNAME, gText_Ghost);
     IncrementGameStat(GAME_STAT_TOTAL_BATTLES);
+    Online_OnWildBattleStart();
     IncrementGameStat(GAME_STAT_WILD_BATTLES);
 }
 
@@ -484,6 +492,7 @@ static void DoBattlePikeWildBattle(void)
     gBattleTypeFlags = BATTLE_TYPE_PIKE;
     CreateBattleStartTask(GetWildBattleTransition(), 0);
     IncrementGameStat(GAME_STAT_TOTAL_BATTLES);
+    Online_OnWildBattleStart();
     IncrementGameStat(GAME_STAT_WILD_BATTLES);
     IncrementDailyWildBattles();
     TryUpdateGymLeaderRematchFromWild();
@@ -496,6 +505,7 @@ static void DoTrainerBattle(void)
         CreateNPCTrainerParty(&gParties[B_TRAINER_OPPONENT_B][0], TRAINER_BATTLE_PARAM.opponentB);
     CreateBattleStartTask(GetTrainerBattleTransition(), 0);
     IncrementGameStat(GAME_STAT_TOTAL_BATTLES);
+    Online_OnWildBattleStart();
     IncrementGameStat(GAME_STAT_TRAINER_BATTLES);
     TryUpdateGymLeaderRematchFromTrainer();
 }
@@ -508,6 +518,7 @@ static void DoBattlePyramidTrainerHillBattle(void)
         CreateBattleStartTask(GetSpecialBattleTransition(B_TRANSITION_GROUP_TRAINER_HILL), 0);
 
     IncrementGameStat(GAME_STAT_TOTAL_BATTLES);
+    Online_OnWildBattleStart();
     IncrementGameStat(GAME_STAT_TRAINER_BATTLES);
     TryUpdateGymLeaderRematchFromTrainer();
 }
@@ -538,6 +549,7 @@ void BattleSetup_StartScriptedWildBattle(void)
     gBattleTypeFlags = 0;
     CreateBattleStartTask(GetWildBattleTransition(), 0);
     IncrementGameStat(GAME_STAT_TOTAL_BATTLES);
+    Online_OnWildBattleStart();
     IncrementGameStat(GAME_STAT_WILD_BATTLES);
     IncrementDailyWildBattles();
     TryUpdateGymLeaderRematchFromWild();
@@ -550,6 +562,7 @@ void BattleSetup_StartScriptedDoubleWildBattle(void)
     gBattleTypeFlags = BATTLE_TYPE_DOUBLE;
     CreateBattleStartTask(GetWildBattleTransition(), 0);
     IncrementGameStat(GAME_STAT_TOTAL_BATTLES);
+    Online_OnWildBattleStart();
     IncrementGameStat(GAME_STAT_WILD_BATTLES);
     IncrementDailyWildBattles();
     TryUpdateGymLeaderRematchFromWild();
@@ -571,6 +584,7 @@ void StartMarowakBattle(void)
     CreateBattleStartTask(GetWildBattleTransition(), 0);
     SetMonData(&gParties[B_TRAINER_OPPONENT_A][0], MON_DATA_NICKNAME, gText_Ghost);
     IncrementGameStat(GAME_STAT_TOTAL_BATTLES);
+    Online_OnWildBattleStart();
     IncrementGameStat(GAME_STAT_WILD_BATTLES);
 }
 
@@ -581,6 +595,7 @@ void BattleSetup_StartLatiBattle(void)
     gBattleTypeFlags = BATTLE_TYPE_LEGENDARY;
     CreateBattleStartTask(GetWildBattleTransition(), 0);
     IncrementGameStat(GAME_STAT_TOTAL_BATTLES);
+    Online_OnWildBattleStart();
     IncrementGameStat(GAME_STAT_WILD_BATTLES);
     IncrementDailyWildBattles();
     TryUpdateGymLeaderRematchFromWild();
@@ -1545,6 +1560,38 @@ static void CB2_EndDebugBattle(void)
     SetMainCallback2(CB2_EndTrainerBattle);
 }
 
+// A battle against gLifeTrainer (src/life_battle.c), from a script (call
+// it with waitstate). No
+// trainer flags are set; VAR_RESULT is TRUE if the player won, and a loss
+// whites out as usual.
+static void CB2_EndLifeTrainerBattle(void)
+{
+    World_OnTrainerBattleEnd();
+    LifeGhost_OnBattleEnd(gLifeTrainer, IsPlayerDefeated(gBattleOutcome) != TRUE);
+    gLifeTrainer = NULL;
+    if (IsPlayerDefeated(gBattleOutcome) == TRUE)
+    {
+        gSpecialVar_Result = FALSE;
+        SetMainCallback2(CB2_WhiteOut);
+    }
+    else
+    {
+        gSpecialVar_Result = TRUE;
+        SetMainCallback2(CB2_ReturnToFieldContinueScriptPlayMapMusic);
+    }
+}
+
+void BattleSetup_StartLifeTrainerBattle(void)
+{
+    LockPlayerFieldControls();
+    FreezeObjectEvents();
+    StopPlayerAvatar();
+    gMain.savedCallback = CB2_EndLifeTrainerBattle;
+    CreateBattleStartTask(GetTrainerBattleTransition(), 0);
+    IncrementGameStat(GAME_STAT_TOTAL_BATTLES);
+    IncrementGameStat(GAME_STAT_TRAINER_BATTLES);
+}
+
 void BattleSetup_StartTrainerBattle_Debug(void)
 {
     sNoOfPossibleTrainerRetScripts = gNoOfApproachingTrainers;
@@ -2272,6 +2319,8 @@ void CreateNPCTrainerPartyFromTrainer(struct Pokemon *party, const struct Traine
 
 static void CreateNPCTrainerParty(struct Pokemon *party, u16 trainerNum)
 {
+    if (Community_OverrideTrainerParty(party, trainerNum))
+        return;
     if (!GetTrainerStructFromId(trainerNum)->overrideTrainer)
     {
         CreateNPCTrainerPartyFromTrainer(party, GetTrainerStructFromId(trainerNum));

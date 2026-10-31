@@ -73,6 +73,35 @@ class WorldTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(await a.recv(), "WROW 3 1 Ash 400 263")
         self.assertEqual(await a.recv(), "WBOARDEND 3 1")
 
+    async def test_dungeon_board_ranks_the_deepest_floor(self):
+        a = await self.connect("Ash")
+        b = await self.connect("Misty")
+        await a.send("SCORE 8 0 12 3")
+        await a.send("HUNT")
+        await a.recv()  # Ash's score is in
+        await b.send("SCORE 8 0 8 1")
+        await b.send("WBOARD 8 0")
+        self.assertEqual(await b.recv(), "WROW 8 1 Ash 12 3")
+        self.assertEqual(await b.recv(), "WROW 8 2 Misty 8 1")
+        self.assertEqual(await b.recv(), "WBOARDEND 8 2")
+
+    async def test_treasure_board_counts_treasures_found(self):
+        a = await self.connect("Ash")
+        await a.send("SCORE 9 0 1 0")
+        await a.send("SCORE 9 0 2 4")
+        await a.send("WBOARD 9 0")
+        self.assertEqual(await a.recv(), "WROW 9 1 Ash 2 4")
+        self.assertEqual(await a.recv(), "WBOARDEND 9 1")
+
+    async def test_frontier_boards_keep_the_best_streak(self):
+        a = await self.connect("Ash")
+        for board in (10, 11, 12):
+            await a.send(f"SCORE {board} 0 20 0")
+            await a.send(f"SCORE {board} 0 7 1")  # a worse streak: ignored
+            await a.send(f"WBOARD {board} 0")
+            self.assertEqual(await a.recv(), f"WROW {board} 1 Ash 20 0")
+            self.assertEqual(await a.recv(), f"WBOARDEND {board} 1")
+
     async def test_photo_goes_to_the_gallery(self):
         a = await self.connect("Ash")
         png = b"\x89PNG\r\n\x1a\n" + bytes(range(200))

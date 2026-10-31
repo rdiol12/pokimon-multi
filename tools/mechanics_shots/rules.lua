@@ -1,0 +1,38 @@
+-- The rules referee in the Slateport Battle Tent: the rule list, an
+-- INVERSE battle against a Battle Frontier trainer, and the result.
+dofile(INSTANCE_DIR .. "/../driver_lib.lua")
+local D, K = Driver, Driver.KEY
+
+D.run(function()
+    D.boot()
+    D.wait(60)
+    D.scene(13, MAPS.MAP_SLATEPORT_CITY_BATTLE_TENT_LOBBY, 9, 7, { give = "BLAZIKEN", level = 50, lead = true })
+    D.fastText()
+    D.mech({ fixMoves = true, moves = { "FLAMETHROWER", "CLOSE_COMBAT", "BRAVE_BIRD", "EARTHQUAKE" } })
+    D.shot("lobby")
+    D.hold(K.UP, 2)
+    D.wait(10)
+    for _ = 1, 4 do D.step(K.A, "intro") end
+    D.step(K.A, "menu")
+    D.step(K.A, "help")
+    D.step(K.A, "help")
+    D.step(K.A, "help")
+    D.step(K.A, "ready")
+    D.step(K.A, "opponent")
+    D.step(K.A, "start", 200)
+    D.fight("battle", 60, 400)
+    D.shot("after")
+    D.step(K.A, "after")
+    D.step(K.A, "after")
+    -- TRICK ROOM next.
+    D.step(K.DOWN, "menu-2")
+    D.step(K.A, "tr-help")
+    D.step(K.A, "tr-help")
+    D.step(K.A, "tr-ready")
+    D.step(K.A, "tr-opponent")
+    D.step(K.A, "tr-start", 200)
+    D.fight("tr-battle", 150, 400)
+    D.step(K.A, "tr-after")
+    D.step(K.A, "tr-after")
+    D.result("ok")
+end)

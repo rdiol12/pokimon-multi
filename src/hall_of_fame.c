@@ -33,6 +33,7 @@
 #include "trainer_pokemon_sprites.h"
 #include "data.h"
 #include "confetti_util.h"
+#include "hall_of_fame_wall.h"
 #include "constants/rgb.h"
 
 #define HALL_OF_FAME_MAX_TEAMS 30
@@ -410,6 +411,7 @@ void CB2_DoHallOfFameScreen(void)
 {
     if (!InitHallOfFameScreen())
     {
+        HallOfFameWall_OnEnter();
         u8 taskId = CreateTask(Task_Hof_InitMonData, 0);
         gTasks[taskId].tDontSaveData = FALSE;
         AllocateHoFTeams();

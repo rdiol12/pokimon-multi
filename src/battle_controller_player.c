@@ -1,5 +1,6 @@
 #include "global.h"
 #include "battle.h"
+#include "mechanics.h"
 #include "battle_anim.h"
 #include "battle_arena.h"
 #include "battle_controllers.h"
@@ -441,9 +442,9 @@ void HandleInputChooseTarget(enum BattlerId battler)
         PlaySE(SE_SELECT);
         gSprites[gBattlerSpriteIds[gMultiUsePlayerCursor]].callback = SpriteCB_HideAsMoveTarget;
         if (gBattleStruct->gimmick.playerSelect)
-            BtlController_EmitTwoReturnValues(battler, B_COMM_TO_ENGINE, B_ACTION_EXEC_SCRIPT, gMoveSelectionCursor[battler] | RET_GIMMICK | (gMultiUsePlayerCursor << 8));
+            BtlController_EmitTwoReturnValues(battler, B_COMM_TO_ENGINE, B_ACTION_EXEC_SCRIPT, gMoveSelectionCursor[battler] | Mechanics_GetStyleReturnBits(battler) | RET_GIMMICK | (gMultiUsePlayerCursor << 8));
         else
-            BtlController_EmitTwoReturnValues(battler, B_COMM_TO_ENGINE, B_ACTION_EXEC_SCRIPT, gMoveSelectionCursor[battler] | (gMultiUsePlayerCursor << 8));
+            BtlController_EmitTwoReturnValues(battler, B_COMM_TO_ENGINE, B_ACTION_EXEC_SCRIPT, gMoveSelectionCursor[battler] | Mechanics_GetStyleReturnBits(battler) | (gMultiUsePlayerCursor << 8));
         EndBounceEffect(gMultiUsePlayerCursor, BOUNCE_HEALTHBOX);
         TryHideLastUsedBall();
         HideGimmickTriggerSprite();
@@ -600,9 +601,9 @@ void HandleInputShowEntireFieldTargets(enum BattlerId battler)
         PlaySE(SE_SELECT);
         HideAllTargets();
         if (gBattleStruct->gimmick.playerSelect)
-            BtlController_EmitTwoReturnValues(battler, B_COMM_TO_ENGINE, B_ACTION_EXEC_SCRIPT, gMoveSelectionCursor[battler] | RET_GIMMICK | (gMultiUsePlayerCursor << 8));
+            BtlController_EmitTwoReturnValues(battler, B_COMM_TO_ENGINE, B_ACTION_EXEC_SCRIPT, gMoveSelectionCursor[battler] | Mechanics_GetStyleReturnBits(battler) | RET_GIMMICK | (gMultiUsePlayerCursor << 8));
         else
-            BtlController_EmitTwoReturnValues(battler, B_COMM_TO_ENGINE, B_ACTION_EXEC_SCRIPT, gMoveSelectionCursor[battler] | (gMultiUsePlayerCursor << 8));
+            BtlController_EmitTwoReturnValues(battler, B_COMM_TO_ENGINE, B_ACTION_EXEC_SCRIPT, gMoveSelectionCursor[battler] | Mechanics_GetStyleReturnBits(battler) | (gMultiUsePlayerCursor << 8));
         HideGimmickTriggerSprite();
         BtlController_Complete(battler);
     }
@@ -628,9 +629,9 @@ void HandleInputShowTargets(enum BattlerId battler)
         PlaySE(SE_SELECT);
         HideAllTargets();
         if (gBattleStruct->gimmick.playerSelect)
-            BtlController_EmitTwoReturnValues(battler, B_COMM_TO_ENGINE, B_ACTION_EXEC_SCRIPT, gMoveSelectionCursor[battler] | RET_GIMMICK | (gMultiUsePlayerCursor << 8));
+            BtlController_EmitTwoReturnValues(battler, B_COMM_TO_ENGINE, B_ACTION_EXEC_SCRIPT, gMoveSelectionCursor[battler] | Mechanics_GetStyleReturnBits(battler) | RET_GIMMICK | (gMultiUsePlayerCursor << 8));
         else
-            BtlController_EmitTwoReturnValues(battler, B_COMM_TO_ENGINE, B_ACTION_EXEC_SCRIPT, gMoveSelectionCursor[battler] | (gMultiUsePlayerCursor << 8));
+            BtlController_EmitTwoReturnValues(battler, B_COMM_TO_ENGINE, B_ACTION_EXEC_SCRIPT, gMoveSelectionCursor[battler] | Mechanics_GetStyleReturnBits(battler) | (gMultiUsePlayerCursor << 8));
         HideGimmickTriggerSprite();
         TryHideLastUsedBall();
         BtlController_Complete(battler);
@@ -751,9 +752,9 @@ void HandleInputChooseMove(enum BattlerId battler)
         case 0:
         default:
             if (gBattleStruct->gimmick.playerSelect)
-                BtlController_EmitTwoReturnValues(battler, B_COMM_TO_ENGINE, B_ACTION_EXEC_SCRIPT, gMoveSelectionCursor[battler] | RET_GIMMICK | (gMultiUsePlayerCursor << 8));
+                BtlController_EmitTwoReturnValues(battler, B_COMM_TO_ENGINE, B_ACTION_EXEC_SCRIPT, gMoveSelectionCursor[battler] | Mechanics_GetStyleReturnBits(battler) | RET_GIMMICK | (gMultiUsePlayerCursor << 8));
             else
-                BtlController_EmitTwoReturnValues(battler, B_COMM_TO_ENGINE, B_ACTION_EXEC_SCRIPT, gMoveSelectionCursor[battler] | (gMultiUsePlayerCursor << 8));
+                BtlController_EmitTwoReturnValues(battler, B_COMM_TO_ENGINE, B_ACTION_EXEC_SCRIPT, gMoveSelectionCursor[battler] | Mechanics_GetStyleReturnBits(battler) | (gMultiUsePlayerCursor << 8));
             HideGimmickTriggerSprite();
             TryHideLastUsedBall();
             BtlController_Complete(battler);
@@ -861,6 +862,16 @@ void HandleInputChooseMove(enum BattlerId battler)
             MoveSelectionDisplayMoveType(battler);
             TryMoveSelectionDisplayMoveDescription(battler);
             TryChangeZTrigger(battler, gMoveSelectionCursor[battler]);
+        }
+    }
+    else if (JOY_NEW(SELECT_BUTTON) && !gBattleStruct->zmove.viewing && !gBattleStruct->descriptionSubmenu
+          && Mechanics_CanUseBattleStyles())
+    {
+        // Battle styles (src/mechanics_styles.c).
+        if (Mechanics_CycleStyleChoice(battler, moveInfo->currentPP[gMoveSelectionCursor[battler]]))
+        {
+            PlaySE(SE_SELECT);
+            MoveSelectionDisplayMoveType(battler);
         }
     }
     else if (B_MOVE_REARRANGEMENT_IN_BATTLE < GEN_4 && JOY_NEW(SELECT_BUTTON) && !gBattleStruct->zmove.viewing && !gBattleStruct->descriptionSubmenu)
@@ -1700,7 +1711,10 @@ static void MoveSelectionDisplayMoveType(enum BattlerId battler)
     u8 *txtPtr, *end;
     enum Species speciesId = gBattleMons[battler].species;
     struct ChooseMoveStruct *moveInfo = (struct ChooseMoveStruct *)(&gBattleResources->bufferA[battler][4]);
-    txtPtr = StringCopy(gDisplayedStringBattle, gText_MoveInterfaceType);
+    if (Mechanics_GetStyleChoice(battler) != STYLE_NONE && Mechanics_CanUseBattleStyles())
+        txtPtr = StringAppend(StringCopy(gDisplayedStringBattle, Mechanics_GetStyleName(Mechanics_GetStyleChoice(battler))), COMPOUND_STRING("/"));
+    else
+        txtPtr = StringCopy(gDisplayedStringBattle, gText_MoveInterfaceType);
     enum Move move = moveInfo->moves[gMoveSelectionCursor[battler]];
     enum Type type = GetMoveType(move);
     enum BattleMoveEffects effect = GetMoveEffect(move);
@@ -2109,6 +2123,7 @@ void PlayerHandleChooseMove(enum BattlerId battler)
     {
         struct ChooseMoveStruct *moveInfo = (struct ChooseMoveStruct *)(&gBattleResources->bufferA[battler][4]);
 
+        Mechanics_ResetStyleChoice(battler);
         InitMoveSelectionsVarsAndStrings(battler);
         gBattleStruct->gimmick.playerSelect = FALSE;
         TryToAddMoveInfoWindow();

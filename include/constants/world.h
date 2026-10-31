@@ -28,6 +28,12 @@
 #define WORLD_BOARD_BERRIES  1 // value: berries picked, extra: best harvest
 #define WORLD_BOARD_HARDCORE 2
 #define WORLD_BOARD_HUNT     3
+// 8-15: the fourth-batch features (docs/adventure.md).
+#define WORLD_BOARD_DUNGEON  8 // value: deepest floor, extra: dives
+#define WORLD_BOARD_TREASURE 9 // value: treasures found, extra: the last spot
+#define WORLD_BOARD_FACTORY  10 // value: best streak, extra: level mode | doubles << 1
+#define WORLD_BOARD_ARENA    11 // value: best streak, extra: level mode
+#define WORLD_BOARD_PYRAMID  12 // value: most floors, extra: level mode
 
 // Legendary quests (src/world_legends.c), index into legendStage.
 #define LEGEND_RAIKOU    0

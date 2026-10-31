@@ -471,8 +471,16 @@ D.run(function()
         if i % 40 ~= 0 then return end
         step = step + 1
         if INSTANCE == 1 then
-            local cycle = { K.B, K.B, K.RIGHT, K.DOWN, K.A }
-            D.press(cycle[(step - 1) % #cycle + 1], 0)
+            -- B backs out of any submenu; then A with the action cursor on
+            -- RUN forfeits. (Walking the cursor there with the d-pad only
+            -- worked when the presses happened to line up with the menu.)
+            if step % 2 == 1 then
+                D.press(K.B, 0)
+            else
+                -- Our battler id depends on who hosts the link, so set all four.
+                for b = 0, 3 do D.write8(D.SYM.gActionSelectionCursor + b, 3) end -- B_ACTION_RUN
+                D.press(K.A, 0)
+            end
         else
             D.press(K.A, 0)
         end

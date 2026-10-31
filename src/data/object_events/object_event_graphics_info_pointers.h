@@ -118,6 +118,10 @@ extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_DevonEmploy
 extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_AquaMemberM;
 extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_AquaMemberF;
 extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_MagmaMemberM;
+extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_EclipseMemberM;
+extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_EclipseMemberF;
+extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_EclipseAdmin;
+extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_EclipseLeader;
 extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_MagmaMemberF;
 extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_Sidney;
 extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_Phoebe;
@@ -793,6 +797,10 @@ const struct ObjectEventGraphicsInfo *const gObjectEventGraphicsInfoPointers[NUM
     [OBJ_EVENT_GFX_DEOXYS_N]                 = &gObjectEventGraphicsInfo_DeoxysN,
     [OBJ_EVENT_GFX_SS_ANNE]                  = &gObjectEventGraphicsInfo_SSAnne,
 #endif // IS_FRLG
+    [OBJ_EVENT_GFX_ECLIPSE_MEMBER_M] =        &gObjectEventGraphicsInfo_EclipseMemberM,
+    [OBJ_EVENT_GFX_ECLIPSE_MEMBER_F] =        &gObjectEventGraphicsInfo_EclipseMemberF,
+    [OBJ_EVENT_GFX_ECLIPSE_ADMIN] =           &gObjectEventGraphicsInfo_EclipseAdmin,
+    [OBJ_EVENT_GFX_ECLIPSE_LEADER] =          &gObjectEventGraphicsInfo_EclipseLeader,
 };
 
 const struct ObjectEventGraphicsInfo *const gMauvilleOldManGraphicsInfoPointers[] = {

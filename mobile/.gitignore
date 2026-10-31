@@ -1,0 +1,11 @@
+node_modules/
+dist/
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+ios/build/
+ios/*.xcodeproj
+
+# The phone app is JavaScript
+!www/*.js

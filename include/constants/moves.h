@@ -907,7 +907,13 @@ enum __attribute__((packed)) Move
 
     // Add any custom moves here, not further down!
 
-    MOVES_COUNT = MOVES_COUNT_GEN9,
+    // The Hoenn starters' signature moves (src/mechanics_signature.c).
+    MOVE_CANOPY_EDGE = MOVES_COUNT_GEN9,
+    MOVE_BLAZE_RUSH,
+    MOVE_MIRE_CRASH,
+    MOVES_COUNT_MECHANICS,
+
+    MOVES_COUNT = MOVES_COUNT_MECHANICS,
 
     // Z Moves
     FIRST_Z_MOVE = MOVES_COUNT,

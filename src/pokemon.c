@@ -1,6 +1,7 @@
 #include "global.h"
 #include "world.h"
 #include "malloc.h"
+#include "mechanics.h"
 #include "apprentice.h"
 #include "battle.h"
 #include "battle_ai_util.h"
@@ -490,6 +491,7 @@ const struct NatureInfo gNaturesInfo[NUM_NATURES] =
 #include "data/pokemon/form_change_table_pointers.h"
 #include "data/pokemon/wild_encounter_ow_behavior.h"
 #include "data/object_events/object_event_pic_tables_followers.h"
+#include "data/pokemon/adventure_forms.h"
 
 #include "data/pokemon/species_info.h"
 
@@ -5121,7 +5123,12 @@ u16 GetBattleBGM(void)
         {
         case TRAINER_CLASS_AQUA_LEADER:
         case TRAINER_CLASS_MAGMA_LEADER:
+        case TRAINER_CLASS_ECLIPSE_LEADER:
             return MUS_VS_AQUA_MAGMA_LEADER;
+        case TRAINER_CLASS_LIFE_GHOST:
+            return MUS_VS_RIVAL;
+        case TRAINER_CLASS_TEAM_ECLIPSE:
+        case TRAINER_CLASS_ECLIPSE_ADMIN:
         case TRAINER_CLASS_TEAM_AQUA:
         case TRAINER_CLASS_TEAM_MAGMA:
         case TRAINER_CLASS_AQUA_ADMIN:
@@ -5221,12 +5228,14 @@ const u16 *GetMonFrontSpritePal(struct Pokemon *mon)
 
 const u16 *GetMonSpritePalFromSpeciesAndPersonality(enum Species species, bool32 isShiny, u32 personality)
 {
-    return GetMonSpritePalFromSpeciesIsEgg(species, isShiny, IsPersonalityFemale(species, personality), FALSE);
+    return Mechanics_ApplyColorVariant(GetMonSpritePalFromSpeciesIsEgg(species, isShiny, IsPersonalityFemale(species, personality), FALSE), personality);
 }
 
 const u16 *GetMonSpritePalFromSpeciesAndPersonalityIsEgg(enum Species species, bool32 isShiny, u32 personality, bool32 isEgg)
 {
-    return GetMonSpritePalFromSpeciesIsEgg(species, isShiny, IsPersonalityFemale(species, personality), isEgg);
+    const u16 *palette = GetMonSpritePalFromSpeciesIsEgg(species, isShiny, IsPersonalityFemale(species, personality), isEgg);
+
+    return isEgg ? palette : Mechanics_ApplyColorVariant(palette, personality);
 }
 
 const u16 *GetMonSpritePalFromSpecies(enum Species species, bool32 isShiny, bool32 isFemale)
