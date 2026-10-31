@@ -1,5 +1,6 @@
 #include "global.h"
 #include "adventure.h"
+#include "pastime.h"
 #include "achievements.h"
 #include "battle.h"
 #include "berry.h"
@@ -121,13 +122,14 @@ bool32 World_OverworldUpdate(void)
     WorldOnline_Update();
     Achievements_Update();
     Adventure_Update();
+    Pastime_Update();
     return Hardcore_Update();
 }
 
 // A pressed facing (x, y), map coordinates with MAP_OFFSET.
 bool32 World_TryInteract(s16 x, s16 y)
 {
-    return Legends_TryInteract(x, y) || House_TryInteract(x, y);
+    return Legends_TryInteract(x, y) || House_TryInteract(x, y) || Pastime_TryInteract(x, y);
 }
 
 bool32 World_TryOpenMenu(void)
@@ -152,6 +154,7 @@ void World_OnWildBattleEnd(void)
         Achievements_OnCatch(gBattleResults.caughtMonSpecies, gBattleResults.shinyWildMon);
         WorldOnline_OnCatch();
         Adventure_OnCatch();
+        Pastime_OnCatch();
     }
     ShinyChain_OnWildBattleEnd();
     Records_OnWildBattleEnd();
@@ -161,6 +164,7 @@ void World_OnWildBattleEnd(void)
 void World_OnTrainerBattleEnd(void)
 {
     Adventure_OnTrainerBattleEnd();
+    Pastime_OnTrainerBattleEnd();
     Hardcore_OnBattleEnd(FALSE);
 }
 

@@ -10,11 +10,13 @@ World_EventScript_Menu::
 	dynmultipush World_Text_MenuHunt, WORLD_MENU_HUNT
 	dynmultipush World_Text_MenuPhoto, WORLD_MENU_PHOTO
 	dynmultipush World_Text_MenuAdventure, WORLD_MENU_ADVENTURE
+	dynmultipush World_Text_MenuPastimes, WORLD_MENU_PASTIMES
 	dynmultipush World_Text_MenuClose, WORLD_MENU_CLOSE
 	dynmultistack 0, 0, FALSE, 6, FALSE, WORLD_MENU_RIDE, DYN_MULTICHOICE_CB_NONE
 	switch VAR_RESULT
 	case WORLD_MENU_RIDE, World_EventScript_Ride
 	case WORLD_MENU_ADVENTURE, Adventure_EventScript_Menu
+	case WORLD_MENU_PASTIMES, Pastime_EventScript_Menu
 	case WORLD_MENU_ACHIEVEMENTS, World_EventScript_Achievements
 	case WORLD_MENU_RECORDS, World_EventScript_Records
 	case WORLD_MENU_QUESTS, World_EventScript_Quests
@@ -158,6 +160,8 @@ World_Text_MenuPhoto:
 	.string "PHOTO$"
 World_Text_MenuHunt:
 	.string "SAFARI HUNT$"
+World_Text_MenuPastimes:
+	.string "PASTIMES$"
 World_Text_MenuClose:
 	.string "CLOSE$"
 

@@ -45,6 +45,7 @@
 #include "constants/songs.h"
 #include "constants/trainer_hill.h"
 #include "netplay.h"
+#include "pastime.h"
 #include "world.h"
 
 static EWRAM_DATA u8 sWildEncounterImmunitySteps = 0;
@@ -423,6 +424,8 @@ static const u8 *GetInteractedObjectEventScript(struct MapPosition *position, u8
         script = EventScript_Follower;
     else if (Netplay_IsNetplayObjectEvent(&gObjectEvents[objectEventId]))
         script = Netplay_GetTalkScript(objectEventId);
+    else if (Pastime_IsPastimeObjectEvent(&gObjectEvents[objectEventId]))
+        script = Pastime_GetTalkScript(objectEventId);
     else if (InTrainerHill() == TRUE)
         script = GetTrainerHillTrainerScript();
     else
