@@ -1424,7 +1424,7 @@ static bool32 IsGimmickChosenForAction(enum BattlerId battler, enum Gimmick gimm
 u32 TrySetCantSelectMoveBattleScript(enum BattlerId battler)
 {
     u32 limitations = 0;
-    u8 moveId = gBattleResources->bufferB[battler][2] & ~RET_GIMMICK;
+    u8 moveId = gBattleResources->bufferB[battler][2] & ~(RET_GIMMICK | STYLE_RET_MASK);
     enum Move move = gBattleMons[battler].moves[moveId];
     enum HoldEffect holdEffect = GetBattlerHoldEffect(battler);
     u16 *choicedMove = &gBattleStruct->choicedMove[battler];
@@ -6484,7 +6484,7 @@ static inline u32 CalcMoveBasePowerAfterModifiers(struct DamageContext *ctx)
     enum BattleMoveEffects moveEffect = GetMoveEffect(move);
 
     uq4_12_t holdEffectModifier;
-    uq4_12_t modifier = UQ_4_12(1.0);
+    uq4_12_t modifier = Mechanics_GetStylePowerModifier(battlerAtk);
     u32 atkSide = GetBattlerSide(battlerAtk);
 
     // move effect

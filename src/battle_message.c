@@ -2451,6 +2451,9 @@ void BufferStringBattle(enum StringID stringID, enum BattlerId battler)
 
     switch (stringID)
     {
+    case STRINGID_MECH_MESSAGE:
+        stringPtr = Mechanics_GetBattleMessage(gBattleTextBuff3[0]);
+        break;
     case STRINGID_INTROMSG: // first battle msg
         if (gBattleTypeFlags & BATTLE_TYPE_TRAINER)
         {

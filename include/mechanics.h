@@ -46,4 +46,29 @@ void Mechanics_AdjustFollowerMoods(struct Pokemon *mon, u8 *weights);
 bool32 Mechanics_TryFollowerPersonaLine(struct ScriptContext *ctx, struct Pokemon *mon, struct ObjectEvent *follower);
 void Mechanics_UpdatePersonaFollower(void);
 
+// Battle styles (src/mechanics_styles.c).
+bool32 Mechanics_CanUseBattleStyles(void);
+const u8 *Mechanics_GetStyleName(u8 style);
+void Mechanics_ResetStyleChoice(u32 battler);
+bool32 Mechanics_CycleStyleChoice(u32 battler, u32 pp);
+u8 Mechanics_GetStyleChoice(u32 battler);
+u32 Mechanics_GetStyleReturnBits(u32 battler);
+void Mechanics_SetBattlerStyle(u32 battler, u8 returnValue);
+void Mechanics_ClearBattlerStyle(u32 battler);
+u32 Mechanics_GetStylePowerModifier(u32 battler);
+s32 Mechanics_GetStyleOrder(u32 battler);
+u32 Mechanics_GetStyleExtraPP(u32 battler);
+bool32 Mechanics_TryAnnounceBattleStyle(u32 battler);
+const u8 *Mechanics_GetBattleMessage(u8 id);
+void Mechanics_SetupStylePractice(void);
+
+// Trainer skills (src/mechanics_skills.c).
+bool32 Mechanics_HasSkill(u8 skill);
+bool32 Mechanics_TryKeepBattleItem(u16 item);
+u32 Mechanics_BoostCatchOdds(u32 odds);
+u32 Mechanics_BoostPrizeMoney(u32 money);
+void Mechanics_OnTrainerBattleEnd(void);
+void Mechanics_UpdateSkills(void);
+void Mechanics_EndStylePractice(void);
+
 #endif // GUARD_MECHANICS_H

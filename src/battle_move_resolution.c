@@ -1,5 +1,6 @@
 #include "global.h"
 #include "battle.h"
+#include "mechanics.h"
 #include "battle_arena.h"
 #include "battle_environment.h"
 #include "battle_hold_effects.h"
@@ -1027,6 +1028,9 @@ static enum CancelerResult CancelerPPDeduction(struct BattleCalcValues *cv)
         if (cv->battlerAtk != cv->battlerDef && GetBattlerAbility(cv->battlerDef) == ABILITY_PRESSURE)
              ppToDeduct++;
     }
+
+    if (cv->move == gChosenMoveByBattler[cv->battlerAtk])
+        ppToDeduct += Mechanics_GetStyleExtraPP(cv->battlerAtk);
 
     // For item Metronome, echoed voice
     if (cv->move != gLastResultingMoves[cv->battlerAtk] || gBattleStruct->unableToUseMove)
