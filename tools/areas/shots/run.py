@@ -32,7 +32,7 @@ def main():
     scenario = sys.argv[1]
     names = sorted(set(re.findall(r'\b(FLAG_\w+)', open(scenario).read())))
     c = constants(names)
-    world.SYMBOLS.append('gSaveBlock3Ptr')
+    world.SYMBOLS += ['gSaveBlock3Ptr', 'gObjectEvents', 'gPlayerAvatar']
     world.HELPERS += '\nFLAG = {\n' + ''.join(f'    {n} = {c[n]},\n' for n in names) + '}\n' + f'''
 -- Sets or clears a flag (area flags live in SaveBlock3).
 function Driver.flag(name, on)
@@ -47,6 +47,14 @@ function Driver.flag(name, on)
     local bit = 1 << (id % 8)
     if on == false then v = v & ~bit else v = v | bit end
     E.write8(addr, v)
+end
+
+-- The player's map position (x, y).
+function Driver.where()
+    local id = E.read8(Driver.SYM.gPlayerAvatar + {c['PlayerAvatarObjectId']})
+    local o = Driver.SYM.gObjectEvents + id * {c['ObjectEventSize']} + {c['ObjectEventCoords']}
+    local x, y = E.read16(o), E.read16(o + 2)
+    return x - 7, y - 7
 end
 '''
     world.main()

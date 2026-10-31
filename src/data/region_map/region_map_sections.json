@@ -1654,6 +1654,10 @@
     {
       "id": "MAPSEC_SKYROPE_CANYON",
       "name": "SKYROPE CANYON"
+    },
+    {
+      "id": "MAPSEC_FROSTVEIN_CAVE",
+      "name": "FROSTVEIN CAVE"
     }
   ]
 }
