@@ -8,3 +8,4 @@
 	.include "data/scripts/pastime/quiz.inc"
 	.include "data/scripts/pastime/hotel.inc"
 	.include "data/scripts/pastime/cafe.inc"
+	.include "data/scripts/pastime/cooking.inc"

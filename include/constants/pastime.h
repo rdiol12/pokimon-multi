@@ -14,6 +14,7 @@
 #define PASTIME_MENU_QUIZ       4
 #define PASTIME_MENU_HOTEL      5
 #define PASTIME_MENU_CAFE       6
+#define PASTIME_MENU_COOKING    7
 #define PASTIME_MENU_CLOSE      31
 
 // NPCs and objects the activities place on maps from code (src/pastime.c)
@@ -81,5 +82,15 @@
 #define CAFE_DISH_NONE    0
 #define CAFE_DISH_COUNT   7 // dishes 1 to 6
 #define CAFE_MENU_CANCEL  15
+
+// Cooking contest (src/pastime_cooking.c), next to the cafe.
+#define COOK_RANK_NORMAL  0
+#define COOK_RANK_GREAT   1
+#define COOK_RANK_ULTRA   2
+#define COOK_RANK_MASTER  3
+#define COOK_RANK_COUNT   4
+#define COOK_RIVALS       3
+#define COOK_STEPS        3 // chop, stir, plate: one timing meter round each
+#define WORLD_BOARD_COOKING 17 // server leaderboard (server/world.py)
 
 #endif // GUARD_CONSTANTS_PASTIME_H

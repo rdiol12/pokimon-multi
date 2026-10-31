@@ -30,5 +30,6 @@ extern const struct PastimeSpot gMailSpots[];
 extern const struct PastimeSpot gQuizSpots[];
 extern const struct PastimeSpot gHotelSpots[];
 extern const struct PastimeSpot gCafeSpots[];
+extern const struct PastimeSpot gCookingSpots[];
 
 #endif // GUARD_PASTIME_SPOTS_H
