@@ -33,6 +33,13 @@
 #define LIFE_JOB_LAST_MON 1
 #define LIFE_JOB_EGG      2
 
+// Underground mining (src/life_mining.c): dig spots in caves (VAR_0x8005),
+// and LifeMining_CheckSpot results.
+#define LIFE_DIG_SPOTS        6
+#define LIFE_DIG_NO_KIT       0
+#define LIFE_DIG_DONE_TODAY   1
+#define LIFE_DIG_READY        2
+
 // Seasons (src/life_seasons.c), from the real-world month.
 #define SEASON_SPRING 0 // March to May
 #define SEASON_SUMMER 1 // June to August

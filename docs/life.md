@@ -91,12 +91,47 @@ pay and 1.5× EXP. If the party is full it goes to the PC. Levels gained on
 a job don't teach moves or evolve the Pokémon (use the move relearner, or
 level it once in battle).
 
+## Underground mining
+
+![The digger, a dig wall, uncovering treasures and the haul](images/life-mining.png)
+
+Rocks with a glint in them sit in six caves: Granite Cave 1F and B1F,
+Rusturf Tunnel, Fiery Path, Meteor Falls and Victory Road 1F
+(`LifeMining_*` in `src/life_mining.c`, object scripts
+`Life_EventScript_DigSpot0`–`5`). They need the digging tools, which the
+digger next to the Rusturf Tunnel rock gives away. Each rock can be dug
+once a day.
+
+Digging opens a wall of rock, 13×6 cells, one to three layers deep, with
+two to four treasures buried in it (the items' own icons). Move the cursor
+with the D-pad:
+
+- **A, the pick**: two layers off the cell, one off the four cells around it.
+  Adds 2 cracks.
+- **B, the hammer**: two layers off the cell, one off the eight around it.
+  Adds 4 cracks and shakes the wall.
+- **START** stops digging.
+
+The wall gives way at 70 cracks. Every treasure that was completely
+uncovered by then goes in the bag. Treasures (weighted): Red, Blue, Yellow
+and Green Shards, Hard Stone, Everstone, Heart Scale, Star Piece, Nugget,
+Oval Stone, the evolution stones (Fire, Water, Thunder, Leaf, Moon, Sun,
+Ice, Dusk, Dawn, Shiny), Fire/Water/Electric/Grass Gems, and, rarer and 3×3
+cells big, Root Fossil, Claw Fossil (both revived at the Devon lab) and Rare
+Bone. The digger keeps count of what you've found.
+
+The wall and treasures are drawn on BG1 (rock, in 16×16 blocks from
+`graphics/life/mine_tiles.png`, drawn by `tools/life_shots/draw_art.py` in
+the browns of Emerald's caves) over BG2 (earth); the treasure icons are
+sprites between the two, so they show through as the rock is cleared.
+
 ## Screenshots
 
 ```sh
 python3 tools/life_shots/run.py tools/life_shots/bond.lua out/bond
 python3 tools/life_shots/run.py tools/life_shots/seasons.lua out/seasons 400000
 python3 tools/life_shots/run.py tools/life_shots/jobs.lua out/jobs
+python3 tools/life_shots/run.py tools/life_shots/mining.lua out/mining
 ```
 
 `run.py` is `tools/world_shots/run.py` with this batch's symbols added, so

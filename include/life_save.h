@@ -31,6 +31,12 @@ struct LifeSaveData
     u8 season;
     u8 padding[3];
     struct LifeJob jobs[LIFE_JOB_SLOTS];
+    // Mining: the digger's tools, which spots were dug today, and a count.
+    u16 digDay;
+    u8 digSpotsToday; // bit per dig spot
+    u8 hasDigKit;
+    u16 treasuresDug;
+    u16 padding2;
 };
 
 #endif // GUARD_LIFE_SAVE_H

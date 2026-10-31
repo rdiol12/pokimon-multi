@@ -44,4 +44,9 @@ void LifeJobs_Collect(void);
 void LifeJobs_ShowList(void);
 void LifeJobs_FinishAll(void);
 
+// Underground mining (life_mining.c).
+void LifeMining_CheckSpot(void);
+void LifeMining_Start(void);
+void LifeMining_GiveKit(void);
+
 #endif // GUARD_LIFE_H
