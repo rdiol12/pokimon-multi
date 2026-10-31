@@ -55,6 +55,26 @@
 #define LIFE_PHOTO_RANGER_STILL_OUT 1
 #define LIFE_PHOTO_RANGER_PAYOUT    2
 
+// Team Eclipse (src/life_eclipse.c): the postgame chapter. VAR_LIFE_ECLIPSE
+// is the step; each trainer has a flag that hides its object and one that
+// says it's been beaten.
+#define VAR_LIFE_ECLIPSE            0x4091
+#define LIFE_ECLIPSE_NOT_STARTED    0
+#define LIFE_ECLIPSE_METEOR_FALLS   1
+#define LIFE_ECLIPSE_MT_PYRE        2
+#define LIFE_ECLIPSE_SPACE_CENTER   3
+#define LIFE_ECLIPSE_REWARD         4
+#define LIFE_ECLIPSE_DONE           5
+#define LIFE_ECLIPSE_TRAINERS       6
+#define FLAG_LIFE_ECLIPSE_HIDE_0    0x290
+#define FLAG_LIFE_ECLIPSE_HIDE_1    0x291
+#define FLAG_LIFE_ECLIPSE_HIDE_2    0x292
+#define FLAG_LIFE_ECLIPSE_HIDE_3    0x293
+#define FLAG_LIFE_ECLIPSE_HIDE_4    0x294
+#define FLAG_LIFE_ECLIPSE_HIDE_5    0x295
+#define FLAG_LIFE_ECLIPSE_HIDE_SCIENTIST 0x296
+#define FLAG_LIFE_ECLIPSE_BEATEN_0  0x298 // to 0x29D
+
 // Seasons (src/life_seasons.c), from the real-world month.
 #define SEASON_SPRING 0 // March to May
 #define SEASON_SUMMER 1 // June to August

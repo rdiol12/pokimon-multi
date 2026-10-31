@@ -158,6 +158,45 @@ the Safari Zone any other way also ends the safari). The photographer
 adds up the safari's score and gives a prize: a Nugget for 12000 or more,
 an Ultra Ball for 7000, a Great Ball for 3500, otherwise a Poké Ball.
 
+## Team Eclipse (postgame chapter)
+
+![A grunt in Meteor Falls, Admin Vesper, Leader Nyx at the Space Center and her battle](images/life-eclipse.png)
+
+A new villain team for after the Champion battle (`src/life_eclipse.c`,
+`data/scripts/life/eclipse.inc`). Team Eclipse wants to launch a shade into
+orbit from the Mossdeep Space Center and leave Hoenn in endless night.
+
+1. **Mossdeep Space Center 1F**: a scientist (shown once the game is beaten)
+   says Eclipse copied the launch data and went for moon rock.
+2. **Meteor Falls 1F**: two grunts.
+3. **Mt. Pyre summit**: a grunt and Admin **Vesper** (Honchkrow, Gengar,
+   Bisharp, Weavile, levels 64–66, held items, smart AI).
+4. **Space Center 2F**: a grunt and Leader **Nyx** (Umbreon, Malamar,
+   Spiritomb, Absol, Tyranitar, Hydreigon, levels 68–70, perfect IVs).
+5. Back to the scientist for the reward: an Ability Patch and 5 Dusk Balls.
+
+`VAR_LIFE_ECLIPSE` (0x4091) is the step. Each trainer's object has a
+`FLAG_LIFE_ECLIPSE_HIDE_*` flag (0x290–0x295, scientist 0x296) that
+`LifeEclipse_UpdateObjects` sets on every map load, so a trainer shows only
+during its step until beaten (`FLAG_LIFE_ECLIPSE_BEATEN_*`, 0x298–0x29D).
+Beaten trainers leave; beating both trainers of a step moves the chapter on.
+
+**Battles without trainer ids.** `TRAINERS_MAX` is full, so the Eclipse
+trainers are `struct Trainer`s in `life_eclipse.c`. `LifeBattle_Start`
+(`src/life_battle.c`) sets `gLifeTrainer`, which `GetTrainerStructFromId`
+(`include/data.h`) returns while the battle runs, so name, class, picture,
+AI and prize money come from it. `BattleSetup_StartLifeTrainerBattle`
+(`battle_setup.c`) starts it without touching trainer flags; a loss whites
+out as usual. Ghost trainers use the same path.
+
+**Art.** Three new trainer classes (TEAM ECLIPSE, ADMIN, ECLIPSE BOSS, with
+the Aqua/Magma battle and victory music), four battle pictures and four
+overworld sprites. They're Emerald's Team Aqua grunts, a Magma Admin's
+hooded outfit and the Hex Maniac redressed in midnight violet and gold, with
+the Aqua and Magma emblems painted over with a gold crescent moon
+(`tools/life_shots/draw_art.py` makes `graphics/life/eclipse_*.png`; the
+overworld sprites share `graphics/life/eclipse_ow.pal`).
+
 ## Screenshots
 
 ```sh
@@ -166,6 +205,7 @@ python3 tools/life_shots/run.py tools/life_shots/seasons.lua out/seasons 400000
 python3 tools/life_shots/run.py tools/life_shots/jobs.lua out/jobs
 python3 tools/life_shots/run.py tools/life_shots/mining.lua out/mining
 python3 tools/life_shots/run.py tools/life_shots/photo.lua out/photo
+python3 tools/life_shots/run.py tools/life_shots/eclipse.lua out/eclipse 700000
 ```
 
 `run.py` is `tools/world_shots/run.py` with this batch's symbols added, so
@@ -176,7 +216,9 @@ season plus one (0 uses the clock); it applies on the next warp. Byte 3
 = 1 finishes every Pokémon job. Bytes 4–8 pose a photo subject in the
 Safari Zone during a photo safari: species (u16), tiles away, the
 direction it faces (`DIR_*`, 0 = toward the player) and how many stand
-side by side.
+side by side. Byte 9 is the Team Eclipse step plus one: it beats the game
+(all badges, the story's visitors to those maps gone, the party healed,
+battle style SET) and puts the chapter at that step.
 
 Art: `tools/life_shots/draw_art.py` draws this batch's sprites into
 `graphics/life/`.

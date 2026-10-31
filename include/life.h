@@ -26,6 +26,7 @@ struct LifeShowcase
     u8 photoDistance; // tiles away
     u8 photoFacing;   // DIR_*, or 0: looking at the player
     u8 photoCount;    // how many of them, side by side
+    u8 eclipseStep;   // Team Eclipse: game clear, and this chapter step + 1
 };
 extern struct LifeShowcase gLifeShowcase;
 
@@ -52,6 +53,18 @@ void LifeJobs_FinishAll(void);
 void LifeMining_CheckSpot(void);
 void LifeMining_Start(void);
 void LifeMining_GiveKit(void);
+
+// Battles against trainers that aren't in gTrainers (life_battle.c).
+struct Trainer;
+void LifeBattle_Start(const struct Trainer *trainer, const u8 *defeatText);
+
+// Team Eclipse (life_eclipse.c).
+void LifeEclipse_UpdateObjects(void);
+void LifeEclipse_ApplyShowcase(u32 step);
+void LifeEclipse_BufferIntro(void);
+void LifeEclipse_StartBattle(void);
+void LifeEclipse_Defeated(void);
+void LifeEclipse_Scientist(void);
 
 // Photo safari (life_photo.c).
 bool32 LifePhoto_IsActive(void);
