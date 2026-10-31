@@ -120,6 +120,10 @@ struct PastimeSaveData
     u8 orchestraBest;    // longest tune played back
     u8 orchestraPrizes;  // a bit per prize given
     u16 orchestraPlays;
+    // Art studio (src/pastime_art.c)
+    u8 artBest[ART_PAINTINGS]; // best percent right, per painting
+    u8 artFiller;
+    u16 artPaintings;
 };
 
 #endif // GUARD_PASTIME_SAVE_H

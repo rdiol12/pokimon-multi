@@ -404,3 +404,18 @@ ends the concert. The longest tune is the record; reaching 5, 8 and 12 notes
 gives a Metronome, a Soothe Bell and a Throat Spray. **R > PASTIMES >
 ORCHESTRA** shows the quartet, the record and concerts played.
 Screenshots: `tools/pastime_shots/orchestra.lua`.
+
+## Art studio
+
+![Art studio](images/pastime-art.png)
+
+A painter at the Lilycove Museum (1F, 5,8) runs paint-by-numbers classes:
+POKé BALL, ORAN BERRY, HEART, LEAF and MUSHROOM, each a 12 x 12 picture
+(original pixel art in `src/pastime_art.c`). The canvas window shows a dot
+of the right color in every blank cell; the + Control Pad moves the brush,
+A paints (hold it to paint while moving), L and R (or SELECT) pick the
+color, with white as the eraser, and START finishes. 90% right or better
+and the painting is hung in the gallery and the museum pays ¥20 per
+percent; hanging all five gives a Shiny Stone. **R > PASTIMES > ART
+STUDIO** shows each painting's best score. Screenshots:
+`tools/pastime_shots/art.lua`.

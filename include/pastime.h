@@ -177,4 +177,10 @@ void Orchestra_Play(void);
 void Orchestra_Finish(void);
 void Orchestra_ShowList(void);
 
+// Art studio (pastime_art.c).
+void Art_PushPaintingMenu(void);
+void Art_Paint(void);
+void Art_Judge(void);
+void Art_ShowList(void);
+
 #endif // GUARD_PASTIME_H

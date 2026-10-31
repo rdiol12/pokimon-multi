@@ -25,6 +25,7 @@
 #define PASTIME_MENU_STARS      15
 #define PASTIME_MENU_CARNIVAL   16
 #define PASTIME_MENU_ORCHESTRA  17
+#define PASTIME_MENU_ART        18
 #define PASTIME_MENU_CLOSE      31
 
 // NPCs and objects the activities place on maps from code (src/pastime.c)
@@ -214,5 +215,10 @@
 // Pokémon orchestra in Verdanturf (src/pastime_orchestra.c).
 #define ORCHESTRA_FIRST_NOTES  3
 #define ORCHESTRA_MAX_NOTES    12
+
+// Art studio at the Lilycove Museum (src/pastime_art.c).
+#define ART_PAINTINGS          5
+#define ART_SIZE               12 // cells a side
+#define ART_MENU_CANCEL        15
 
 #endif // GUARD_CONSTANTS_PASTIME_H
