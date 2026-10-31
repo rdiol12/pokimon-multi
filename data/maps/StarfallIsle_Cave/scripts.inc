@@ -4,6 +4,7 @@ StarfallIsle_Cave_MapScripts::
 StarfallIsle_Cave_EventScript_Jirachi::
 	lock
 	faceplayer
+	goto_if_unset FLAG_SYS_GAME_CLEAR, StarfallIsle_Cave_EventScript_JirachiAsleep
 	msgbox StarfallIsle_Cave_Text_Glow, MSGBOX_DEFAULT
 	closemessage
 	waitse
@@ -34,3 +35,15 @@ StarfallIsle_Cave_EventScript_JirachiRan::
 
 StarfallIsle_Cave_Text_Glow:
 	.string "A tiny POKéMON is floating in a\nsoft, starry glow...$"
+
+@ The island opens at eight badges; JIRACHI only wakes for the CHAMPION.
+StarfallIsle_Cave_EventScript_JirachiAsleep:
+	msgbox StarfallIsle_Cave_Text_JirachiAsleep, MSGBOX_DEFAULT
+	release
+	end
+
+StarfallIsle_Cave_Text_JirachiAsleep:
+	.string "JIRACHI is fast asleep, curled up in\n"
+	.string "the starlight.\p"
+	.string "It stirs a little… Maybe it will wake\n"
+	.string "for the CHAMPION of HOENN.$"

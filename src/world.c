@@ -1,4 +1,5 @@
 #include "global.h"
+#include "guide.h"
 #include "adventure.h"
 #include "pastime.h"
 #include "achievements.h"
@@ -126,6 +127,8 @@ bool32 World_OverworldUpdate(void)
     Adventure_Update();
     Mechanics_Update();
     Pastime_Update();
+    if (Guide_OverworldUpdate())
+        return TRUE;
     if (Online_OverworldUpdate())
         return TRUE;
     return Hardcore_Update();
