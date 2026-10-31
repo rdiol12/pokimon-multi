@@ -1,4 +1,5 @@
 #include "global.h"
+#include "breed_fusion.h"
 #include "pokemon.h"
 #include "battle.h"
 #include "daycare.h"
@@ -1010,6 +1011,9 @@ static void _GiveEggFromDaycare(struct DayCare *daycare)
     InheritPokeball(&egg, daycare);
     BuildEggMoveset(&egg, &daycare->mons[parentSlots[1]].mon, &daycare->mons[parentSlots[0]].mon);
     InheritAbility(&egg, daycare);
+    if (BreedFusion_CanFuse(GetBoxMonData(&daycare->mons[parentSlots[0]].mon, MON_DATA_SPECIES),
+                            GetBoxMonData(&daycare->mons[parentSlots[1]].mon, MON_DATA_SPECIES)))
+        BreedFusion_MakeEgg(&egg, &daycare->mons[parentSlots[1]].mon);
 
     isEgg = TRUE;
     SetMonData(&egg, MON_DATA_IS_EGG, &isEgg);
@@ -1292,7 +1296,7 @@ u8 GetDaycareCompatibilityScore(struct DayCare *daycare)
         if (genders[0] == MON_GENDERLESS || genders[1] == MON_GENDERLESS)
             return PARENTS_INCOMPATIBLE;
         if (!EggGroupsOverlap(eggGroups[0], eggGroups[1]))
-            return PARENTS_INCOMPATIBLE;
+            return BreedFusion_CanFuse(species[0], species[1]) ? PARENTS_LOW_COMPATIBILITY : PARENTS_INCOMPATIBLE; // a fusion egg (breed_fusion.c)
 
         if (species[0] == species[1])
         {
@@ -1335,6 +1339,8 @@ void SetDaycareCompatibilityString(void)
         whichString = 0;
 
     StringCopy(gStringVar4, sCompatibilityMessages[whichString]);
+    if (relationshipScore != PARENTS_INCOMPATIBLE && BreedFusion_CanFuseDaycare(&gSaveBlock1Ptr->daycare))
+        StringAppend(gStringVar4, gDaycareText_FusionEgg);
 }
 
 bool8 NameHasGenderSymbol(const u8 *name, u8 genderRatio)

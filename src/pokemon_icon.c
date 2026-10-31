@@ -1,4 +1,5 @@
 #include "global.h"
+#include "breed_fusion.h"
 #include "graphics.h"
 #include "mail.h"
 #include "palette.h"
@@ -171,6 +172,9 @@ u8 CreateMonIconIsEgg(enum Species species, void (*callback)(struct Sprite *), s
     }
 #endif
 
+    if (!isEgg && species < NUM_SPECIES)
+        iconTemplate.paletteTag = POKE_ICON_BASE_PAL_TAG
+            + BreedFusion_GetIconPalIndex(species, personality, iconTemplate.paletteTag - POKE_ICON_BASE_PAL_TAG);
     spriteId = CreateMonIconSprite(&iconTemplate, x, y, subpriority);
 
     UpdateMonIconFrame(&gSprites[spriteId]);

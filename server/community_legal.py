@@ -26,6 +26,7 @@ import struct
 import time
 
 import community
+import community_fusion
 from community import Answer, listen, request
 
 log = logging.getLogger("netplay.legal")
@@ -145,6 +146,11 @@ def decode(raw):
         "ivs": [(ivs >> (5 * i)) & 31 for i in range(6)],
         "met_level": struct.unpack_from("<H", s3, 2)[0] & 0x7F,
         "ability_num": (struct.unpack_from("<I", s3, 8)[0] >> 29) & 3,
+        # Fusion breeding's partner species (src/breed_fusion.c), spread over spare bits.
+        "fusion_partner": ((struct.unpack_from("<I", s3, 8)[0] >> 20) & 0x7F)
+                          | (((struct.unpack_from("<H", s0, 10)[0] >> 14) & 3) << 7)
+                          | (((struct.unpack_from("<I", s3, 8)[0] >> 28) & 1) << 9)
+                          | (((flags >> 7) & 1) << 10),
         "level": raw[84] if len(raw) >= PARTY_MON_SIZE else None,
         "nickname": community.decode_text(raw[8:18]),
     }
@@ -169,6 +175,11 @@ def check(raw):
     if not 0 < species < d["species_count"] or species == d["species_egg"]:
         reasons.append("no such species")
         return reasons
+    partner = mon["fusion_partner"]
+    if partner and not (0 < partner < d["species_count"] and partner != d["species_egg"]
+                        and community_fusion.can_fuse_with(partner)):
+        reasons.append("no such fusion")
+        partner = 0
     if mon["is_egg"]:
         return reasons
     if not 0 <= mon["item"] < d["items_count"]:
@@ -179,6 +190,9 @@ def check(raw):
     if len(set(moves)) != len(moves):
         reasons.append("it knows a move twice")
     learnable = d["learn"].get(species)
+    if learnable is not None and partner:
+        # A fusion also knows moves from its father's side.
+        learnable = learnable | d["learn"].get(partner, set())
     for move in moves:
         if move >= d["moves_count"]:
             reasons.append("no such move")

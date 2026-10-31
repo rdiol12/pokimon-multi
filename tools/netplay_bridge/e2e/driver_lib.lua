@@ -127,6 +127,9 @@ function Driver.boot()
         E.write8(MB + 0x0D1, 0xB0 | INSTANCE)
         if i % 40 == 0 then Driver.press(i % 80 == 0 and KEY.START or KEY.A, 0) end
     end)
+    -- Arriving locks the controls until the screen has faded in, which
+    -- takes longer in rain; START or A pressed before then is lost.
+    Driver.waitFor("the controls", 600, function() return E.read8(SYM.sLockFieldControls) == 0 end)
     Driver.log("in the overworld")
 end
 

@@ -1,4 +1,5 @@
 #include "global.h"
+#include "breed_fusion.h"
 #include "malloc.h"
 #include "netplay.h"
 #include "online.h"
@@ -2199,6 +2200,9 @@ static u32 LoadDynamicFollowerPalette(enum Species species, bool32 shiny, bool32
         if (female && gSpeciesInfo[species].overworldShinyPaletteFemale != NULL)
             palTag += OBJ_EVENT_MON_FEMALE;
     #endif
+        // A fusion follower gets its own colors and tag (breed_fusion.c).
+        const u16 *basePal = shiny ? gSpeciesInfo[species].overworldShinyPalette : gSpeciesInfo[species].overworldPalette;
+        const u16 *fusionPal = BreedFusion_GetFollowerPalette(basePal, species, shiny, SpeciesToGraphicsInfo(species, shiny, female), &palTag);
         // palette already loaded
         if ((paletteNum = IndexOfSpritePaletteTag(palTag)) < 16)
             return paletteNum;
@@ -2219,6 +2223,8 @@ static u32 LoadDynamicFollowerPalette(enum Species species, bool32 shiny, bool32
             else
                 spritePalette.data = gSpeciesInfo[species].overworldPalette;
         }
+        if (fusionPal != basePal)
+            spritePalette.data = fusionPal;
 
         paletteNum = LoadSpritePalette(&spritePalette);
     }

@@ -197,7 +197,9 @@
     "VerdantRiver_Hut",
     "IronmoorIsle",
     "IronmoorPrison",
-    "IronmoorPrison_Solitary"
+    "IronmoorPrison_Solitary",
+    "HavenReserve",
+    "HavenReserve_Lodge"
   ],
   "gMapGroup_IndoorLittleroot": [
     "LittlerootTown_BrendansHouse_1F",
