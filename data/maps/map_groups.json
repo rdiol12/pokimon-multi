@@ -137,7 +137,10 @@
     "StarfallIsle",
     "AmberwoodHollow",
     "ElderwoodForest",
-    "EmberSprings"
+    "EmberSprings",
+    "CinderCaverns_1F",
+    "CinderCaverns_B1F",
+    "CinderCaverns_Heart"
   ],
   "gMapGroup_IndoorLittleroot": [
     "LittlerootTown_BrendansHouse_1F",

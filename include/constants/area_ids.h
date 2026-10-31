@@ -4,7 +4,7 @@
 // Flags, vars and trainers of each new area. AREA_TRAINER_* index the area
 // trainer table; TRAINER_* are the ids scripts battle.
 
-#define AREA_TRAINERS_COUNT 12
+#define AREA_TRAINERS_COUNT 20
 
 /* begin ElderwoodForest */
 #define FLAG_ELDERWOOD_BOUNSWEET_HOME         AREA_FLAG(0)
@@ -54,5 +54,31 @@
 #define AREA_TRAINER_EMBER_SAKI               11
 #define TRAINER_EMBER_SAKI                    AREA_TRAINER(AREA_TRAINER_EMBER_SAKI)
 /* end EmberSprings */
+
+/* begin CinderCaverns */
+#define FLAG_CINDER_VALVE_WEST                AREA_FLAG(48)
+#define FLAG_CINDER_VALVE_EAST                AREA_FLAG(49)
+#define FLAG_CINDER_VALVE_SOUTH               AREA_FLAG(50)
+#define FLAG_HIDE_CINDER_HEATRAN              AREA_FLAG(51)
+#define FLAG_CINDER_HEATRAN_DONE              AREA_FLAG(52)
+#define FLAG_ITEM_CINDER_MAGMARIZER           AREA_FLAG(53)
+#define FLAG_ITEM_CINDER_FULL_RESTORE         AREA_FLAG(54)
+#define FLAG_ITEM_CINDER_CHARCOAL             AREA_FLAG(55)
+#define FLAG_ITEM_CINDER_FIRE_GEM             AREA_FLAG(56)
+#define FLAG_ITEM_CINDER_ULTRA_BALL           AREA_FLAG(57)
+#define FLAG_ITEM_CINDER_TM_FLAMETHROWER      AREA_FLAG(58)
+#define FLAG_HIDDEN_ITEM_CINDER_HEAT_ROCK     AREA_FLAG(59)
+#define FLAG_HIDDEN_ITEM_CINDER_STAR_PIECE    AREA_FLAG(60)
+#define FLAG_HIDDEN_ITEM_CINDER_NUGGET        AREA_FLAG(61)
+#define FLAG_CINDER_SCIENTIST_TALKED          AREA_FLAG(62)
+#define AREA_TRAINER_CINDER_IGNATIUS          16
+#define TRAINER_CINDER_IGNATIUS               AREA_TRAINER(AREA_TRAINER_CINDER_IGNATIUS)
+#define AREA_TRAINER_CINDER_ROSA              17
+#define TRAINER_CINDER_ROSA                   AREA_TRAINER(AREA_TRAINER_CINDER_ROSA)
+#define AREA_TRAINER_CINDER_BRUNO             18
+#define TRAINER_CINDER_BRUNO                  AREA_TRAINER(AREA_TRAINER_CINDER_BRUNO)
+#define AREA_TRAINER_CINDER_TESS              19
+#define TRAINER_CINDER_TESS                   AREA_TRAINER(AREA_TRAINER_CINDER_TESS)
+/* end CinderCaverns */
 
 #endif // GUARD_CONSTANTS_AREA_IDS_H

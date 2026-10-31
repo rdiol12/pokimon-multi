@@ -38,3 +38,24 @@ def volcanic():
                                    wall_classes={'T': TREES}, colors=True)
         _cache['volcanic'].exclude = {0x202, 0x2BB, 0x304, 0x215, 0x113}  # river banks and signs
     return _cache['volcanic']
+
+
+LAVA = {0x2BD, 0x333}
+
+
+def magma():
+    """Fiery Path and the Magma Hideout: red caverns with lava lakes."""
+    if 'magma' not in _cache:
+        _cache['magma'] = Style('gTileset_General', 'gTileset_Lavaridge',
+                                ['LAYOUT_FIERY_PATH', 'LAYOUT_MAGMA_HIDEOUT_1F', 'LAYOUT_MAGMA_HIDEOUT_2F_1R',
+                                 'LAYOUT_MAGMA_HIDEOUT_2F_2R', 'LAYOUT_MAGMA_HIDEOUT_3F_1R', 'LAYOUT_MAGMA_HIDEOUT_4F'],
+                                wall_classes={'L': LAVA})
+        _tune_magma(_cache['magma'])
+    return _cache['magma']
+
+
+def _tune_magma(st):
+    st.pattern_weight = 2.5
+    st.uniform_plain = True
+    st.exclude |= {0x215, 0x364, 0x33B, 0x30E, 0x2AF, 0x35C, 0x3A8, 0x3A9, 0x397, 0x396, 0x39D, 0x25E, 0x256}  # machines, ladders, doors
+    return st

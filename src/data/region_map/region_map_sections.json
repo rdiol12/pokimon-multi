@@ -1646,6 +1646,10 @@
     {
       "id": "MAPSEC_EMBER_SPRINGS",
       "name": "EMBER SPRINGS"
+    },
+    {
+      "id": "MAPSEC_CINDER_CAVERNS",
+      "name": "CINDER CAVERNS"
     }
   ]
 }

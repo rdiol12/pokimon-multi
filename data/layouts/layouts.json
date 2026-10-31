@@ -9374,6 +9374,36 @@
       "secondary_tileset": "gTileset_Lavaridge",
       "border_filepath": "data/layouts/EmberSprings/border.bin",
       "blockdata_filepath": "data/layouts/EmberSprings/map.bin"
+    },
+    {
+      "id": "LAYOUT_CINDER_CAVERNS_1F",
+      "name": "CinderCaverns_1F_Layout",
+      "width": 44,
+      "height": 36,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Lavaridge",
+      "border_filepath": "data/layouts/CinderCaverns_1F/border.bin",
+      "blockdata_filepath": "data/layouts/CinderCaverns_1F/map.bin"
+    },
+    {
+      "id": "LAYOUT_CINDER_CAVERNS_B1F",
+      "name": "CinderCaverns_B1F_Layout",
+      "width": 48,
+      "height": 40,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Lavaridge",
+      "border_filepath": "data/layouts/CinderCaverns_B1F/border.bin",
+      "blockdata_filepath": "data/layouts/CinderCaverns_B1F/map.bin"
+    },
+    {
+      "id": "LAYOUT_CINDER_CAVERNS_HEART",
+      "name": "CinderCaverns_Heart_Layout",
+      "width": 26,
+      "height": 22,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Lavaridge",
+      "border_filepath": "data/layouts/CinderCaverns_Heart/border.bin",
+      "blockdata_filepath": "data/layouts/CinderCaverns_Heart/map.bin"
     }
   ]
 }

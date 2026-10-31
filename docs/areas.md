@@ -37,6 +37,24 @@ Lavaridge Town leads you up once you have Flannery's badge.
 - Items on the vent hills, hidden items, Lv29–34 wild Fire types (Numel,
   Litleo, Salandit, Rolycoly, Sizzlipede, Charcadet, Turtonator, Heatmor).
 
+## Cinder Caverns
+
+A volcano dungeon under Ember Springs. The cave door is on the north hill
+of Ember Springs.
+
+- 1F: a lava river splits the cave, so you go round by the sides. A
+  volcanologist explains the valves. Kindler Ignatius, Hex Maniac Rosa.
+- B1F: a lava lake. Three old Team Magma valves (west, east and far
+  south-west) each cool a stretch of the causeway across the lake
+  (`setmetatile`, reapplied on load from FLAG_CINDER_VALVE_*). Hiker Bruno,
+  Cooltrainer Tess. Magmarizer, TM Flamethrower, Full Restore.
+- Molten Heart: after the Pokémon League the guard on the landing steps
+  aside, and Heatran (Lv50) waits on an island in the lava. If you defeat
+  it, it sinks back into the magma; if you run, it stays.
+- Wild Pokémon Lv33–40 (Slugma, Torkoal, Magby, Litwick, Carkol, Larvesta,
+  Heatmor…) and rock smash encounters.
+- Map ids for bosses and events: MAP_CINDER_CAVERNS_1F, _B1F, _HEART.
+
 ## How the maps are made
 
 - `tools/areas/tiles.py` renders any tileset or layout to PNG.

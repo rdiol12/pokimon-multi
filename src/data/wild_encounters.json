@@ -38005,6 +38005,204 @@
               }
             ]
           }
+        },
+        {
+          "map": "MAP_CINDER_CAVERNS_1F",
+          "base_label": "gCinderCaverns1F",
+          "land_mons": {
+            "encounter_rate": 10,
+            "mons": [
+              {
+                "min_level": 33,
+                "max_level": 35,
+                "species": "SPECIES_SLUGMA"
+              },
+              {
+                "min_level": 33,
+                "max_level": 35,
+                "species": "SPECIES_NUMEL"
+              },
+              {
+                "min_level": 34,
+                "max_level": 36,
+                "species": "SPECIES_TORKOAL"
+              },
+              {
+                "min_level": 33,
+                "max_level": 35,
+                "species": "SPECIES_MAGBY"
+              },
+              {
+                "min_level": 33,
+                "max_level": 35,
+                "species": "SPECIES_LITWICK"
+              },
+              {
+                "min_level": 33,
+                "max_level": 35,
+                "species": "SPECIES_SIZZLIPEDE"
+              },
+              {
+                "min_level": 34,
+                "max_level": 36,
+                "species": "SPECIES_CARKOL"
+              },
+              {
+                "min_level": 34,
+                "max_level": 36,
+                "species": "SPECIES_HOUNDOUR"
+              },
+              {
+                "min_level": 36,
+                "max_level": 38,
+                "species": "SPECIES_MAGMAR"
+              },
+              {
+                "min_level": 36,
+                "max_level": 38,
+                "species": "SPECIES_HEATMOR"
+              },
+              {
+                "min_level": 36,
+                "max_level": 37,
+                "species": "SPECIES_LARVESTA"
+              },
+              {
+                "min_level": 38,
+                "max_level": 39,
+                "species": "SPECIES_MAGCARGO"
+              }
+            ]
+          },
+          "rock_smash_mons": {
+            "encounter_rate": 20,
+            "mons": [
+              {
+                "min_level": 30,
+                "max_level": 35,
+                "species": "SPECIES_ROLYCOLY"
+              },
+              {
+                "min_level": 33,
+                "max_level": 37,
+                "species": "SPECIES_CARKOL"
+              },
+              {
+                "min_level": 30,
+                "max_level": 35,
+                "species": "SPECIES_NOSEPASS"
+              },
+              {
+                "min_level": 30,
+                "max_level": 35,
+                "species": "SPECIES_GEODUDE"
+              },
+              {
+                "min_level": 38,
+                "max_level": 40,
+                "species": "SPECIES_COALOSSAL"
+              }
+            ]
+          }
+        },
+        {
+          "map": "MAP_CINDER_CAVERNS_B1F",
+          "base_label": "gCinderCavernsB1F",
+          "land_mons": {
+            "encounter_rate": 10,
+            "mons": [
+              {
+                "min_level": 33,
+                "max_level": 35,
+                "species": "SPECIES_SLUGMA"
+              },
+              {
+                "min_level": 33,
+                "max_level": 35,
+                "species": "SPECIES_NUMEL"
+              },
+              {
+                "min_level": 34,
+                "max_level": 36,
+                "species": "SPECIES_TORKOAL"
+              },
+              {
+                "min_level": 33,
+                "max_level": 35,
+                "species": "SPECIES_MAGBY"
+              },
+              {
+                "min_level": 33,
+                "max_level": 35,
+                "species": "SPECIES_LITWICK"
+              },
+              {
+                "min_level": 33,
+                "max_level": 35,
+                "species": "SPECIES_SIZZLIPEDE"
+              },
+              {
+                "min_level": 34,
+                "max_level": 36,
+                "species": "SPECIES_CARKOL"
+              },
+              {
+                "min_level": 34,
+                "max_level": 36,
+                "species": "SPECIES_HOUNDOUR"
+              },
+              {
+                "min_level": 36,
+                "max_level": 38,
+                "species": "SPECIES_MAGMAR"
+              },
+              {
+                "min_level": 36,
+                "max_level": 38,
+                "species": "SPECIES_HEATMOR"
+              },
+              {
+                "min_level": 36,
+                "max_level": 37,
+                "species": "SPECIES_LARVESTA"
+              },
+              {
+                "min_level": 38,
+                "max_level": 39,
+                "species": "SPECIES_MAGCARGO"
+              }
+            ]
+          },
+          "rock_smash_mons": {
+            "encounter_rate": 20,
+            "mons": [
+              {
+                "min_level": 30,
+                "max_level": 35,
+                "species": "SPECIES_ROLYCOLY"
+              },
+              {
+                "min_level": 33,
+                "max_level": 37,
+                "species": "SPECIES_CARKOL"
+              },
+              {
+                "min_level": 30,
+                "max_level": 35,
+                "species": "SPECIES_NOSEPASS"
+              },
+              {
+                "min_level": 30,
+                "max_level": 35,
+                "species": "SPECIES_GEODUDE"
+              },
+              {
+                "min_level": 38,
+                "max_level": 40,
+                "species": "SPECIES_COALOSSAL"
+              }
+            ]
+          }
         }
       ]
     },
