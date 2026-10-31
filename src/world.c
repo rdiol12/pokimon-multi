@@ -17,6 +17,7 @@
 #include "constants/weather.h"
 #include "world.h"
 #include "online.h"
+#include "field_ability.h"
 
 extern const u8 World_EventScript_Menu[];
 
@@ -126,6 +127,7 @@ bool32 World_OverworldUpdate(void)
     Adventure_Update();
     Mechanics_Update();
     Pastime_Update();
+    FieldAbility_Update();
     if (Online_OverworldUpdate())
         return TRUE;
     return Hardcore_Update();
@@ -134,7 +136,7 @@ bool32 World_OverworldUpdate(void)
 // A pressed facing (x, y), map coordinates with MAP_OFFSET.
 bool32 World_TryInteract(s16 x, s16 y)
 {
-    return Legends_TryInteract(x, y) || House_TryInteract(x, y) || Adventure_TryInteract(x, y) || Mechanics_TryInteract(x, y) || Pastime_TryInteract(x, y);
+    return Legends_TryInteract(x, y) || House_TryInteract(x, y) || Adventure_TryInteract(x, y) || Mechanics_TryInteract(x, y) || Pastime_TryInteract(x, y) || FieldAbility_TryInteract(x, y);
 }
 
 bool32 World_TryOpenMenu(void)
@@ -163,6 +165,7 @@ void World_OnWildBattleEnd(void)
         Online_OnCatch();
         Pastime_OnCatch();
     }
+    FieldAbility_OnWildBattleEnd();
     ShinyChain_OnWildBattleEnd();
     Records_OnWildBattleEnd();
     Hardcore_OnBattleEnd(TRUE);

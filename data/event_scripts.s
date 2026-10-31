@@ -1743,6 +1743,7 @@ EventScript_PalletTown_PlayersHouse_2F_TurnOnPC::
 	.include "data/scripts/mechanics.inc"
 	.include "data/scripts/community.inc"
 	.include "data/scripts/pastime.inc"
+	.include "data/scripts/field_ability.inc"
 	.include "data/text/cable_club.inc"
 	.include "data/scripts/contest_hall.inc"
 	.include "data/scripts/tv.inc"
