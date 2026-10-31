@@ -85,6 +85,17 @@ const struct Tileset gTileset_Slateport =
     .callback = InitTilesetAnim_Slateport,
 };
 
+const struct Tileset gTileset_Carnival =
+{
+    .isCompressed = TRUE,
+    .isSecondary = TRUE,
+    .tiles = gTilesetTiles_Carnival,
+    .palettes = gTilesetPalettes_Carnival,
+    .metatiles = gMetatiles_Carnival,
+    .metatileAttributes = gMetatileAttributes_Carnival,
+    .callback = InitTilesetAnim_Petalburg,
+};
+
 const struct Tileset gTileset_Mauville =
 {
     .isCompressed = TRUE,

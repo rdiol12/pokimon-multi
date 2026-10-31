@@ -156,6 +156,32 @@ Feather Badge.
   Shroomish, Yanma, Skorupi, Stunfisk and their evolutions Lv34–39;
   Barboach, Whiscash and Poliwag on a rod. Map id: MAP_MIREBOUGH_MARSH.
 
+## Sunfair Carnival
+
+A fairground by the sea. A sailor in Slateport City takes you there by boat
+at any time.
+
+- New art drawn for it in Emerald's style (`tools/areas/carnival_art.py`):
+  a Ferris wheel, big top tents, striped market stalls, an entrance arch
+  you walk under, lamp posts and balloon carts. They live in a new
+  secondary tileset, `gTileset_Carnival`, which is Petalburg's tiles plus
+  the new ones (palettes 7 and 11), so the town style can still lay out the
+  ground.
+- Quest: the Ringmaster's Spinda spun itself dizzy and wobbled off. Find
+  it by the bowling ground and he gives you a Mime Jr. egg.
+- Stalls: a drinks stall and a sweets stall (Lava Cookie, Rage Candy Bar,
+  Casteliacone…) are shops; the ring toss costs ¥500 a throw and sometimes
+  wins a Rare Candy, Heart Scale or Lemonade. A fortune teller, a balloon
+  seller, a Mr. Mime, and trainers Kindler Blaze, Twins Kit & Kat (double),
+  Ninja Boy Shade (hiding behind the big top) and Guitarist Riff.
+- Games: the hosts for the Ferris wheel (29,12), bowling (9,13), mini golf
+  (39,26) and soccer (12,26) call `Carnival_EventScript_FerrisWheel`,
+  `_Bowling`, `_Golf` and `_Soccer` in `data/scripts/areas/carnival_games.inc`.
+  For now they say "coming soon"; the minigames branch fills them in.
+  Open ground left for the games: bowling lanes x 40–54, y 4–11; soccer
+  pitch x 4–21, y 27–36; golf green x 38–54, y 27–37. Map id:
+  MAP_SUNFAIR_CARNIVAL.
+
 ## How the maps are made
 
 - `tools/areas/tiles.py` renders any tileset or layout to PNG.

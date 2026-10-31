@@ -1670,6 +1670,10 @@
     {
       "id": "MAPSEC_MIREBOUGH_MARSH",
       "name": "MIREBOUGH MARSH"
+    },
+    {
+      "id": "MAPSEC_SUNFAIR_CARNIVAL",
+      "name": "SUNFAIR CARNIVAL"
     }
   ]
 }

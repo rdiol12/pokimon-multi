@@ -502,3 +502,71 @@ Level: 39
 Sliggoo
 Level: 38
 /* end MireboughMarsh */
+
+/* begin SunfairCarnival */
+=== AREA_TRAINER_CARNIVAL_BLAZE ===
+Name: BLAZE
+Class: Kindler
+Pic: Kindler
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Basic Trainer
+
+Litleo
+Level: 24
+
+Slugma
+Level: 24
+
+Magby
+Level: 25
+
+=== AREA_TRAINER_CARNIVAL_KIT_AND_KAT ===
+Name: KIT & KAT
+Class: Twins
+Pic: Twins
+Gender: Female
+Music: Girl
+Double Battle: Yes
+AI: Basic Trainer
+
+Minun
+Level: 24
+
+Plusle
+Level: 24
+
+=== AREA_TRAINER_CARNIVAL_SHADE ===
+Name: SHADE
+Class: Ninja Boy
+Pic: Ninja Boy
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Basic Trainer
+
+Croagunk
+Level: 24
+
+Nincada
+Level: 23
+
+Zubat
+Level: 24
+
+=== AREA_TRAINER_CARNIVAL_RIFF ===
+Name: RIFF
+Class: Guitarist
+Pic: Guitarist
+Gender: Male
+Music: Intense
+Double Battle: No
+AI: Basic Trainer
+
+Toxel
+Level: 24
+
+Loudred
+Level: 25
+/* end SunfairCarnival */
