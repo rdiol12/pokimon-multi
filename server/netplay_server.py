@@ -26,8 +26,9 @@ EMOTE_BURST = 4  # emotes a player can send at once; one more each EMOTE_REFILL 
 EMOTE_REFILL = 1.0
 NAME_RE = re.compile(r"^[A-Za-z0-9]{1,7}$")
 HEX_RE = re.compile(r"^[0-9a-fA-F]{2,64}$")
-KINDS = ("battle", "trade", "deal", "coop")
+KINDS = ("battle", "trade", "deal", "coop", "double")
 OUTCOMES = ("win", "loss", "draw")
+BATTLE_KINDS = ("battle", "double")  # PvP battles with a result
 MAX_LINE = 256
 
 
@@ -251,7 +252,7 @@ class Server:
             if watcher.id in self.players:
                 watcher.send(f"WEND {session.id}")
         session.watchers.clear()
-        if session.kind == "battle" and session.started and not session.recorded:
+        if session.kind in BATTLE_KINDS and session.started and not session.recorded:
             self.pending[session.id] = session
             self.settle_pending(leaver)
 
@@ -273,7 +274,9 @@ class Server:
         session.recorded = True
         self.pending.pop(session.id, None)
         h, g = session.host, session.guest
-        status = self.league.record(
+        # Ranked doubles have their own ladder (server/online_doubles.py).
+        record = self.league.record if session.kind == "battle" else getattr(self, "record_" + session.kind)
+        status = record(
             h.key, session.reports.get(h.key), g.key, session.reports.get(g.key)
         )
         log.info("battle %d %s vs %s: %s", session.id, h.name, g.name, status)
@@ -373,7 +376,7 @@ class Server:
 
     def cmd_result(self, player, sid, outcome):
         session = self.require_session(player, sid, started=True)
-        if session.kind != "battle" or outcome not in OUTCOMES:
+        if session.kind not in BATTLE_KINDS or outcome not in OUTCOMES:
             raise ValueError("bad result")
         session.reports.setdefault(player.key, outcome)
         if len(session.reports) == 2 and not session.recorded:
@@ -477,7 +480,7 @@ class Server:
 
     def live_battle(self, sid):
         session = self.sessions.get(int(sid))
-        if session is None or session.kind != "battle" or not session.started:
+        if session is None or session.kind not in BATTLE_KINDS or not session.started:
             return None
         return session
 
@@ -508,7 +511,7 @@ class Server:
     def battle_report(self, player, sid):
         """The battle `player` hosts, which only the host reports on."""
         session = self.require_session(player, sid, started=True)
-        if session.kind != "battle" or player is not session.host:
+        if session.kind not in BATTLE_KINDS or player is not session.host:
             raise ValueError("not the host of a battle")
         return session
 

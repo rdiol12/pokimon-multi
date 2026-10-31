@@ -61,4 +61,5 @@ const struct OnlineRequest gOnlineRequests[ONL_REQ_COUNT] =
     [ONL_REQ_BET_PLACE]   = {"BET PLACE", 1, ONL_ARG_CHOSEN | ONL_ARG_COINS},
     [ONL_REQ_BET_COLLECT] = {"BET COLLECT"},
     [ONL_REQ_BET_BOARD]   = {"BET BOARD"},
+    [ONL_REQ_DOUBLES_BOARD] = {"DOUBLES BOARD"},
 };

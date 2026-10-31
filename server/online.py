@@ -165,6 +165,7 @@ class Online:
 def install(server, ext_obj):
     import online_betting
     import online_coopfish
+    import online_doubles
     import online_duo
     import online_fishing
     import online_goals
@@ -177,7 +178,8 @@ def install(server, ext_obj):
 
     online_web.install(server)
     online_betting.install(server)
+    online_doubles.install(server)
     return Online(server, ext_obj, [online_goals, online_sightings, online_web, online_fishing, online_coopfish,
                                        online_shops, online_pageant, online_duo,
                                        online_mentors, online_pquests,
-                                       online_betting])
+                                       online_betting, online_doubles])

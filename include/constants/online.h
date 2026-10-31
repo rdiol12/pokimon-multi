@@ -70,7 +70,8 @@
 #define ONL_REQ_BET_PLACE   53 // VAR_0x8005: coins; the side picked from BET_SHOW
 #define ONL_REQ_BET_COLLECT 54
 #define ONL_REQ_BET_BOARD   55
-#define ONL_REQ_COUNT       56
+#define ONL_REQ_DOUBLES_BOARD 56
+#define ONL_REQ_COUNT       57
 
 // The hub's rows (VAR_RESULT of its menu).
 #define ONLINE_HUB_GOALS    0
@@ -83,6 +84,7 @@
 #define ONLINE_HUB_MENTORS  7
 #define ONLINE_HUB_PQUESTS  8
 #define ONLINE_HUB_BETTING  9
+#define ONLINE_HUB_DOUBLES  10
 #define ONLINE_HUB_CLOSE    127
 
 // VAR_0x800B of the co-op fishing requests.

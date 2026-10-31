@@ -103,7 +103,7 @@ def install(server):
     def cmd_accept(player, sid):
         accept(player, sid)
         session = server.sessions.get(int(sid))
-        if session and session.kind == "battle" and session.started and hasattr(server, "online"):
+        if session and session.kind in ("battle", "double") and session.started and hasattr(server, "online"):
             battles(server)[session.id] = (session.host.name, session.guest.name, server.online.now())
             for p in server.players.values():
                 if p not in (session.host, session.guest) and p.name is not None:

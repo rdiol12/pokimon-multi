@@ -68,9 +68,9 @@ local STATE_OFFLINE, STATE_CONNECTING, STATE_ONLINE = 0, 1, 2
 local REQ_CHALLENGE, REQ_TRADE, REQ_ACCEPT, REQ_DECLINE, REQ_RESULT, REQ_LEAVE, REQ_DEAL, REQ_LADDER, REQ_EMOTE = 1, 2, 3, 4, 5, 6, 7, 8, 9
 local REQ_FRIENDS, REQ_FRIEND_ADD, REQ_FRIEND_DEL, REQ_SEASON, REQ_CLAIM = 10, 11, 12, 13, 14
 local REQ_MARKET, REQ_MARKET_SELL, REQ_MARKET_BUY, REQ_MARKET_CANCEL, REQ_MARKET_COLLECT = 15, 16, 17, 18, 19
-local REQ_LIVE, REQ_WATCH, REQ_UNWATCH, REQ_COOP = 20, 21, 22, 23
+local REQ_LIVE, REQ_WATCH, REQ_UNWATCH, REQ_COOP, REQ_DOUBLE = 20, 21, 22, 23, 24
 local EV_INVITE, EV_START, EV_DECLINED, EV_ENDED, EV_PENDING, EV_EMOTE = 1, 2, 3, 4, 5, 6
-local KIND_IDS = { battle = 1, trade = 2, deal = 3, coop = 4 }
+local KIND_IDS = { battle = 1, trade = 2, deal = 3, coop = 4, double = 5 }
 local RESULTS = { "win", "loss", "draw" }
 
 local SCAN_INTERVAL = 60
@@ -510,6 +510,8 @@ function Bridge:handleRequest()
         self.net.send("REQ deal " .. target)
     elseif type == REQ_COOP then
         self.net.send("REQ coop " .. target)
+    elseif type == REQ_DOUBLE then
+        self.net.send("REQ double " .. target)
     elseif type == REQ_ACCEPT then
         self.net.send("ACCEPT " .. sid)
     elseif type == REQ_DECLINE then

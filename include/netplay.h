@@ -56,6 +56,7 @@ enum NetplayRequestType
     NETPLAY_REQ_WATCH,       // arg: index in the live list
     NETPLAY_REQ_UNWATCH,
     NETPLAY_REQ_COOP,        // target: the player to team up with
+    NETPLAY_REQ_DOUBLE,      // target: the player to challenge to a ranked double battle
 };
 
 enum NetplayEventType
