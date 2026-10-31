@@ -141,6 +141,7 @@ bool32 World_TryOpenMenu(void)
 enum Species World_ModifyWildSpecies(enum Species species, u8 level)
 {
     species = RoamingWeather_ModifyWildSpecies(species, level);
+    species = Pastime_ModifyWildSpecies(species);
     ShinyChain_OnWildSpecies(species);
     return species;
 }

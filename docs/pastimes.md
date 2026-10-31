@@ -191,3 +191,31 @@ The best score goes to the server's **COOK-OFF CHAMPS** leaderboard (world
 board 17 in `server/world.py`). **R > PASTIMES > COOK-OFF** has MY RECORDS
 (rank, best score, wins, entries, today's contest) and COOK-OFF CHAMPS.
 Screenshots: `tools/pastime_shots/cooking.lua` (two players online).
+
+## Bug-catching contest
+
+![Bug-catching contest](images/pastime-bug-contest.png)
+
+The contest officer stands at the north edge of Route 119's big field of
+tall grass (below the Weather Institute). Once a day, enter to get 20 Sport
+Balls and 10 minutes on the clock (overworld time; battles and menus pause
+it). While the contest is on, every wild Pokémon in Route 119's grass is a
+Bug type: common ones (Caterpie, Weedle, Wurmple, Ledyba, Spinarak,
+Kricketot, Sewaddle, Nincada, Blipbug), uncommon ones (Venonat, Paras,
+Surskit, Volbeat, Illumise, Combee, Yanma, Cutiefly, Nymble) and rare ones
+(Scyther, Pinsir, Heracross, Karrablast, Shelmet, Larvesta). You keep
+everything you catch.
+
+Each Bug caught scores 20, 50 or 100 for rarity, 3 a level, half its IV
+total and 50 if it's shiny; your best one counts ("NEW BEST BUG!"). One
+minute before the end, and when time's up, a notice tells you to go back
+to the officer (or end early by talking to him). The judges compare your
+best Bug with three rivals: 1st wins a Sun Stone, 2nd an Everstone, 3rd a
+Sitrus Berry, 4th an Oran Berry. Leftover Sport Balls are collected.
+
+The score goes to the server's **BUG CONTEST** board (world board 18 in
+`server/world.py`). **R > PASTIMES > BUG CONTEST** shows the clock, your
+best catch, best ever, wins and entries, and the board. Hooks:
+`Pastime_ModifyWildSpecies` in `World_ModifyWildSpecies` (`src/world.c`);
+the wild Pokémon is read at battle start (`Pastime_OnBattleStart`).
+Screenshots: `tools/pastime_shots/bug_contest.lua` (two players online).

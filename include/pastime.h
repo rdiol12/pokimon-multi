@@ -90,5 +90,15 @@ void Cook_CheckDish(void);
 void Cook_Play(void);
 void Cook_Judge(void);
 void Cook_ShowList(void);
+void Cafe_OnBattleStart(void);
+u16 Pastime_ModifyWildSpecies(u16 species);
+u16 BugContest_ModifyWildSpecies(u16 species);
+void BugContest_OnBattleStart(void);
+void BugContest_OnCatch(u16 species);
+void BugContest_Update(void);
+void BugContest_GetState(void);
+void BugContest_Start(void);
+void BugContest_Judge(void);
+void BugContest_ShowList(void);
 
 #endif // GUARD_PASTIME_H

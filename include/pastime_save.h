@@ -58,6 +58,12 @@ struct PastimeSaveData
     u8 cookBest;
     u16 cookWins;
     u16 cookEntries;
+    // Bug-catching contest (src/pastime_bug_contest.c)
+    u16 bugDay;       // day + 1 of the last contest entered
+    u16 bugBest;
+    u16 bugBestSpecies;
+    u16 bugWins;
+    u16 bugEntries;
 };
 
 #endif // GUARD_PASTIME_SAVE_H

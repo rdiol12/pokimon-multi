@@ -15,6 +15,7 @@
 #define PASTIME_MENU_HOTEL      5
 #define PASTIME_MENU_CAFE       6
 #define PASTIME_MENU_COOKING    7
+#define PASTIME_MENU_BUG_CONTEST 8
 #define PASTIME_MENU_CLOSE      31
 
 // NPCs and objects the activities place on maps from code (src/pastime.c)
@@ -92,5 +93,11 @@
 #define COOK_RIVALS       3
 #define COOK_STEPS        3 // chop, stir, plate: one timing meter round each
 #define WORLD_BOARD_COOKING 17 // server leaderboard (server/world.py)
+
+// Bug-catching contest on Route 119 (src/pastime_bug_contest.c).
+#define BUG_CONTEST_OPEN       0 // VAR_RESULT of BugContest_GetState
+#define BUG_CONTEST_RUNNING    1
+#define BUG_CONTEST_DONE_TODAY 2
+#define WORLD_BOARD_BUG_CONTEST 18 // server leaderboard (server/world.py)
 
 #endif // GUARD_CONSTANTS_PASTIME_H
