@@ -67,7 +67,7 @@ const u16 gTilesetPalettes_Petalburg[][16] =
 };
 
 // The carnival (tools/areas/carnival_art.py): Petalburg's tiles plus new art.
-const u32 gTilesetTiles_Carnival[] = INCGFX_U32("data/tilesets/secondary/carnival/tiles.png", ".4bpp.fastSmol", "-num_tiles 356 -Wnum_tiles");
+const u32 gTilesetTiles_Carnival[] = INCGFX_U32("data/tilesets/secondary/carnival/tiles.png", ".4bpp.fastSmol", "-num_tiles 496 -Wnum_tiles");
 
 const u16 gTilesetPalettes_Carnival[][16] =
 {

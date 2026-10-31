@@ -157,7 +157,7 @@ SunscarDesert_Text_SableDefeat:
 	.string "You passed.$"
 
 SunscarDesert_Text_SablePost:
-	.string "My GARCHOMP hatched here, on the\n"
+	.string "My GABITE hatched here, on the\n"
 	.string "hottest day of the year.$"
 
 SunscarDesert_EventScript_Item_SoftSand::

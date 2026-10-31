@@ -158,7 +158,10 @@
     "CorallineReef",
     "Abyssia",
     "Abyssia_Temple",
-    "CorallineReef_Wreck"
+    "GullwingPoint",
+    "GullwingPoint_PirateShip",
+    "CorallineReef_Wreck",
+    "GullwingPoint_PirateHold"
   ],
   "gMapGroup_IndoorLittleroot": [
     "LittlerootTown_BrendansHouse_1F",

@@ -1682,6 +1682,10 @@
     {
       "id": "MAPSEC_ABYSSIA",
       "name": "ABYSSIA"
+    },
+    {
+      "id": "MAPSEC_GULLWING_POINT",
+      "name": "GULLWING POINT"
     }
   ]
 }

@@ -4,7 +4,7 @@ tileset (a copy of an existing one plus the new tiles and metatiles).
 
 Used by tools/areas/carnival_art.py and tools/areas/abyss_art.py.
 """
-import json, os, shutil, struct
+import json, os, re, shutil, struct
 import numpy as np
 from PIL import Image
 
@@ -80,7 +80,8 @@ def pack(src, out, objects, palettes, ground, table_path, fill_free=False):
     can walk on), counter (blocks you can talk across), door (blocks that
     warp you when you step in) and behavior (any other metatile behaviour,
     or 0), each a function of (row, col). palettes: {slot: 16 colours} replacing the copied ones.
-    ground: the metatile whose bottom layer shows under see-through pixels.
+    ground: the metatile whose bottom layer shows under see-through pixels
+    (an object's options can name its own, e.g. water under a ship).
     fill_free: put new tiles in slots no metatile uses (for full tilesets
     whose animations need every tile to stay where it is) before appending.
     Writes table_path: object name -> rows of metatile ids (-1 where the
@@ -124,17 +125,17 @@ def pack(src, out, objects, palettes, ground, table_path, fill_free=False):
         lookup[t.tobytes()] = i
         return i, 0, 0
 
-    if ground < NUM_PRIMARY:
-        gm = _u16s(f'{ROOT}/data/tilesets/primary/general/metatiles.bin')
-        ground_bottom = gm[ground * 8:ground * 8 + 4]
-    else:
-        ground_bottom = meta[(ground - NUM_PRIMARY) * 8:(ground - NUM_PRIMARY) * 8 + 4]
+    gm = _u16s(f'{ROOT}/data/tilesets/primary/general/metatiles.bin')
+
+    def bottom(m):
+        return gm[m * 8:m * 8 + 4] if m < NUM_PRIMARY else meta[(m - NUM_PRIMARY) * 8:(m - NUM_PRIMARY) * 8 + 4]
     first_new = NUM_PRIMARY + len(attrs)
     table, walk = {}, {}
     no = lambda r, c: False
     for name, (fn, pal, opt) in objects.items():
         over, can_walk, counter, door, other = (opt.get(k, no) for k in ('over', 'walk', 'counter', 'door', 'behavior'))
         walk[name] = []
+        ground_bottom = bottom(opt.get('ground', ground))
         art = fn().a
         h, w = art.shape
         rows = []
@@ -177,4 +178,11 @@ def pack(src, out, objects, palettes, ground, table_path, fill_free=False):
     open(f'{out}/metatile_attributes.bin', 'wb').write(struct.pack(f'<{len(attrs)}H', *attrs))
     json.dump({'num_tiles': n, 'first_new_metatile': first_new, 'objects': table, 'walkable': walk},
               open(table_path, 'w'), indent=1)
+    # keep the tile count the build reads in step
+    gp = f'{ROOT}/src/data/tilesets/graphics.h'
+    g = open(gp).read()
+    rel = os.path.relpath(out, ROOT)
+    g2 = re.sub(rf'("{re.escape(rel)}/tiles\.png", "[^"]*", "-num_tiles )\d+', rf'\g<1>{n}', g)
+    if g2 != g:
+        open(gp, 'w').write(g2)
     print(f'{os.path.basename(out)} tileset: {n} tiles ({added} new), {len(attrs)} metatiles')

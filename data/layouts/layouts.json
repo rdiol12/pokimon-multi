@@ -9545,6 +9545,26 @@
       "secondary_tileset": "gTileset_Abyss",
       "border_filepath": "data/layouts/Abyssia_Temple/border.bin",
       "blockdata_filepath": "data/layouts/Abyssia_Temple/map.bin"
+    },
+    {
+      "id": "LAYOUT_GULLWING_POINT",
+      "name": "GullwingPoint_Layout",
+      "width": 56,
+      "height": 48,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Carnival",
+      "border_filepath": "data/layouts/GullwingPoint/border.bin",
+      "blockdata_filepath": "data/layouts/GullwingPoint/map.bin"
+    },
+    {
+      "id": "LAYOUT_GULLWING_POINT_PIRATE_SHIP",
+      "name": "GullwingPoint_PirateShip_Layout",
+      "width": 22,
+      "height": 14,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Carnival",
+      "border_filepath": "data/layouts/GullwingPoint_PirateShip/border.bin",
+      "blockdata_filepath": "data/layouts/GullwingPoint_PirateShip/map.bin"
     }
   ]
 }

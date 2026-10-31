@@ -2,7 +2,7 @@
 MauvilleCity_EventScript_SunscarGuide::
 	lock
 	faceplayer
-	goto_if_unset FLAG_BADGE06_GET, MauvilleCity_EventScript_SunscarGuideNoBadge
+	goto_if_unset FLAG_BADGE04_GET, MauvilleCity_EventScript_SunscarGuideNoBadge
 	msgbox MauvilleCity_Text_SunscarGuideAsk, MSGBOX_YESNO
 	goto_if_eq VAR_RESULT, NO, MauvilleCity_EventScript_SunscarGuideNo
 	msgbox MauvilleCity_Text_SunscarGuideGo, MSGBOX_DEFAULT
@@ -26,10 +26,10 @@ MauvilleCity_Text_SunscarGuideNoBadge:
 	.string "Deep in the desert there are ruins\n"
 	.string "full of UNOWN riddles.\p"
 	.string "It's a harsh trip. Come back with\n"
-	.string "WINONA's badge and I'll guide you.$"
+	.string "FLANNERY's badge and I'll guide you.$"
 
 MauvilleCity_Text_SunscarGuideAsk:
-	.string "WINONA's badge! You're ready for\n"
+	.string "FLANNERY's badge! You're ready for\n"
 	.string "the desert.\p"
 	.string "Shall I guide you to SUNSCAR\n"
 	.string "DESERT?$"

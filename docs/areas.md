@@ -101,7 +101,7 @@ you there once you have the Mind Badge.
 ## Sunscar Desert and Ruins
 
 A sand basin among rock mesas, with ruins at its north end. A guide in
-Mauville City leads you there once you have Winona's badge.
+Mauville City leads you there once you have Flannery's badge (4 badges).
 
 - The Hall of Riddles: three Unown statues each whisper a riddle, and four
   glyph tablets (sun, moon, wave, flame) stand in the hall. Read a tablet
@@ -109,12 +109,12 @@ Mauville City leads you there once you have Winona's badge.
   only in order: the sun, then the moon, then the wave. The flame is a
   decoy. When all three glow the ruins shake and the sealed door opens
   (`setmetatile`, reapplied on load).
-- The vault: Spiritomb (Lv40), the Odd Keystone, a Relic Gold, a Dusk Ball,
+- The vault: Spiritomb (Lv34), the Odd Keystone, a Relic Gold, a Dusk Ball,
   a hidden Relic Copper, and wild Unown.
 - In the desert: an archaeologist with hints, a digger who gives a Relic
   Gold once the vault is open, a basking Sandile, a Trapinch pit, Ruin
   Maniac Dexter, Camper Milo, Expert Sable. TM Sandstorm, Soft Sand, a
-  Hyper Potion and three hidden items. Wild Pokémon Lv34–38 (Sandile,
+  Hyper Potion and three hidden items. Wild Pokémon Lv29–33, trainers Lv30–34, vault Unown Lv26–32 (Sandile,
   Trapinch, Cacnea, Hippopotas, Baltoy, Silicobra, Gible, Sigilyph…).
 - Map ids: MAP_SUNSCAR_DESERT, MAP_SUNSCAR_RUINS_HALL, MAP_SUNSCAR_RUINS_VAULT.
 
@@ -206,6 +206,26 @@ you down once you have the Mind Badge, and back up again from the reef.
   the drawing and packing code shared with the carnival.
 - Map ids: MAP_CORALLINE_REEF, _REEF_WRECK (the Abandoned Ship's flooded
   hold), MAP_ABYSSIA, _TEMPLE.
+
+## Gullwing Point and the pirate ship
+
+A rocky cape with a lighthouse and a pirate ship at anchor. A boatman in
+Dewford Town takes you there with no badge needed, so it is an early-game
+area (trainers Lv14–22, wild Pokémon Lv13–18).
+
+- The lighthouse puzzle: the keeper says the beam has gone dark. Four
+  mirrors on the cape are turned the wrong way; talk to each to turn it.
+  When all four are right the beam crosses the cape (`setmetatile`,
+  reapplied on load) and lights the way to the ship, and a gangplank drops
+  at the shore.
+- The pirate ship: deckhands Peg and Finn, a Murkrow, barrels and cannons,
+  and Captain Barnacle at the helm. Beat him and his guard lets you down the
+  hatch into the hold: a Big Nugget, a King's Rock and a Pearl String.
+- Around the cape: a fisherman, a Pelipper, a wandering Wingull, hidden
+  items and trainers along the cliffs.
+- Map ids: MAP_GULLWING_POINT, MAP_GULLWING_POINT_PIRATE_SHIP,
+  MAP_GULLWING_POINT_PIRATE_HOLD. Flags FLAG_GULL_MIRROR_1–4,
+  FLAG_GULL_BEAM_SOLVED, FLAG_GULL_CAPTAIN_BEATEN.
 
 ## How the maps are made
 
