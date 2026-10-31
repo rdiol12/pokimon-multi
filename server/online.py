@@ -112,10 +112,10 @@ class Online:
 
     # --- notices -------------------------------------------------------
 
-    def announce(self, message):
-        """A notice for every player online now."""
+    def announce(self, message, exclude=None):
+        """A notice for every player online now (but `exclude`, a key)."""
         self._note_id += 1
-        self.notes.append((self._note_id, game_text(wrap(message))[:NOTE_LENGTH]))
+        self.notes.append((self._note_id, game_text(wrap(message))[:NOTE_LENGTH], exclude))
         del self.notes[:-20]
 
     def notify(self, key, message):
@@ -124,7 +124,7 @@ class Online:
         del self.personal[tuple(key)][:-5]
 
     def pending_notes(self, ctx):
-        rows = [["N", t] for i, t in self.notes if i > ctx.player.online_seen]
+        rows = [["N", t] for i, t, exclude in self.notes if i > ctx.player.online_seen and exclude != ctx.key]
         ctx.player.online_seen = self._note_id
         rows += [["N", t] for t in self.personal.pop(ctx.key, [])]
         return b"\n" + text(rows) if rows else b""
@@ -147,5 +147,6 @@ class Online:
 
 def install(server, ext_obj):
     import online_goals
+    import online_sightings
 
-    return Online(server, ext_obj, [online_goals])
+    return Online(server, ext_obj, [online_goals, online_sightings])

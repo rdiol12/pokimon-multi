@@ -21,6 +21,7 @@
 #include "text.h"
 #include "wild_encounter.h"
 #include "battle.h"
+#include "battle_setup.h"
 #include "window.h"
 #include "constants/characters.h"
 #include "constants/items.h"
@@ -74,6 +75,23 @@ struct OnlineState
 };
 
 static EWRAM_DATA struct OnlineState sOnline = {0};
+
+// The screenshot driver (tools/online_shots/) writes a scene here; the next
+// free overworld frame plays it.
+enum
+{
+    SHOWCASE_NONE,
+    SHOWCASE_ROAMER, // a roaming species/level battle starts
+};
+
+struct OnlineShowcase
+{
+    u8 kind;
+    u8 level;
+    u16 species;
+};
+
+EWRAM_DATA struct OnlineShowcase gOnlineShowcase = {0};
 static EWRAM_DATA u8 sItemText[NPX_MAX_ROWS + 1][32] = {0};
 static EWRAM_DATA struct ListMenuItem sItems[NPX_MAX_ROWS + 1] = {0};
 
@@ -671,6 +689,24 @@ static void PollBackground(void)
     }
 }
 
+static bool32 RunShowcase(void)
+{
+    u32 kind = gOnlineShowcase.kind;
+
+    gOnlineShowcase.kind = SHOWCASE_NONE;
+    switch (kind)
+    {
+    case SHOWCASE_ROAMER:
+        ZeroEnemyPartyMons();
+        CreateMonWithIVs(&gEnemyParty[0], gOnlineShowcase.species, gOnlineShowcase.level,
+            GetMonPersonality(gOnlineShowcase.species, MON_GENDER_RANDOM, NATURE_RANDOM, RANDOM_UNOWN_LETTER),
+            OTID_STRUCT_PLAYER_ID, USE_RANDOM_IVS);
+        BattleSetup_StartRoamerBattle();
+        return TRUE;
+    }
+    return FALSE;
+}
+
 // Called every overworld frame. Returns TRUE if it started a script.
 bool32 Online_OverworldUpdate(void)
 {
@@ -688,6 +724,9 @@ bool32 Online_OverworldUpdate(void)
     else if (!ArePlayerFieldControlsLocked())
         SendBackground();
 
+    if (gOnlineShowcase.kind != SHOWCASE_NONE && !ArePlayerFieldControlsLocked())
+        return RunShowcase();
+
     if (sOnline.noticeCount != 0 && !ArePlayerFieldControlsLocked() && IsPlayerStandingStill())
     {
         StringCopy(gStringVar4, sOnline.notices[0]);
@@ -697,6 +736,25 @@ bool32 Online_OverworldUpdate(void)
         return TRUE;
     }
     return FALSE;
+}
+
+// A wild battle is starting: a roaming Pokémon or a legend is a sighting
+// for the server's board (and a notice for everyone online).
+void Online_OnWildBattleStart(void)
+{
+    u16 species = GetMonData(&gEnemyParty[0], MON_DATA_SPECIES);
+    s32 args[4];
+
+    if (species == SPECIES_NONE || species >= NUM_SPECIES)
+        return;
+    if (!(gBattleTypeFlags & BATTLE_TYPE_ROAMER) && !gSpeciesInfo[species].isRestrictedLegendary
+     && !gSpeciesInfo[species].isSubLegendary && !gSpeciesInfo[species].isMythical)
+        return;
+    args[0] = species;
+    args[1] = gSaveBlock1Ptr->location.mapGroup;
+    args[2] = gSaveBlock1Ptr->location.mapNum;
+    args[3] = (gBattleTypeFlags & BATTLE_TYPE_ROAMER) != 0;
+    Online_Report("SIGHT", ARRAY_COUNT(args), args);
 }
 
 // Back from a wild battle where the player caught the Pokémon.

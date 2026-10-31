@@ -52,3 +52,13 @@ function Driver.waitNotice(name, timeout)
         if i % 30 == 0 then D.press(K.A, 0) end
     end)
 end
+
+-- Starts a battle with a roaming Pokémon (gOnlineShowcase in src/online.c).
+function Driver.roamer(species, level)
+    local s = D.SYM.gOnlineShowcase
+    local id = SPECIES_ID[species]
+    D.write8(s + 1, level)
+    D.write8(s + 2, id & 0xFF)
+    D.write8(s + 3, id >> 8)
+    D.write8(s, 1)
+end

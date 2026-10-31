@@ -12,6 +12,7 @@
 // Overworld and battle hooks (called from src/world.c).
 bool32 Online_OverworldUpdate(void);
 void Online_OnCatch(void);
+void Online_OnWildBattleStart(void);
 void Online_OpenHubFromMenu(void);
 
 // Queues a report for the server, sent in the background as

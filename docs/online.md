@@ -21,6 +21,17 @@ When a goal is reached, everyone online gets a notice. Everyone who caught at
 least one Pokémon that week can collect the reward from HUB → CATCH GOALS.
 Goals start over every week.
 
+## Legend sightings
+
+![TEST1 meets a roaming Latios, TEST2 gets the notice, the sightings board](images/online-sightings.png)
+
+When a player meets a roaming Pokémon or any legend in a wild battle, the
+game reports it (`OEV SIGHT species mapGroup mapNum roaming`). Everyone else
+online gets a notice ("TEST1 spotted LATIOS at ROUTE 117!"), at most once
+every ten minutes per player and species, and HUB → LEGEND SIGHTINGS shows
+where each one was last seen, by whom and how long ago
+(`server/online_sightings.py`).
+
 ## How it talks to the server
 
 These features use the Online Plaza's request channel (`NpxRpc_*` in
@@ -44,7 +55,7 @@ lines; a line starting with `*` is the player's own (red), and
 `%|percent|text|right text|count` is a progress bar.
 
 In the background the game reports what happens (`OEV CATCH species shiny
-mapGroup mapNum fished`) and asks for the live features' status (`OSTAT`)
+mapGroup mapNum fished`, `OEV SIGHT ...`) and asks for the live features' status (`OSTAT`)
 every ten seconds; both answers bring any notices.
 
 On the server, `server/online.py` adds these words to the plaza's request

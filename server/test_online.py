@@ -8,7 +8,8 @@ import ext  # noqa: E402
 import netplay_server as ns  # noqa: E402
 import online  # noqa: E402
 import online_goals  # noqa: E402
-from online_ids import ITEMS, SPECIES  # noqa: E402
+import online_sightings  # noqa: E402
+from online_ids import ITEMS, MAPS, SPECIES  # noqa: E402
 from test_netplay_server import Client  # noqa: E402
 
 
@@ -22,7 +23,7 @@ class OnlineTest(unittest.IsolatedAsyncioTestCase):
         self.league = ns.League(":memory:")
         self.server = ns.Server(self.league)
         self.online = online.Online(self.server, ext.install(self.server),
-                                    [online_goals], clock=lambda: self.now)
+                                    [online_goals, online_sightings], clock=lambda: self.now)
         self.srv = await asyncio.start_server(self.server.handle, "127.0.0.1", 0)
         self.port = self.srv.sockets[0].getsockname()[1]
         self.clients = []
@@ -85,6 +86,23 @@ class GoalTest(OnlineTest):
             self.assertEqual(rows(out)[3][:2], ["%", "0"])
         finally:
             online_goals.GOALS = old
+
+
+class SightingTest(OnlineTest):
+    async def test_sightings_board_and_notice(self):
+        a = await self.connect("Ann", 1)
+        b = await self.connect("Ben", 2)
+        await self.ask(b, "OSTAT")
+        latios, route = SPECIES["LATIOS"], MAPS["ROUTE117"]
+        await self.ask(a, f"OEV SIGHT {latios} {route[0]} {route[1]} 1")
+        status, out = await self.ask(b, "OSTAT")
+        self.assertIn(["N", "Ann spotted LATIOS at ROUTE 117!"], rows(out))
+        self.now += 300
+        await self.ask(a, f"OEV SIGHT {latios} {route[0]} {route[1]} 1")
+        status, out = await self.ask(b, "OSTAT")
+        self.assertNotIn("N", [r[0] for r in rows(out)])  # announced recently
+        status, out = await self.ask(b, "SIGHT BOARD")
+        self.assertEqual(rows(out)[3], ["LATIOS", "ROUTE 117", "Ann", "now"])
 
 
 if __name__ == "__main__":

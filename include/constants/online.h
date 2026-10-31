@@ -16,10 +16,12 @@
 // VAR_0x8005 onwards (see gOnlineRequests in src/online_requests.c).
 #define ONL_REQ_GOAL_VIEW   0
 #define ONL_REQ_GOAL_CLAIM  1
-#define ONL_REQ_COUNT       2
+#define ONL_REQ_SIGHT_BOARD 2
+#define ONL_REQ_COUNT       3
 
 // The hub's rows (VAR_RESULT of its menu).
 #define ONLINE_HUB_GOALS    0
+#define ONLINE_HUB_SIGHTINGS 1
 #define ONLINE_HUB_CLOSE    127
 
 #endif // GUARD_CONSTANTS_ONLINE_H

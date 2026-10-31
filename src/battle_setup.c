@@ -1,5 +1,6 @@
 #include "global.h"
 #include "world.h"
+#include "online.h"
 #include "data.h"
 #include "main.h"
 #include "battle.h"
@@ -413,6 +414,7 @@ static void DoStandardWildBattle(bool32 isDouble)
     }
     CreateBattleStartTask(GetWildBattleTransition(), 0);
     IncrementGameStat(GAME_STAT_TOTAL_BATTLES);
+    Online_OnWildBattleStart();
     World_OnWildBattleStart();
     IncrementGameStat(GAME_STAT_WILD_BATTLES);
     IncrementDailyWildBattles();
@@ -447,6 +449,7 @@ void BattleSetup_StartRoamerBattle(void)
     gBattleTypeFlags = BATTLE_TYPE_ROAMER;
     CreateBattleStartTask(GetWildBattleTransition(), 0);
     IncrementGameStat(GAME_STAT_TOTAL_BATTLES);
+    Online_OnWildBattleStart();
     IncrementGameStat(GAME_STAT_WILD_BATTLES);
     IncrementDailyWildBattles();
     TryUpdateGymLeaderRematchFromWild();
@@ -472,6 +475,7 @@ static void DoGhostBattle(void)
     CreateBattleStartTask(GetWildBattleTransition(), 0);
     SetMonData(&gParties[B_TRAINER_OPPONENT_A][0], MON_DATA_NICKNAME, gText_Ghost);
     IncrementGameStat(GAME_STAT_TOTAL_BATTLES);
+    Online_OnWildBattleStart();
     IncrementGameStat(GAME_STAT_WILD_BATTLES);
 }
 
@@ -484,6 +488,7 @@ static void DoBattlePikeWildBattle(void)
     gBattleTypeFlags = BATTLE_TYPE_PIKE;
     CreateBattleStartTask(GetWildBattleTransition(), 0);
     IncrementGameStat(GAME_STAT_TOTAL_BATTLES);
+    Online_OnWildBattleStart();
     IncrementGameStat(GAME_STAT_WILD_BATTLES);
     IncrementDailyWildBattles();
     TryUpdateGymLeaderRematchFromWild();
@@ -496,6 +501,7 @@ static void DoTrainerBattle(void)
         CreateNPCTrainerParty(&gParties[B_TRAINER_OPPONENT_B][0], TRAINER_BATTLE_PARAM.opponentB);
     CreateBattleStartTask(GetTrainerBattleTransition(), 0);
     IncrementGameStat(GAME_STAT_TOTAL_BATTLES);
+    Online_OnWildBattleStart();
     IncrementGameStat(GAME_STAT_TRAINER_BATTLES);
     TryUpdateGymLeaderRematchFromTrainer();
 }
@@ -508,6 +514,7 @@ static void DoBattlePyramidTrainerHillBattle(void)
         CreateBattleStartTask(GetSpecialBattleTransition(B_TRANSITION_GROUP_TRAINER_HILL), 0);
 
     IncrementGameStat(GAME_STAT_TOTAL_BATTLES);
+    Online_OnWildBattleStart();
     IncrementGameStat(GAME_STAT_TRAINER_BATTLES);
     TryUpdateGymLeaderRematchFromTrainer();
 }
@@ -538,6 +545,7 @@ void BattleSetup_StartScriptedWildBattle(void)
     gBattleTypeFlags = 0;
     CreateBattleStartTask(GetWildBattleTransition(), 0);
     IncrementGameStat(GAME_STAT_TOTAL_BATTLES);
+    Online_OnWildBattleStart();
     IncrementGameStat(GAME_STAT_WILD_BATTLES);
     IncrementDailyWildBattles();
     TryUpdateGymLeaderRematchFromWild();
@@ -550,6 +558,7 @@ void BattleSetup_StartScriptedDoubleWildBattle(void)
     gBattleTypeFlags = BATTLE_TYPE_DOUBLE;
     CreateBattleStartTask(GetWildBattleTransition(), 0);
     IncrementGameStat(GAME_STAT_TOTAL_BATTLES);
+    Online_OnWildBattleStart();
     IncrementGameStat(GAME_STAT_WILD_BATTLES);
     IncrementDailyWildBattles();
     TryUpdateGymLeaderRematchFromWild();
@@ -571,6 +580,7 @@ void StartMarowakBattle(void)
     CreateBattleStartTask(GetWildBattleTransition(), 0);
     SetMonData(&gParties[B_TRAINER_OPPONENT_A][0], MON_DATA_NICKNAME, gText_Ghost);
     IncrementGameStat(GAME_STAT_TOTAL_BATTLES);
+    Online_OnWildBattleStart();
     IncrementGameStat(GAME_STAT_WILD_BATTLES);
 }
 
@@ -581,6 +591,7 @@ void BattleSetup_StartLatiBattle(void)
     gBattleTypeFlags = BATTLE_TYPE_LEGENDARY;
     CreateBattleStartTask(GetWildBattleTransition(), 0);
     IncrementGameStat(GAME_STAT_TOTAL_BATTLES);
+    Online_OnWildBattleStart();
     IncrementGameStat(GAME_STAT_WILD_BATTLES);
     IncrementDailyWildBattles();
     TryUpdateGymLeaderRematchFromWild();
