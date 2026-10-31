@@ -172,6 +172,7 @@ def install(server, ext_obj):
     import online_fishing
     import online_goals
     import online_guilds
+    import online_hide
     import online_mentors
     import online_pageant
     import online_pquests
@@ -187,8 +188,9 @@ def install(server, ext_obj):
     online_doubles.install(server)
     online_teams.install(server)
     online_guilds.install(server)
+    online_hide.install(server)
     return Online(server, ext_obj, [online_goals, online_sightings, online_web, online_fishing, online_coopfish,
                                        online_shops, online_pageant, online_duo,
                                        online_mentors, online_pquests,
                                        online_betting, online_doubles, online_teams, online_guilds, online_racing,
-                                       guide_social])
+                                       online_hide, guide_social])

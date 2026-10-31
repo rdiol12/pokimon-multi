@@ -26,6 +26,7 @@
 #include "link.h"
 #include "match_call.h"
 #include "metatile_behavior.h"
+#include "online.h"
 #include "overworld.h"
 #include "pokemon.h"
 #include "safari_zone.h"
@@ -728,7 +729,8 @@ static bool8 TryStartCoordEventScript(struct MapPosition *position)
 {
     const u8 *script = GetCoordEventScriptAtPosition(&gMapHeader, position->x - MAP_OFFSET, position->y - MAP_OFFSET, position->elevation);
 
-    if (script == NULL)
+    // Races and hide and seek don't stop for the story's scenes.
+    if (script == NULL || Online_QuietRulesOn())
         return FALSE;
 
     struct ScriptContext ctx;

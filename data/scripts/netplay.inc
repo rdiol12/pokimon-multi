@@ -5,6 +5,8 @@ Netplay_EventScript_TalkToPlayer::
 	lockall
 	special Netplay_GetTalkedPlayer
 	goto_if_eq VAR_RESULT, FALSE, Netplay_EventScript_ReleaseAll
+	callnative Online_HideIsSeeking
+	goto_if_eq VAR_RESULT, TRUE, Online_EventScript_HideTag
 	message Netplay_Text_WhatToDo
 	waitmessage
 	dynmultipush Netplay_Text_Battle, NETPLAY_KIND_BATTLE

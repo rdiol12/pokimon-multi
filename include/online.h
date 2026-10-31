@@ -40,6 +40,22 @@ bool32 Online_RaceUpdate(void);
 struct ObjectEvent;
 bool32 Online_RacePassesThrough(const struct ObjectEvent *mover, const struct ObjectEvent *other);
 
+// Hide and seek (src/online_hide.c).
+bool32 Online_HideIsOn(void);
+bool32 Online_HideUpdate(void);
+void Online_AddTalkedPlayer(void);
+void Online_AddHideTalents(void);
+
+// No trainers or wild Pokémon while a race or game is on (src/online_racing.c).
+void Online_SetQuietRules(bool32 on);
+bool32 Online_QuietRulesOn(void);
+
+// The live features' window at the top right (src/online_hud.c).
+typedef void (*OnlineHudText)(u8 *dest);
+void Online_ShowHud(OnlineHudText text, bool32 whileLocked);
+void Online_HideHud(void);
+u8 *Online_FormatTime(u8 *dest, u32 frames, bool32 cs);
+
 // Asks for the live features' status within a few frames.
 void Online_PollStatusSoon(void);
 

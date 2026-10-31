@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 
 #include <mgba/core/core.h>
@@ -120,8 +121,23 @@ int main(int argc, char** argv) {
 			return 1;
 	}
 
+	// NETPLAY_FPS: runs no faster than that, for scenarios timed by the
+	// server's clock (hide and seek). Otherwise as fast as it can.
+	const char* fpsText = getenv("NETPLAY_FPS");
+	long frameNs = fpsText ? 1000000000L / atol(fpsText) : 0;
+	struct timespec next;
+	clock_gettime(CLOCK_MONOTONIC, &next);
+
 	long frame;
 	for (frame = 0; frame < frames; frame++) {
+		if (frameNs > 0) {
+			next.tv_nsec += frameNs;
+			while (next.tv_nsec >= 1000000000L) {
+				next.tv_nsec -= 1000000000L;
+				next.tv_sec++;
+			}
+			clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &next, NULL);
+		}
 		bool allDone = true;
 		for (int i = 0; i < count; i++) {
 			instances[i].core->runFrame(instances[i].core);

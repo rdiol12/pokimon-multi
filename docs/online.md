@@ -303,6 +303,41 @@ Server: `server/online_racing.py` (heats in memory, table
 `online_race_times`). Game: `src/online_racing.c` (courses, gates, the
 timer), `data/scripts/online/racing.inc`.
 
+## Hide and seek
+
+![TEST1 starts a game with Kirlia in the lead, counts with their eyes closed, seeks (WARM, then HOT), spots TEST2 blending in with Gastly one tile away and finds them; time's up, TEST3 stayed hidden and wins $1500, and the week's points board](images/online-hide.png)
+
+HUB > HIDE AND SEEK picks an arena (Petalburg Woods or Route 117). The
+first to pick one seeks; anyone who joins it in the next 20 seconds hides,
+up to five. The game warps everyone to the arena, counts the lobby down,
+and then the hiders have 30 seconds to hide while the seeker counts with
+their eyes closed. The seeker then has two minutes and finds a hider by
+talking to them. While seeking they only see hiders within 3 tiles: the
+server sends them the others as gone (`Server.can_see`). A hider who leaves
+the arena's map is out. Wild Pokémon, trainers and the story's scenes leave
+players alone during a game, as in a race, and notices wait for the end.
+
+The lead Pokémon helps, from its ability or else its type:
+
+| Lead | For a seeker | For a hider |
+| --- | --- | --- |
+| Keen Eye, Compound Eyes, Illuminate, Frisk | sharp eyes: sees hiders from 5 tiles | |
+| Forewarn, Anticipation, Telepathy, or a Psychic type | senses hiders: the timer shows HOT (closest within 5 tiles), WARM (12) or COLD | |
+| Sand Veil, Snow Cloak, Illusion, Infiltrator, or a Ghost type | | blends in: the seeker sees them from 2 tiles closer (at least 1) |
+
+The server's clock runs the game: the status tells the game how many seconds
+are left, so a clock that runs fast or slow keeps in step, and the game ends
+when the server says so (or 20 seconds after its own clock runs out, if the
+server is gone). The seeker wins $500 for each hider found and $1000 more
+for finding everyone; a hider nobody found wins $1500. Points go on the
+week's board: 2 for each find, 3 for staying hidden. Picking HIDE AND SEEK
+again during a game stops playing.
+
+Server: `server/online_hide.py` (games in memory, table
+`online_hide_points`). Game: `src/online_hide.c` (arenas, the timer, the
+talents), `data/scripts/online/hide.inc`; the racing and hide-and-seek
+timer window is `src/online_hud.c`.
+
 ## How it talks to the server
 
 These features use the Online Plaza's request channel (`NpxRpc_*` in
@@ -337,8 +372,9 @@ and optionally `setup(db)`, `EVENTS` (reports it listens to) and
 numbers; `tools/online/gen_ids.py` writes it from the headers.
 
 Numbers this batch owns (agreed with the other feature threads): flags
-`0x4C0`–`0x4DF` (`0x4C0` and `0x4C1` are the race's no-trainers and
-no-encounters switches), vars `0x40BB` and `0x40DB`, object local ids 241–248 on
+`0x4C0`–`0x4DF` (`0x4C0` and `0x4C1` are the no-trainers and
+no-encounters switches of races and hide and seek, which also skip the
+story's scenes), vars `0x40BB` and `0x40DB`, object local ids 241–248 on
 shared maps.
 
 ## Tests and screenshots
@@ -351,3 +387,6 @@ shared maps.
   `run.py` is `tools/world_shots/run.py` plus the seed and the bridge
   extensions; `tools/online_shots/lib.lua` has `Driver.openHub`,
   `Driver.catchWild` and `Driver.waitNotice`.
+- A seed's `ENV` reaches the games too: `NETPLAY_FPS` (as `hide_seed.py`
+  sets it, 60) makes the harness run at the game's real speed, for
+  scenarios timed by the server's clock.
