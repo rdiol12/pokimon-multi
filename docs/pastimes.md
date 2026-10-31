@@ -318,3 +318,22 @@ Garden Points; ranks: SPROUT, BLOOM at 10 (Miracle Seed), GREEN THUMB at 30
 (Big Root), MASTER GARDENER at 60 (Leaf Stone). **R > PASTIMES > GARDEN**
 shows each plot's Berry and stage, the rank and today's show.
 Screenshots: `tools/pastime_shots/garden.lua`.
+
+## Weather lab
+
+![Weather lab](images/pastime-weather.png)
+
+A researcher at the Route 119 Weather Institute (1F) tracks the three
+roaming weather fronts (the rainstorm, sandstorm and snow squall of
+`src/world_weather.c`). **FORECAST** shows where each front is now and in
+2 and 4 hours (`RoamingWeather_GetFrontMap`, a small addition to
+`world_weather.c`). After signing up, standing a few seconds in a front's
+weather takes a reading, one an hour, up to 10 waiting; story weather (the
+Route 119 cycle, Groudon/Kyogre) doesn't count. A toast says so.
+
+**REPORT READINGS** turns them into Research Points: 1 for light rain, 3 for
+a thunderstorm, sandstorm or snow, plus a one-off 10 for logging all four
+kinds. Ranks: TRAINEE, ASSISTANT at 10 (Heat Rock), RESEARCHER at 30
+(Smooth Rock), METEOROLOGIST at 60 (Icy Rock). **R > PASTIMES > WEATHER
+LAB** shows the rank, readings waiting, the kinds logged and where the
+fronts are now. Screenshots: `tools/pastime_shots/weather.lua`.

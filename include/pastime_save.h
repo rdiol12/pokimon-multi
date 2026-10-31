@@ -95,6 +95,14 @@ struct PastimeSaveData
     u8 gardenFiller;
     u16 gardenPoints;
     u16 gardenShows;
+    // Weather lab (src/pastime_weather.c)
+    u16 weatherHour;     // hour + 1 (days * 24 + hours) of the last reading
+    u8 weatherReadings;  // taken, not yet reported
+    u8 weatherPending;   // their Research Points
+    u8 weatherSeen;      // a bit per WEATHER_KIND_*, and WEATHER_LAB_JOINED, _BONUS
+    u8 weatherFiller;
+    u16 weatherPoints;
+    u16 weatherTotal;    // readings reported
 };
 
 #endif // GUARD_PASTIME_SAVE_H

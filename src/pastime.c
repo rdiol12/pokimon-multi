@@ -44,6 +44,7 @@ static const struct PastimeSpotList sSpotLists[] =
     {gRangerSpots, 1 + RANGER_LOST_COUNT},
     {gSchoolSpots, 1},
     {gGardenSpots, 1 + GARDEN_PLOTS},
+    {gWeatherSpots, 1},
 };
 
 #define MAX_SHOWN (LOCALID_PASTIME_LAST - LOCALID_PASTIME_FIRST + 1)
@@ -154,6 +155,7 @@ void Pastime_Update(void)
     Delivery_Update();
     BugContest_Update();
     Garden_Update();
+    Weather_Update();
 }
 
 // A pressed facing (x, y), map coordinates with MAP_OFFSET.
