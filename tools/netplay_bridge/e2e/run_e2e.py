@@ -20,7 +20,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
 SYMBOLS = ["gNetplayMailbox", "gMain", "gParties", "CB2_Overworld", "BattleMainCB2",
            "gLink", "gLinkStatus", "gReceivedRemoteLinkPlayers", "gLinkCallback",
-           "gReadyToCloseLink", "gPartiesCount", "gSaveBlock1Ptr", "gSaveBlock2Ptr"]
+           "gReadyToCloseLink", "gPartiesCount", "gSaveBlock1Ptr", "gSaveBlock2Ptr",
+           "sLockFieldControls"]
 
 
 def server_env():
@@ -40,6 +41,15 @@ def read_symbols(map_path):
             if m and m.group(2) in SYMBOLS:
                 found[m.group(2)] = int(m.group(1), 16)
     missing = set(SYMBOLS) - set(found)
+    if missing:
+        # File-local (static) symbols aren't in the map; the ELF has them.
+        elf = os.path.splitext(map_path)[0] + ".elf"
+        nm = subprocess.run(["arm-none-eabi-nm", elf], capture_output=True, text=True).stdout
+        for line in nm.splitlines():
+            parts = line.split()
+            if len(parts) == 3 and parts[2] in missing:
+                found[parts[2]] = int(parts[0], 16)
+        missing = set(SYMBOLS) - set(found)
     if missing:
         sys.exit(f"symbols not found in {map_path}: {', '.join(sorted(missing))}")
     return found

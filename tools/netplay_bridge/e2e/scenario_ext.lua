@@ -124,9 +124,8 @@ D.run(function()
         D.waitFor("the field", 600, D.inOverworld)
         waitAnswer(200)
         D.shot("guild-founded")
-        D.wait(200)
-        D.press(K.A, 40)
-        waitIdle()
+        -- The fanfare can still be playing; the message only takes A after it.
+        closeText()
         signal("guild-made")
         waitSignal("guild-joined")
         openPlaza(1)
@@ -155,9 +154,8 @@ D.run(function()
         D.press(K.A, 30)            -- YES
         waitAnswer(150)
         D.shot("guild-joined")
-        D.wait(200)
-        D.press(K.A, 40)
-        waitIdle()
+        -- The fanfare can still be playing; the message only takes A after it.
+        closeText()
         signal("guild-joined")
     end
 
