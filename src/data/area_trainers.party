@@ -1,0 +1,55 @@
+/* begin ElderwoodForest */
+=== AREA_TRAINER_ELDERWOOD_IVY ===
+Name: IVY
+Class: Pkmn Ranger
+Pic: Pokemon Ranger F
+Gender: Female
+Music: Female
+Double Battle: No
+AI: Basic Trainer
+
+Dartrix
+Level: 36
+
+Tropius
+Level: 37
+
+Leavanny
+Level: 38
+
+=== AREA_TRAINER_ELDERWOOD_HAL ===
+Name: HAL
+Class: Bug Maniac
+Pic: Bug Maniac
+Gender: Male
+Music: Suspicious
+Double Battle: No
+AI: Basic Trainer
+
+Heracross
+Level: 36
+
+Pinsir
+Level: 36
+
+Yanmega
+Level: 37
+
+=== AREA_TRAINER_ELDERWOOD_FERN ===
+Name: FERN
+Class: Aroma Lady
+Pic: Aroma Lady
+Gender: Female
+Music: Female
+Double Battle: No
+AI: Basic Trainer
+
+Steenee
+Level: 36
+
+Comfey
+Level: 37
+
+Breloom
+Level: 37
+/* end ElderwoodForest */

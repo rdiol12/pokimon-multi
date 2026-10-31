@@ -9354,6 +9354,16 @@
       "secondary_tileset": "gTileset_Amberwood",
       "border_filepath": "data/layouts/AmberwoodHollow/border.bin",
       "blockdata_filepath": "data/layouts/AmberwoodHollow/map.bin"
+    },
+    {
+      "id": "LAYOUT_ELDERWOOD_FOREST",
+      "name": "ElderwoodForest_Layout",
+      "width": 56,
+      "height": 52,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Fortree",
+      "border_filepath": "data/layouts/ElderwoodForest/border.bin",
+      "blockdata_filepath": "data/layouts/ElderwoodForest/map.bin"
     }
   ]
 }
