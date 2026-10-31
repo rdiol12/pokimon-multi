@@ -85,14 +85,46 @@ talking to the person. A notice shows when a request is ready to turn in,
 and R > ADVENTURE > DAILY QUESTS lists the open ones with their progress
 and reward. Saved in `dailyQuests` (one slot per person).
 
+## Crafting
+
+![Crafting: the Rustboro crafter, the recipe list, a Level Ball, Potions and a Fire Stone being made, and the Apricorn shop](images/adventure-crafting.png)
+
+A crafter stands outside the Devon Corporation in Rustboro (14,17). The
+first talk explains crafting, gives 4 Red and 2 White Apricorns and sets
+`FLAG_ADVENTURE_CRAFTING`; after that he sells all seven Apricorns
+(¥20 each), and R > ADVENTURE > CRAFTING opens the recipe list anywhere
+(`src/crafting.c`). The list greys out recipes the bag can't pay for, and
+the right side shows the item, how many are in the bag and what it needs.
+A crafts one; holding A keeps crafting. Each craft gives 3 trainer XP
+online.
+
+| Makes | From |
+| --- | --- |
+| Level, Lure, Moon, Friend, Love, Fast, Heavy Ball | 2 Red, Blue, Yellow, Green, Pink, White or Black Apricorns (Kurt's recipes) |
+| 2 Poké Balls | Red + White Apricorn |
+| Great Ball | 2 Poké Balls + Blue Apricorn |
+| Ultra Ball | 2 Great Balls + Black + Yellow Apricorn |
+| 2 Potions | 2 Oran Berries |
+| Super Potion | 2 Oran + Sitrus Berry |
+| Full Heal | Pecha + Chesto + Rawst Berry |
+| Ether | 2 Leppa Berries |
+| Revive | 2 Tiny Mushrooms + Sitrus Berry |
+| Max Revive | 2 Revives + Big Mushroom |
+| 2 Repels | Tiny Mushroom |
+| Super Repel | 2 Repels + Tiny Mushroom |
+| Honey | 3 Pecha Berries |
+| Fire, Water, Thunder, Leaf Stone | 4 Red, Blue, Yellow or Green Shards (like the Route 124 treasure hunter) |
+| Star Piece | 4 Stardust |
+
 ## Screenshots
 
 ```sh
 python3 tools/adventure_shots/run.py tools/adventure_shots/trainer_level.lua out/trainer_level 30000 2
 python3 tools/adventure_shots/run.py tools/adventure_shots/daily_quests.lua out/daily_quests 40000
+python3 tools/adventure_shots/run.py tools/adventure_shots/crafting.lua out/crafting 20000
 ```
 
 `run.py` is `tools/world_shots/run.py` (headless libmgba, `Driver.scene`,
 two players with a server when the last argument is 2) plus
-`Driver.adventure{xp = ..., outfit = ...}`, which sets up a scene through
+`Driver.adventure{xp = ..., outfit = ..., items = {...}}`, which sets up a scene through
 `gAdventureShowcase` (`src/adventure.c`).

@@ -7,7 +7,8 @@ Usage: run.py <scenario.lua> <out dir> [frames] [players]
 The same runner as tools/world_shots/run.py (Driver.scene, two players
 with a server, ...), plus Driver.adventure{...}, which sets up a scene
 through gAdventureShowcase (src/adventure.c):
-    xp = trainer XP, outfit = OUTFIT_* number.
+    xp = trainer XP, outfit = OUTFIT_* number, items = {"ORAN_BERRY", ...}
+    (10 of each, up to 8).
 """
 import os
 import sys
@@ -26,8 +27,15 @@ function Driver.adventure(t)
         local v = t.xp + 1
         for i = 0, 3 do E.write8(s + 4 + i, (v >> (8 * i)) & 0xFF) end
     end
+    for i, name in ipairs(t.items or {}) do
+        local id = ITEM_ID[name]
+        E.write8(s + 6 + i * 2, id & 0xFF); E.write8(s + 7 + i * 2, id >> 8)
+    end
     E.write8(s, 1)
-    Driver.waitFor("the adventure scene", 600, function() return E.read8(s) == 0 end)
+    -- B closes whatever message is still open, so the scene can run.
+    Driver.waitFor("the adventure scene", 1800, function() return E.read8(s) == 0 end, function(i)
+        if i % 30 == 0 then Driver.press(Driver.KEY.B, 0) end
+    end)
     Driver.wait(10)
 end
 """
