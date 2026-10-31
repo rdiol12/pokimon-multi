@@ -25,3 +25,4 @@
 	.include "data/scripts/pastime/festival.inc"
 	.include "data/scripts/pastime/dig.inc"
 	.include "data/scripts/pastime/alpha.inc"
+	.include "data/scripts/pastime/lighthouse.inc"

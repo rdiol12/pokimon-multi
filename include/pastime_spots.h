@@ -46,5 +46,6 @@ extern const struct PastimeSpot gDetectiveSpots[];
 extern const struct PastimeSpot gFestivalSpots[];
 extern const struct PastimeSpot gDigSpots[];
 extern const struct PastimeSpot gAlphaSpots[];
+extern const struct PastimeSpot gLighthouseSpots[];
 
 #endif // GUARD_PASTIME_SPOTS_H
