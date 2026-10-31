@@ -22,6 +22,10 @@ struct LifeShowcase
     u8 friendship; // the lead's friendship, if not 0
     u8 season;     // SEASON_* + 1 overrides the clock, 0 uses it
     u8 finishJobs; // 1: every Pokémon job is done
+    u16 photoSpecies; // photo safari: puts this Pokémon in front of the player
+    u8 photoDistance; // tiles away
+    u8 photoFacing;   // DIR_*, or 0: looking at the player
+    u8 photoCount;    // how many of them, side by side
 };
 extern struct LifeShowcase gLifeShowcase;
 
@@ -48,5 +52,17 @@ void LifeJobs_FinishAll(void);
 void LifeMining_CheckSpot(void);
 void LifeMining_Start(void);
 void LifeMining_GiveKit(void);
+
+// Photo safari (life_photo.c).
+bool32 LifePhoto_IsActive(void);
+bool32 LifePhoto_IsPhotoMon(struct ObjectEvent *objectEvent);
+extern const u8 Life_EventScript_PhotoMon[];
+bool32 LifePhoto_TrySnap(void);
+void LifePhoto_Update(void);
+void LifePhoto_OnMapTransition(void);
+void LifePhoto_ShowPhoto(void);
+void LifePhoto_RangerState(void);
+void LifePhoto_Start(void);
+void LifePhoto_ShowAlbum(void);
 
 #endif // GUARD_LIFE_H

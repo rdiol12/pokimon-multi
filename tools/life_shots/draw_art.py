@@ -196,3 +196,28 @@ CURSOR = [
     "oooooo....oooooo",
 ]
 png("mine_cursor", CURSOR_PAL, CURSOR, CURSOR_KEYS)
+
+
+# --- Photo safari (src/life_photo.c) -----------------------------------------
+# One corner of the camera's viewfinder (the other three are flips of it).
+FINDER_KEYS = ".owg"
+FINDER_PAL = [(0, 0, 0), (0x30, 0x30, 0x38), (0xF8, 0xF8, 0xF8), (0xC8, 0xC8, 0xD0)]
+FINDER = [
+    "oooooooooooo....",
+    "owwwwwwwwwwo....",
+    "owggggggggoo....",
+    "owgoooooooo.....",
+    "owgo............",
+    "owgo............",
+    "owgo............",
+    "owgo............",
+    "owgo............",
+    "owgo............",
+    "owoo............",
+    "ooo.............",
+    "................",
+    "................",
+    "................",
+    "................",
+]
+png("photo_finder", FINDER_PAL, FINDER, FINDER_KEYS)

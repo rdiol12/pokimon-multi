@@ -46,6 +46,7 @@
 #include "constants/trainer_hill.h"
 #include "netplay.h"
 #include "world.h"
+#include "life.h"
 
 static EWRAM_DATA u8 sWildEncounterImmunitySteps = 0;
 static EWRAM_DATA u16 sPrevMetatileBehavior = 0;
@@ -246,7 +247,7 @@ int ProcessPlayerFieldInput(struct FieldInput *input)
     if (input->pressedSelectButton && UseRegisteredKeyItemOnField() == TRUE)
         return TRUE;
 
-    if (input->pressedRButton && World_TryOpenMenu())
+    if (input->pressedRButton && (LifePhoto_TrySnap() || World_TryOpenMenu()))
         return TRUE;
 
     if (input->pressedRButton && TryStartDexNavSearch())
@@ -423,6 +424,8 @@ static const u8 *GetInteractedObjectEventScript(struct MapPosition *position, u8
         script = EventScript_Follower;
     else if (Netplay_IsNetplayObjectEvent(&gObjectEvents[objectEventId]))
         script = Netplay_GetTalkScript(objectEventId);
+    else if (LifePhoto_IsPhotoMon(&gObjectEvents[objectEventId]))
+        script = Life_EventScript_PhotoMon;
     else if (InTrainerHill() == TRUE)
         script = GetTrainerHillTrainerScript();
     else

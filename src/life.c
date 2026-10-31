@@ -29,12 +29,14 @@ bool32 Life_OverworldUpdate(void)
     if (gLifeShowcase.pending)
         RunShowcase();
     Seasons_Update();
+    LifePhoto_Update();
     return FALSE;
 }
 
 void Life_OnMapTransition(void)
 {
     Seasons_OnMapTransition();
+    LifePhoto_OnMapTransition();
 }
 
 enum Species Life_ModifyWildSpecies(enum Species species, u8 level)

@@ -20,6 +20,16 @@ struct LifeJob
     u16 padding;
 };
 
+// The best photo of one species in the photo safari album.
+struct LifePhoto
+{
+    u16 species;
+    u16 score;
+    u8 pose;  // LIFE_POSE_*
+    u8 shiny;
+    u16 padding;
+};
+
 struct LifeSaveData
 {
     // Bonding: what each Pokémon got today, by personality.
@@ -37,6 +47,12 @@ struct LifeSaveData
     u8 hasDigKit;
     u16 treasuresDug;
     u16 padding2;
+    // Photo safari: shots left on the camera (0: no safari), the safari's
+    // running score, and the album.
+    u8 photoFilm;
+    u8 padding3;
+    u16 photoTotal;
+    struct LifePhoto album[LIFE_ALBUM_SIZE];
 };
 
 #endif // GUARD_LIFE_SAVE_H

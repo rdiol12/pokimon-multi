@@ -3,3 +3,4 @@
 	.include "data/scripts/life/bond.inc"
 	.include "data/scripts/life/jobs.inc"
 	.include "data/scripts/life/mining.inc"
+	.include "data/scripts/life/photo.inc"

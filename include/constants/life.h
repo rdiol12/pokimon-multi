@@ -13,6 +13,7 @@
 // numbered after the world features' own WORLD_MENU_* values.
 #define LIFE_MENU_BOND 16
 #define LIFE_MENU_JOBS 17
+#define LIFE_MENU_ALBUM 18
 
 // Bonding (src/life_bond.c).
 #define LIFE_BOND_SLOTS        PARTY_SIZE
@@ -39,6 +40,20 @@
 #define LIFE_DIG_NO_KIT       0
 #define LIFE_DIG_DONE_TODAY   1
 #define LIFE_DIG_READY        2
+
+// Photo safari (src/life_photo.c): roaming Pokémon use object local ids
+// 216-219, and LifePhoto_RangerState results.
+#define LIFE_PHOTO_MONS          4
+#define LOCALID_LIFE_PHOTO_MON   216
+#define LIFE_ALBUM_SIZE          24
+#define LIFE_POSE_NONE    0
+#define LIFE_POSE_LOOKING 1
+#define LIFE_POSE_MOVING  2
+#define LIFE_POSE_SIDE    3
+#define LIFE_POSE_BEHIND  4
+#define LIFE_PHOTO_RANGER_OFFER     0
+#define LIFE_PHOTO_RANGER_STILL_OUT 1
+#define LIFE_PHOTO_RANGER_PAYOUT    2
 
 // Seasons (src/life_seasons.c), from the real-world month.
 #define SEASON_SPRING 0 // March to May

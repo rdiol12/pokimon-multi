@@ -670,7 +670,7 @@ bool8 StandardWildEncounter(u16 curMetatileBehavior, u16 prevMetatileBehavior)
     enum TimeOfDay timeOfDay;
     struct Roamer *roamer;
 
-    if (sWildEncountersDisabled == TRUE)
+    if (sWildEncountersDisabled == TRUE || LifePhoto_IsActive())
         return FALSE;
 
     headerId = GetCurrentMapWildMonHeaderId();

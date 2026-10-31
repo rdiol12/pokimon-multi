@@ -125,6 +125,39 @@ The wall and treasures are drawn on BG1 (rock, in 16×16 blocks from
 the browns of Emerald's caves) over BG2 (earth); the treasure icons are
 sprites between the two, so they show through as the rock is cleared.
 
+## Photo safari
+
+![The photographer, a Pokémon roaming the Safari Zone, three photos and the album](images/life-photo.png)
+
+A photographer stands at the Safari Zone entrance on Route 121
+(`Life_EventScript_PhotoRanger`, `src/life_photo.c`). For ¥500 they lend a
+camera with 12 shots and send you into the Safari Zone. With the camera
+there are no wild battles; instead up to four Pokémon from the area's
+grass table roam around the player (object local ids 216–219, 1 in 64
+shiny). Talking to one reminds you to use the camera.
+
+**R** takes a photo of the best subject up to five tiles straight ahead
+(a little to either side counts too, more the further away it is). The
+photo opens full screen, framed by a viewfinder, with the score:
+
+| | |
+|---|---|
+| Distance | 1 tile 350, 2 tiles 400, 3 tiles 300, 4 tiles 200, 5 tiles 100 |
+| Framing | centered +200, one tile off +100 |
+| Pose | facing you +300, on the move +200, side view +100, from behind 0 |
+| Group | +150 for every other Pokémon of its kind in the shot |
+| Rarity | catch rate 45 or less ×3, 120 or less ×2; shiny ×2 |
+
+The picture follows the shot: close Pokémon are big, a Pokémon seen from
+behind shows its back, a side view is turned, and a group stands
+together. The best photo of each species goes in the album (R > **ALBUM**,
+24 pages; a new species replaces the lowest-scoring page when it's full).
+
+When the film runs out the player is walked back to the entrance (leaving
+the Safari Zone any other way also ends the safari). The photographer
+adds up the safari's score and gives a prize: a Nugget for 12000 or more,
+an Ultra Ball for 7000, a Great Ball for 3500, otherwise a Poké Ball.
+
 ## Screenshots
 
 ```sh
@@ -132,6 +165,7 @@ python3 tools/life_shots/run.py tools/life_shots/bond.lua out/bond
 python3 tools/life_shots/run.py tools/life_shots/seasons.lua out/seasons 400000
 python3 tools/life_shots/run.py tools/life_shots/jobs.lua out/jobs
 python3 tools/life_shots/run.py tools/life_shots/mining.lua out/mining
+python3 tools/life_shots/run.py tools/life_shots/photo.lua out/photo
 ```
 
 `run.py` is `tools/world_shots/run.py` with this batch's symbols added, so
@@ -139,7 +173,10 @@ scenarios use the same Driver (`Driver.scene` and friends). They can also
 write `gLifeShowcase` (`src/life.c`): byte 1 sets the lead's friendship,
 then byte 0 = 1 applies it on the next overworld frame. Byte 2 is the
 season plus one (0 uses the clock); it applies on the next warp. Byte 3
-= 1 finishes every Pokémon job.
+= 1 finishes every Pokémon job. Bytes 4–8 pose a photo subject in the
+Safari Zone during a photo safari: species (u16), tiles away, the
+direction it faces (`DIR_*`, 0 = toward the player) and how many stand
+side by side.
 
 Art: `tools/life_shots/draw_art.py` draws this batch's sprites into
 `graphics/life/`.
