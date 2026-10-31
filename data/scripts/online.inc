@@ -24,11 +24,13 @@ Online_EventScript_Hub::
 	lockall
 	dynmultipush Online_Text_HubGoals, ONLINE_HUB_GOALS
 	dynmultipush Online_Text_HubSightings, ONLINE_HUB_SIGHTINGS
+	dynmultipush Online_Text_HubFishing, ONLINE_HUB_FISHING
 	dynmultipush Online_Text_HubClose, ONLINE_HUB_CLOSE
 	dynmultistack 0, 0, FALSE, 6, FALSE, 0, DYN_MULTICHOICE_CB_NONE
 	switch VAR_RESULT
 	case ONLINE_HUB_GOALS, Online_EventScript_Goals
 	case ONLINE_HUB_SIGHTINGS, Online_EventScript_Sightings
+	case ONLINE_HUB_FISHING, Online_EventScript_Fishing
 	releaseall
 	end
 
@@ -66,8 +68,12 @@ Online_Text_HubGoals:
 Online_Text_HubSightings:
 	.string "LEGEND SIGHTINGS$"
 
+Online_Text_HubFishing:
+	.string "FISHING TOURNEY$"
+
 Online_Text_HubClose:
 	.string "CLOSE$"
 
 	.include "data/scripts/online/goals.inc"
 	.include "data/scripts/online/sightings.inc"
+	.include "data/scripts/online/fishing.inc"

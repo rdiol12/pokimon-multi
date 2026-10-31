@@ -82,3 +82,50 @@ function Driver.catchThis()
         if i % 30 == 0 then D.press(K.B, 0) end
     end)
 end
+
+-- Fishes facing dir with the registered rod (SELECT), plays the reel
+-- meter, and throws the last used Ball at whatever bites, until one Pokémon
+-- is landed. shotName: a screenshot once the Pokémon is in battle.
+function Driver.fishOne(dir, shotName)
+    D.hold(dir, 2)
+    D.wait(20)
+    for _ = 1, 15 do
+        D.press(K.SELECT, 10)
+        local bite = false
+        for _ = 1, 600 do
+            if D.read8(D.SYM.gWorldTimingMeter + 20) == 0xFF then bite = true; break end
+            if D.inBattle() then break end
+            D.wait(1)
+        end
+        if bite then D.playMeter(false) end
+        if D.read8(D.SYM.gWorldTimingMeter + 20) == 0xFF then D.playMeter(false) end
+        for _ = 1, 200 do
+            if D.inBattle() then break end
+            D.wait(1)
+        end
+        if D.inBattle() then
+            D.wait(380)
+            if shotName then D.shot(shotName) end
+            D.press(K.A, 150)
+            for i = 1, 120 do
+                if not D.inBattle() then break end
+                D.press(i % 4 == 0 and K.R or K.B, 30)
+            end
+            D.waitFor("the overworld", 4000, D.inOverworld, function(i)
+                if i % 30 == 0 then D.press(K.B, 0) end
+            end)
+            D.wait(30)
+            return true
+        end
+        D.press(K.A, 30); D.press(K.A, 30); D.press(K.B, 30)
+        D.wait(60)
+    end
+    return false
+end
+
+-- True once a file the seed writes exists in the output folder.
+function Driver.seedSays(name)
+    local f = io.open(OUT_DIR .. "/" .. name, "r")
+    if f then f:close() return true end
+    return false
+end

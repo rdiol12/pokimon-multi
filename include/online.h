@@ -15,6 +15,10 @@ void Online_OnCatch(void);
 void Online_OnWildBattleStart(void);
 void Online_OpenHubFromMenu(void);
 
+// Fishing tournaments (src/online_fishing.c).
+bool32 Online_TournamentIsOn(void);
+void Online_TournamentBite(void);
+
 // Queues a report for the server, sent in the background as
 // "OEV <word> <a> <b> ...". Up to ONLINE_REPORT_ARGS numbers.
 #define ONLINE_REPORT_ARGS 6
