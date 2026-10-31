@@ -47,6 +47,12 @@ rover wins prize money; gym badges pay too. The game is sent its battle
 medicine (used in battles against it), ball count, ranch size and money,
 which it mentions when you talk to it.
 
+With the day/night code on the server (`server/world.py` `time_of_day`,
+optional), most rovers rest after dark (healing if they're at a Pokémon
+Center) and fewer are pulled onto the player's map; every fifth one is a
+night owl and keeps going. Outdoors they only catch the night Pokémon at
+night and the day ones by day, like the game's tags.
+
 ## How it works
 
 The server (`server/rovers.py`) owns the rovers. Every ten minutes of real

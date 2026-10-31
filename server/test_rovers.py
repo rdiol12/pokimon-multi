@@ -99,6 +99,32 @@ class RoverTest(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(any(r.life["quest"] or r.life["job"] for r in rs) or "quest" in news)
         self.assertEqual(len(rs[0].wire()), rovers.ROVER_SIZE)
 
+    async def test_night(self):
+        class Night:
+            NIGHT = 3
+
+            @staticmethod
+            def time_of_day(t=None):
+                return 3
+        rovers.ensure_rovers(self.league.db)
+        before = {r.id: r.map for r in rovers.load_all(self.league.db)}
+        old, rovers.world = rovers.world, Night
+        try:
+            self.assertTrue(rovers.is_night(0))
+            self.assertFalse(rovers.out_now("Pidgey", True, False))
+            self.assertTrue(rovers.out_now("Pidgey", True, True))
+            self.assertTrue(rovers.out_now("Hoothoot", True, False))
+            self.t += 6 * 3600
+            rovers.Sim(self.league.db, self.league).run()
+        finally:
+            rovers.world = old
+        after = rovers.load_all(self.league.db)
+        moved = [r for r in after if r.map != before[r.id]]
+        owls = [r for r in moved if r.id % rovers.NIGHT_OWL == 0]
+        self.assertEqual(len(moved), len(owls))  # only night owls on the move
+        self.assertTrue(owls)
+        self.assertFalse(rovers.is_night(0))
+
     async def test_majors(self):
         a = await self.connect("Ash", 1)
         status, answer = await self.ask(a, f"MAJOR LIST {G} {N}")
