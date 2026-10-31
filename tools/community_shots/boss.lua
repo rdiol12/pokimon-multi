@@ -1,3 +1,4 @@
+-- The server boss: two players bring it down (NETPLAY_BOSS_HP=400) and claim rewards.
 dofile(INSTANCE_DIR .. "/../driver_lib.lua")
 local D, K = Driver, Driver.KEY
 local P1 = INSTANCE == 1
@@ -13,24 +14,18 @@ D.run(function()
     D.wait(40)
     D.shot("status")
     D.press(K.A, 10)
-    D.waitFor("the battle", 1200, D.inBattle)
-    D.wait(400)
-    D.shot("battle")
-    local shot = false
-    D.waitFor("the end of the battle", 20000, D.inOverworld, function(i)
-        local cycle = { K.A, K.A, K.A, K.A, K.DOWN, K.A, K.B }
-        if i % 30 == 0 then D.press(cycle[(i // 30) % #cycle + 1], 0) end
-        if not shot and i == 900 then D.shot("battle-hit"); shot = true end
-    end)
+    D.winBattle("battle")
     D.wait(60)
     D.shot("damage")
-    D.press(K.A, 30)
-    D.press(K.A, 60)
-    D.wait(300)
+    D.press(K.B, 60) -- B closes messages without talking to the follower
+    -- Until it falls (gCommunityMailbox.events[COMMUNITY_EVENT_BOSS]: seq, id, alive...).
+    D.waitFor("the boss to fall", 8000, function() return D.cmb8(0x3BC + 0xC0 + 2) == 0 end)
+    D.wait(90)
     D.shot("later")
-    D.press(K.A, 60) D.shot("later2")
-    D.press(K.A, 60)
+    D.press(K.B, 60) D.shot("later2")
+    D.press(K.B, 60)
     D.wait(120)
+    if not P1 then return end
     before = D.answers()
     D.community(2)
     D.waitAnswer(before)

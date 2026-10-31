@@ -1,3 +1,4 @@
+-- The postgame rival: May at Ever Grande City, then at Fortree City with one more Pokémon.
 dofile(INSTANCE_DIR .. "/../driver_lib.lua")
 local D, K = Driver, Driver.KEY
 D.run(function()
@@ -17,6 +18,7 @@ D.run(function()
     D.wait(120)
     D.shot("rival-gone")
     D.scene(13, MAPS.MAP_FORTREE_CITY, 7, 8)
+    D.wait(400) -- the achievement popups
     D.shot("rival-fortree")
     D.talk(K.UP, "rival-again")
     D.wait(30)

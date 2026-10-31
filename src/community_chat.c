@@ -70,7 +70,7 @@ void CommunityChat_PickPhrase(void)
 
     for (i = 0; i < CHAT_WORDS; i++)
         sWords[i] = EC_EMPTY_WORD;
-    DoEasyChatScreen(EASY_CHAT_TYPE_BATTLE_START, sWords, CB2_ReturnToFieldContinueScript, EASY_CHAT_PERSON_DISPLAY_NONE);
+    DoEasyChatScreen(EASY_CHAT_TYPE_COMMUNITY_CHAT, sWords, CB2_ReturnToFieldContinueScript, EASY_CHAT_PERSON_DISPLAY_NONE);
 }
 
 // Script, waitstate: sends the phrase just picked (if any).

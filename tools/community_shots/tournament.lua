@@ -1,3 +1,4 @@
+-- Tournaments: four players fill a cup (NETPLAY_TOUR_SIZE=4), get the match popup and see the bracket.
 dofile(INSTANCE_DIR .. "/../driver_lib.lua")
 local D, K = Driver, Driver.KEY
 local N = INSTANCE

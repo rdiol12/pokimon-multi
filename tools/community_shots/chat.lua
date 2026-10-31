@@ -1,3 +1,4 @@
+-- Chat: P1 joins a room and says an Easy Chat phrase; P2 sees it.
 dofile(INSTANCE_DIR .. "/../driver_lib.lua")
 local D, K = Driver, Driver.KEY
 D.run(function()

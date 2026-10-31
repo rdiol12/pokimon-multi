@@ -1,3 +1,4 @@
+-- Shared daycare: two players pair up and both collect an egg (NETPLAY_DAYCARE_EGG_SECONDS=0.5).
 dofile(INSTANCE_DIR .. "/../driver_lib.lua")
 local D, K = Driver, Driver.KEY
 local P1 = INSTANCE == 1

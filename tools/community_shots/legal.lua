@@ -1,3 +1,4 @@
+-- Legality: P1's team passes, P2's Blaziken knows Spore (edited in like a save editor would).
 dofile(INSTANCE_DIR .. "/../driver_lib.lua")
 local D, K = Driver, Driver.KEY
 local P1 = INSTANCE == 1

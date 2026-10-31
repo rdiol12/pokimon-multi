@@ -1,6 +1,6 @@
 # Server boss
 
-![The boss status, the battle, its HP going down and the reward](../images/community-boss.png)
+![The boss status, a battle, the final blow and the news reaching everyone](../images/community-boss.png)
 
 **START > ONLINE > COMMUNITY > BOSS**: one huge wild Pokémon is shared by
 everyone on the server.

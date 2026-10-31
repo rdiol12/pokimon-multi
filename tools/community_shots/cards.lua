@@ -1,3 +1,4 @@
+-- Trainer cards: the list and a card.
 dofile(INSTANCE_DIR .. "/../driver_lib.lua")
 local D, K = Driver, Driver.KEY
 local P1 = INSTANCE == 1

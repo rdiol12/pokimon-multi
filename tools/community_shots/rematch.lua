@@ -1,3 +1,4 @@
+-- Gym rematches: Roxanne at full strength, then Rustboro's gym ace.
 dofile(INSTANCE_DIR .. "/../driver_lib.lua")
 local D, K = Driver, Driver.KEY
 D.run(function()
