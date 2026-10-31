@@ -46,4 +46,12 @@ void Delivery_Deliver(void);
 void Delivery_Cancel(void);
 void Delivery_ShowList(void);
 
+// Mail courier routes (pastime_mail.c).
+bool32 Mail_IsRecipientShown(u32 arg);
+void Mail_TalkToPostmaster(void);
+void Mail_StartRoute(void);
+void Mail_FinishRoute(void);
+void Mail_TalkToRecipient(void);
+void Mail_ShowList(void);
+
 #endif // GUARD_PASTIME_H

@@ -4,12 +4,14 @@ Pastime_EventScript_Menu::
 	dynmultipush Pastime_Text_MenuLostFound, PASTIME_MENU_LOST_FOUND
 	dynmultipush Pastime_Text_MenuMuseum, PASTIME_MENU_MUSEUM
 	dynmultipush Pastime_Text_MenuDelivery, PASTIME_MENU_DELIVERY
+	dynmultipush Pastime_Text_MenuMail, PASTIME_MENU_MAIL
 	dynmultipush Pastime_Text_MenuClose, PASTIME_MENU_CLOSE
 	dynmultistack 0, 0, FALSE, 6, FALSE, PASTIME_MENU_LOST_FOUND, DYN_MULTICHOICE_CB_NONE
 	switch VAR_RESULT
 	case PASTIME_MENU_LOST_FOUND, Pastime_EventScript_LostFound
 	case PASTIME_MENU_MUSEUM, Pastime_EventScript_Museum
 	case PASTIME_MENU_DELIVERY, Pastime_EventScript_Delivery
+	case PASTIME_MENU_MAIL, Pastime_EventScript_Mail
 Pastime_EventScript_MenuDone::
 	releaseall
 	end
@@ -29,11 +31,18 @@ Pastime_EventScript_Delivery:
 	releaseall
 	end
 
+Pastime_EventScript_Mail:
+	callnative Mail_ShowList, waitstate=1
+	releaseall
+	end
+
 Pastime_Text_MenuLostFound:
 	.string "LOST & FOUND$"
 Pastime_Text_MenuMuseum:
 	.string "MUSEUM$"
 Pastime_Text_MenuDelivery:
 	.string "DELIVERY$"
+Pastime_Text_MenuMail:
+	.string "MAIL ROUTE$"
 Pastime_Text_MenuClose:
 	.string "CLOSE$"
