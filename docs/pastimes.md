@@ -389,3 +389,18 @@ goes.
 **R > PASTIMES > CARNIVAL** shows the best scores, wins and rides.
 Screenshots: `tools/pastime_shots/carnival.lua` (this branch's R menu has
 the extra BOND, JOBS and ALBUM rows, so it sets `Driver.PASTIMES_ROW`).
+
+## Pokémon orchestra
+
+![Pokémon orchestra](images/pastime-orchestra.png)
+
+The CONDUCTOR in Verdanturf Town (17,10) leads a quartet of Pokémon
+musicians, one on each direction of the + Control Pad: Chimecho (UP, high
+C), Jigglypuff (LEFT, E), Kricketune (RIGHT, G) and Loudred (DOWN, C). A
+stage window shows their pads and icons; the quartet plays a tune (each pad
+lights up, its icon hops and its note plays), then the player plays it back.
+Each tune right adds a note, from 3 up to 12. A wrong note or a long pause
+ends the concert. The longest tune is the record; reaching 5, 8 and 12 notes
+gives a Metronome, a Soothe Bell and a Throat Spray. **R > PASTIMES >
+ORCHESTRA** shows the quartet, the record and concerts played.
+Screenshots: `tools/pastime_shots/orchestra.lua`.

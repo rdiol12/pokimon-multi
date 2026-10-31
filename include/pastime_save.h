@@ -116,6 +116,10 @@ struct PastimeSaveData
     u8 carnivalPrizes;   // a bit per game's big prize
     u16 ferrisRides;
     u16 carnivalPlays;
+    // Pokémon orchestra (src/pastime_orchestra.c)
+    u8 orchestraBest;    // longest tune played back
+    u8 orchestraPrizes;  // a bit per prize given
+    u16 orchestraPlays;
 };
 
 #endif // GUARD_PASTIME_SAVE_H

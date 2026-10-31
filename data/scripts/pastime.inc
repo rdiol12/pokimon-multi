@@ -18,3 +18,4 @@
 	.include "data/scripts/pastime/weather.inc"
 	.include "data/scripts/pastime/stars.inc"
 	.include "data/scripts/pastime/carnival.inc"
+	.include "data/scripts/pastime/orchestra.inc"
