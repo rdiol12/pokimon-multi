@@ -7,6 +7,7 @@
 #include "dungeon.h"
 #include "ranch.h"
 #include "trainer_level.h"
+#include "treasure.h"
 
 // Entry points for the fourth-batch game features (docs/adventure.md),
 // called from the world features' overworld and battle hooks (src/world.c).
@@ -25,6 +26,7 @@ struct AdventureShowcase
     u8 dungeonFloor;               // the dungeon floor the next dive shows
     u8 dungeonLadderX, dungeonLadderY; // out: where that floor's ladder is
     u16 wildSpecies;               // every wild Pokémon is this one, 0 = as usual
+    u8 treasureSpot;               // today's treasure map + 1, 0 = leave as is
 };
 
 EWRAM_DATA struct AdventureShowcase gAdventureShowcase = {0};
@@ -47,6 +49,9 @@ static void RunShowcase(void)
     if (gAdventureShowcase.dungeonFloor != 0)
         Dungeon_Showcase(gAdventureShowcase.dungeonFloor, &gAdventureShowcase.dungeonLadderX, &gAdventureShowcase.dungeonLadderY);
     gAdventureShowcase.dungeonFloor = 0;
+    if (gAdventureShowcase.treasureSpot != 0)
+        Treasure_Showcase(gAdventureShowcase.treasureSpot - 1);
+    gAdventureShowcase.treasureSpot = 0;
     if (gAdventureShowcase.setXp != 0)
         TrainerLevel_SetXp(gAdventureShowcase.setXp - 1);
     if (gAdventureShowcase.outfit != 0)
@@ -67,7 +72,7 @@ void Adventure_Update(void)
 // A pressed facing (x, y), map coordinates with MAP_OFFSET.
 bool32 Adventure_TryInteract(s16 x, s16 y)
 {
-    return Dungeon_TryInteract(x, y);
+    return Dungeon_TryInteract(x, y) || Treasure_TryInteract(x, y);
 }
 
 // A wild Pokémon is about to be made.

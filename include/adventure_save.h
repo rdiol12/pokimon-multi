@@ -39,6 +39,12 @@ struct AdventureSaveData
     u8 dungeonFloor;  // 1 = B1F
     u8 dungeonBest;
     u16 dungeonRuns;
+    // Treasure hunts.
+    u16 treasureDay;    // RTC day of the map in hand
+    u8 treasureSpot;
+    u8 treasureState;
+    u16 treasuresFound;
+    u16 filler2;
 };
 
 #endif // GUARD_ADVENTURE_SAVE_H

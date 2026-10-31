@@ -5,3 +5,4 @@
 	.include "data/scripts/adventure/crafting.inc"
 	.include "data/scripts/adventure/ranch.inc"
 	.include "data/scripts/adventure/dungeon.inc"
+	.include "data/scripts/adventure/treasure.inc"
