@@ -28,3 +28,13 @@ def woods():
                                 ['LAYOUT_ROUTE104', 'LAYOUT_ROUTE116', 'LAYOUT_PETALBURG_WOODS'],
                                 wall_classes={'T': TREES})
     return _cache['woods']
+
+
+def volcanic():
+    """Lavaridge, Route 112, Mt. Chimney and Jagged Pass: red rock and ash."""
+    if 'volcanic' not in _cache:
+        _cache['volcanic'] = Style('gTileset_General', 'gTileset_Lavaridge',
+                                   ['LAYOUT_LAVARIDGE_TOWN', 'LAYOUT_ROUTE112', 'LAYOUT_MT_CHIMNEY', 'LAYOUT_JAGGED_PASS'],
+                                   wall_classes={'T': TREES}, colors=True)
+        _cache['volcanic'].exclude = {0x202, 0x2BB, 0x304, 0x215, 0x113}  # river banks and signs
+    return _cache['volcanic']

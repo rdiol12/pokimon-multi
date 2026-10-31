@@ -1642,6 +1642,10 @@
     {
       "id": "MAPSEC_ELDERWOOD_FOREST",
       "name": "ELDERWOOD FOREST"
+    },
+    {
+      "id": "MAPSEC_EMBER_SPRINGS",
+      "name": "EMBER SPRINGS"
     }
   ]
 }

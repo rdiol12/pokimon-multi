@@ -37936,6 +37936,75 @@
               }
             ]
           }
+        },
+        {
+          "map": "MAP_EMBER_SPRINGS",
+          "base_label": "gEmberSprings",
+          "land_mons": {
+            "encounter_rate": 20,
+            "mons": [
+              {
+                "min_level": 29,
+                "max_level": 31,
+                "species": "SPECIES_NUMEL"
+              },
+              {
+                "min_level": 29,
+                "max_level": 31,
+                "species": "SPECIES_SLUGMA"
+              },
+              {
+                "min_level": 30,
+                "max_level": 32,
+                "species": "SPECIES_TORKOAL"
+              },
+              {
+                "min_level": 29,
+                "max_level": 31,
+                "species": "SPECIES_LITLEO"
+              },
+              {
+                "min_level": 29,
+                "max_level": 31,
+                "species": "SPECIES_SALANDIT"
+              },
+              {
+                "min_level": 29,
+                "max_level": 31,
+                "species": "SPECIES_ROLYCOLY"
+              },
+              {
+                "min_level": 30,
+                "max_level": 32,
+                "species": "SPECIES_SIZZLIPEDE"
+              },
+              {
+                "min_level": 30,
+                "max_level": 32,
+                "species": "SPECIES_CHARCADET"
+              },
+              {
+                "min_level": 31,
+                "max_level": 33,
+                "species": "SPECIES_PONYTA"
+              },
+              {
+                "min_level": 30,
+                "max_level": 32,
+                "species": "SPECIES_MAGBY"
+              },
+              {
+                "min_level": 33,
+                "max_level": 34,
+                "species": "SPECIES_TURTONATOR"
+              },
+              {
+                "min_level": 33,
+                "max_level": 34,
+                "species": "SPECIES_HEATMOR"
+              }
+            ]
+          }
         }
       ]
     },

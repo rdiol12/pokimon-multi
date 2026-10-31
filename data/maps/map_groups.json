@@ -136,7 +136,8 @@
     "Underwater_Route125",
     "StarfallIsle",
     "AmberwoodHollow",
-    "ElderwoodForest"
+    "ElderwoodForest",
+    "EmberSprings"
   ],
   "gMapGroup_IndoorLittleroot": [
     "LittlerootTown_BrendansHouse_1F",
@@ -167,7 +168,10 @@
     "LavaridgeTown_House",
     "LavaridgeTown_Mart",
     "LavaridgeTown_PokemonCenter_1F",
-    "LavaridgeTown_PokemonCenter_2F"
+    "LavaridgeTown_PokemonCenter_2F",
+    "EmberSprings_PokemonCenter_1F",
+    "EmberSprings_Inn",
+    "EmberSprings_HermitHouse"
   ],
   "gMapGroup_IndoorFallarbor": [
     "FallarborTown_Mart",

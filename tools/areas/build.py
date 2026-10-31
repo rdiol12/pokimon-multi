@@ -58,7 +58,7 @@ class Area:
                 if ch != ' ':
                     self.put(x + dx, y + dy, (legend or {}).get(ch, ch))
 
-    def snap_trees(self, c='T'):
+    def snap_trees(self, c='T', ground='.'):
         """Trees are 2x2 metatiles; make every tree cell part of an aligned 2x2 block."""
         for by in range(0, self.h, 2):
             for bx in range(0, self.w, 2):
@@ -71,7 +71,7 @@ class Area:
                 elif n:
                     for x, y in cells:
                         if self.grid[y][x] == c:
-                            self.grid[y][x] = '.'
+                            self.grid[y][x] = ground
 
     def scatter(self, metatile, n, x0=0, y0=0, x1=None, y1=None, seed=1, clump=3):
         """Sprinkles a walkable decoration (e.g. flowers 0x004) over open
@@ -206,6 +206,7 @@ class Area:
             register_mapsec(mapsec, mapsec_name)
         os.makedirs(f'{ROOT}/build/areas', exist_ok=True)
         preview(self, b).save(f'{ROOT}/build/areas/{self.name}.png')
+        render(self.style.pair, b, grid=True).save(f'{ROOT}/build/areas/{self.name}-collision.png')
         return b
 
 
@@ -351,3 +352,49 @@ def register_script_file(name, text):
         anchor = '\t.include "data/maps/AmberwoodHollow/scripts.inc"\n'
         s = s.replace(anchor, anchor + line)
         open(p, 'w').write(s)
+
+
+def npc(gfx, x, y, script, move='MOVEMENT_TYPE_FACE_DOWN', local_id=None, flag='0', elevation=3):
+    o = {'graphics_id': gfx, 'x': x, 'y': y, 'elevation': elevation, 'movement_type': move, 'movement_range_x': 1,
+         'movement_range_y': 1, 'trainer_type': 'TRAINER_TYPE_NONE', 'trainer_sight_or_berry_tree_id': '0',
+         'script': script, 'flag': flag}
+    return {'local_id': local_id, **o} if local_id else o
+
+
+def interior(name, map_id, layout, doors, outside_map, outside_warp, objects, scripts, mapsec, group,
+             music='MUS_NONE', bgs=(), extra_warps=()):
+    """A room using an existing layout. doors: (x, y) cells of its exit."""
+    warps = [{'x': x, 'y': y, 'elevation': 0, 'dest_map': outside_map, 'dest_warp_id': str(outside_warp)} for x, y in doors]
+    warps += list(extra_warps)
+    m = {'id': map_id, 'name': name, 'layout': layout, 'music': music, 'region': 'REGION_HOENN',
+         'region_map_section': mapsec, 'requires_flash': False, 'weather': 'WEATHER_NONE', 'map_type': 'MAP_TYPE_INDOOR',
+         'allow_cycling': False, 'allow_escaping': False, 'allow_running': False, 'show_map_name': False,
+         'battle_scene': 'MAP_BATTLE_SCENE_NORMAL', 'connections': None, 'object_events': objects,
+         'warp_events': warps, 'coord_events': [], 'bg_events': list(bgs)}
+    d = f'{ROOT}/data/maps/{name}'
+    os.makedirs(d, exist_ok=True)
+    with open(f'{d}/map.json', 'w') as f:
+        json.dump(m, f, indent=2, ensure_ascii=False)
+        f.write('\n')
+    open(f'{d}/scripts.inc', 'w').write(scripts.strip('\n') + '\n')
+    register_group(group, name)
+    register_scripts(name)
+
+
+def pokemon_center(prefix, mapsec, group, outside_map, outside_warp, heal_text_npcs=()):
+    """A Pokémon Center 1F (Lavaridge's layout) with a nurse and a few NPCs."""
+    name = f'{prefix}_PokemonCenter_1F'
+    up = re.sub(r'(?<!^)(?=[A-Z])', '_', prefix).upper()
+    objs = [npc('OBJ_EVENT_GFX_NURSE', 7, 2, f'{name}_EventScript_Nurse', local_id=f'LOCALID_{up}_NURSE')]
+    objs[0]['movement_range_x'] = objs[0]['movement_range_y'] = 0
+    lines = [f'{name}_MapScripts::', '\tmap_script MAP_SCRIPT_ON_RESUME, CableClub_OnResume', '\t.byte 0', '',
+             f'{name}_EventScript_Nurse::', f'\tsetvar VAR_0x800B, LOCALID_{up}_NURSE',
+             '\tcall Common_EventScript_PkmnCenterNurse', '\twaitmessage', '\twaitbuttonpress', '\trelease', '\tend', '']
+    for i, (gfx, x, y, text) in enumerate(heal_text_npcs):
+        label = f'{name}_EventScript_Npc{i}'
+        objs.append(npc(gfx, x, y, label, 'MOVEMENT_TYPE_WANDER_AROUND' if i % 2 else 'MOVEMENT_TYPE_FACE_DOWN'))
+        lines += [f'{label}::', f'\tmsgbox {name}_Text_Npc{i}, MSGBOX_NPC', '\tend', '',
+                  f'{name}_Text_Npc{i}:'] + [f'\t.string "{l}"' for l in text] + ['']
+    interior(name, f'MAP_{up}_POKEMON_CENTER_1F', 'LAYOUT_LAVARIDGE_TOWN_POKEMON_CENTER_1F', [(6, 8), (7, 8)],
+             outside_map, outside_warp, objs, '\n'.join(lines), mapsec, group, music='MUS_POKE_CENTER')
+    return f'MAP_{up}_POKEMON_CENTER_1F'
