@@ -8,12 +8,12 @@ Netplay_EventScript_TalkToPlayer::
 	message Netplay_Text_WhatToDo
 	waitmessage
 	dynmultipush Netplay_Text_Battle, NETPLAY_KIND_BATTLE
-	dynmultipush Netplay_Text_Double, NETPLAY_KIND_DOUBLE
-	dynmultipush Netplay_Text_Multi, NETPLAY_KIND_MULTI
 	dynmultipush Netplay_Text_Trade, NETPLAY_KIND_TRADE
 	dynmultipush Netplay_Text_BuySell, NETPLAY_KIND_DEAL
 	dynmultipush Netplay_Text_AddFriend, NETPLAY_KIND_FRIEND
 	dynmultipush Netplay_Text_Coop, NETPLAY_KIND_COOP
+	dynmultipush Netplay_Text_Double, NETPLAY_KIND_DOUBLE
+	dynmultipush Netplay_Text_Multi, NETPLAY_KIND_MULTI
 	dynmultipush Netplay_Text_Cancel, NETPLAY_KIND_NONE
 	dynmultistack 0, 0, FALSE, 6, FALSE, NETPLAY_KIND_BATTLE, DYN_MULTICHOICE_CB_NONE
 	switch VAR_RESULT

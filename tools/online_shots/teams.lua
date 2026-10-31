@@ -18,8 +18,7 @@ D.run(function()
         D.wait(30)
         if select(3, D.pos()) ~= D.DIR.WEST then D.press(K.LEFT, 20) end
         D.press(K.A, 150)
-        D.press(K.DOWN, 15)
-        D.press(K.DOWN, 15)
+        for _ = 1, 6 do D.press(K.DOWN, 15) end
         D.shot("menu")
         D.press(K.A, 30) -- 2v2 team battle
         D.wait(60)
