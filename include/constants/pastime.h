@@ -23,6 +23,7 @@
 #define PASTIME_MENU_GARDEN     13
 #define PASTIME_MENU_WEATHER    14
 #define PASTIME_MENU_STARS      15
+#define PASTIME_MENU_CARNIVAL   16
 #define PASTIME_MENU_CLOSE      31
 
 // NPCs and objects the activities place on maps from code (src/pastime.c)
@@ -182,5 +183,31 @@
 #define STAR_METEOR_EVERY      5  // nights
 #define STAR_METEOR_MON_PERCENT 25
 #define STAR_METEOR_RATE       6  // a shooting star every this many updates, on average
+
+// Carnival games at the Sunfair Carnival (src/pastime_carnival.c).
+#define CARNIVAL_PERFECT_PIXELS 2 // needle this close to the zone's middle
+#define CARNIVAL_CLOSE_PIXELS  14
+#define BOWLING_FRAMES         5
+#define BOWLING_PINS           10
+#define BOWLING_STRIKE_BONUS   10
+#define BOWLING_SPARE_BONUS    5
+#define BOWLING_GREAT          80
+#define BOWLING_GOOD           50
+#define GOLF_HOLES             3
+#define GOLF_PAR               3
+#define GOLF_POND_HOLE         2  // the third hole has the pond
+#define GOLF_PUTT_YARDS        8
+#define GOLF_ACE_YARDS         130 // a perfect shot from this close goes in
+#define GOLF_MAX_STROKES       7
+#define SOCCER_KICKS           5
+#define SOCCER_SIDES           3
+#define SOCCER_CPU_MISS_PERCENT 15
+#define SOCCER_OVER            0 // VAR_RESULT of Soccer_Prepare
+#define SOCCER_SHOOT           1
+#define SOCCER_KEEP            2
+#define SOCCER_WON             0 // VAR_RESULT of Soccer_Finish
+#define SOCCER_DRAW            1
+#define SOCCER_LOST            2
+#define FERRIS_WHEEL_FARE      100
 
 #endif // GUARD_CONSTANTS_PASTIME_H

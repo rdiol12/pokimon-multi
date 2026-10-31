@@ -154,4 +154,22 @@ void Star_PickMeteorite(void);
 void Star_TalkToAstronomer(void);
 void Star_ShowList(void);
 
+// Carnival games (pastime_carnival.c).
+void Carnival_CloseCourt(void);
+void Bowl_Start(void);
+void Bowl_Prepare(void);
+void Bowl_Roll(void);
+void Bowl_Finish(void);
+void Golf_Start(void);
+void Golf_Prepare(void);
+void Golf_Swing(void);
+void Golf_Finish(void);
+void Soccer_Start(void);
+void Soccer_Prepare(void);
+void Soccer_Shoot(void);
+void Soccer_Keep(void);
+void Soccer_Finish(void);
+void Ferris_Ride(void);
+void Carnival_ShowList(void);
+
 #endif // GUARD_PASTIME_H

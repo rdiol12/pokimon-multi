@@ -109,6 +109,13 @@ struct PastimeSaveData
     u8 meteorPicked;     // a bit per meteorite, on night meteorNight - 1
     u16 meteorNight;
     u16 meteorFound;
+    // Carnival games (src/pastime_carnival.c)
+    u8 bowlBest;
+    u8 golfBest;         // fewest strokes, 0: never played
+    u8 soccerWins;
+    u8 carnivalPrizes;   // a bit per game's big prize
+    u16 ferrisRides;
+    u16 carnivalPlays;
 };
 
 #endif // GUARD_PASTIME_SAVE_H

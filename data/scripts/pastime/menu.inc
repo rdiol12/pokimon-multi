@@ -17,6 +17,7 @@ Pastime_EventScript_Menu::
 	dynmultipush Pastime_Text_MenuGarden, PASTIME_MENU_GARDEN
 	dynmultipush Pastime_Text_MenuWeather, PASTIME_MENU_WEATHER
 	dynmultipush Pastime_Text_MenuStars, PASTIME_MENU_STARS
+	dynmultipush Pastime_Text_MenuCarnival, PASTIME_MENU_CARNIVAL
 	dynmultipush Pastime_Text_MenuClose, PASTIME_MENU_CLOSE
 	dynmultistack 0, 0, FALSE, 6, FALSE, PASTIME_MENU_LOST_FOUND, DYN_MULTICHOICE_CB_NONE
 	switch VAR_RESULT
@@ -36,6 +37,7 @@ Pastime_EventScript_Menu::
 	case PASTIME_MENU_GARDEN, Pastime_EventScript_Garden
 	case PASTIME_MENU_WEATHER, Pastime_EventScript_Weather
 	case PASTIME_MENU_STARS, Pastime_EventScript_Stars
+	case PASTIME_MENU_CARNIVAL, Pastime_EventScript_CarnivalList
 Pastime_EventScript_MenuDone::
 	releaseall
 	end
@@ -153,6 +155,11 @@ Pastime_EventScript_Stars:
 	releaseall
 	end
 
+Pastime_EventScript_CarnivalList:
+	callnative Carnival_ShowList, waitstate=1
+	releaseall
+	end
+
 Pastime_Text_MenuLostFound:
 	.string "LOST & FOUND$"
 Pastime_Text_MenuMuseum:
@@ -195,5 +202,7 @@ Pastime_Text_MenuWeather:
 	.string "WEATHER LAB$"
 Pastime_Text_MenuStars:
 	.string "STAR MAP$"
+Pastime_Text_MenuCarnival:
+	.string "CARNIVAL$"
 Pastime_Text_MenuClose:
 	.string "CLOSE$"

@@ -1,34 +1,13 @@
-@ Sunfair Carnival game hosts (tools/areas/carnival.py). The minigames
-@ branch (claude/pastime-carnival) replaces each body with
-@ goto Pastime_EventScript_<game>.
+@ Sunfair Carnival game hosts (tools/areas/carnival.py). The games are in
+@ data/scripts/pastime/carnival.inc (src/pastime_carnival.c).
 Carnival_EventScript_Bowling::
-	msgbox Carnival_Text_BowlingSoon, MSGBOX_NPC
-	end
+	goto Pastime_EventScript_Bowling
 
 Carnival_EventScript_Golf::
-	msgbox Carnival_Text_GolfSoon, MSGBOX_NPC
-	end
+	goto Pastime_EventScript_Golf
 
 Carnival_EventScript_Soccer::
-	msgbox Carnival_Text_SoccerSoon, MSGBOX_NPC
-	end
+	goto Pastime_EventScript_Soccer
 
 Carnival_EventScript_FerrisWheel::
-	msgbox Carnival_Text_FerrisWheelSoon, MSGBOX_NPC
-	end
-
-Carnival_Text_BowlingSoon:
-	.string "The bowling lanes are being polished.\n"
-	.string "Coming soon!$"
-
-Carnival_Text_GolfSoon:
-	.string "Mini golf opens soon! We're still\n"
-	.string "mowing the green.$"
-
-Carnival_Text_SoccerSoon:
-	.string "We're picking teams for a POKéMON\n"
-	.string "soccer match. Coming soon!$"
-
-Carnival_Text_FerrisWheelSoon:
-	.string "The Ferris wheel is getting its last\n"
-	.string "safety check. Rides start soon!$"
+	goto Pastime_EventScript_FerrisWheel
