@@ -1,7 +1,7 @@
 import UIKit
 import WebKit
 
-/// The whole app is one WKWebView showing the web app bundled in www/
+/// The whole app is one WKWebView showing the web app bundled in dist/
 /// (mobile/dist): the mGBA core, touch controls and the netplay bridge.
 /// Files are served through the app:// scheme so the page gets a stable
 /// origin for IndexedDB; the page's TCP connections go through NetBridge.
@@ -91,13 +91,14 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
     }
 }
 
-/// Serves app://game/<path> from the bundle's www folder.
+/// Serves app://game/<path> from the bundle's dist folder (a folder
+/// reference keeps its name in the bundle).
 final class BundleSchemeHandler: NSObject, WKURLSchemeHandler {
     private static let types: [String: String] = [
         "html": "text/html", "js": "text/javascript", "css": "text/css", "json": "application/json",
         "wasm": "application/wasm", "lua": "text/plain", "png": "image/png", "txt": "text/plain",
     ]
-    private let root = Bundle.main.resourceURL!.appendingPathComponent("www")
+    private let root = Bundle.main.resourceURL!.appendingPathComponent("dist")
 
     func webView(_ webView: WKWebView, start task: WKURLSchemeTask) {
         guard let url = task.request.url else { return }
