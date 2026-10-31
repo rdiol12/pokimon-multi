@@ -256,3 +256,26 @@ list: `Pastime_CanLearnTeachableMove` is checked first in
 teaching that move. It uses the usual tutor box and "forget a move" screens.
 **R > PASTIMES > BATTLE DOJO** shows the belt, points, sessions left, moves
 learned and the move list with prices. Screenshots: `tools/pastime_shots/dojo.lua`.
+
+## Ranger missions
+
+![Ranger missions](images/pastime-ranger.png)
+
+The RANGER stands outside Fortree Gym and gives one mission at a time, up
+to three a day, from a pool of 15 picked by the day:
+
+- **Rescue**: a lost Pokémon (Skitty on Route 104, Plusle on Route 110,
+  Azurill on Route 117, Whismur on Route 116, Spinda on Route 113) appears
+  on its route only while the mission is on. Find it and talk to it.
+- **Calm**: wild Pokémon are rampaging on a route (119, 110, 117, 104, 113);
+  win 3 or 4 wild battles there.
+- **Survey**: catch 1 to 3 Pokémon of a type (Water, Grass, Bug, Flying,
+  Electric) anywhere.
+
+Progress notices pop up as you go ("1 of 3 done", "MISSION COMPLETE!").
+Report back for 3 to 5 Ranger Points. Points raise your rank, and each
+promotion comes with a prize: RANGER at 10 points (Ultra Ball), AREA RANGER
+at 30 (Exp. Share), TOP RANGER at 60 (Master Ball). **R > PASTIMES > RANGER**
+shows the rank, points, missions done today and the current mission. Hooks:
+`Pastime_OnWildBattleEnd` in `World_OnWildBattleEnd` (`src/world.c`) and
+`Pastime_OnCatch`. Screenshots: `tools/pastime_shots/ranger.lua`.

@@ -77,6 +77,14 @@ struct PastimeSaveData
     u16 dojoPoints;
     u16 dojoEarned;
     u16 dojoTaught;
+    // Ranger missions (src/pastime_ranger.c)
+    u16 rangerDay;      // day + 1 of rangerToday
+    u8 rangerToday;     // missions given today
+    u8 rangerMission;   // index + 1 in sMissions, 0: none
+    u8 rangerProgress;
+    u8 rangerFiller;
+    u16 rangerPoints;
+    u16 rangerDone;
 };
 
 #endif // GUARD_PASTIME_SAVE_H

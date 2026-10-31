@@ -114,5 +114,14 @@ void Dojo_CheckMove(void);
 void Dojo_PayForMove(void);
 void Dojo_ShowList(void);
 bool32 Pastime_CanLearnTeachableMove(u16 species, u16 move);
+void Pastime_OnWildBattleEnd(void);
+void Ranger_OnCatch(u16 species);
+void Ranger_OnWildBattleEnd(void);
+void Ranger_GetState(void);
+void Ranger_StartMission(void);
+void Ranger_CompleteMission(void);
+void Ranger_RescueLostMon(void);
+void Ranger_IsLostMonWaiting(void);
+void Ranger_ShowList(void);
 
 #endif // GUARD_PASTIME_H

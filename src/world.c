@@ -159,6 +159,7 @@ void World_OnWildBattleEnd(void)
     }
     ShinyChain_OnWildBattleEnd();
     Records_OnWildBattleEnd();
+    Pastime_OnWildBattleEnd();
     Hardcore_OnBattleEnd(TRUE);
 }
 

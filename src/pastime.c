@@ -41,6 +41,7 @@ static const struct PastimeSpotList sSpotLists[] =
     {gBugContestSpots, 1},
     {gTradingSpots, 1},
     {gDojoSpots, 1},
+    {gRangerSpots, 1 + RANGER_LOST_COUNT},
 };
 
 #define MAX_SHOWN (LOCALID_PASTIME_LAST - LOCALID_PASTIME_FIRST + 1)
@@ -200,6 +201,13 @@ void Pastime_OnBattleStart(void)
 void Pastime_OnCatch(void)
 {
     BugContest_OnCatch(gBattleResults.caughtMonSpecies);
+    Ranger_OnCatch(gBattleResults.caughtMonSpecies);
+}
+
+// Back from a wild battle, before the field reloads.
+void Pastime_OnWildBattleEnd(void)
+{
+    Ranger_OnWildBattleEnd();
 }
 
 // World_ModifyWildSpecies: changes the species of a wild encounter.

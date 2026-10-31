@@ -18,6 +18,7 @@
 #define PASTIME_MENU_BUG_CONTEST 8
 #define PASTIME_MENU_TRADING    9
 #define PASTIME_MENU_DOJO       10
+#define PASTIME_MENU_RANGER     11
 #define PASTIME_MENU_CLOSE      31
 
 // NPCs and objects the activities place on maps from code (src/pastime.c)
@@ -123,5 +124,17 @@
 #define DOJO_OK           0  // VAR_RESULT of Dojo_CheckMove
 #define DOJO_NO_BELT      1
 #define DOJO_NO_POINTS    2
+
+// Ranger missions from Fortree (src/pastime_ranger.c).
+#define RANGER_RESCUE            0
+#define RANGER_CALM              1
+#define RANGER_SURVEY            2
+#define RANGER_LOST_COUNT        5
+#define RANGER_RANK_COUNT        4
+#define RANGER_MISSIONS_PER_DAY  3
+#define RANGER_STATE_OPEN        0 // VAR_RESULT of Ranger_GetState
+#define RANGER_STATE_ACTIVE      1
+#define RANGER_STATE_COMPLETE    2
+#define RANGER_STATE_DONE_TODAY  3
 
 #endif // GUARD_CONSTANTS_PASTIME_H
