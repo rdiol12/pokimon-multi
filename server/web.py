@@ -10,12 +10,15 @@ import logging
 import os
 import re
 
+import community
+
 log = logging.getLogger("netplay.web")
 
 BRIDGE_PATH = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), "..", "tools", "netplay_bridge", "netplay_bridge.lua"
 )
 WORLD_BRIDGE_PATH = os.path.join(os.path.dirname(BRIDGE_PATH), "netplay_world.lua")
+COMMUNITY_BRIDGE_PATH = os.path.join(os.path.dirname(BRIDGE_PATH), "netplay_community.lua")
 GALLERY_FILE_RE = re.compile(r"^/gallery/([\w.-]+\.png)$")
 
 GALLERY_PAGE = """<!doctype html>
@@ -55,7 +58,7 @@ code {{ background: #eee; padding: 0 .2rem; }}
 <tr><th>#</th><th>Trainer</th><th class=n>Rating</th><th class=n>W</th><th class=n>L</th><th class=n>D</th></tr>
 {rows}
 </table>
-<p><a href="/gallery">Photo gallery</a></p>
+<p><a href="/gallery">Photo gallery</a>{community_links}</p>
 <h2>Play</h2>
 <ol>
 <li>Open the game in mGBA 0.10 or newer.</li>
@@ -86,9 +89,10 @@ class Web:
         with open(BRIDGE_PATH, encoding="utf-8") as f:
             script = f.read()
         # One download: the world features part goes first (netplay_world.lua).
-        if os.path.exists(WORLD_BRIDGE_PATH):
-            with open(WORLD_BRIDGE_PATH, encoding="utf-8") as f:
-                script = f.read() + "\n" + script
+        for part in (WORLD_BRIDGE_PATH, COMMUNITY_BRIDGE_PATH):
+            if os.path.exists(part):
+                with open(part, encoding="utf-8") as f:
+                    script = f.read() + "\n" + script
         header = f"NETPLAY_HOST = NETPLAY_HOST or {json.dumps(host)}\nNETPLAY_PORT = NETPLAY_PORT or {self.game_port}\n"
         return header + script
 
@@ -122,8 +126,13 @@ class Web:
                 f"<td class=n>{r['wins']}</td><td class=n>{r['losses']}</td><td class=n>{r['draws']}</td></tr>"
                 for r in self.board()
             ) or "<tr><td colspan=6>No battles yet.</td></tr>"
-            page = PAGE.format(online=self.online(), rows=rows, address=html.escape(f"{host}:{self.game_port}"))
+            links = "".join(f' &middot; <a href="{p}">{html.escape(t)}</a>' for p, (t, _) in sorted(community.WEB_ROUTES.items()))
+            page = PAGE.format(online=self.online(), rows=rows, address=html.escape(f"{host}:{self.game_port}"),
+                               community_links=links)
             return 200, "text/html; charset=utf-8", page
+        route = community.WEB_ROUTES.get(path)
+        if route is not None:
+            return route[1](self.server)
         return 404, "text/plain", "not found\n"
 
     async def handle(self, reader, writer):

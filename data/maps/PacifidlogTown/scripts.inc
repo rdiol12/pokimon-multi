@@ -4,6 +4,7 @@ PacifidlogTown_MapScripts::
 	.byte 0
 
 PacifidlogTown_OnTransition:
+	call Community_EventScript_RivalSetup
 	setflag FLAG_VISITED_PACIFIDLOG_TOWN
 	end
 

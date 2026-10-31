@@ -86,6 +86,7 @@
 #include "constants/weather.h"
 #include "netplay.h"
 #include "world.h"
+#include "community.h"
 
 STATIC_ASSERT((B_FLAG_FOLLOWERS_DISABLED == 0 || OW_FOLLOWERS_ENABLED), FollowersFlagAssignedWithoutEnablingThem);
 
@@ -1664,7 +1665,7 @@ static void DoCB1_Overworld(u16 newKeys, u16 heldKeys)
     FieldClearPlayerInput(&inputStruct);
     FieldGetPlayerInput(&inputStruct, newKeys, heldKeys);
     CancelSignPostMessageBox(&inputStruct);
-    if (Netplay_OverworldUpdate() || World_OverworldUpdate())
+    if (Netplay_OverworldUpdate() || World_OverworldUpdate() || Community_OverworldUpdate())
     {
         LockPlayerFieldControls();
         HideMapNamePopUpWindow();
