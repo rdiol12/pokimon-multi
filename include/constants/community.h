@@ -34,6 +34,7 @@
 #define COMMUNITY_REQ_CHAT_SAY       52
 #define COMMUNITY_REQ_CHAT_LEAVE     53
 #define COMMUNITY_REQ_LEGAL_CHECK    60 // anti-cheat
+#define COMMUNITY_REQ_FUSION_BUILD   70 // fusion breeding: the server builds a fusion's colors (src/breed_fusion.c)
 
 // Event sections the server writes into without being asked
 // (gCommunityMailbox.events).

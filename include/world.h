@@ -25,6 +25,24 @@ u16 RoamingWeather_GetFrontMap(u32 front, u32 hoursAhead);
 
 // Day/night (world_daynight.c).
 void DayNight_UpdateFlags(void);
+enum DayNightTag
+{
+    DAYNIGHT_BOTH,
+    DAYNIGHT_DAY,   // out in the morning, by day and in the evening
+    DAYNIGHT_NIGHT, // out in the evening and at night
+};
+struct WildPokemon;
+enum DayNightTag DayNight_GetSpeciesTag(u32 species);
+// Whether a wild Pokemon of this species is out on this map at this hour.
+bool32 DayNight_IsSpeciesOut(u32 species);
+// Rerolls a wild slot (with choose(arg)) while its Pokemon is asleep.
+u32 DayNight_PickSlot(const struct WildPokemon *mons, u32 index, u32 (*choose)(u32 arg), u32 arg);
+// The hour (0-23) and minute the game runs on. Online, this is the
+// server's clock, so everybody shares one sky; offline, the RTC.
+bool32 DayNight_GetServerClock(s32 *hours, s32 *minutes);
+// Lights the windows in the evening and at night (after a map's palettes
+// load, and every overworld frame so they switch on as the hour turns).
+void DayNight_UpdateLights(void);
 
 // Mounts (world_mount.c).
 bool32 Mount_IsRideable(u16 species);

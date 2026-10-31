@@ -1,0 +1,1052 @@
+[
+{
+"name": "Arlo",
+"female": 0,
+"type": "NORMAL",
+"style": "COLLECTOR",
+"starter": 263
+},
+{
+"name": "Ada",
+"female": 1,
+"type": "GHOST",
+"style": "TRAINER",
+"starter": 353
+},
+{
+"name": "Bea",
+"female": 1,
+"type": "ICE",
+"style": "BALANCED",
+"starter": 361
+},
+{
+"name": "Cleo",
+"female": 1,
+"type": "POISON",
+"style": "BREEDER",
+"starter": 316
+},
+{
+"name": "Bram",
+"female": 0,
+"type": "WATER",
+"style": "COLLECTOR",
+"starter": 183
+},
+{
+"name": "Dot",
+"female": 1,
+"type": "FAIRY",
+"style": "TRAINER",
+"starter": 298
+},
+{
+"name": "Cass",
+"female": 0,
+"type": "BUG",
+"style": "BALANCED",
+"starter": 265
+},
+{
+"name": "Dax",
+"female": 0,
+"type": "PSYCHIC",
+"style": "BREEDER",
+"starter": 280
+},
+{
+"name": "Eve",
+"female": 1,
+"type": "FLYING",
+"style": "COLLECTOR",
+"starter": 276
+},
+{
+"name": "Eli",
+"female": 0,
+"type": "FIRE",
+"style": "TRAINER",
+"starter": 322
+},
+{
+"name": "Finn",
+"female": 0,
+"type": "DARK",
+"style": "BALANCED",
+"starter": 261
+},
+{
+"name": "Gus",
+"female": 0,
+"type": "ROCK",
+"style": "BREEDER",
+"starter": 299
+},
+{
+"name": "Hal",
+"female": 0,
+"type": "ELECTRIC",
+"style": "COLLECTOR",
+"starter": 309
+},
+{
+"name": "Ivo",
+"female": 0,
+"type": "FIGHTING",
+"style": "TRAINER",
+"starter": 296
+},
+{
+"name": "Jace",
+"female": 0,
+"type": "STEEL",
+"style": "BALANCED",
+"starter": 304
+},
+{
+"name": "Kai",
+"female": 0,
+"type": "DRAGON",
+"style": "BREEDER",
+"starter": 371
+},
+{
+"name": "Leo",
+"female": 0,
+"type": "GROUND",
+"style": "COLLECTOR",
+"starter": 231
+},
+{
+"name": "Fay",
+"female": 1,
+"type": "GRASS",
+"style": "TRAINER",
+"starter": 273
+},
+{
+"name": "Gwen",
+"female": 1,
+"type": "NORMAL",
+"style": "BREEDER",
+"starter": 263
+},
+{
+"name": "Milo",
+"female": 0,
+"type": "GHOST",
+"style": "COLLECTOR",
+"starter": 353
+},
+{
+"name": "Hana",
+"female": 1,
+"type": "ICE",
+"style": "TRAINER",
+"starter": 361
+},
+{
+"name": "Nico",
+"female": 0,
+"type": "POISON",
+"style": "BALANCED",
+"starter": 316
+},
+{
+"name": "Oren",
+"female": 0,
+"type": "WATER",
+"style": "BREEDER",
+"starter": 183
+},
+{
+"name": "Iris",
+"female": 1,
+"type": "FAIRY",
+"style": "COLLECTOR",
+"starter": 298
+},
+{
+"name": "Pax",
+"female": 0,
+"type": "BUG",
+"style": "TRAINER",
+"starter": 265
+},
+{
+"name": "Jo",
+"female": 1,
+"type": "PSYCHIC",
+"style": "BALANCED",
+"starter": 280
+},
+{
+"name": "Quin",
+"female": 0,
+"type": "FLYING",
+"style": "BREEDER",
+"starter": 276
+},
+{
+"name": "Rex",
+"female": 0,
+"type": "FIRE",
+"style": "COLLECTOR",
+"starter": 322
+},
+{
+"name": "Sol",
+"female": 0,
+"type": "DARK",
+"style": "TRAINER",
+"starter": 261
+},
+{
+"name": "Tobi",
+"female": 0,
+"type": "ROCK",
+"style": "BALANCED",
+"starter": 299
+},
+{
+"name": "Uri",
+"female": 0,
+"type": "ELECTRIC",
+"style": "BREEDER",
+"starter": 309
+},
+{
+"name": "Kira",
+"female": 1,
+"type": "FIGHTING",
+"style": "COLLECTOR",
+"starter": 296
+},
+{
+"name": "Vic",
+"female": 0,
+"type": "STEEL",
+"style": "TRAINER",
+"starter": 304
+},
+{
+"name": "Lia",
+"female": 1,
+"type": "DRAGON",
+"style": "BALANCED",
+"starter": 371
+},
+{
+"name": "Wes",
+"female": 0,
+"type": "GROUND",
+"style": "BREEDER",
+"starter": 231
+},
+{
+"name": "Mae",
+"female": 1,
+"type": "GRASS",
+"style": "COLLECTOR",
+"starter": 273
+},
+{
+"name": "Xan",
+"female": 0,
+"type": "NORMAL",
+"style": "BALANCED",
+"starter": 263
+},
+{
+"name": "Nell",
+"female": 1,
+"type": "GHOST",
+"style": "BREEDER",
+"starter": 353
+},
+{
+"name": "Opal",
+"female": 1,
+"type": "ICE",
+"style": "COLLECTOR",
+"starter": 361
+},
+{
+"name": "Pia",
+"female": 1,
+"type": "POISON",
+"style": "TRAINER",
+"starter": 316
+},
+{
+"name": "Rue",
+"female": 1,
+"type": "WATER",
+"style": "BALANCED",
+"starter": 183
+},
+{
+"name": "Suki",
+"female": 1,
+"type": "FAIRY",
+"style": "BREEDER",
+"starter": 298
+},
+{
+"name": "Yuri",
+"female": 0,
+"type": "BUG",
+"style": "COLLECTOR",
+"starter": 265
+},
+{
+"name": "Tess",
+"female": 1,
+"type": "PSYCHIC",
+"style": "TRAINER",
+"starter": 280
+},
+{
+"name": "Una",
+"female": 1,
+"type": "FLYING",
+"style": "BALANCED",
+"starter": 276
+},
+{
+"name": "Zed",
+"female": 0,
+"type": "FIRE",
+"style": "BREEDER",
+"starter": 322
+},
+{
+"name": "Ash",
+"female": 0,
+"type": "DARK",
+"style": "COLLECTOR",
+"starter": 261
+},
+{
+"name": "Beck",
+"female": 0,
+"type": "ROCK",
+"style": "TRAINER",
+"starter": 299
+},
+{
+"name": "Cole",
+"female": 0,
+"type": "ELECTRIC",
+"style": "BALANCED",
+"starter": 309
+},
+{
+"name": "Dane",
+"female": 0,
+"type": "FIGHTING",
+"style": "BREEDER",
+"starter": 296
+},
+{
+"name": "Ezra",
+"female": 0,
+"type": "STEEL",
+"style": "COLLECTOR",
+"starter": 304
+},
+{
+"name": "Vera",
+"female": 1,
+"type": "DRAGON",
+"style": "TRAINER",
+"starter": 371
+},
+{
+"name": "Ford",
+"female": 0,
+"type": "GROUND",
+"style": "BALANCED",
+"starter": 231
+},
+{
+"name": "Wren",
+"female": 1,
+"type": "GRASS",
+"style": "BREEDER",
+"starter": 273
+},
+{
+"name": "Yara",
+"female": 1,
+"type": "NORMAL",
+"style": "TRAINER",
+"starter": 263
+},
+{
+"name": "Gray",
+"female": 0,
+"type": "GHOST",
+"style": "BALANCED",
+"starter": 353
+},
+{
+"name": "Zoe",
+"female": 1,
+"type": "ICE",
+"style": "BREEDER",
+"starter": 361
+},
+{
+"name": "Hugh",
+"female": 0,
+"type": "POISON",
+"style": "COLLECTOR",
+"starter": 316
+},
+{
+"name": "Iggy",
+"female": 0,
+"type": "WATER",
+"style": "TRAINER",
+"starter": 183
+},
+{
+"name": "Amy",
+"female": 1,
+"type": "FAIRY",
+"style": "BALANCED",
+"starter": 298
+},
+{
+"name": "Jett",
+"female": 0,
+"type": "BUG",
+"style": "BREEDER",
+"starter": 265
+},
+{
+"name": "Knox",
+"female": 0,
+"type": "PSYCHIC",
+"style": "COLLECTOR",
+"starter": 280
+},
+{
+"name": "Bree",
+"female": 1,
+"type": "FLYING",
+"style": "TRAINER",
+"starter": 276
+},
+{
+"name": "Lane",
+"female": 0,
+"type": "FIRE",
+"style": "BALANCED",
+"starter": 322
+},
+{
+"name": "Moss",
+"female": 0,
+"type": "DARK",
+"style": "BREEDER",
+"starter": 261
+},
+{
+"name": "Nash",
+"female": 0,
+"type": "ROCK",
+"style": "COLLECTOR",
+"starter": 299
+},
+{
+"name": "Otto",
+"female": 0,
+"type": "ELECTRIC",
+"style": "TRAINER",
+"starter": 309
+},
+{
+"name": "Pike",
+"female": 0,
+"type": "FIGHTING",
+"style": "BALANCED",
+"starter": 296
+},
+{
+"name": "Reed",
+"female": 0,
+"type": "STEEL",
+"style": "BREEDER",
+"starter": 304
+},
+{
+"name": "Sage",
+"female": 0,
+"type": "DRAGON",
+"style": "COLLECTOR",
+"starter": 371
+},
+{
+"name": "Tate",
+"female": 0,
+"type": "GROUND",
+"style": "TRAINER",
+"starter": 231
+},
+{
+"name": "Cora",
+"female": 1,
+"type": "GRASS",
+"style": "BALANCED",
+"starter": 273
+},
+{
+"name": "Vale",
+"female": 0,
+"type": "NORMAL",
+"style": "COLLECTOR",
+"starter": 263
+},
+{
+"name": "Dina",
+"female": 1,
+"type": "GHOST",
+"style": "TRAINER",
+"starter": 353
+},
+{
+"name": "Edie",
+"female": 1,
+"type": "ICE",
+"style": "BALANCED",
+"starter": 361
+},
+{
+"name": "Fern",
+"female": 1,
+"type": "POISON",
+"style": "BREEDER",
+"starter": 316
+},
+{
+"name": "Wade",
+"female": 0,
+"type": "WATER",
+"style": "COLLECTOR",
+"starter": 183
+},
+{
+"name": "Gia",
+"female": 1,
+"type": "FAIRY",
+"style": "TRAINER",
+"starter": 298
+},
+{
+"name": "York",
+"female": 0,
+"type": "BUG",
+"style": "BALANCED",
+"starter": 265
+},
+{
+"name": "Hope",
+"female": 1,
+"type": "PSYCHIC",
+"style": "BREEDER",
+"starter": 280
+},
+{
+"name": "Zane",
+"female": 0,
+"type": "FLYING",
+"style": "COLLECTOR",
+"starter": 276
+},
+{
+"name": "Abe",
+"female": 0,
+"type": "FIRE",
+"style": "TRAINER",
+"starter": 322
+},
+{
+"name": "Boyd",
+"female": 0,
+"type": "DARK",
+"style": "BALANCED",
+"starter": 261
+},
+{
+"name": "Cyrus",
+"female": 0,
+"type": "ROCK",
+"style": "BREEDER",
+"starter": 299
+},
+{
+"name": "Drew",
+"female": 0,
+"type": "ELECTRIC",
+"style": "COLLECTOR",
+"starter": 309
+},
+{
+"name": "Ivy",
+"female": 1,
+"type": "FIGHTING",
+"style": "TRAINER",
+"starter": 296
+},
+{
+"name": "Emil",
+"female": 0,
+"type": "STEEL",
+"style": "BALANCED",
+"starter": 304
+},
+{
+"name": "June",
+"female": 1,
+"type": "DRAGON",
+"style": "BREEDER",
+"starter": 371
+},
+{
+"name": "Flint",
+"female": 0,
+"type": "GROUND",
+"style": "COLLECTOR",
+"starter": 231
+},
+{
+"name": "Kay",
+"female": 1,
+"type": "GRASS",
+"style": "TRAINER",
+"starter": 273
+},
+{
+"name": "Gale",
+"female": 0,
+"type": "NORMAL",
+"style": "BREEDER",
+"starter": 263
+},
+{
+"name": "Heath",
+"female": 0,
+"type": "GHOST",
+"style": "COLLECTOR",
+"starter": 353
+},
+{
+"name": "Lola",
+"female": 1,
+"type": "ICE",
+"style": "TRAINER",
+"starter": 361
+},
+{
+"name": "Isak",
+"female": 0,
+"type": "POISON",
+"style": "BALANCED",
+"starter": 316
+},
+{
+"name": "Joel",
+"female": 0,
+"type": "WATER",
+"style": "BREEDER",
+"starter": 183
+},
+{
+"name": "Mira",
+"female": 1,
+"type": "FAIRY",
+"style": "COLLECTOR",
+"starter": 298
+},
+{
+"name": "Kit",
+"female": 0,
+"type": "BUG",
+"style": "TRAINER",
+"starter": 265
+},
+{
+"name": "Nina",
+"female": 1,
+"type": "PSYCHIC",
+"style": "BALANCED",
+"starter": 280
+},
+{
+"name": "Olive",
+"female": 1,
+"type": "FLYING",
+"style": "BREEDER",
+"starter": 276
+},
+{
+"name": "Lyle",
+"female": 0,
+"type": "FIRE",
+"style": "COLLECTOR",
+"starter": 322
+},
+{
+"name": "Marv",
+"female": 0,
+"type": "DARK",
+"style": "TRAINER",
+"starter": 261
+},
+{
+"name": "Ned",
+"female": 0,
+"type": "ROCK",
+"style": "BALANCED",
+"starter": 299
+},
+{
+"name": "Ozzy",
+"female": 0,
+"type": "ELECTRIC",
+"style": "BREEDER",
+"starter": 309
+},
+{
+"name": "Perry",
+"female": 0,
+"type": "FIGHTING",
+"style": "COLLECTOR",
+"starter": 296
+},
+{
+"name": "Rhys",
+"female": 0,
+"type": "STEEL",
+"style": "TRAINER",
+"starter": 304
+},
+{
+"name": "Pearl",
+"female": 1,
+"type": "DRAGON",
+"style": "BALANCED",
+"starter": 371
+},
+{
+"name": "Stan",
+"female": 0,
+"type": "GROUND",
+"style": "BREEDER",
+"starter": 231
+},
+{
+"name": "Rosa",
+"female": 1,
+"type": "GRASS",
+"style": "COLLECTOR",
+"starter": 273
+},
+{
+"name": "Sky",
+"female": 1,
+"type": "NORMAL",
+"style": "BALANCED",
+"starter": 263
+},
+{
+"name": "Tara",
+"female": 1,
+"type": "GHOST",
+"style": "BREEDER",
+"starter": 353
+},
+{
+"name": "Uma",
+"female": 1,
+"type": "ICE",
+"style": "COLLECTOR",
+"starter": 361
+},
+{
+"name": "Viv",
+"female": 1,
+"type": "POISON",
+"style": "TRAINER",
+"starter": 316
+},
+{
+"name": "Willa",
+"female": 1,
+"type": "WATER",
+"style": "BALANCED",
+"starter": 183
+},
+{
+"name": "Zia",
+"female": 1,
+"type": "FAIRY",
+"style": "BREEDER",
+"starter": 298
+},
+{
+"name": "Teo",
+"female": 0,
+"type": "BUG",
+"style": "COLLECTOR",
+"starter": 265
+},
+{
+"name": "Vern",
+"female": 0,
+"type": "PSYCHIC",
+"style": "TRAINER",
+"starter": 280
+},
+{
+"name": "Aria",
+"female": 1,
+"type": "FLYING",
+"style": "BALANCED",
+"starter": 276
+},
+{
+"name": "Wylie",
+"female": 0,
+"type": "FIRE",
+"style": "BREEDER",
+"starter": 322
+},
+{
+"name": "Zeke",
+"female": 0,
+"type": "DARK",
+"style": "COLLECTOR",
+"starter": 261
+},
+{
+"name": "Basil",
+"female": 0,
+"type": "ROCK",
+"style": "TRAINER",
+"starter": 299
+},
+{
+"name": "Axel",
+"female": 0,
+"type": "ELECTRIC",
+"style": "BALANCED",
+"starter": 309
+},
+{
+"name": "Brock",
+"female": 0,
+"type": "FIGHTING",
+"style": "BREEDER",
+"starter": 296
+},
+{
+"name": "Clay",
+"female": 0,
+"type": "STEEL",
+"style": "COLLECTOR",
+"starter": 304
+},
+{
+"name": "Dean",
+"female": 0,
+"type": "DRAGON",
+"style": "TRAINER",
+"starter": 371
+},
+{
+"name": "Enzo",
+"female": 0,
+"type": "GROUND",
+"style": "BALANCED",
+"starter": 231
+},
+{
+"name": "Bella",
+"female": 1,
+"type": "GRASS",
+"style": "BREEDER",
+"starter": 273
+},
+{
+"name": "Felix",
+"female": 0,
+"type": "NORMAL",
+"style": "TRAINER",
+"starter": 263
+},
+{
+"name": "Glen",
+"female": 0,
+"type": "GHOST",
+"style": "BALANCED",
+"starter": 353
+},
+{
+"name": "Cami",
+"female": 1,
+"type": "ICE",
+"style": "BREEDER",
+"starter": 361
+},
+{
+"name": "Hank",
+"female": 0,
+"type": "POISON",
+"style": "COLLECTOR",
+"starter": 316
+},
+{
+"name": "Jules",
+"female": 0,
+"type": "WATER",
+"style": "TRAINER",
+"starter": 183
+},
+{
+"name": "Dara",
+"female": 1,
+"type": "FAIRY",
+"style": "BALANCED",
+"starter": 298
+},
+{
+"name": "Kurt",
+"female": 0,
+"type": "BUG",
+"style": "BREEDER",
+"starter": 265
+},
+{
+"name": "Elsa",
+"female": 1,
+"type": "PSYCHIC",
+"style": "COLLECTOR",
+"starter": 280
+},
+{
+"name": "Linus",
+"female": 0,
+"type": "FLYING",
+"style": "TRAINER",
+"starter": 276
+},
+{
+"name": "Max",
+"female": 0,
+"type": "FIRE",
+"style": "BALANCED",
+"starter": 322
+},
+{
+"name": "Noel",
+"female": 0,
+"type": "DARK",
+"style": "BREEDER",
+"starter": 261
+},
+{
+"name": "Orrin",
+"female": 0,
+"type": "ROCK",
+"style": "COLLECTOR",
+"starter": 299
+},
+{
+"name": "Pete",
+"female": 0,
+"type": "ELECTRIC",
+"style": "TRAINER",
+"starter": 309
+},
+{
+"name": "Flora",
+"female": 1,
+"type": "FIGHTING",
+"style": "BALANCED",
+"starter": 296
+},
+{
+"name": "Roy",
+"female": 0,
+"type": "STEEL",
+"style": "BREEDER",
+"starter": 304
+},
+{
+"name": "Gemma",
+"female": 1,
+"type": "DRAGON",
+"style": "COLLECTOR",
+"starter": 371
+},
+{
+"name": "Seth",
+"female": 0,
+"type": "GROUND",
+"style": "TRAINER",
+"starter": 231
+},
+{
+"name": "Hazel",
+"female": 1,
+"type": "GRASS",
+"style": "BALANCED",
+"starter": 273
+},
+{
+"name": "Ines",
+"female": 1,
+"type": "NORMAL",
+"style": "COLLECTOR",
+"starter": 263
+},
+{
+"name": "Jade",
+"female": 1,
+"type": "GHOST",
+"style": "TRAINER",
+"starter": 353
+},
+{
+"name": "Kiki",
+"female": 1,
+"type": "ICE",
+"style": "BALANCED",
+"starter": 361
+},
+{
+"name": "Luna",
+"female": 1,
+"type": "POISON",
+"style": "BREEDER",
+"starter": 316
+},
+{
+"name": "Theo",
+"female": 0,
+"type": "WATER",
+"style": "COLLECTOR",
+"starter": 183
+},
+{
+"name": "Maya",
+"female": 1,
+"type": "FAIRY",
+"style": "TRAINER",
+"starter": 298
+}
+]

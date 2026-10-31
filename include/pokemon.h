@@ -129,6 +129,7 @@ enum MonData {
     MON_DATA_INJURY_PART,    // INJURY_PART_* of the part that is currently injured
     MON_DATA_LOST_PARTS,     // bitmask of body parts lost for good
     MON_DATA_INJURY_FLAGS,   // INJURY_FLAG_*: scar, message pending
+    MON_DATA_FUSION_PARTNER, // species whose colors, type and stats this Pokémon shares (0 = not a fusion)
 };
 
 #define BLOCK_AI_DYNAMAX 15 // Used as dynamax level value by the AI to indicate this mon shouldn't dynamax
@@ -146,7 +147,7 @@ struct PokemonSubstruct0
     u8 friendship;
     u16 pokeball:6; // 63 balls.
     u16 nickname12:8; // 12th character of nickname.
-    u16 unused_0A:2;
+    u16 fusionPartnerHi:2; // Bits 7-8 of the fusion partner species (see breed_fusion.c).
 };
 
 struct PokemonSubstruct1
@@ -213,15 +214,9 @@ struct PokemonSubstruct3
     u32 victoryRibbon:1;  // Given at the Battle Tower's Level 100 challenge by winning a set of seven battles that extends the current streak to 56 or more.
     u32 artistRibbon:1;   // Given at the Contest Hall by winning a Master Rank contest with at least 800 points, and agreeing to have the Pokémon's portrait placed in the museum after being offered.
     u32 effortRibbon:1;   // Given at Slateport's market to Pokémon with maximum EVs.
-    u32 marineRibbon:1;   // Never distributed.
-    u32 landRibbon:1;     // Never distributed.
-    u32 skyRibbon:1;      // Never distributed.
-    u32 countryRibbon:1;  // Distributed during Pokémon Festa '04 and '05 to tournament winners.
-    u32 nationalRibbon:1; // Given to purified Shadow Pokémon in Colosseum/XD.
-    u32 earthRibbon:1;    // Given to teams that have beaten Mt. Battle's 100-battle challenge in Colosseum/XD.
-    u32 worldRibbon:1;    // Distributed during Pokémon Festa '04 and '05 to tournament winners.
+    u32 fusionPartnerLo:7; // Bits 0-6 of the fusion partner species (see breed_fusion.c). Was the Marine, Land, Sky, Country, National, Earth and World ribbons, which this game never gives.
     u32 isShadow:1;
-    u32 unused_0B:1;
+    u32 fusionPartnerMid:1; // Bit 9 of the fusion partner species.
     u32 abilityNum:2;
 
     // The functionality of this bit changed in FRLG:
@@ -271,7 +266,7 @@ struct BoxPokemon
     u8 isEgg:1;
     u8 blockBoxRS:1; // Unused, but Pokémon Box Ruby & Sapphire will refuse to deposit a Pokémon with this flag set.
     u8 daysSinceFormChange:3; // 7 days.
-    u8 unused_13:1;
+    u8 fusionPartnerTop:1; // Bit 10 of the fusion partner species.
     u8 otName[PLAYER_NAME_LENGTH];
     u8 markings:4;
     u8 compressedStatus:4;

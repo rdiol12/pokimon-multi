@@ -1040,6 +1040,7 @@ const u8 gText_WinLoseDraw[] = _("{CLEAR_TO 83}WIN{CLEAR_TO 128}LOSE{CLEAR_TO 17
 const u8 gText_CommunicationStandby5[] = _("Communication standby…");
 const u8 gDaycareText_GetAlongVeryWell[] = _("The two seem to get along\nvery well.");
 const u8 gDaycareText_GetAlong[] = _("The two seem to get along.");
+const u8 gDaycareText_FusionEgg[] = _("\pThey're different kinds, so their EGG\nwill be a FUSION of the two!");
 const u8 gDaycareText_DontLikeOther[] = _("The two don't seem to like\neach other much.");
 const u8 gDaycareText_PlayOther[] = _("The two prefer to play with other\nPOKéMON than each other.");
 const u8 gText_NewLine2[] = _("\n");

@@ -2,6 +2,7 @@
 #include "world.h"
 #include "malloc.h"
 #include "mechanics.h"
+#include "breed_fusion.h"
 #include "apprentice.h"
 #include "battle.h"
 #include "battle_ai_util.h"
@@ -1420,7 +1421,7 @@ void CalculateMonStatsCont(struct Pokemon *mon, bool32 updateSpeedStat)
         if (i == STAT_HP)
             continue;
 
-        u8 baseStat = GetSpeciesBaseStat(species, i);
+        u8 baseStat = BreedFusion_GetBaseStat(&mon->box, species, i);
         s32 n = (((2 * baseStat + iv[i] + ev[i] / 4) * level) / 100) + 5;
         n = ModifyStatByNature(nature, n, i);
         if (B_FRIENDSHIP_BOOST == TRUE)
@@ -1440,7 +1441,7 @@ void CalculateMonStatsCont(struct Pokemon *mon, bool32 updateSpeedStat)
     }
     else
     {
-        s32 n = 2 * GetSpeciesBaseHP(species) + iv[STAT_HP];
+        s32 n = 2 * BreedFusion_GetBaseStat(&mon->box, species, STAT_HP) + iv[STAT_HP];
         newMaxHP = (((n + ev[STAT_HP] / 4) * level) / 100) + level + 10;
     }
 
@@ -2277,25 +2278,25 @@ u32 GetBoxMonData3(struct BoxPokemon *boxMon, s32 field, u8 *data)
             retVal = GetSubstruct3(boxMon)->effortRibbon;
             break;
         case MON_DATA_MARINE_RIBBON:
-            retVal = GetSubstruct3(boxMon)->marineRibbon;
+            retVal = 0; // the bit holds fusion data (breed_fusion.c)
             break;
         case MON_DATA_LAND_RIBBON:
-            retVal = GetSubstruct3(boxMon)->landRibbon;
+            retVal = 0; // the bit holds fusion data (breed_fusion.c)
             break;
         case MON_DATA_SKY_RIBBON:
-            retVal = GetSubstruct3(boxMon)->skyRibbon;
+            retVal = 0; // the bit holds fusion data (breed_fusion.c)
             break;
         case MON_DATA_COUNTRY_RIBBON:
-            retVal = GetSubstruct3(boxMon)->countryRibbon;
+            retVal = 0; // the bit holds fusion data (breed_fusion.c)
             break;
         case MON_DATA_NATIONAL_RIBBON:
-            retVal = GetSubstruct3(boxMon)->nationalRibbon;
+            retVal = 0; // the bit holds fusion data (breed_fusion.c)
             break;
         case MON_DATA_EARTH_RIBBON:
-            retVal = GetSubstruct3(boxMon)->earthRibbon;
+            retVal = 0; // the bit holds fusion data (breed_fusion.c)
             break;
         case MON_DATA_WORLD_RIBBON:
-            retVal = GetSubstruct3(boxMon)->worldRibbon;
+            retVal = 0; // the bit holds fusion data (breed_fusion.c)
             break;
         case MON_DATA_MODERN_FATEFUL_ENCOUNTER:
             retVal = GetSubstruct3(boxMon)->modernFatefulEncounter;
@@ -2350,13 +2351,6 @@ u32 GetBoxMonData3(struct BoxPokemon *boxMon, s32 field, u8 *data)
                 retVal += substruct3->victoryRibbon;
                 retVal += substruct3->artistRibbon;
                 retVal += substruct3->effortRibbon;
-                retVal += substruct3->marineRibbon;
-                retVal += substruct3->landRibbon;
-                retVal += substruct3->skyRibbon;
-                retVal += substruct3->countryRibbon;
-                retVal += substruct3->nationalRibbon;
-                retVal += substruct3->earthRibbon;
-                retVal += substruct3->worldRibbon;
             }
             break;
         case MON_DATA_RIBBONS:
@@ -2372,14 +2366,7 @@ u32 GetBoxMonData3(struct BoxPokemon *boxMon, s32 field, u8 *data)
                        | (substruct3->winningRibbon << 16)
                        | (substruct3->victoryRibbon << 17)
                        | (substruct3->artistRibbon << 18)
-                       | (substruct3->effortRibbon << 19)
-                       | (substruct3->marineRibbon << 20)
-                       | (substruct3->landRibbon << 21)
-                       | (substruct3->skyRibbon << 22)
-                       | (substruct3->countryRibbon << 23)
-                       | (substruct3->nationalRibbon << 24)
-                       | (substruct3->earthRibbon << 25)
-                       | (substruct3->worldRibbon << 26);
+                       | (substruct3->effortRibbon << 19);
             }
             break;
         case MON_DATA_HYPER_TRAINED_HP:
@@ -2414,6 +2401,12 @@ u32 GetBoxMonData3(struct BoxPokemon *boxMon, s32 field, u8 *data)
             break;
         case MON_DATA_INJURY_FLAGS:
             retVal = GetSubstruct0(boxMon)->injuryFlags;
+            break;
+        case MON_DATA_FUSION_PARTNER:
+            retVal = GetSubstruct3(boxMon)->fusionPartnerLo
+                   | (GetSubstruct0(boxMon)->fusionPartnerHi << 7)
+                   | (GetSubstruct3(boxMon)->fusionPartnerMid << 9)
+                   | (boxMon->fusionPartnerTop << 10);
             break;
         case MON_DATA_DYNAMAX_LEVEL:
             retVal = GetSubstruct3(boxMon)->dynamaxLevel;
@@ -2805,26 +2798,19 @@ void SetBoxMonData(struct BoxPokemon *boxMon, s32 field, const void *dataArg)
             SET8(GetSubstruct3(boxMon)->effortRibbon);
             break;
         case MON_DATA_MARINE_RIBBON:
-            SET8(GetSubstruct3(boxMon)->marineRibbon);
-            break;
+            break; // the bit holds fusion data (breed_fusion.c)
         case MON_DATA_LAND_RIBBON:
-            SET8(GetSubstruct3(boxMon)->landRibbon);
-            break;
+            break; // the bit holds fusion data (breed_fusion.c)
         case MON_DATA_SKY_RIBBON:
-            SET8(GetSubstruct3(boxMon)->skyRibbon);
-            break;
+            break; // the bit holds fusion data (breed_fusion.c)
         case MON_DATA_COUNTRY_RIBBON:
-            SET8(GetSubstruct3(boxMon)->countryRibbon);
-            break;
+            break; // the bit holds fusion data (breed_fusion.c)
         case MON_DATA_NATIONAL_RIBBON:
-            SET8(GetSubstruct3(boxMon)->nationalRibbon);
-            break;
+            break; // the bit holds fusion data (breed_fusion.c)
         case MON_DATA_EARTH_RIBBON:
-            SET8(GetSubstruct3(boxMon)->earthRibbon);
-            break;
+            break; // the bit holds fusion data (breed_fusion.c)
         case MON_DATA_WORLD_RIBBON:
-            SET8(GetSubstruct3(boxMon)->worldRibbon);
-            break;
+            break; // the bit holds fusion data (breed_fusion.c)
         case MON_DATA_MODERN_FATEFUL_ENCOUNTER:
             SET8(GetSubstruct3(boxMon)->modernFatefulEncounter);
             break;
@@ -2874,6 +2860,15 @@ void SetBoxMonData(struct BoxPokemon *boxMon, s32 field, const void *dataArg)
         case MON_DATA_INJURY_FLAGS:
             SET8(GetSubstruct0(boxMon)->injuryFlags);
             break;
+        case MON_DATA_FUSION_PARTNER:
+        {
+            u32 partner = data[0] | (data[1] << 8);
+            GetSubstruct3(boxMon)->fusionPartnerLo = partner & 0x7F;
+            GetSubstruct0(boxMon)->fusionPartnerHi = (partner >> 7) & 3;
+            GetSubstruct3(boxMon)->fusionPartnerMid = (partner >> 9) & 1;
+            boxMon->fusionPartnerTop = (partner >> 10) & 1;
+            break;
+        }
         case MON_DATA_DYNAMAX_LEVEL:
             SET8(GetSubstruct3(boxMon)->dynamaxLevel);
             break;
@@ -3433,6 +3428,7 @@ void PokemonToBattleMon(struct Pokemon *src, struct BattlePokemon *dst)
     dst->otId = GetMonData(src, MON_DATA_OT_ID);
     dst->types[0] = GetSpeciesType(dst->species, 0);
     dst->types[1] = GetSpeciesType(dst->species, 1);
+    BreedFusion_SetBattlerTypes(&src->box, dst->species, dst->types);
     dst->types[2] = TYPE_MYSTERY;
     dst->isShiny = IsMonShiny(src);
     dst->affectionHearts = GetMonAffectionHearts(src);
@@ -5257,14 +5253,20 @@ const u16 *GetMonFrontSpritePal(struct Pokemon *mon)
 
 const u16 *GetMonSpritePalFromSpeciesAndPersonality(enum Species species, bool32 isShiny, u32 personality)
 {
-    return Mechanics_ApplyColorVariant(GetMonSpritePalFromSpeciesIsEgg(species, isShiny, IsPersonalityFemale(species, personality), FALSE), personality);
+    const u16 *palette = GetMonSpritePalFromSpeciesIsEgg(species, isShiny, IsPersonalityFemale(species, personality), FALSE);
+
+    palette = BreedFusion_ApplyPalette(palette, species, isShiny, personality);
+    return Mechanics_ApplyColorVariant(palette, personality);
 }
 
 const u16 *GetMonSpritePalFromSpeciesAndPersonalityIsEgg(enum Species species, bool32 isShiny, u32 personality, bool32 isEgg)
 {
     const u16 *palette = GetMonSpritePalFromSpeciesIsEgg(species, isShiny, IsPersonalityFemale(species, personality), isEgg);
 
-    return isEgg ? palette : Mechanics_ApplyColorVariant(palette, personality);
+    if (isEgg)
+        return palette;
+    palette = BreedFusion_ApplyPalette(palette, species, isShiny, personality);
+    return Mechanics_ApplyColorVariant(palette, personality);
 }
 
 const u16 *GetMonSpritePalFromSpecies(enum Species species, bool32 isShiny, bool32 isFemale)

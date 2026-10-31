@@ -10,6 +10,7 @@
 #include "battle_pike.h"
 #include "battle_pyramid.h"
 #include "battle_setup.h"
+#include "rovers.h"
 #include "community.h"
 #include "battle_special.h"
 #include "battle_partner.h"
@@ -1570,6 +1571,7 @@ static void CB2_EndLifeTrainerBattle(void)
 {
     World_OnTrainerBattleEnd();
     LifeGhost_OnBattleEnd(gLifeTrainer, IsPlayerDefeated(gBattleOutcome) != TRUE);
+    Rovers_OnLifeBattleEnd(gLifeTrainer, IsPlayerDefeated(gBattleOutcome) != TRUE);
     gLifeTrainer = NULL;
     if (IsPlayerDefeated(gBattleOutcome) == TRUE)
     {
@@ -1592,6 +1594,17 @@ void BattleSetup_StartLifeTrainerBattle(void)
     CreateBattleStartTask(GetTrainerBattleTransition(), 0);
     IncrementGameStat(GAME_STAT_TOTAL_BATTLES);
     IncrementGameStat(GAME_STAT_TRAINER_BATTLES);
+}
+
+// Watching two roaming trainers battle (src/rovers.c): the battle runs with
+// both sides played by the AI, then endCallback puts things back.
+void BattleSetup_StartRoverWatch(void (*endCallback)(void))
+{
+    LockPlayerFieldControls();
+    FreezeObjectEvents();
+    StopPlayerAvatar();
+    gMain.savedCallback = endCallback;
+    CreateBattleStartTask(GetTrainerBattleTransition(), 0);
 }
 
 void BattleSetup_StartTrainerBattle_Debug(void)

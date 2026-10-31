@@ -1,4 +1,5 @@
 #include "global.h"
+#include "breed_fusion.h"
 #include "battle.h"
 #include "mechanics.h"
 #include "battle_anim.h"
@@ -10,6 +11,7 @@
 #include "battle_hold_effects.h"
 #include "battle_interface.h"
 #include "battle_main.h"
+#include "rovers.h"
 #include "battle_message.h"
 #include "battle_pyramid.h"
 #include "battle_scripts.h"
@@ -2750,6 +2752,9 @@ static void ClearSetBScriptingStruct(void)
 
     gBattleScripting.windowsType = temp;
     gBattleScripting.battleStyle = gSaveBlock2Ptr->optionsBattleStyle;
+    // Nobody to ask "Will you switch?" in a battle the player only watches.
+    if (Rovers_IsWatching())
+        gBattleScripting.battleStyle = OPTIONS_BATTLE_STYLE_SET;
     #if TESTING
     gBattleScripting.battleStyle = OPTIONS_BATTLE_STYLE_SET;
     #endif
@@ -3142,6 +3147,7 @@ static void DoBattleIntro(void)
                 memcpy(&gBattleMons[battler], &gBattleResources->bufferB[battler][4], sizeof(struct BattlePokemon));
                 gBattleMons[battler].types[0] = GetSpeciesType(gBattleMons[battler].species, 0);
                 gBattleMons[battler].types[1] = GetSpeciesType(gBattleMons[battler].species, 1);
+                BreedFusion_SetBattlerTypes(&GetBattlerMon(battler)->box, gBattleMons[battler].species, gBattleMons[battler].types);
                 gBattleMons[battler].types[2] = TYPE_MYSTERY;
                 gBattleMons[battler].ability = GetAbilityBySpecies(gBattleMons[battler].species, gBattleMons[battler].abilityNum);
                 gBattleStruct->battlerState[battler].hpOnSwitchout = gBattleMons[battler].hp;
@@ -5564,6 +5570,7 @@ enum Type GetDynamicMoveType(struct Pokemon *mon, enum Move move, enum BattlerId
         ability = GetMonAbility(mon);
         types[0] = GetSpeciesType(species, 0);
         types[1] = GetSpeciesType(species, 1);
+        BreedFusion_SetBattlerTypes(&mon->box, species, types);
         types[2] = TYPE_MYSTERY;
         gimmick = GIMMICK_NONE;
     }

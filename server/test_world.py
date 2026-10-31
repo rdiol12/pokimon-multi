@@ -51,6 +51,34 @@ class WorldTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(await c.recv(), f"LOOK {a.id} 16409 0 6")
         self.assertEqual(await c.recv(), f"HOUSE {a.id} 1 0303" + "00" * 14)
         self.assertTrue((await c.recv()).startswith("HUNT "))
+        self.assertTrue((await c.recv()).startswith("CLOCK "))
+
+    async def test_everyone_gets_the_same_clock(self):
+        a = await self.connect("Ash")
+        b = await self.connect("Misty")
+        await a.send("CLOCK")
+        await b.send("CLOCK")
+        ta = int((await a.recv()).split()[1])
+        tb = int((await b.recv()).split()[1])
+        self.assertLessEqual(abs(ta - tb), 1)
+        self.assertTrue(0 <= ta < 86400)
+
+    def test_clock_follows_the_configured_offset(self):
+        noon_utc = 1700000000 - 1700000000 % 86400 + 12 * 3600
+        old = os.environ.get("NETPLAY_CLOCK_UTC_OFFSET")
+        try:
+            os.environ["NETPLAY_CLOCK_UTC_OFFSET"] = "120"
+            self.assertEqual(world.clock_seconds(noon_utc), 14 * 3600)
+            self.assertEqual(world.time_of_day(noon_utc), world.DAY)
+            os.environ["NETPLAY_CLOCK_UTC_OFFSET"] = "540"  # 21:00
+            self.assertEqual(world.time_of_day(noon_utc), world.NIGHT)
+            os.environ["NETPLAY_CLOCK_UTC_OFFSET"] = "-300"  # 7:00
+            self.assertEqual(world.time_of_day(noon_utc), world.MORNING)
+        finally:
+            if old is None:
+                os.environ.pop("NETPLAY_CLOCK_UTC_OFFSET", None)
+            else:
+                os.environ["NETPLAY_CLOCK_UTC_OFFSET"] = old
 
     async def test_board_keeps_each_players_best(self):
         a = await self.connect("Ash")
