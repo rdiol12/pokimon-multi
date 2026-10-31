@@ -147,7 +147,12 @@
     "FrostveinCave_B1F",
     "SunscarDesert",
     "SunscarRuins_Hall",
-    "SunscarRuins_Vault"
+    "SunscarRuins_Vault",
+    "Hollowmere",
+    "Hollowmere_Inn",
+    "Hollowmere_House",
+    "Hollowmere_Manor_1F",
+    "Hollowmere_Manor_2F"
   ],
   "gMapGroup_IndoorLittleroot": [
     "LittlerootTown_BrendansHouse_1F",

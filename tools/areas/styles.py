@@ -102,3 +102,13 @@ def ruins():
                       0x208, 0x209, 0x20A, 0x218, 0x21A, 0x180, 0x189, 0x190, 0x181, 0x156, 0x147, 0x192}
         _cache['ruins'] = st
     return _cache['ruins']
+
+
+def town():
+    """Littleroot, Oldale and Petalburg with Routes 101-103: Hoenn's small towns."""
+    if 'town' not in _cache:
+        _cache['town'] = Style('gTileset_General', 'gTileset_Petalburg',
+                               ['LAYOUT_PETALBURG_CITY', 'LAYOUT_OLDALE_TOWN', 'LAYOUT_LITTLEROOT_TOWN',
+                                'LAYOUT_ROUTE101', 'LAYOUT_ROUTE102', 'LAYOUT_ROUTE103'],
+                               wall_classes={'T': TREES}, colors=True)
+    return _cache['town']

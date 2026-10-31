@@ -118,6 +118,26 @@ Mauville City leads you there once you have Winona's badge.
   Trapinch, Cacnea, Hippopotas, Baltoy, Silicobra, Gible, Sigilyph…).
 - Map ids: MAP_SUNSCAR_DESERT, MAP_SUNSCAR_RUINS_HALL, MAP_SUNSCAR_RUINS_VAULT.
 
+## Hollowmere and Hollowmere Manor
+
+An abandoned town in the fog that only appears at night. An old ferryman
+in Lilycove City rows you there, but only at night and only once you have
+the Mind Badge (`gettimeofday`).
+
+- Quest: the caretaker's four little ghosts have wandered off: a Gastly
+  and a Duskull in town, a Shuppet in a house and a Misdreavus in the
+  manor. Talk to each to send it home. With all four home she gives a
+  Spell Tag and the Manor Key, and the butler steps aside from the stairs.
+- Hollowmere Manor is dark (it needs Flash to see far). Portraits whose
+  eyes follow you, Gentleman Mortimer, and upstairs the master's doll
+  collection, Hex Maniac Elvira, a Reaper Cloth and a Mimikyu (Lv40).
+- An inn where a ghostly keeper lets you rest, a Drifloon that wants to
+  hold your hand, Hex Maniac Vesper and Psychic Luna, TM Shadow Ball, Dusk
+  Stone, Rare Candy, Max Elixir and hidden items. Wild ghosts Lv37–42,
+  Frillish and Jellicent in the pond.
+- The manor reuses the Lilycove Museum layouts with new events. Map ids:
+  MAP_HOLLOWMERE, _INN, _HOUSE, _MANOR_1F, _MANOR_2F.
+
 ## How the maps are made
 
 - `tools/areas/tiles.py` renders any tileset or layout to PNG.
