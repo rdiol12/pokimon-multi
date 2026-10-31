@@ -1,6 +1,6 @@
 # XcodeGen spec for the iOS app: `xcodegen generate` in mobile/ios makes
 # PokimonMulti.xcodeproj. The web app (mobile/dist, from `npm run assemble`)
-# is bundled as the www folder.
+# is bundled as the dist folder, which BundleSchemeHandler serves.
 name: PokimonMulti
 options:
   bundleIdPrefix: io.github.rdiol12
@@ -17,7 +17,6 @@ targets:
     sources:
       - path: PokimonMulti
       - path: ../dist
-        name: www
         type: folder
         buildPhase: resources
     info:

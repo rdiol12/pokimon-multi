@@ -50,9 +50,14 @@ EWRAM_DATA static u8 sBattleScene = 0;
 EWRAM_DATA static u8 sTextSpeed = 0;
 EWRAM_DATA static u32 sBattleFlags = 0;
 EWRAM_DATA static u64 sAI_Scripts[MAX_BATTLERS_COUNT] = {0};
+// The last online battle's recording, which src/netplay_ext_features.c
+// uploads as a replay. Its parties double as the saved parties: the parties
+// as a link battle began, or the player's own while a recording plays back.
 // Not on the heap: CB2_InitBattle resets the heap, so a copy made before a
 // recorded battle starts (PlayRecordedBattle) wouldn't survive it.
-EWRAM_DATA static struct Pokemon sSavedParties[MAX_BATTLE_TRAINERS][PARTY_SIZE] = {0};
+EWRAM_DATA static struct RecordedBattleSave sLinkReplay = {0};
+#define sSavedParties sLinkReplay.parties
+EWRAM_DATA static u8 sSavedPartiesStamp = 0; // bumped whenever sSavedParties changes
 EWRAM_DATA static u16 sPlayerMonMoves[MAX_BATTLERS_COUNT / 2][MAX_MON_MOVES] = {0};
 EWRAM_DATA static struct PlayerInfo sPlayers[MAX_LINK_PLAYERS] = {0};
 EWRAM_DATA static bool8 sIsPlaybackFinished = 0;
@@ -71,6 +76,7 @@ static void RecordedBattle_RestoreSavedParties(void);
 static void CB2_RecordedBattle(void);
 static void Task_StartAfterCountdown(u8 taskId);
 static bool32 IsRecordedBattleSaveValid(struct RecordedBattleSave *save);
+static void BuildSaveHeader(struct RecordedBattleSave *battleSave);
 
 void RecordedBattle_Init(u8 mode)
 {
@@ -311,18 +317,27 @@ bool32 MoveRecordedBattleToSaveData(void)
 
 // An online battle's recording, with both parties as they were when the
 // battle began (src/netplay_ext_features.c uploads it as a replay).
-void RecordedBattle_BuildLinkReplay(struct RecordedBattleSave *battleSave)
+// It's built in place: the parties are already there (sSavedParties).
+const struct RecordedBattleSave *RecordedBattle_BuildLinkReplay(void)
 {
     s32 i;
+    struct RecordedBattleSave *battleSave = &sLinkReplay;
 
-    memset(battleSave, 0, sizeof(*battleSave));
-    RecordedBattle_BuildSave(battleSave);
-    memcpy(battleSave->parties, sSavedParties, sizeof(battleSave->parties));
+    memset(battleSave->playersName, 0, sizeof(*battleSave) - offsetof(struct RecordedBattleSave, playersName));
+    BuildSaveHeader(battleSave);
     // The battlers are recorded before the link sets them; take them now.
     battleSave->playersBattlers = 0;
     for (i = 0; i < MAX_LINK_PLAYERS; i++)
         battleSave->playersBattlers |= ((gLinkPlayers[i].id & 3) << (2 * (i >> 1) + 4 * (i & BIT_SIDE)));
     battleSave->checksum = CalcByteArraySum((void *)battleSave, sizeof(*battleSave) - 4);
+    return battleSave;
+}
+
+// Changes whenever the replay's parties do (a link battle starts, or a
+// recording plays back and keeps the player's parties there).
+u8 RecordedBattle_LinkReplayStamp(void)
+{
+    return sSavedPartiesStamp;
 }
 
 // Plays back a recording that isn't in the save, such as a downloaded replay.
@@ -344,9 +359,14 @@ bool32 PlayRecordedBattleFromSave(struct RecordedBattleSave *battleSave, void (*
 
 void RecordedBattle_BuildSave(struct RecordedBattleSave *battleSave)
 {
-    s32 i, j;
-
     memcpy(battleSave->parties, gParties, sizeof(struct Pokemon[MAX_BATTLE_TRAINERS][PARTY_SIZE]));
+    BuildSaveHeader(battleSave);
+}
+
+// Everything but the parties.
+static void BuildSaveHeader(struct RecordedBattleSave *battleSave)
+{
+    s32 i, j;
 
     battleSave->playersGender = 0;
 
@@ -632,6 +652,7 @@ u8 GetRecordedBattleFronterBrainSymbol(void)
 void RecordedBattle_SaveParties(void)
 {
     memcpy(sSavedParties, gParties, sizeof(sSavedParties));
+    sSavedPartiesStamp++;
 }
 
 static void RecordedBattle_RestoreSavedParties(void)
