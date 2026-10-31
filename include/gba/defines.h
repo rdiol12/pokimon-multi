@@ -53,6 +53,16 @@
 #define PKX_ID               0x504B
 #define PKX_UNLOCK_EWRAM     0x4558
 #define PKX_CONTROL_EWRAM    0x0001
+// Version 2: extra sprite palettes and sprite slots, in the extended video region
+#define PKX_ENABLE_OBJ       0x4F41
+#define PKX_DISABLE_OBJ      0x4F40
+#define PKX_CONTROL_OBJ      0x0002
+#define PKX_VIDEO            0x1000000
+#define PKX_OBJ_PLTT         (PKX_VIDEO + 0x0000) // sprite palettes 16..63
+#define PKX_OAM              (PKX_VIDEO + 0x1000) // 512 OAM entries; 0..127 are ignored (the normal OAM is used)
+#define PKX_OAM_ATTR         (PKX_VIDEO + 0x2000) // one byte per OAM entry 0..511: bits 0-1 = palette bank
+#define PKX_OBJ_PALETTES     64
+#define PKX_OAM_ENTRIES      512
 #define IWRAM_START 0x03000000
 #define IWRAM_END   (IWRAM_START + 0x8000)
 

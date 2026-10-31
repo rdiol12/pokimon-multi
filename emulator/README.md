@@ -6,8 +6,8 @@ releases stay a `.bps` patch against the player's own ROM. The fork is upstream 
 the commit in `MGBA_COMMIT` plus the patches in `patches/`, under mGBA's MPL-2.0 licence.
 It contains no Nintendo code or data.
 
-Why: the GBA's 256 KiB of EWRAM was 96% full, and the 16 palettes and 128 sprite slots
-were blocking features. See the plan doc linked from the project thread
+Why: the GBA's 256 KiB of EWRAM was 96% full, and the 16 sprite palettes and 128 sprite
+slots were blocking features. See the plan doc linked from the project thread
 "Port the game off the GBA".
 
 ## Building
@@ -30,9 +30,10 @@ tests link the harness against `build/emulator/headless/libmgba.so`.
 | Address      | Access | Value                                                        |
 | ------------ | ------ | ------------------------------------------------------------ |
 | `0x04FFF7F0` | read   | `0x504B` ("PK") on our hardware                              |
-| `0x04FFF7F2` | read   | hardware version, currently `1`                              |
+| `0x04FFF7F2` | read   | hardware version, currently `2`                              |
 | `0x04FFF7F4` | write  | `0x4558` ("EX") unlocks extended EWRAM until the next reset  |
-| `0x04FFF7F4` | read   | bit 0 set once extended EWRAM is unlocked                    |
+| `0x04FFF7F4` | write  | `0x4F41` turns extended sprites on, `0x4F40` turns them off  |
+| `0x04FFF7F4` | read   | bit 0: extended EWRAM unlocked; bit 1: extended sprites on   |
 
 These sit next to mGBA's own debug registers (`0x04FFF600`–`0x04FFF780`), in I/O space a
 real GBA leaves unused, so writes there are harmless elsewhere.
@@ -59,7 +60,42 @@ real GBA leaves unused, so writes there are harmless elsewhere.
 - Initialised data (`EWRAM_INIT`) can't go there yet. Use `EWRAM_EXT_DATA` and set the
   values at runtime.
 
+### Extended sprites (version 2)
+
+Region `0x01000000` (unused on a real GBA) holds extra video memory:
+
+| Address      | Size         | Contents                                                  |
+| ------------ | ------------ | --------------------------------------------------------- |
+| `0x01000000` | `0x600`      | sprite palettes 16..63 (16 colors each, same format as PLTT) |
+| `0x01001000` | 512 × 8      | OAM entries; entries 0..127 here are ignored               |
+| `0x01002000` | 512          | one attribute byte per OAM entry 0..511                   |
+
+- While extended sprites are on, the renderer draws OAM entries 0..127 from the normal
+  OAM and entries 128..511 from `0x01001400` on. Lower numbers still draw on top.
+- Attribute bits 0-1 are the entry's palette bank: a 16-color sprite uses palette
+  `bank * 16 + paletteNum`. Bank 0 is the normal 16 palettes, so old code is unaffected.
+- Rotation/scaling matrices stay the 32 in the normal OAM.
+- There is no per-scanline sprite limit while extended sprites are on.
+- 256-color sprites ignore the bank. Background palettes are not extended.
+- Only the software renderer draws them (the default, and what the phone app uses), not
+  the OpenGL renderer. Savestates keep all of it.
+
+In the game:
+
+- `InitPkxObj` (src/sprite.c) turns extended sprites on at boot when the version is at
+  least 2. Without it everything behaves like before (64 sprites, 16 palettes).
+- `MAX_SPRITES` is 128. Sprites go into the normal OAM first (up to `gOamLimit`, 64) and
+  overflow into entries 128..511.
+- Sprite palette slots 16..63 are handed out only once the normal 16 are full.
+  `OBJ_PLTT_ID(slot)` works for every slot: the palette buffers are 0x300 colors longer
+  and `TransferPlttBuffer` copies the extra ones to `0x01000000`.
+- A sprite's palette slot is `GetSpritePaletteSlot(sprite)` and is set with
+  `SetSpritePaletteSlot(sprite, slot)`. Don't read or write `sprite->oam.paletteNum`
+  directly, because it only holds the low 4 bits.
+- Fades, time-of-day blending and weather apply to the extra palettes whenever they
+  apply to all 16 normal sprite palettes.
+
 ## Planned (later versions)
 
-More sprite and background palettes, more OAM slots without the per-line sprite limit,
-more VRAM, a CPU overclock, a ROM larger than 32 MiB and a larger save.
+More background palettes, more VRAM, a CPU overclock, a ROM larger than 32 MiB and a
+larger save.

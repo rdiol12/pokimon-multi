@@ -8,6 +8,7 @@
 #include "bg.h"
 #include "rtc.h"
 #include "scanline_effect.h"
+#include "sprite.h"
 #include "overworld.h"
 #include "play_time.h"
 #include "random.h"
@@ -107,6 +108,7 @@ static void CheckExtendedHardware(void)
 void AgbMain(void)
 {
     CheckExtendedHardware();
+    InitPkxObj();
     *(vu16 *)BG_PLTT = RGB_WHITE; // Set the backdrop to white on startup
     InitGpuRegManager();
     REG_WAITCNT = WAITCNT_PREFETCH_ENABLE

@@ -167,7 +167,7 @@ static u16 CreatePicSprite(u16 species, bool8 isShiny, u32 personality, bool8 is
     LoadPicPaletteByTagOrSlot(species, isShiny, personality, paletteSlot, paletteTag, isTrainer);
     spriteId = CreateSprite(&sCreatingSpriteTemplate, x, y, 0);
     if (paletteTag == TAG_NONE)
-        gSprites[spriteId].oam.paletteNum = paletteSlot;
+        SetSpritePaletteSlot(&gSprites[spriteId], paletteSlot);
     sSpritePics[i].frames = framePics;
     sSpritePics[i].images = images;
     sSpritePics[i].paletteTag = paletteTag;
@@ -245,7 +245,7 @@ u16 CreateMonPicSprite_Affine(enum Species species, bool8 isShiny, u32 personali
     LoadPicPaletteByTagOrSlot(species, isShiny, personality, paletteSlot, paletteTag, FALSE);
     spriteId = CreateSprite(&sCreatingSpriteTemplate, x, y, 0);
     if (paletteTag == TAG_NONE)
-        gSprites[spriteId].oam.paletteNum = paletteSlot;
+        SetSpritePaletteSlot(&gSprites[spriteId], paletteSlot);
     sSpritePics[i].frames = framePics;
     sSpritePics[i].images = images;
     sSpritePics[i].paletteTag = paletteTag;
@@ -271,7 +271,7 @@ static u16 FreeAndDestroyPicSpriteInternal(u16 spriteId, bool8 clearPalette)
     framePics = sSpritePics[i].frames;
     images = sSpritePics[i].images;
     if (clearPalette && sSpritePics[i].paletteTag != TAG_NONE)
-        FreeSpritePaletteByTag(GetSpritePaletteTagByPaletteNum(gSprites[spriteId].oam.paletteNum));
+        FreeSpritePaletteByTag(GetSpritePaletteTagByPaletteNum(GetSpritePaletteSlot(&gSprites[spriteId])));
     DestroySprite(&gSprites[spriteId]);
     Free(framePics);
     Free(images);

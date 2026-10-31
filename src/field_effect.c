@@ -901,7 +901,7 @@ void FieldEffectScript_CallNative(u8 **script, u32 *val)
 void FieldEffectFreeGraphicsResources(struct Sprite *sprite)
 {
     u16 sheetTileStart = sprite->sheetTileStart;
-    u32 paletteNum = sprite->oam.paletteNum;
+    u32 paletteNum = GetSpritePaletteSlot(sprite);
     DestroySprite(sprite);
     FieldEffectFreeTilesIfUnused(sheetTileStart);
     FieldEffectFreePaletteIfUnused(paletteNum);
@@ -935,7 +935,7 @@ void FieldEffectFreePaletteIfUnused(u8 paletteNum)
     if (tag != TAG_NONE)
     {
         for (i = 0; i < MAX_SPRITES; i++)
-            if (gSprites[i].inUse && gSprites[i].oam.paletteNum == paletteNum)
+            if (gSprites[i].inUse && GetSpritePaletteSlot(&gSprites[i]) == paletteNum)
                 return;
         ResetPaletteColorMapType(paletteNum + 16);
         FreeSpritePaletteByTag(tag);
@@ -1041,7 +1041,7 @@ u8 CreateMonSprite_PicBox(enum Species species, s16 x, s16 y, u8 subpriority)
 u8 CreateMonSprite_FieldMove(enum Species species, bool8 isShiny, u32 personality, s16 x, s16 y, u8 subpriority)
 {
     u16 spriteId = CreateMonPicSprite(species, isShiny, personality, TRUE, x, y, 0, species);
-    PreservePaletteInWeather(gSprites[spriteId].oam.paletteNum + 0x10);
+    PreservePaletteInWeather(GetSpritePaletteSlot(&gSprites[spriteId]) + 0x10);
     if (spriteId == 0xFFFF)
         return MAX_SPRITES;
     else
@@ -1050,7 +1050,7 @@ u8 CreateMonSprite_FieldMove(enum Species species, bool8 isShiny, u32 personalit
 
 void FreeResourcesAndDestroySprite(struct Sprite *sprite, u8 spriteId)
 {
-    u8 paletteNum = sprite->oam.paletteNum;
+    u8 paletteNum = GetSpritePaletteSlot(sprite);
     ResetPreservedPalettesInWeather();
     if (sprite->oam.affineMode != ST_OAM_AFFINE_OFF)
     {
@@ -3444,7 +3444,7 @@ u8 FldEff_RayquazaSpotlight(void)
     struct Sprite *sprite = &gSprites[spriteId];
 
     sprite->oam.priority = 1;
-    sprite->oam.paletteNum = 4;
+    SetSpritePaletteSlot(sprite, 4);
     sprite->data[0] = 0;
     sprite->data[1] = 0;
     sprite->data[2] = 0;
@@ -3479,7 +3479,7 @@ u8 FldEff_NPCFlyOut(void)
     u8 spriteId = CreateSprite(gFieldEffectObjectTemplatePointers[FLDEFFOBJ_BIRD], 0x78, 0, 1);
     struct Sprite *sprite = &gSprites[spriteId];
 
-    sprite->oam.paletteNum = LoadPlayerObjectEventPalette(gSaveBlock2Ptr->playerGender);
+    SetSpritePaletteSlot(sprite, LoadPlayerObjectEventPalette(gSaveBlock2Ptr->playerGender));
     sprite->oam.priority = 1;
     sprite->callback = SpriteCB_NPCFlyOut;
     sprite->data[1] = gFieldEffectArguments[0];
@@ -3662,7 +3662,7 @@ static u8 CreateFlyBirdSprite(void)
     struct Sprite *sprite;
     spriteId = CreateSprite(gFieldEffectObjectTemplatePointers[FLDEFFOBJ_BIRD], 0xff, 0xb4, 0x1);
     sprite = &gSprites[spriteId];
-    sprite->oam.paletteNum = LoadPlayerObjectEventPalette(gSaveBlock2Ptr->playerGender);
+    SetSpritePaletteSlot(sprite, LoadPlayerObjectEventPalette(gSaveBlock2Ptr->playerGender));
     sprite->oam.priority = 1;
     sprite->callback = SpriteCB_FlyBirdLeaveBall;
     return spriteId;
@@ -4164,7 +4164,7 @@ static void CreateDeoxysRockFragments(struct Sprite *sprite)
         {
             StartSpriteAnim(&gSprites[spriteId], i);
             gSprites[spriteId].data[0] = i;
-            gSprites[spriteId].oam.paletteNum = sprite->oam.paletteNum;
+            SetSpritePaletteSlot(&gSprites[spriteId], GetSpritePaletteSlot(sprite));
         }
     }
 }
@@ -4312,7 +4312,7 @@ static u8 CreateRockClimbBlob(void)
     {
         sprite = &gSprites[spriteId];
         sprite->coordOffsetEnabled = TRUE;
-        sprite->oam.paletteNum = LoadPlayerObjectEventPalette(gSaveBlock2Ptr->playerGender);
+        SetSpritePaletteSlot(sprite, LoadPlayerObjectEventPalette(gSaveBlock2Ptr->playerGender));
         sprite->data[2] = gFieldEffectArguments[2];
         sprite->data[3] = -1;
         sprite->data[6] = -1;

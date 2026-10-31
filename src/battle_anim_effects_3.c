@@ -3405,7 +3405,7 @@ void AnimTask_RolePlaySilhouette(u8 taskId)
 
     gSprites[spriteId].oam.priority = priority;
     gSprites[spriteId].oam.objMode = ST_OAM_OBJ_BLEND;
-    FillPalette(RGB_WHITE, OBJ_PLTT_ID(gSprites[spriteId].oam.paletteNum), PLTT_SIZE_4BPP);
+    FillPalette(RGB_WHITE, OBJ_PLTT_ID(GetSpritePaletteSlot(&gSprites[spriteId])), PLTT_SIZE_4BPP);
     gSprites[spriteId].oam.priority = priority;
     SetGpuReg(REG_OFFSET_BLDCNT, BLDCNT_EFFECT_BLEND | BLDCNT_TGT2_ALL);
     SetGpuReg(REG_OFFSET_BLDALPHA, BLDALPHA_BLEND(gTasks[taskId].data[1], 16 - gTasks[taskId].data[1]));
@@ -4039,7 +4039,7 @@ void AnimTask_FacadeColorBlend(u8 taskId)
     gTasks[taskId].data[0] = 0;
     gTasks[taskId].data[1] = gBattleAnimArgs[1];
     spriteId = GetAnimBattlerSpriteId(animBattler);
-    gTasks[taskId].data[2] = OBJ_PLTT_ID(gSprites[spriteId].oam.paletteNum);
+    gTasks[taskId].data[2] = OBJ_PLTT_ID(GetSpritePaletteSlot(&gSprites[spriteId]));
     gTasks[taskId].func = AnimTask_FacadeColorBlend_Step;
 }
 
@@ -5308,7 +5308,7 @@ void AnimTask_SnatchOpposingMonMove(u8 taskId)
 
         spriteId2 = CreateAdditionalMonSpriteForMoveAnim(species, isBackPic, 0, x, GetBattlerSpriteCoord(gBattleAnimTarget, BATTLER_COORD_Y), subpriority, personality, isShiny, gBattleAnimAttacker);
         if (gBattleSpritesDataPtr->battlerData[gBattleAnimAttacker].transformSpecies != SPECIES_NONE)
-            BlendPalette(OBJ_PLTT_ID(gSprites[spriteId2].oam.paletteNum), 16, 6, RGB_WHITE);
+            BlendPalette(OBJ_PLTT_ID(GetSpritePaletteSlot(&gSprites[spriteId2])), 16, 6, RGB_WHITE);
 
         gTasks[taskId].data[15] = spriteId2;
         gTasks[taskId].data[0]++;

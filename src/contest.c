@@ -3191,7 +3191,7 @@ static u8 CreateJudgeSprite(void)
     LoadCompressedSpriteSheet(&sSpriteSheet_Judge);
     LoadPalette(gContest2Pal, OBJ_PLTT_ID(1), PLTT_SIZE_4BPP);
     spriteId = CreateSprite(&sSpriteTemplate_Judge, 112, 36, 30);
-    gSprites[spriteId].oam.paletteNum = 1;
+    SetSpritePaletteSlot(&gSprites[spriteId], 1);
     gSprites[spriteId].callback = SpriteCallbackDummy;
     return spriteId;
 }
@@ -3219,11 +3219,11 @@ static u8 CreateContestantSprite(enum Species species, bool8 isShiny, u32 person
     SetMultiuseSpriteTemplateToPokemon(species, B_POSITION_PLAYER_LEFT);
 
     spriteId = CreateSprite(&gMultiuseSpriteTemplate, 0x70, GetBattlerSpriteFinal_Y(2, species, FALSE), 30);
-    gSprites[spriteId].oam.paletteNum = 2;
+    SetSpritePaletteSlot(&gSprites[spriteId], 2);
     gSprites[spriteId].oam.priority = 2;
     gSprites[spriteId].subpriority = GetBattlerSpriteSubpriority(2);
     gSprites[spriteId].callback = SpriteCallbackDummy;
-    gSprites[spriteId].data[0] = gSprites[spriteId].oam.paletteNum;
+    gSprites[spriteId].data[0] = GetSpritePaletteSlot(&gSprites[spriteId]);
     gSprites[spriteId].data[2] = species;
     if (IsSpeciesNotUnown(species))
         gSprites[spriteId].affineAnims = gAffineAnims_BattleSpriteContest;

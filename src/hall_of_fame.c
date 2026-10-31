@@ -622,7 +622,7 @@ static void Task_Hof_TryDisplayAnotherMon(u8 taskId)
     }
     else
     {
-        sHofFadePalettes |= (0x10000 << gSprites[gTasks[taskId].tMonSpriteId(currPokeID)].oam.paletteNum);
+        sHofFadePalettes |= (0x10000 << GetSpritePaletteSlot(&gSprites[gTasks[taskId].tMonSpriteId(currPokeID)]));
         if (gTasks[taskId].tDisplayedMonId < PARTY_SIZE - 1 && currMon[1].species != SPECIES_NONE) // there is another Pokémon to display
         {
             gTasks[taskId].tDisplayedMonId++;
@@ -969,7 +969,7 @@ static void Task_HofPC_PrintMonInfo(u8 taskId)
 
     currMonID = gTasks[taskId].tMonSpriteId(gTasks[taskId].tCurrMonId);
     gSprites[currMonID].oam.priority = 0;
-    sHofFadePalettes = (0x10000 << gSprites[currMonID].oam.paletteNum) ^ PALETTES_OBJECTS;
+    sHofFadePalettes = (0x10000 << GetSpritePaletteSlot(&gSprites[currMonID])) ^ PALETTES_OBJECTS;
     BlendPalettesUnfaded(sHofFadePalettes, 0xC, RGB(16, 29, 24));
 
     currMon = &savedTeams->mon[gTasks[taskId].tCurrMonId];

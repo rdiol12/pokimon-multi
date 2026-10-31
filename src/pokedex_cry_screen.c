@@ -477,7 +477,7 @@ bool8 LoadCryMeter(struct CryScreenWindow *window, u8 windowId)
 
 void FreeCryScreen(void)
 {
-    FreeSpritePaletteByTag(GetSpritePaletteTagByPaletteNum(gSprites[sCryMeterNeedle->spriteId].oam.paletteNum));
+    FreeSpritePaletteByTag(GetSpritePaletteTagByPaletteNum(GetSpritePaletteSlot(&gSprites[sCryMeterNeedle->spriteId])));
     DestroySprite(gSprites + sCryMeterNeedle->spriteId);
     FREE_AND_SET_NULL(sDexCryScreen);
     FREE_AND_SET_NULL(sCryMeterNeedle);

@@ -54,7 +54,7 @@ static void ShowPic(u16 species, bool32 shiny, u32 personality)
     if (spriteId == 0xFFFF)
         return;
     sPic.spriteId = spriteId;
-    PreservePaletteInWeather(gSprites[spriteId].oam.paletteNum + 0x10);
+    PreservePaletteInWeather(GetSpritePaletteSlot(&gSprites[spriteId]) + 0x10);
     gSprites[sPic.spriteId].callback = SpriteCallbackDummy;
     gSprites[sPic.spriteId].oam.priority = 0;
     sPic.windowId = AddWindow(&sPicWindow);

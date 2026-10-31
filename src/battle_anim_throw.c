@@ -502,14 +502,14 @@ void LoadHealthboxPalsForLevelUp(u8 *paletteId1, u8 *paletteId2, enum BattlerId 
     *paletteId1 = AllocSpritePalette(TAG_HEALTHBOX_PALS_1);
     *paletteId2 = AllocSpritePalette(TAG_HEALTHBOX_PALS_2);
 
-    offset1 = OBJ_PLTT_ID(gSprites[healthBoxSpriteId].oam.paletteNum);
-    offset2 = OBJ_PLTT_ID(gSprites[spriteId2].oam.paletteNum);
+    offset1 = OBJ_PLTT_ID(GetSpritePaletteSlot(&gSprites[healthBoxSpriteId]));
+    offset2 = OBJ_PLTT_ID(GetSpritePaletteSlot(&gSprites[spriteId2]));
     LoadPalette(&gPlttBufferUnfaded[offset1], OBJ_PLTT_ID(*paletteId1), PLTT_SIZE_4BPP);
     LoadPalette(&gPlttBufferUnfaded[offset2], OBJ_PLTT_ID(*paletteId2), PLTT_SIZE_4BPP);
 
-    gSprites[healthBoxSpriteId].oam.paletteNum = *paletteId1;
-    gSprites[spriteId1].oam.paletteNum = *paletteId1;
-    gSprites[spriteId2].oam.paletteNum = *paletteId2;
+    SetSpritePaletteSlot(&gSprites[healthBoxSpriteId], *paletteId1);
+    SetSpritePaletteSlot(&gSprites[spriteId1], *paletteId1);
+    SetSpritePaletteSlot(&gSprites[spriteId2], *paletteId2);
 }
 
 void AnimTask_LoadHealthboxPalsForLevelUp(u8 taskId)
@@ -533,9 +533,9 @@ void FreeHealthboxPalsForLevelUp(enum BattlerId battler)
     FreeSpritePaletteByTag(TAG_HEALTHBOX_PALS_2);
     paletteId1 = IndexOfSpritePaletteTag(TAG_HEALTHBOX_PAL);
     paletteId2 = IndexOfSpritePaletteTag(TAG_HEALTHBAR_PAL);
-    gSprites[healthBoxSpriteId].oam.paletteNum = paletteId1;
-    gSprites[spriteId1].oam.paletteNum = paletteId1;
-    gSprites[spriteId2].oam.paletteNum = paletteId2;
+    SetSpritePaletteSlot(&gSprites[healthBoxSpriteId], paletteId1);
+    SetSpritePaletteSlot(&gSprites[spriteId1], paletteId1);
+    SetSpritePaletteSlot(&gSprites[spriteId2], paletteId2);
 }
 
 void AnimTask_FreeHealthboxPalsForLevelUp(u8 taskId)
@@ -1250,12 +1250,12 @@ static void SpriteCB_Ball_Capture_Step(struct Sprite *sprite)
     if (sprite->sTimer == 40)
     {
         PlaySE(SE_RG_BALL_CLICK);
-        BlendPalettes(0x10000 << sprite->oam.paletteNum, 6, RGB_BLACK);
+        BlendPalettes(0x10000 << GetSpritePaletteSlot(sprite), 6, RGB_BLACK);
         MakeCaptureStars(sprite);
     }
     else if (sprite->sTimer == 60)
     {
-        BeginNormalPaletteFade(0x10000 << sprite->oam.paletteNum, 2, 6, 0, RGB_BLACK);
+        BeginNormalPaletteFade(0x10000 << GetSpritePaletteSlot(sprite), 2, 6, 0, RGB_BLACK);
     }
     else if (sprite->sTimer == 95)
     {

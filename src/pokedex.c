@@ -1535,7 +1535,7 @@ void Task_HandlePokedexInput(u8 taskId)
         {
             HandleDestroyStatBars_HGSS();
             UpdateSelectedMonSpriteId();
-            BeginNormalPaletteFade(~(1 << (gSprites[sPokedexView->selectedMonSpriteId].oam.paletteNum + 16)), 0, 0, 0x10, RGB_BLACK);
+            BeginNormalPaletteFade(~(1 << (GetSpritePaletteSlot(&gSprites[sPokedexView->selectedMonSpriteId]) + 16)), 0, 0, 0x10, RGB_BLACK);
             gSprites[sPokedexView->selectedMonSpriteId].callback = SpriteCB_MoveMonForInfoScreen;
             gTasks[taskId].func = Task_OpenInfoScreenAfterMonMovement;
             PlaySE(SE_PIN);
@@ -1755,7 +1755,7 @@ static void Task_HandleSearchResultsInput(u8 taskId)
 
             HandleDestroyStatBars_HGSS();
             UpdateSelectedMonSpriteId();
-            a = (1 << (gSprites[sPokedexView->selectedMonSpriteId].oam.paletteNum + 16));
+            a = (1 << (GetSpritePaletteSlot(&gSprites[sPokedexView->selectedMonSpriteId]) + 16));
             gSprites[sPokedexView->selectedMonSpriteId].callback = SpriteCB_MoveMonForInfoScreen;
             BeginNormalPaletteFade(~a, 0, 0, 0x10, RGB_BLACK);
             gTasks[taskId].func = Task_OpenSearchResultsInfoScreenAfterMonMovement;
@@ -3276,7 +3276,7 @@ void Task_LoadInfoScreen(u8 taskId)
             if (gTasks[taskId].tBgLoaded)
                 preservedPalettes = 0x14; // each bit represents a palette index
             if (gTasks[taskId].tMonSpriteDone)
-                preservedPalettes |= (1 << (gSprites[gTasks[taskId].tMonSpriteId].oam.paletteNum + 16));
+                preservedPalettes |= (1 << (GetSpritePaletteSlot(&gSprites[gTasks[taskId].tMonSpriteId]) + 16));
             BeginNormalPaletteFade(~preservedPalettes, 0, 16, 0, RGB_BLACK);
             SetVBlankCallback(gPokedexVBlankCB);
             gMain.state++;
@@ -3989,7 +3989,7 @@ u8 DisplayCaughtMonDexPage(enum Species species, bool32 isShiny, u32 personality
 static void LoadDexMonPalette(u32 taskId, bool32 isShiny)
 {
     const u16 *paletteData = GetMonSpritePalFromSpeciesAndPersonality(gTasks[taskId].tSpecies, isShiny, GetWordTaskArg(taskId, tPersonalityLo));
-    u32 paletteNum = gSprites[gTasks[taskId].tMonSpriteId].oam.paletteNum;
+    u32 paletteNum = GetSpritePaletteSlot(&gSprites[gTasks[taskId].tMonSpriteId]);
     LoadPalette(paletteData, OBJ_PLTT_ID(paletteNum), PLTT_SIZE_4BPP);
 }
 
@@ -5911,5 +5911,5 @@ enum Species NationalPokedexNumToSpeciesForm(enum NationalDexOrder nationalNum)
 
 void LoadSpriteSilhouettePalette(u32 spriteId)
 {
-    LoadPalette(sSizeScreenSilhouette_Pal, OBJ_PLTT_ID2(gSprites[spriteId].oam.paletteNum), PLTT_SIZE_4BPP);
+    LoadPalette(sSizeScreenSilhouette_Pal, OBJ_PLTT_ID2(GetSpritePaletteSlot(&gSprites[spriteId])), PLTT_SIZE_4BPP);
 }

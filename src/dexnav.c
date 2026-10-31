@@ -2067,7 +2067,7 @@ static void SetTypeIconPosAndPal(u8 typeId, u8 x, u8 y, u8 spriteArrayId)
 
     sprite = &gSprites[sDexNavUiDataPtr->typeIconSpriteIds[spriteArrayId]];
     StartSpriteAnim(sprite, typeId);
-    sprite->oam.paletteNum = sMoveTypeToOamPaletteNum[typeId];
+    SetSpritePaletteSlot(sprite, sMoveTypeToOamPaletteNum[typeId]);
     sprite->x = x + 16;
     sprite->y = y + 8;
     SetSpriteInvisibility(spriteArrayId, FALSE);
