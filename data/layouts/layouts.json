@@ -9464,6 +9464,16 @@
       "secondary_tileset": "gTileset_Cave",
       "border_filepath": "data/layouts/SunscarRuins_Vault/border.bin",
       "blockdata_filepath": "data/layouts/SunscarRuins_Vault/map.bin"
+    },
+    {
+      "id": "LAYOUT_HOLLOWMERE",
+      "name": "Hollowmere_Layout",
+      "width": 44,
+      "height": 40,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Petalburg",
+      "border_filepath": "data/layouts/Hollowmere/border.bin",
+      "blockdata_filepath": "data/layouts/Hollowmere/map.bin"
     }
   ]
 }

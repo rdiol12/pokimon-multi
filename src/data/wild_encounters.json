@@ -38663,6 +38663,229 @@
               }
             ]
           }
+        },
+        {
+          "map": "MAP_HOLLOWMERE",
+          "base_label": "gHollowmere",
+          "land_mons": {
+            "encounter_rate": 20,
+            "mons": [
+              {
+                "min_level": 37,
+                "max_level": 39,
+                "species": "SPECIES_GASTLY"
+              },
+              {
+                "min_level": 37,
+                "max_level": 39,
+                "species": "SPECIES_MISDREAVUS"
+              },
+              {
+                "min_level": 37,
+                "max_level": 39,
+                "species": "SPECIES_DUSKULL"
+              },
+              {
+                "min_level": 37,
+                "max_level": 39,
+                "species": "SPECIES_SHUPPET"
+              },
+              {
+                "min_level": 37,
+                "max_level": 39,
+                "species": "SPECIES_PHANTUMP"
+              },
+              {
+                "min_level": 37,
+                "max_level": 39,
+                "species": "SPECIES_PUMPKABOO"
+              },
+              {
+                "min_level": 37,
+                "max_level": 39,
+                "species": "SPECIES_LITWICK"
+              },
+              {
+                "min_level": 37,
+                "max_level": 39,
+                "species": "SPECIES_DRIFLOON"
+              },
+              {
+                "min_level": 38,
+                "max_level": 40,
+                "species": "SPECIES_YAMASK"
+              },
+              {
+                "min_level": 38,
+                "max_level": 40,
+                "species": "SPECIES_GREAVARD"
+              },
+              {
+                "min_level": 40,
+                "max_level": 41,
+                "species": "SPECIES_HAUNTER"
+              },
+              {
+                "min_level": 41,
+                "max_level": 42,
+                "species": "SPECIES_MISMAGIUS"
+              }
+            ]
+          },
+          "water_mons": {
+            "encounter_rate": 4,
+            "mons": [
+              {
+                "min_level": 30,
+                "max_level": 35,
+                "species": "SPECIES_BASCULIN"
+              },
+              {
+                "min_level": 35,
+                "max_level": 40,
+                "species": "SPECIES_FRILLISH"
+              },
+              {
+                "min_level": 35,
+                "max_level": 40,
+                "species": "SPECIES_FRILLISH"
+              },
+              {
+                "min_level": 38,
+                "max_level": 42,
+                "species": "SPECIES_JELLICENT"
+              },
+              {
+                "min_level": 38,
+                "max_level": 42,
+                "species": "SPECIES_JELLICENT"
+              }
+            ]
+          },
+          "fishing_mons": {
+            "encounter_rate": 20,
+            "mons": [
+              {
+                "min_level": 10,
+                "max_level": 30,
+                "species": "SPECIES_MAGIKARP"
+              },
+              {
+                "min_level": 10,
+                "max_level": 30,
+                "species": "SPECIES_FEEBAS"
+              },
+              {
+                "min_level": 25,
+                "max_level": 30,
+                "species": "SPECIES_BASCULIN"
+              },
+              {
+                "min_level": 25,
+                "max_level": 30,
+                "species": "SPECIES_FRILLISH"
+              },
+              {
+                "min_level": 25,
+                "max_level": 30,
+                "species": "SPECIES_BARBOACH"
+              },
+              {
+                "min_level": 30,
+                "max_level": 35,
+                "species": "SPECIES_FRILLISH"
+              },
+              {
+                "min_level": 30,
+                "max_level": 35,
+                "species": "SPECIES_WHISCASH"
+              },
+              {
+                "min_level": 30,
+                "max_level": 35,
+                "species": "SPECIES_JELLICENT"
+              },
+              {
+                "min_level": 35,
+                "max_level": 38,
+                "species": "SPECIES_JELLICENT"
+              },
+              {
+                "min_level": 35,
+                "max_level": 40,
+                "species": "SPECIES_GYARADOS"
+              }
+            ]
+          }
+        },
+        {
+          "map": "MAP_HOLLOWMERE_MANOR_1F",
+          "base_label": "gHollowmereManor1F",
+          "land_mons": {
+            "encounter_rate": 6,
+            "mons": [
+              {
+                "min_level": 38,
+                "max_level": 40,
+                "species": "SPECIES_GASTLY"
+              },
+              {
+                "min_level": 38,
+                "max_level": 40,
+                "species": "SPECIES_SHUPPET"
+              },
+              {
+                "min_level": 38,
+                "max_level": 40,
+                "species": "SPECIES_SINISTEA"
+              },
+              {
+                "min_level": 38,
+                "max_level": 40,
+                "species": "SPECIES_HONEDGE"
+              },
+              {
+                "min_level": 38,
+                "max_level": 40,
+                "species": "SPECIES_SABLEYE"
+              },
+              {
+                "min_level": 40,
+                "max_level": 41,
+                "species": "SPECIES_HAUNTER"
+              },
+              {
+                "min_level": 40,
+                "max_level": 41,
+                "species": "SPECIES_BANETTE"
+              },
+              {
+                "min_level": 40,
+                "max_level": 41,
+                "species": "SPECIES_DUSCLOPS"
+              },
+              {
+                "min_level": 38,
+                "max_level": 40,
+                "species": "SPECIES_MISDREAVUS"
+              },
+              {
+                "min_level": 38,
+                "max_level": 40,
+                "species": "SPECIES_LITWICK"
+              },
+              {
+                "min_level": 42,
+                "max_level": 42,
+                "species": "SPECIES_POLTEAGEIST"
+              },
+              {
+                "min_level": 42,
+                "max_level": 42,
+                "species": "SPECIES_DOUBLADE"
+              }
+            ]
+          }
         }
       ]
     },
