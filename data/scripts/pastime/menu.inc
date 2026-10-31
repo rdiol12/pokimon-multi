@@ -7,6 +7,7 @@ Pastime_EventScript_Menu::
 	dynmultipush Pastime_Text_MenuMail, PASTIME_MENU_MAIL
 	dynmultipush Pastime_Text_MenuQuiz, PASTIME_MENU_QUIZ
 	dynmultipush Pastime_Text_MenuHotel, PASTIME_MENU_HOTEL
+	dynmultipush Pastime_Text_MenuCafe, PASTIME_MENU_CAFE
 	dynmultipush Pastime_Text_MenuClose, PASTIME_MENU_CLOSE
 	dynmultistack 0, 0, FALSE, 6, FALSE, PASTIME_MENU_LOST_FOUND, DYN_MULTICHOICE_CB_NONE
 	switch VAR_RESULT
@@ -16,6 +17,7 @@ Pastime_EventScript_Menu::
 	case PASTIME_MENU_MAIL, Pastime_EventScript_Mail
 	case PASTIME_MENU_QUIZ, Pastime_EventScript_Quiz
 	case PASTIME_MENU_HOTEL, Pastime_EventScript_Hotel
+	case PASTIME_MENU_CAFE, Pastime_EventScript_Cafe
 Pastime_EventScript_MenuDone::
 	releaseall
 	end
@@ -61,6 +63,11 @@ Pastime_EventScript_Hotel:
 	releaseall
 	end
 
+Pastime_EventScript_Cafe:
+	callnative Cafe_ShowList, waitstate=1
+	releaseall
+	end
+
 Pastime_Text_MenuLostFound:
 	.string "LOST & FOUND$"
 Pastime_Text_MenuMuseum:
@@ -77,5 +84,7 @@ Pastime_Text_QuizChamps:
 	.string "QUIZ CHAMPS$"
 Pastime_Text_MenuHotel:
 	.string "HOTEL$"
+Pastime_Text_MenuCafe:
+	.string "CAFE$"
 Pastime_Text_MenuClose:
 	.string "CLOSE$"

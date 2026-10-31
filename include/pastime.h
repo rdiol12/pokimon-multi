@@ -76,4 +76,11 @@ void Hotel_GetUpgrade(void);
 void Hotel_Upgrade(void);
 void Hotel_ShowList(void);
 
+// Pokémon cafe (pastime_cafe.c).
+void Pastime_OnBattleStart(void);
+void Cafe_PushMenu(void);
+void Cafe_CheckDish(void);
+void Cafe_Cook(void);
+void Cafe_ShowList(void);
+
 #endif // GUARD_PASTIME_H

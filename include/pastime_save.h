@@ -48,6 +48,10 @@ struct PastimeSaveData
     u32 hotelEarnings;  // all-time
     u16 hotelGuests;    // all-time guests served
     u16 hotelFiller2;
+    // Pokémon cafe: the dish eaten last, and battles it still lasts.
+    u8 cafeDish;
+    u8 cafeBattles;
+    u16 cafeDishesCooked;
 };
 
 #endif // GUARD_PASTIME_SAVE_H
