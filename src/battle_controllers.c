@@ -1,4 +1,6 @@
 #include "global.h"
+#include "netplay.h"
+#include "trainer_look.h"
 #include "battle.h"
 #include "battle_ai_main.h"
 #include "battle_ai_util.h"
@@ -2452,11 +2454,30 @@ void BtlController_HandleReturnMonToBall(enum BattlerId battler)
 
 #define sSpeedX data[0]
 
+// Our own back picture wears our trainer look (src/trainer_look.c); so does
+// the other player's front picture in an online one-on-one battle.
+static void RecolorForTrainerLook(enum BattlerId battler, enum TrainerPicID trainerPicId, bool32 isFront)
+{
+    u32 look;
+    u8 slot = IndexOfSpritePaletteTag(GetTrainerPicTag(trainerPicId, isFront));
+
+    if (slot == 0xFF)
+        return;
+    if (!isFront && GetBattlerPosition(battler) == B_POSITION_PLAYER_LEFT)
+        look = TrainerLook_Get();
+    else if (isFront && (gBattleTypeFlags & BATTLE_TYPE_LINK) && !(gBattleTypeFlags & BATTLE_TYPE_MULTI))
+        look = Netplay_GetPeerTrainerLook();
+    else
+        return;
+    TrainerLook_RecolorTrainerPic(OBJ_PLTT_ID(slot), trainerPicId, look);
+}
+
 void BtlController_HandleDrawTrainerPic(enum BattlerId battler, enum TrainerPicID trainerPicId, bool32 isFrontPic, s16 xPos, s16 yPos, s32 subpriority)
 {
     if (!IsOnPlayerSide(battler)) // Always the front sprite for the opponent.
     {
         DecompressTrainerFrontPic(trainerPicId, battler);
+        RecolorForTrainerLook(battler, trainerPicId, TRUE);
         SetMultiuseSpriteTemplateToTrainerFront(trainerPicId, GetBattlerPosition(battler));
         if (subpriority == -1)
             subpriority = GetBattlerSpriteSubpriority(battler);
@@ -2491,6 +2512,7 @@ void BtlController_HandleDrawTrainerPic(enum BattlerId battler, enum TrainerPicI
         else
         {
             LoadSpritePaletteWithTag(GetTrainerBackPicPalette(trainerPicId), GetTrainerPicTag(trainerPicId, FALSE));
+            RecolorForTrainerLook(battler, trainerPicId, FALSE);
             SetMultiuseSpriteTemplateToTrainerBack(trainerPicId, GetBattlerPosition(battler));
             if (subpriority == -1)
                 subpriority = GetBattlerSpriteSubpriority(battler);
@@ -2521,6 +2543,7 @@ void BtlController_HandleTrainerSlide(enum BattlerId battler, enum TrainerPicID 
     if (IsOnPlayerSide(battler))
     {
         LoadSpritePaletteWithTag(GetTrainerBackPicPalette(trainerPicId), GetTrainerPicTag(trainerPicId, FALSE));
+        RecolorForTrainerLook(battler, trainerPicId, FALSE);
         SetMultiuseSpriteTemplateToTrainerBack(trainerPicId, GetBattlerPosition(battler));
         gBattleStruct->trainerSlideSpriteIds[battler] = CreateSprite(&gMultiuseSpriteTemplate,
                                                          80,

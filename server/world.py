@@ -6,7 +6,8 @@ Safari hunts and the photo gallery.
 mGBA side is tools/netplay_bridge/netplay_world.lua.
 
 Protocol (one line each, client -> server):
-    LOOK follower mount [accessory]  what this player looks like (graphics ids; what the follower wears)
+    LOOK follower mount [accessory [trainer]]  what this player looks like (graphics ids; what the
+                                  follower wears; the trainer's colours and accessories, a u32)
     HOUSE open hexdecor           their house: open to visitors, 16 bytes
     SCORE board key value extra   a new result for a leaderboard
     WBOARD board key              ask for a leaderboard
@@ -16,7 +17,7 @@ Protocol (one line each, client -> server):
     CLOCK                         ask for the server's time of day
     WORLD                         after WELCOME: send me everyone's LOOK and HOUSE, HUNT and CLOCK
 Server -> client:
-    LOOK id follower mount        sent to everyone
+    LOOK id follower mount accessory trainer   sent to everyone
     HOUSE id open hexdecor        likewise
     WROW board rank name value extra ... WBOARDEND board myrank
     HUNT id minutesleft           id 0: no hunt
@@ -121,7 +122,7 @@ class WorldStore:
 
 class PlayerWorld:
     def __init__(self):
-        self.look = (0, 0, 0)
+        self.look = (0, 0, 0, 0)
         self.house = (0, "00" * 16)
         self.photo = bytearray()
 
@@ -138,9 +139,9 @@ def _check_hex(text, length=None):
     return text.lower()
 
 
-def cmd_look(self, player, follower, mount, accessory="0"):
+def cmd_look(self, player, follower, mount, accessory="0", trainer="0"):
     w = _world(player)
-    w.look = (int(follower) & 0xFFFF, int(mount) & 0xFFFF, int(accessory) & 0xFF)
+    w.look = (int(follower) & 0xFFFF, int(mount) & 0xFFFF, int(accessory) & 0xFF, int(trainer) & 0xFFFFFFFF)
     self.broadcast_all(f"LOOK {player.id} {' '.join(map(str, w.look))}", exclude=player)
 
 

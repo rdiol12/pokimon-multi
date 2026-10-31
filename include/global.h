@@ -624,7 +624,8 @@ struct SaveBlock2
              //u16 padding2;
     /*0x18*/ struct Pokedex pokedex;
     /*0x90*/ u8 playerStyle; // PLAYER_STYLE_* + 1, or 0 to follow playerGender
-    /*0x91*/ u8 filler_91[0x7];
+    /*0x91*/ u8 trainerLook[4]; // include/trainer_look.h, little-endian
+    /*0x95*/ u8 filler_95[0x3];
     /*0x98*/ struct Time localTimeOffset;
     /*0xA0*/ struct Time lastBerryTreeUpdate;
     /*0xA8*/ u32 gcnLinkFlags; // Read by Pokémon Colosseum/XD

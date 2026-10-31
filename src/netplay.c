@@ -1,4 +1,5 @@
 #include "global.h"
+#include "trainer_look.h"
 #include "netplay.h"
 #include "battle.h"
 #include "battle_frontier.h"
@@ -433,6 +434,22 @@ bool32 Netplay_OverworldUpdate(void)
     }
 
     return TryStartInviteScript();
+}
+
+// The trainer look (src/trainer_look.c) of the player we're in a session
+// with, if they are in a netplay slot; 0 otherwise.
+u32 Netplay_GetPeerTrainerLook(void)
+{
+    u32 i;
+
+    if (!sSession.active || sSession.peerId == 0)
+        return 0;
+    for (i = 0; i < NETPLAY_MAX_REMOTES; i++)
+    {
+        if (gNetplayMailbox.remotes[i].id == sSession.peerId)
+            return WorldOnline_GetRemoteTrainerLook(i);
+    }
+    return 0;
 }
 
 bool32 Netplay_IsNetplayObjectEvent(const struct ObjectEvent *objectEvent)

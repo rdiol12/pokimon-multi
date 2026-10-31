@@ -10,6 +10,7 @@
 #include "script.h"
 #include "string_util.h"
 #include "task.h"
+#include "trainer_look.h"
 #include "world.h"
 #include "frontier_online.h"
 #include "world_mailbox.h"
@@ -168,6 +169,20 @@ static void PublishLook(void)
     gWorldMailbox.accessory = gWorldMailbox.followerGfx != 0 ? Fashion_WornNow() : 0;
     memcpy(gWorldMailbox.decor, gSaveBlock3Ptr->world.houseDecor, sizeof(gWorldMailbox.decor));
     gWorldMailbox.houseOpen = FlagGet(FLAG_WORLD_HOUSE_OPEN);
+    gWorldMailbox.trainerLook = TrainerLook_Get();
+}
+
+// Another player's trainer look (src/trainer_look.c), by netplay slot.
+u32 WorldOnline_GetRemoteTrainerLook(u32 slot)
+{
+    u16 id;
+
+    if (slot >= NETPLAY_MAX_REMOTES)
+        return 0;
+    id = gNetplayMailbox.remotes[slot].id;
+    if (id == 0 || gWorldMailbox.remotes[slot].id != id)
+        return 0;
+    return gWorldMailbox.remoteTrainerLooks[slot];
 }
 
 static const struct WorldRemoteLook *FindLook(u16 id)

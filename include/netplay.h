@@ -313,6 +313,7 @@ void Netplay_Init(void);
 void Netplay_Update(void);
 bool32 Netplay_OverworldUpdate(void);
 bool32 Netplay_IsNetplayObjectEvent(const struct ObjectEvent *objectEvent);
+u32 Netplay_GetPeerTrainerLook(void);
 const u8 *Netplay_GetTalkScript(u8 objectEventId);
 bool32 Netplay_InSession(void);
 void Netplay_OnBattleEnd(u8 battleOutcome);

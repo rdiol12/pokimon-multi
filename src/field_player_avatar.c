@@ -27,6 +27,7 @@
 #include "strings.h"
 #include "task.h"
 #include "trainer_level.h"
+#include "trainer_look.h"
 #include "tv.h"
 #include "wild_encounter.h"
 #include "constants/abilities.h"
@@ -1838,6 +1839,7 @@ void InitPlayerAvatar(s16 x, s16 y, enum Direction direction, enum Gender gender
     objectEventId = SpawnSpecialObjectEvent(&playerObjEventTemplate);
     objectEvent = &gObjectEvents[objectEventId];
     objectEvent->isPlayer = TRUE;
+    TrainerLook_ApplyToObjectEvent(objectEvent);
     objectEvent->warpArrowSpriteId = CreateWarpArrowSprite();
     ObjectEventTurn(objectEvent, direction);
     ClearPlayerAvatarInfo();
