@@ -534,3 +534,39 @@ adds a Big Pearl, and a new best shift gets a fanfare. **R > PASTIMES >
 LIGHTHOUSE** has the shifts worked, ships guided, the best shift and
 whether tonight's shift is done. Screenshots:
 `tools/pastime_shots/lighthouse.lua`.
+
+## Bottle treasure maps
+
+![Bottle treasure maps](images/pastime-bottles.png)
+
+Once a day a bottle washes up on one of five beaches (Route 104, Route 109,
+Dewford, Slateport, Lilycove), bobbing at the water's edge; A next to it
+picks it up. Inside is one of Captain Marlow's twelve letters and a torn
+quarter of one of his three treasure maps, shown next to the letter (the
+pieces still missing are blank). The fourth piece makes a map whole: it
+names the place (Route 109, Route 132, Route 134) and its back has a riddle
+for the spot. A on the X digs up the treasure: a Pearl String, a Big Nugget
+and a Comet Shard. **R > PASTIMES > BOTTLE MAPS** lists the maps, their
+pieces, the riddle of a whole map not dug up yet, and whether today's bottle
+has been found. The bottle is a sprite of its own (not an object event);
+picking it up and digging go through `Pastime_TryInteract`. These treasures
+are separate from the daily treasure hunt of `docs/adventure.md`.
+Screenshots: `tools/pastime_shots/bottle.lua`.
+
+## Pokémon fashion
+
+![Pokémon fashion](images/pastime-fashion.png)
+
+A stylist at the Pokémon Fan Club in Slateport sells eight accessories
+(RED BOW, STRAW HAT, BLUE SCARF, FLOWER CROWN, SUNGLASSES, GOLD CROWN, BELL
+COLLAR, PARTY HAT, from ¥800 to ¥8000) and dresses the lead Pokémon in one.
+It wears it while following the player: the accessory is a sprite that
+rides on the follower's sprite (`GetFollowerObject`), with glasses and
+collars hidden from behind. The accessory belongs to that Pokémon (by its
+personality), so it comes off when another Pokémon leads. Each day the
+stylist has a theme (CUTE, COOL, NATURAL, ROYAL or FUN); TODAY'S LOOK with
+a lead Pokémon wearing an accessory of that theme wins the day's prize
+(a Heart Scale, PP Up, Star Piece, Big Pearl or Rare Candy, by the day).
+**R > PASTIMES > FASHION** lists the accessories, their themes, which are
+owned and which is worn, and today's theme. Screenshots:
+`tools/pastime_shots/fashion.lua`.

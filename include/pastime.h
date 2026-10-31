@@ -229,4 +229,22 @@ void Lighthouse_Play(void);
 void Lighthouse_Finish(void);
 void Lighthouse_ShowList(void);
 
+// Bottle treasure maps (pastime_bottle.c).
+void Bottle_Update(void);
+bool32 Bottle_TryInteract(s16 x, s16 y);
+void Bottle_Open(void);
+void Bottle_ShowMap(void);
+void Bottle_HideMap(void);
+void Bottle_Dig(void);
+void Bottle_ShowList(void);
+
+// Pokémon fashion (pastime_fashion.c).
+void Fashion_Update(void);
+void Fashion_PushBuyMenu(void);
+void Fashion_Buy(void);
+void Fashion_PushDressMenu(void);
+void Fashion_Dress(void);
+void Fashion_Judge(void);
+void Fashion_ShowList(void);
+
 #endif // GUARD_PASTIME_H

@@ -53,6 +53,7 @@ static const struct PastimeSpotList sSpotLists[] =
     {gDigSpots, 1 + DIG_SITES},
     {gAlphaSpots, ALPHA_COUNT},
     {gLighthouseSpots, 1},
+    {gFashionSpots, 1},
 };
 
 #define MAX_SHOWN (LOCALID_PASTIME_LAST - LOCALID_PASTIME_FIRST + 1)
@@ -167,12 +168,14 @@ void Pastime_Update(void)
     Star_Update();
     Track_Update();
     Festival_Update();
+    Bottle_Update();
+    Fashion_Update();
 }
 
 // A pressed facing (x, y), map coordinates with MAP_OFFSET.
 bool32 Pastime_TryInteract(s16 x, s16 y)
 {
-    return FALSE;
+    return Bottle_TryInteract(x, y);
 }
 
 // A Pokémon picture box, like showmonpic but with its own window tiles,

@@ -162,6 +162,16 @@ struct PastimeSaveData
     u16 lighthouseShips;  // ships guided past the rocks
     u8 lighthouseBest;
     u8 lighthouseFiller;
+    // Bottle treasure maps (src/pastime_bottle.c)
+    u16 bottleDay;       // day + 1 of the last bottle picked up
+    u16 bottlePieces;    // a bit per map piece found
+    u8 bottleTreasures;  // a bit per treasure dug up
+    u8 bottleFiller;
+    // Pokémon fashion (src/pastime_fashion.c)
+    u16 fashionJudgeDay;    // day + 1 of the last look judged a match
+    u32 fashionPersonality; // the Pokémon wearing fashionWorn
+    u8 fashionOwned;        // a bit per accessory bought
+    u8 fashionWorn;         // the accessory + 1, or 0
 };
 
 #endif // GUARD_PASTIME_SAVE_H

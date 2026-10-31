@@ -27,6 +27,8 @@ Pastime_EventScript_Menu::
 	dynmultipush Pastime_Text_MenuDig, PASTIME_MENU_DIG
 	dynmultipush Pastime_Text_MenuAlphas, PASTIME_MENU_ALPHAS
 	dynmultipush Pastime_Text_MenuLighthouse, PASTIME_MENU_LIGHTHOUSE
+	dynmultipush Pastime_Text_MenuBottles, PASTIME_MENU_BOTTLES
+	dynmultipush Pastime_Text_MenuFashion, PASTIME_MENU_FASHION
 	dynmultipush Pastime_Text_MenuClose, PASTIME_MENU_CLOSE
 	dynmultistack 0, 0, FALSE, 6, FALSE, PASTIME_MENU_LOST_FOUND, DYN_MULTICHOICE_CB_NONE
 	switch VAR_RESULT
@@ -56,6 +58,8 @@ Pastime_EventScript_Menu::
 	case PASTIME_MENU_DIG, Pastime_EventScript_Dig
 	case PASTIME_MENU_ALPHAS, Pastime_EventScript_Alphas
 	case PASTIME_MENU_LIGHTHOUSE, Pastime_EventScript_Lighthouse
+	case PASTIME_MENU_BOTTLES, Pastime_EventScript_Bottles
+	case PASTIME_MENU_FASHION, Pastime_EventScript_Fashion
 Pastime_EventScript_MenuDone::
 	releaseall
 	end
@@ -218,6 +222,16 @@ Pastime_EventScript_Lighthouse:
 	releaseall
 	end
 
+Pastime_EventScript_Bottles:
+	callnative Bottle_ShowList, waitstate=1
+	releaseall
+	end
+
+Pastime_EventScript_Fashion:
+	callnative Fashion_ShowList, waitstate=1
+	releaseall
+	end
+
 Pastime_Text_MenuLostFound:
 	.string "LOST & FOUND$"
 Pastime_Text_MenuMuseum:
@@ -280,5 +294,9 @@ Pastime_Text_MenuAlphas:
 	.string "ALPHAS$"
 Pastime_Text_MenuLighthouse:
 	.string "LIGHTHOUSE$"
+Pastime_Text_MenuBottles:
+	.string "BOTTLE MAPS$"
+Pastime_Text_MenuFashion:
+	.string "FASHION$"
 Pastime_Text_MenuClose:
 	.string "CLOSE$"

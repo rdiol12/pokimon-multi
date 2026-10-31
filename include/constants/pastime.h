@@ -33,6 +33,8 @@
 #define PASTIME_MENU_DIG        23
 #define PASTIME_MENU_ALPHAS     24
 #define PASTIME_MENU_LIGHTHOUSE 25
+#define PASTIME_MENU_BOTTLES    26
+#define PASTIME_MENU_FASHION    27
 #define PASTIME_MENU_CLOSE      31
 
 // NPCs and objects the activities place on maps from code (src/pastime.c)
@@ -278,5 +280,25 @@
 #define LIGHTHOUSE_RESULT_DAY  0  // VAR_RESULT of Lighthouse_CheckShift
 #define LIGHTHOUSE_RESULT_DONE 1
 #define LIGHTHOUSE_RESULT_WORK 2
+
+// Bottle treasure maps (src/pastime_bottle.c).
+#define BOTTLE_MAPS            3
+#define BOTTLE_MAP_PIECES      4
+#define BOTTLE_BEACHES         5
+
+// Pokémon fashion (src/pastime_fashion.c).
+#define FASHION_ACCESSORIES    8
+#define FASHION_MENU_BUY       0
+#define FASHION_MENU_DRESS     1
+#define FASHION_MENU_JUDGE     2
+#define FASHION_MENU_CANCEL    3
+#define FASHION_TAKE_OFF       FASHION_ACCESSORIES      // dress-up menu
+#define FASHION_CANCEL         (FASHION_ACCESSORIES + 1)
+#define FASHION_BUY_NO_MONEY   0 // VAR_RESULT of Fashion_Buy
+#define FASHION_BUY_OK         1
+#define FASHION_JUDGE_NO_MON   0 // VAR_RESULT of Fashion_Judge
+#define FASHION_JUDGE_DONE     1
+#define FASHION_JUDGE_MISS     2
+#define FASHION_JUDGE_MATCH    3
 
 #endif // GUARD_CONSTANTS_PASTIME_H
