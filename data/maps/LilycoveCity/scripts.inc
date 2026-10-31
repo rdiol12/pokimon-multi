@@ -758,7 +758,7 @@ LilycoveCity_Text_HoneymoonVowToSeeRarePokemon:
 LilycoveCity_EventScript_StarfallSailor::
 	lock
 	faceplayer
-	goto_if_unset FLAG_SYS_GAME_CLEAR, LilycoveCity_EventScript_StarfallNotYet
+	goto_if_unset FLAG_BADGE08_GET, LilycoveCity_EventScript_StarfallNotYet
 	msgbox LilycoveCity_Text_StarfallOffer, MSGBOX_YESNO
 	goto_if_eq VAR_RESULT, NO, LilycoveCity_EventScript_StarfallDeclined
 	msgbox LilycoveCity_Text_StarfallAllAboard, MSGBOX_DEFAULT
@@ -779,10 +779,10 @@ LilycoveCity_EventScript_StarfallDeclined::
 	end
 
 LilycoveCity_Text_StarfallNotYet:
-	.string "I sail to STARFALL ISLE, a secret\nisland far out at sea.\pBut only the CHAMPION of HOENN\nmay set foot there.$"
+	.string "I sail to STARFALL ISLE, a secret\nisland far out at sea.\pBut only a TRAINER with all eight\nGYM BADGES may set foot there.$"
 
 LilycoveCity_Text_StarfallOffer:
-	.string "You're the CHAMPION! I can take you\nto STARFALL ISLE.\pIt's an island of rare POKéMON and\nold legends. Shall we set sail?$"
+	.string "Eight BADGES! I can take you to\nSTARFALL ISLE.\pIt's an island of rare POKéMON and\nold legends. Shall we set sail?$"
 
 LilycoveCity_Text_StarfallAllAboard:
 	.string "Anchors aweigh!$"

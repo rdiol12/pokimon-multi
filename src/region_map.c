@@ -1512,6 +1512,28 @@ mapsec_u16_t GetRegionMapSecIdAt(u16 x, u16 y)
     return GetMapSecIdAt(x, y);
 }
 
+// Moves the cursor of the unzoomed map to the middle of a map section, as if
+// the player had moved it there (the guide map, src/guide_screen.c).
+void SetRegionMapCursorToMapSec(mapsec_u16_t mapSecId)
+{
+    const struct RegionMapLocation *loc = &gRegionMapEntries[mapSecId];
+
+    if (sRegionMap == NULL || sRegionMap->zoomed || loc->width == 0)
+        return;
+    sRegionMap->cursorPosX = loc->x + loc->width / 2 + MAPCURSOR_X_MIN;
+    sRegionMap->cursorPosY = loc->y + loc->height / 2 + MAPCURSOR_Y_MIN;
+    mapSecId = GetMapSecIdAt(sRegionMap->cursorPosX, sRegionMap->cursorPosY);
+    sRegionMap->mapSecType = GetMapsecType(mapSecId);
+    sRegionMap->mapSecId = mapSecId;
+    GetMapName(sRegionMap->mapSecName, mapSecId, MAP_NAME_LENGTH);
+    GetPositionOfCursorWithinMapSec();
+    if (sRegionMap->cursorSprite != NULL)
+    {
+        sRegionMap->cursorSprite->x = 8 * sRegionMap->cursorPosX + 4;
+        sRegionMap->cursorSprite->y = 8 * sRegionMap->cursorPosY + 4;
+    }
+}
+
 static mapsec_u16_t CorrectSpecialMapSecId_Internal(mapsec_u16_t mapSecId)
 {
     u32 i;

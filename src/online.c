@@ -12,6 +12,7 @@
 #include "netplay.h"
 #include "netplay_ext.h"
 #include "online.h"
+#include "guide.h"
 #include "pokemon.h"
 #include "script.h"
 #include "script_pokemon_util.h"
@@ -372,7 +373,9 @@ static void BuildRequest(const struct OnlineRequest *req)
 static void Task_Request(u8 taskId)
 {
     s16 *data = gTasks[taskId].data;
-    const struct OnlineRequest *req = &gOnlineRequests[tReq];
+    // The guide's requests have a table of their own (src/guide_social.c).
+    const struct OnlineRequest *req = (u16)tReq >= ONL_REQ_GUIDE_FIRST ? &gGuideRequests[tReq - ONL_REQ_GUIDE_FIRST]
+                                                                       : &gOnlineRequests[tReq];
 
     switch (tState)
     {
