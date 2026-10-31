@@ -36,6 +36,11 @@ import time
 from ext import Refused, text
 import rovers_life as life
 
+try:  # the shared day/night clock (server/world.py, day/night branch), if this server has it
+    import world
+except ImportError:
+    world = None
+
 try:  # the Haven Reserve (server/community_reserve.py), if this server has it
     import community_reserve
 except ImportError:
@@ -50,6 +55,32 @@ WORLD = _WORLD["maps"]
 BASE = {int(k): v for k, v in _WORLD["base"].items()}
 NAMES = {int(k): v for k, v in _WORLD["names"].items()}
 BY_NAME = {v["name"]: k for k, v in WORLD.items()}
+
+
+# Wild Pokémon that only come out at night outdoors, or only by day, like the
+# game's day/night tags (sNightSpecies and sDaySpecies in
+# src/world_daynight.c). Keep in step with that list.
+NIGHT_ONLY = {"Hoothoot", "Noctowl", "Gastly", "Haunter", "Murkrow", "Oddish", "Gloom", "Zubat", "Golbat",
+              "Duskull", "Shuppet", "Spinarak", "Ariados", "Misdreavus", "Houndour"}
+DAY_ONLY = {"Pidgey", "Pidgeotto", "Taillow", "Swellow", "Wingull", "Ledyba", "Ledian", "Sunkern",
+            "Ponyta"}
+NIGHT_OWL = 5  # every fifth rover keeps going after dark
+
+
+def is_night(t):
+    """Night on the shared server clock; never without the day/night code."""
+    if world is None or not hasattr(world, "time_of_day"):
+        return False
+    try:
+        return world.time_of_day(t) == world.NIGHT
+    except Exception:
+        return False
+
+
+def out_now(name, night, cave):
+    if cave:
+        return True
+    return name not in (DAY_ONLY if night else NIGHT_ONLY)
 
 
 def title(mk):
@@ -330,11 +361,12 @@ class Sim:
             r.team.append(new_mon(got["species"], max(1, min(100, got["level"]))))
             news(self.db, f"{r.name} caught a {species_name(got['species'])} at the Haven Reserve.")
 
-    def step(self, r, others):
+    def step(self, r, others, t=None):
         here = WORLD.get(r.map)
         if here is None:
             r.map = START_MAP
             return
+        night = is_night(t)
         # Untreated injuries get worse; the clinic treats them.
         for m in r.team:
             if m["part"] and rng.random() < 0.25:
@@ -358,6 +390,10 @@ class Sim:
                     self.keep(r, baby)
                 news(self.db, f"{r.name}'s egg hatched into {species_name(r.egg)}!")
                 r.egg = 0
+        # After dark most rovers rest where they are (healing if there's a
+        # Pokémon Center); night owls carry on.
+        if night and r.id % NIGHT_OWL != 0:
+            return
         # Gyms.
         g = gym_index(r.map)
         target = gym_target(r)
@@ -422,8 +458,9 @@ class Sim:
         catch = 0.3 if style == "COLLECTOR" else 0.15
         if life.ball_count(r.life) == 0:
             catch /= 3
-        if rng.random() < catch:
-            sid, lo, hi = rng.choice(here["wild"])
+        wild = [w for w in here["wild"] if out_now(species_name(w[0]), night, here["kind"] == "cave")]
+        if wild and rng.random() < catch:
+            sid, lo, hi = rng.choice(wild)
             level = rng.randint(lo, hi)
             ball = life.use_ball(r.life, rng)
             with_ball = f" with a {life.item_name(ball)}" if ball else ""
@@ -503,8 +540,9 @@ class Sim:
             steps = int((t - r.tick) // STEP)
             if steps <= 0:
                 continue
-            for _ in range(min(steps, MAX_STEPS)):
-                self.step(r, rovers)
+            start = t - min(steps, MAX_STEPS) * STEP
+            for k in range(min(steps, MAX_STEPS)):
+                self.step(r, rovers, start + (k + 1) * STEP)
             r.tick = t if steps > MAX_STEPS else r.tick + steps * STEP
             r.save(self.db)
         post_majors(self.db)
@@ -558,8 +596,9 @@ def cmd_here(ctx, args, data):
     if key in WORLD and WORLD[key]["kind"] != "sea":
         nearby = [r for r in rovers if r.map in WORLD[key]["links"]]
         rng.shuffle(nearby)
+        pull = 0.15 if is_night(now()) else 0.45  # fewer on the road after dark
         for r in nearby:
-            if len(here) >= min(2, most) or rng.random() > 0.45:
+            if len(here) >= min(2, most) or rng.random() > pull:
                 continue
             r.map = key
             r.save(ctx.db)
