@@ -85,6 +85,10 @@ struct PastimeSaveData
     u8 rangerFiller;
     u16 rangerPoints;
     u16 rangerDone;
+    // Trainer school (src/pastime_school.c)
+    u8 schoolPassed;    // a bit per lesson
+    u8 schoolFiller;
+    u16 schoolTests;
 };
 
 #endif // GUARD_PASTIME_SAVE_H

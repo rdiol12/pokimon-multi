@@ -123,5 +123,12 @@ void Ranger_CompleteMission(void);
 void Ranger_RescueLostMon(void);
 void Ranger_IsLostMonWaiting(void);
 void Ranger_ShowList(void);
+void School_PushLessonMenu(void);
+void School_StartLesson(void);
+void School_NextQuestion(void);
+void School_PushAnswers(void);
+void School_Answer(void);
+void School_Finish(void);
+void School_ShowList(void);
 
 #endif // GUARD_PASTIME_H

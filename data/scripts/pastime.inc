@@ -13,3 +13,4 @@
 	.include "data/scripts/pastime/trading.inc"
 	.include "data/scripts/pastime/dojo.inc"
 	.include "data/scripts/pastime/ranger.inc"
+	.include "data/scripts/pastime/school.inc"
