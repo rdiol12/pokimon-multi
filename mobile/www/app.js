@@ -184,6 +184,11 @@ async function startGame(game) {
     }
     emu.attachCanvas($('#screen'));
     await emu.startAudio('audio-worklet.js');
+    // Browsers start sound only from a tap; iOS wants it from the end of
+    // one, so try on every kind of touch until the audio is running.
+    for (const type of ['pointerdown', 'touchend', 'click', 'keydown']) {
+        document.addEventListener(type, () => emu.resumeAudio(), { capture: true, passive: true });
+    }
     const release = attachControls($('#pad'), emu, {
         onPress: () => { emu.resumeAudio(); globalThis.navigator.vibrate?.(8); },
     });
@@ -210,7 +215,7 @@ async function startGame(game) {
     const pause = () => { release(); persistSave(true); emu.stop(); emu.audio?.ctx.suspend(); };
     document.addEventListener('visibilitychange', () => {
         if (document.hidden) pause();
-        else emu.start();
+        else { emu.start(); emu.resumeAudio(); }
     });
     window.addEventListener('pagehide', pause);
 
