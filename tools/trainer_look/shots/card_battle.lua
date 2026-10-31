@@ -23,11 +23,8 @@ D.run(function()
     D.boot()
     D.waitFor("the server", 600, D.online)
     LOOK.set(P1 and LOOK1 or LOOK2, P1 and BRENDAN or MAY)
-    D.wait(200)
-    D.scene(13, MAPS.MAP_OLDALE_TOWN, P1 and 6 or 9, 16)
-    D.hold(K.DOWN, 18)
-    D.wait(20)
-    D.hold(P1 and K.RIGHT or K.LEFT, 4)
+    -- The test boot puts TEST1 at x=6 and TEST2 at x=8 in Oldale Town.
+    D.waitFor("the other player", 600, function() return D.remoteCount() > 0 end)
     D.wait(200)
 
     if P1 then
@@ -37,11 +34,12 @@ D.run(function()
         D.press(K.B, 0)
         D.waitFor("the overworld", 600, D.inOverworld)
         D.wait(60)
+        D.press(K.B, 30) -- close the start menu
         D.waitFor("an invite", 3000, function() return D.mb8(0x0C9) == 1 end)
         D.wait(90)
         D.press(K.A, 40) -- YES
     else
-        D.wait(400)
+        D.wait(900) -- until TEST1 is back from the trainer card
         -- One step west, next to TEST1.
         D.waitFor("a step west", 120, function() return D.pos() == 7 end, function() D.setKeys(K.LEFT) end)
         D.setKeys(0)

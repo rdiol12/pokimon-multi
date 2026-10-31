@@ -49,6 +49,13 @@ and your accessories.
   mailbox gains `trainerLook` (0x198) and `remoteTrainerLooks[8]` (0x19C) at
   its end, so no older offsets move. Other players are recoloured and wear
   their accessories just like the local player.
+- **Big pictures:** the colours (not the accessories) also go on Brendan's
+  and May's front and back pictures, which share one palette each:
+  `TrainerLook_RecolorTrainerPic` maps each part to that palette's indices.
+  This covers the trainer card, Professor Birch's intro after the Look
+  screen, your back picture in battle, and in an online battle the other
+  player's front picture (`Netplay_GetPeerTrainerLook`, from the world
+  mailbox).
 - **Memory:** 9 bytes of EWRAM for the overlay sprite ids, plus 36 bytes in
   the world mailbox. The Look screen's state is on the heap while it is
   open.
@@ -69,9 +76,15 @@ python3 tools/trainer_look/gen_trainer_look.py --preview out.png     # every fra
 python3 tools/trainer_look/shots.py tools/trainer_look/shots/new_game.lua out/look 40000 1
 python3 tools/trainer_look/shots.py tools/trainer_look/shots/gallery.lua out/gallery 30000 1
 python3 tools/trainer_look/shots.py tools/trainer_look/shots/online.lua out/online 30000 2
+python3 tools/trainer_look/shots.py tools/trainer_look/shots/intro.lua out/intro 40000 1
+python3 tools/trainer_look/shots.py tools/trainer_look/shots/card_battle.lua out/battle 60000 2
 ```
 
 `new_game.lua` plays from the title screen through Professor Birch to the
 Look screen. `gallery.lua` opens START > STYLE and rolls 24 random looks.
 `online.lua` runs two players and a server: each sees the other's look, one
-changes it, and the other surfs in a cap.
+changes it, and the other surfs in a cap. `intro.lua` shows Birch's intro
+after the Look screen; `card_battle.lua` opens the trainer card and then
+starts an online battle between two players with different looks.
+
+![Trainer card, both sides of an online battle, Birch's intro](images/trainer-look-card-battle.png)
