@@ -377,6 +377,7 @@ gStdScripts_End::
 	.include "data/maps/StarfallIsle_PlayerHouse/scripts.inc"
 	.include "data/maps/AdventureRanch/scripts.inc"
 	.include "data/maps/AdventureDungeon/scripts.inc"
+	.include "data/maps/StarfallIsle_Hotel/scripts.inc"
 	.include "data/maps/AmberwoodHollow/scripts.inc"
 	.include "data/scripts/areas/skyrope.inc"
 	.include "data/maps/SkyropeCanyon/scripts.inc"

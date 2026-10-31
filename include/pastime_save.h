@@ -38,6 +38,20 @@ struct PastimeSaveData
     u16 quizPrizeDay;   // day the daily prize was won
     u16 quizRounds;
     u16 quizPerfect;    // rounds with every answer right
+    // Pokémon hotel.
+    u16 hotelDay;       // day the guests below are for
+    u8 hotelStars;      // 1 to HOTEL_MAX_STARS (0 = a save from before the hotel)
+    u8 hotelServed;     // a bit per guest served today
+    bool8 hotelCollected; // today's earnings were collected
+    u8 hotelFiller;
+    u16 hotelTips;      // tips waiting at the desk
+    u32 hotelEarnings;  // all-time
+    u16 hotelGuests;    // all-time guests served
+    u16 hotelFiller2;
+    // Pokémon cafe: the dish eaten last, and battles it still lasts.
+    u8 cafeDish;
+    u8 cafeBattles;
+    u16 cafeDishesCooked;
 };
 
 #endif // GUARD_PASTIME_SAVE_H

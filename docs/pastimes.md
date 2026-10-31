@@ -122,3 +122,49 @@ board 16 in `server/world.py`); **R > PASTIMES > QUIZ HALL** has MY RECORDS
 `Pastime_ShowMonPic` is a picture box that can share the screen with a
 multichoice menu (`showmonpic` can't). Screenshots:
 `tools/pastime_shots/quiz.lua` (two players online).
+
+## Pokémon hotel
+
+![Pokémon hotel](images/pastime-hotel.png)
+
+You're the new manager of the STARFALL HOTEL on Starfall Isle. The bellhop
+in the plaza (south of the houses) takes you into the lobby, a new map
+`MAP_STARFALL_ISLE_HOTEL` that reuses the Battle Frontier lounge layout;
+leaving puts you back next to the bellhop (a warp arrival point added to
+Starfall Isle).
+
+Each day, two guests plus one per star sit in the lobby, each wanting
+something (Fresh Water, Soda Pop, a Berry, a Potion, a Repel...). Give it
+to them from your bag for a tip. At the front desk, collect the day's room
+money (the star rate per guest, double for guests you served) and tips;
+the guests then check out and new ones come the next day. The desk also
+renovates the hotel for ¥3,000, ¥8,000, ¥20,000 and ¥45,000 up to five
+stars: more guests and better rates, and at five stars STEVEN checks in,
+asks for a Lava Cookie and gives a Metal Coat and a big tip.
+**R > PASTIMES > HOTEL** shows the stars, totals and today's guests with
+what they want. Screenshots: `tools/pastime_shots/hotel.lua`.
+
+## Pokémon cafe
+
+![Pokémon cafe](images/pastime-cafe.png)
+
+The chef of CAFÉ SOLEIL stands on the Lilycove waterfront, east of the
+Department Store. Bring Berries (and Moomoo Milk) and pick a dish:
+
+| Dish | Ingredients | Effect |
+| --- | --- | --- |
+| Spicy Curry | 2 Cheri, 1 Oran | Attack +1 for 5 battles |
+| Sour Salad | 2 Aspear, 1 Oran | Defense +1 for 5 battles |
+| Dry Rice Ball | 2 Chesto, 1 Oran | Sp. Atk +1 for 5 battles |
+| Bitter Soup | 2 Rawst, 1 Oran | Sp. Def +1 for 5 battles |
+| Sweet Pancakes | 2 Pecha, 1 Moomoo Milk | Speed +1 for 5 battles |
+| Rainbow Feast | 1 Sitrus, 1 Lum, 1 Moomoo Milk | every stat +1 for 3 battles |
+
+The boost uses the totem-aura queue (`gQueuedStatBoosts`): at the start of
+each of your next battles your lead Pokémon (and its partner in doubles)
+gets the boost with the "aura flared to life" message. Online (link),
+recorded, Battle Frontier and Safari battles don't count. The hook is
+`Pastime_OnBattleStart()` in `CreateBattleStartTask` (`src/battle_setup.c`).
+A new dish replaces the old one. **R > PASTIMES > CAFE** shows the dish in
+effect, battles left, and every recipe (grey when you're missing an
+ingredient). Screenshots: `tools/pastime_shots/cafe.lua`.

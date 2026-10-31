@@ -34,6 +34,8 @@ static const struct PastimeSpotList sSpotLists[] =
     {gDeliverySpots, DELIVERY_TOWN_COUNT + 1},
     {gMailSpots, MAIL_TOWN_COUNT * (1 + MAIL_LETTERS)},
     {gQuizSpots, 1},
+    {gHotelSpots, HOTEL_SPOT_COUNT},
+    {gCafeSpots, 1},
 };
 
 #define MAX_SHOWN (LOCALID_PASTIME_LAST - LOCALID_PASTIME_FIRST + 1)

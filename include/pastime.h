@@ -65,4 +65,22 @@ void Quiz_Answer(void);
 void Quiz_Finish(void);
 void Quiz_ShowList(void);
 
+// Pokémon hotel (pastime_hotel.c).
+bool32 Hotel_IsGuestShown(u32 arg);
+u16 Hotel_GetGuestGraphicsId(u32 arg);
+void Hotel_TalkToGuest(void);
+void Hotel_ServeGuest(void);
+void Hotel_TalkToDesk(void);
+void Hotel_Collect(void);
+void Hotel_GetUpgrade(void);
+void Hotel_Upgrade(void);
+void Hotel_ShowList(void);
+
+// Pokémon cafe (pastime_cafe.c).
+void Pastime_OnBattleStart(void);
+void Cafe_PushMenu(void);
+void Cafe_CheckDish(void);
+void Cafe_Cook(void);
+void Cafe_ShowList(void);
+
 #endif // GUARD_PASTIME_H

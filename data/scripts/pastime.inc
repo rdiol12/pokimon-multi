@@ -6,3 +6,5 @@
 	.include "data/scripts/pastime/delivery.inc"
 	.include "data/scripts/pastime/mail.inc"
 	.include "data/scripts/pastime/quiz.inc"
+	.include "data/scripts/pastime/hotel.inc"
+	.include "data/scripts/pastime/cafe.inc"

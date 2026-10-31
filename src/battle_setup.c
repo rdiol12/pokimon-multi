@@ -1,6 +1,7 @@
 #include "global.h"
 #include "world.h"
 #include "online.h"
+#include "pastime.h"
 #include "data.h"
 #include "main.h"
 #include "battle.h"
@@ -279,6 +280,7 @@ static void CreateBattleStartTask(enum BattleTransition transition, u16 song)
 {
     u8 taskId = CreateTask(Task_BattleStart, 1);
 
+    Pastime_OnBattleStart();
     gTasks[taskId].tTransition = transition;
     PlayMapChosenOrBattleBGM(song);
 }
