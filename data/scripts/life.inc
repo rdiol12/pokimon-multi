@@ -5,3 +5,4 @@
 	.include "data/scripts/life/mining.inc"
 	.include "data/scripts/life/photo.inc"
 	.include "data/scripts/life/eclipse.inc"
+	.include "data/scripts/life/auction.inc"

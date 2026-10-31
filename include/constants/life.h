@@ -75,6 +75,27 @@
 #define FLAG_LIFE_ECLIPSE_HIDE_SCIENTIST 0x296
 #define FLAG_LIFE_ECLIPSE_BEATEN_0  0x298 // to 0x29D
 
+// Auction house (src/life_auction.c, server/life_auction.py). VAR_0x8004 of
+// LifeAuction_Request.
+#define LIFE_AUC_REQ_LIST     0
+#define LIFE_AUC_REQ_POST     1 // VAR_0x8005: party slot, VAR_0x8006: hours; the price is LifeAuction_PickPrice's
+#define LIFE_AUC_REQ_BID      2 // the listing and amount LifeAuction_Browse picked
+#define LIFE_AUC_REQ_CANCEL   3 // the listing LifeAuction_Browse picked
+#define LIFE_AUC_REQ_COLLECT  4
+#define LIFE_AUC_REQ_COUNT    5
+// VAR_RESULT of LifeAuction_Browse.
+#define LIFE_AUC_PICK_NONE    0
+#define LIFE_AUC_PICK_BID     1
+#define LIFE_AUC_PICK_CANCEL  2
+// VAR_0x8005 after LIFE_AUC_REQ_COLLECT: what was waiting.
+#define LIFE_AUC_GOT_NOTHING  0
+#define LIFE_AUC_GOT_WON      1
+#define LIFE_AUC_GOT_SOLD     2
+#define LIFE_AUC_GOT_OUTBID   3
+#define LIFE_AUC_GOT_UNSOLD   4
+#define LIFE_AUC_GOT_CANCELED 5
+#define LIFE_AUC_LISTINGS     20
+
 // Seasons (src/life_seasons.c), from the real-world month.
 #define SEASON_SPRING 0 // March to May
 #define SEASON_SUMMER 1 // June to August

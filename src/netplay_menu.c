@@ -1,6 +1,7 @@
 #include "global.h"
 #include "community.h"
 #include "event_object_lock.h"
+#include "life.h"
 #include "menu.h"
 #include "netplay.h"
 #include "netplay_ext.h"
@@ -22,6 +23,7 @@ const struct NetplayMenuEntry gNetplayOnlineMenu[] =
     {COMPOUND_STRING("PLAZA"),   NetplayExt_OpenPlazaFromMenu},
     {COMPOUND_STRING("HUB"),     Online_OpenHubFromMenu},
     {COMPOUND_STRING("COMMUNITY"), ShowCommunityMenu},
+    {COMPOUND_STRING("AUCTION"), LifeAuction_OpenFromMenu},
     {NULL, NULL},
 };
 

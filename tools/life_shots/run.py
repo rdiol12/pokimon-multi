@@ -13,7 +13,7 @@ here = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(here, "..", "world_shots"))
 import run  # noqa: E402
 
-run.SYMBOLS += ["gLifeShowcase", "gLifeMailbox", "gSaveBlock3Ptr", "gLifeMine"]
+run.SYMBOLS += ["gLifeShowcase", "gLifeMailbox", "gSaveBlock3Ptr", "gLifeMine", "gNetplayExtMailbox"]
 
 if __name__ == "__main__":
     run.main()

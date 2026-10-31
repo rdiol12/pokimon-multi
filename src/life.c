@@ -1,5 +1,6 @@
 #include "global.h"
 #include "life.h"
+#include "money.h"
 #include "pokemon.h"
 
 // Entry points the overworld calls for the fifth batch of features
@@ -21,6 +22,11 @@ static void RunShowcase(void)
     {
         LifeEclipse_ApplyShowcase(gLifeShowcase.eclipseStep - 1);
         gLifeShowcase.eclipseStep = 0;
+    }
+    if (gLifeShowcase.moneyThousands != 0)
+    {
+        SetMoney(&gSaveBlock1Ptr->money, gLifeShowcase.moneyThousands * 1000);
+        gLifeShowcase.moneyThousands = 0;
     }
     if (gLifeShowcase.finishJobs)
     {

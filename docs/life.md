@@ -197,6 +197,43 @@ the Aqua and Magma emblems painted over with a gold crescent moon
 (`tools/life_shots/draw_art.py` makes `graphics/life/eclipse_*.png`; the
 overworld sprites share `graphics/life/eclipse_ow.pal`).
 
+## Auction house (online)
+
+![Setting an opening bid, the board, picking a bid, leading, winning, and the seller's payout](images/life-auction.png)
+
+Players put Pokémon up for auction and bid on each other's
+(`src/life_auction.c`, `data/scripts/life/auction.inc`,
+`server/life_auction.py`). Open it from START → ONLINE → AUCTION, or talk to
+the auctioneer in the Lilycove Department Store 1F. It's separate from the
+fixed-price market (`server/market.py`): here the price is set by bidding
+and every listing runs for a set time.
+
+- **SELL**: pick a Pokémon (not an egg or your last one), an opening bid
+  (₽100 to ₽999,999; ↑↓ change it by 100, ←→ by 1,000) and a length (1, 8
+  or 24 hours). It leaves your party right away. Up to 3 auctions each.
+- **BROWSE**: the board lists open auctions, soonest to end first, with the
+  picked one's Pokémon, level, seller, bid count and a live countdown. Your
+  own auctions are blue and ones you're winning are green. A on someone
+  else's opens the bid picker, starting at the lowest bid it takes: the
+  opening bid, or the top bid plus 5% (at least ₽100), rounded up to 100.
+  A on your own auction takes it back while nobody has bid.
+- **Money is held.** A bid comes out of your money once the server takes
+  it. If someone outbids you, it comes back the next time you open the
+  auction house, with who outbid you.
+- **No sniping.** A bid in the last 5 minutes moves the end to 5 minutes
+  from then.
+- **When it ends** the winner collects the Pokémon (to the party, or the PC
+  if the party is full) and the seller collects the price less the house's
+  5%. A Pokémon nobody bid on goes back to its seller. Everything waiting is
+  handed over each time you open the auction house.
+
+It uses the Online Plaza's request channel (`docs/netplay_ext.md`) with its
+own request table: `NetplayExt_RunRequest` runs a `struct NpxRequest` from
+another file. The server module answers `AUCTION LIST | POST | BID |
+CANCEL | COLLECT`, closes auctions whose time is up on every request, and
+keeps everything waiting for a player in `auction_inbox`. Tests:
+`python3 -m unittest server/test_life_auction.py`.
+
 ## Screenshots
 
 ```sh
@@ -206,6 +243,10 @@ python3 tools/life_shots/run.py tools/life_shots/jobs.lua out/jobs
 python3 tools/life_shots/run.py tools/life_shots/mining.lua out/mining
 python3 tools/life_shots/run.py tools/life_shots/photo.lua out/photo
 python3 tools/life_shots/run.py tools/life_shots/eclipse.lua out/eclipse 700000
+# two games online; run from tools/netplay_bridge so the bridge loads its
+# extensions, and let the scenario move the server's auction clock
+(cd tools/netplay_bridge && LIFE_AUCTION_SKEW_FILE=/tmp/auction/clock_skew \
+    python3 ../life_shots/run.py ../life_shots/auction.lua /tmp/auction 60000 2)
 ```
 
 `run.py` is `tools/world_shots/run.py` with this batch's symbols added, so
@@ -218,7 +259,8 @@ Safari Zone during a photo safari: species (u16), tiles away, the
 direction it faces (`DIR_*`, 0 = toward the player) and how many stand
 side by side. Byte 9 is the Team Eclipse step plus one: it beats the game
 (all badges, the story's visitors to those maps gone, the party healed,
-battle style SET) and puts the chapter at that step.
+battle style SET) and puts the chapter at that step. Byte 10 sets the
+player's money to that many thousand.
 
 Art: `tools/life_shots/draw_art.py` draws this batch's sprites into
 `graphics/life/`.
