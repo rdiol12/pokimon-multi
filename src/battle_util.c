@@ -37,6 +37,7 @@
 #include "event_data.h"
 #include "link.h"
 #include "malloc.h"
+#include "mechanics.h"
 #include "berry.h"
 #include "pokedex.h"
 #include "mail.h"
@@ -10847,6 +10848,8 @@ bool32 IsBattlerInvalidForSpreadMove(enum BattlerId battlerAtk, enum BattlerId b
 
 bool32 IsAllowedToUseBag(void)
 {
+    if (Mechanics_IsBagBanned())
+        return FALSE;
     switch (VarGet(B_VAR_NO_BAG_USE))
     {
     case NO_BAG_RESTRICTION:

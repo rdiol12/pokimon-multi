@@ -29,6 +29,7 @@
 #include "world_save.h"
 #include "adventure_save.h"
 #include "life_save.h"
+#include "mechanics_save.h"
 
 // Prevent cross-jump optimization.
 #define BLOCK_CROSS_JUMP asm("");
@@ -278,6 +279,7 @@ struct SaveBlock3
     struct WorldSaveData world;
     struct AdventureSaveData adventure;
     struct LifeSaveData life;
+    struct MechanicsSaveData mechanics;
 }; /* max size 1624 bytes */
 
 extern struct SaveBlock3 *gSaveBlock3Ptr;
