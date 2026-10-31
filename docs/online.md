@@ -78,6 +78,20 @@ collected from the same board.
 `NETPLAY_FISHT_PERIOD`, `NETPLAY_FISHT_LENGTH` and `NETPLAY_FISHT_START`
 (seconds) change the schedule.
 
+## Co-op fishing
+
+![TEST1 invites TEST2, both reel, both land a giant Avalugg, the giant catch board](images/online-coop-fishing.png)
+
+Two players on the same map can reel in a giant Pokémon together
+(`server/online_coopfish.py`, `src/online_fishing.c`,
+`data/scripts/online/coop_fishing.inc`). One faces the water and picks
+HUB → CO-OP FISHING → FISH TOGETHER, then a player nearby; the other gets an
+invitation as soon as they're free. Once both say yes, each plays three
+rounds of the reeling meter. With four hits or more between them the giant
+(Wailord, Gyarados, Lapras, Milotic, Kingdra, Dondozo, Avalugg…) is landed
+and both get one at level 45 (shiny one time in 64). The biggest giants
+landed are on HUB → CO-OP FISHING → GIANT CATCHES.
+
 ## How it talks to the server
 
 These features use the Online Plaza's request channel (`NpxRpc_*` in

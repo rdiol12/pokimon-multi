@@ -70,6 +70,7 @@ struct OnlineState
     u8 noticeCount;
     u8 statusCount;
     bool8 background; // a report or status request is out
+    bool8 statusRequest; // ... and it's OSTAT, whose answer is the whole status
     u16 statusTimer;
     char reports[REPORT_QUEUE][REPORT_LENGTH];
     u8 notices[NOTICE_QUEUE][NOTICE_LENGTH];
@@ -244,6 +245,8 @@ static void TakeRows(bool32 background)
     u32 row;
 
     sOnline.dataCount = 0;
+    if (background && sOnline.statusRequest)
+        sOnline.statusCount = 0;
     for (row = 1; row < Npx_RowCount(); row++)
     {
         const char *what = Npx_Field(row, 0);
@@ -677,12 +680,14 @@ static void SendBackground(void)
         for (i = 1; i < sOnline.reportCount; i++)
             memcpy(sOnline.reports[i - 1], sOnline.reports[i], REPORT_LENGTH);
         sOnline.reportCount--;
+        sOnline.statusRequest = FALSE;
     }
     else
     {
         if (++sOnline.statusTimer < STATUS_INTERVAL || !NpxRpc_Begin("OSTAT"))
             return;
         sOnline.statusTimer = 0;
+        sOnline.statusRequest = TRUE;
     }
     NpxRpc_Send();
     sOnline.background = TRUE;
@@ -752,6 +757,9 @@ bool32 Online_OverworldUpdate(void)
 
     if (gOnlineShowcase.kind != SHOWCASE_NONE && !ArePlayerFieldControlsLocked())
         return RunShowcase();
+
+    if (!ArePlayerFieldControlsLocked() && Online_TryCoFishInvite())
+        return TRUE;
 
     if (sOnline.noticeCount != 0 && !ArePlayerFieldControlsLocked() && IsPlayerStandingStill())
     {
