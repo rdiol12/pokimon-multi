@@ -30,11 +30,12 @@ tests link the harness against `build/emulator/headless/libmgba.so`.
 | Address      | Access | Value                                                        |
 | ------------ | ------ | ------------------------------------------------------------ |
 | `0x04FFF7F0` | read   | `0x504B` ("PK") on our hardware                              |
-| `0x04FFF7F2` | read   | hardware version, currently `4`                              |
+| `0x04FFF7F2` | read   | hardware version, currently `5`                              |
 | `0x04FFF7F4` | write  | `0x4558` ("EX") unlocks extended EWRAM until the next reset  |
 | `0x04FFF7F4` | write  | `0x4F41` turns extended sprites on, `0x4F40` turns them off  |
 | `0x04FFF7F4` | write  | `0x4300` + n (n = 1 to 8) runs the CPU n times faster        |
 | `0x04FFF7F4` | read   | bit 0: extended EWRAM unlocked; bit 1: extended sprites on; bits 8–11: CPU multiplier |
+| `0x04FFF7F6` | both   | background palette banks: 2 bits per background (BG0 in bits 0–1), 0 = normal |
 
 These sit next to mGBA's own debug registers (`0x04FFF600`–`0x04FFF780`), in I/O space a
 real GBA leaves unused, so writes there are harmless elsewhere.
@@ -136,6 +137,29 @@ every save and loaded with the save. To save new data, add a field at the end of
   `0x0C000000` and right after the first 32 MiB in the file. Nothing uses it yet, so the ROM
   stays 32 MiB and the .bps patch stays the same size until something does.
 
+### More sprite VRAM (version 5)
+
+- `0x01010000`–`0x01027FFF` holds three more 32 KiB banks of sprite tiles (1024 tiles each).
+  Bits 2–3 of a sprite's attribute byte (`0x01002000` + entry) pick the bank it draws from;
+  0 is the normal OBJ VRAM. Write the tiles with the CPU or DMA; read them back with the CPU.
+- In the game, sprite tile numbers run from 0 to 4095: 0–1023 are normal VRAM, then the banks.
+  `AllocSpriteTiles` and `LoadSpriteSheet` fill normal VRAM first and only spill into the banks
+  when it's full, so nothing changes until a scene runs out. A block never crosses a bank
+  boundary. Sheet sprites follow their sheet's bank, other sprites keep theirs in
+  `sprite->tileBank`. Code that writes tiles by hand should use `SpriteTileAddr(tileNum)`
+  instead of `OBJ_VRAM0 + tileNum * 32`.
+
+### More background palettes (version 5)
+
+- `0x01003000`–`0x010035FF` holds 48 more background palettes: banks 1–3 of 16 palettes each.
+- The register at `0x04FFF7F6` picks a bank for each background layer (2 bits per layer). A layer
+  on bank b looks up its tiles' palette n in bank b instead of the normal palette n. Only
+  text-mode backgrounds use it (the field, menus and battles are all text mode).
+- In the game: `LoadExtBgPalette(src, bank, n, size)` and `SetBgPaletteBank(bg, bank)`
+  (include/palette.h). They live in the palette buffers at `EXT_BG_PLTT_ID(bank, n)` and fade,
+  tint, follow weather and time of day together with normal BG palette n. `ResetBgs` puts every
+  layer back on the normal palettes, so a new screen always starts clean.
+
 ## Planned (later versions)
 
-More background palettes and more VRAM.
+Nothing yet. Ask in the project if something else hits a GBA limit.
