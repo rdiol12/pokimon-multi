@@ -187,6 +187,27 @@ The spot is the server's copy of the hider's position (the POS lines);
 the quest the player took is in the status, so the game checks the spot
 itself.
 
+## Spectator betting
+
+![Gary and Mia battle: both games hear of it, TEST1 bets 100 COINS on Gary and TEST2 50 on Mia, Gary wins, TEST1 collects 650 COINS, the best bettors board](images/online-betting.png)
+
+When a PvP battle starts, everyone else online hears of it and can bet
+Game Corner COINS on either side for the first two minutes
+(`server/online_betting.py`, `data/scripts/online/betting.inc`). In HUB →
+BETTING → BET ON A BATTLE the player picks the battle, sees what's been
+bet on each side with the payout per coin, picks a side and 10, 50, 100 or
+500 COINS. One side per battle; more bets on the same side add up.
+
+When the battle ends, those who backed the winner share the whole pool in
+proportion to their bets, and collect it from COLLECT WINNINGS; the others
+hear what they lost. After a draw, a dispute or when nobody backed the
+winner, every bet comes back. A player with no COINS gets 100 from the
+house once a day. BEST BETTORS ranks everyone by COINS won or lost. The
+battle itself can be watched from ONLINE → WATCH as before.
+
+The module wraps the plaza server's `cmd_accept` and `finish_battle`, so it
+hears of every battle start and result without changing them.
+
 ## How it talks to the server
 
 These features use the Online Plaza's request channel (`NpxRpc_*` in
@@ -200,7 +221,7 @@ handles every answer the same way:
 | Rows of the answer | What the game does |
 | --- | --- |
 | row 0: `message\|code\|var1\|var2\|var3` | message to `gStringVar4` (`~` new line, `^` new page, `#` é), code to `VAR_0x800B`, vars to `gStringVar1`–`3`; `$` is the money sign, `>` itself |
-| `+ITEM\|id\|n`, `-ITEM\|id\|n`, `+MONEY\|n`, `-MONEY\|n`, `+MON\|species\|level\|shiny` | applied right away |
+| `+ITEM\|id\|n`, `-ITEM\|id\|n`, `+MONEY\|n`, `-MONEY\|n`, `+COINS\|n`, `-COINS\|n`, `+MON\|species\|level\|shiny` | applied right away |
 | `N\|text` | a notice, shown once the player is free |
 | `S\|key\|...` | the status of a live feature (`Online_Status`) |
 | anything else | data rows (their count is in `VAR_0x800A`) for `Online_ShowBoard` and `Online_Choose` |

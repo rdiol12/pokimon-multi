@@ -56,4 +56,9 @@ const struct OnlineRequest gOnlineRequests[ONL_REQ_COUNT] =
     [ONL_REQ_PQUEST_MINE]   = {"PQUEST MINE"},
     [ONL_REQ_PQUEST_CANCEL] = {"PQUEST CANCEL", .flags = ONL_ARG_CHOSEN},
     [ONL_REQ_PQUEST_FIND]   = {"PQUEST FIND", .after = Online_PollStatusSoon},
+    [ONL_REQ_BET_LIST]    = {"BET LIST", .flags = ONL_ARG_COINS},
+    [ONL_REQ_BET_SHOW]    = {"BET SHOW", .flags = ONL_ARG_CHOSEN},
+    [ONL_REQ_BET_PLACE]   = {"BET PLACE", 1, ONL_ARG_CHOSEN | ONL_ARG_COINS},
+    [ONL_REQ_BET_COLLECT] = {"BET COLLECT"},
+    [ONL_REQ_BET_BOARD]   = {"BET BOARD"},
 };

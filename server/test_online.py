@@ -7,6 +7,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 import ext  # noqa: E402
 import netplay_server as ns  # noqa: E402
 import online  # noqa: E402
+import online_betting  # noqa: E402
 import online_coopfish  # noqa: E402
 import online_duo  # noqa: E402
 import online_fishing  # noqa: E402
@@ -33,7 +34,8 @@ class OnlineTest(unittest.IsolatedAsyncioTestCase):
         self.online = online.Online(self.server, ext.install(self.server),
                                     [online_goals, online_sightings, online_web, online_fishing, online_coopfish, online_shops,
                                      online_pageant, online_duo, online_mentors,
-                                     online_pquests], clock=lambda: self.now)
+                                     online_pquests, online_betting], clock=lambda: self.now)
+        online_betting.install(self.server)
         self.srv = await asyncio.start_server(self.server.handle, "127.0.0.1", 0)
         self.port = self.srv.sockets[0].getsockname()[1]
         self.clients = []
@@ -419,6 +421,62 @@ class PlayerQuestTest(OnlineTest):
         status, out = await self.ask(a, "PQUEST MINE")
         status, out = await self.ask(a, f"PQUEST CANCEL {rows(out)[1][1]}")
         self.assertEqual(rows(out)[1], ["+ITEM", str(ITEMS["ULTRA_BALL"]), "2"])
+
+
+class BettingTest(OnlineTest):
+    async def battle(self, host, guest):
+        guest_id = next(p.id for p in self.server.players.values() if p.name == guest.name)
+        await host.send(f"REQ battle {guest_id}")
+        while not (line := await guest.recv()).startswith("INVITE "):
+            pass
+        sid = line.split()[1]
+        await guest.send(f"ACCEPT {sid}")
+        while not (await host.recv()).startswith(f"START {sid} "):
+            pass
+        return sid
+
+    async def test_bet_and_win(self):
+        a = await self.connect("Ann", 1)
+        b = await self.connect("Ben", 2)
+        c = await self.connect("Cy", 3)
+        d = await self.connect("Di", 4)
+        a.name, b.name = "Ann", "Ben"
+        # No coins: the house gives 100 once a day.
+        status, out = await self.ask(c, "BET LIST 0")
+        self.assertEqual(rows(out)[0][1], "0")
+        self.assertIn(["+COINS", "100"], rows(out))
+        self.assertNotIn(["+COINS", "100"], rows((await self.ask(c, "BET LIST 0"))[1]))
+        sid = await self.battle(a, b)
+        status, out = await self.ask(c, "BET LIST 100")
+        self.assertEqual(rows(out)[1][:2], ["Ann vs Ben", sid])
+        self.assertIn("N", [r[0] for r in rows(out)])  # heard it started
+        self.assertEqual(rows((await self.ask(a, "BET LIST 100"))[1])[0][1], "0")  # not on your own
+        await self.ask(c, f"BET SHOW {sid}")
+        self.assertEqual((await self.ask(c, "BET PLACE 500 h 100"))[0], 1)  # too few coins
+        status, out = await self.ask(c, "BET PLACE 100 h 100")
+        self.assertEqual(rows(out)[1], ["-COINS", "100"])
+        await self.ask(d, f"BET SHOW {sid}")
+        await self.ask(d, "BET PLACE 50 g 500")
+        self.assertEqual((await self.ask(d, "BET PLACE 10 h 500"))[0], 1)  # one side only
+        status, out = await self.ask(d, f"BET SHOW {sid}")
+        self.assertEqual(rows(out)[1][0], "Ann (x1.5)")
+        # Ann wins: Cy gets the whole pool.
+        await a.send(f"RESULT {sid} win")
+        await b.send(f"RESULT {sid} loss")
+        for p in (a, b):
+            await p.send(f"QUIT {sid}")
+        await self.ask(a, "OSTAT")
+        status, out = await self.ask(c, "BET COLLECT")
+        self.assertEqual(rows(out)[1], ["+COINS", "150"])
+        self.assertEqual((await self.ask(d, "BET COLLECT"))[0], 1)
+        status, out = await self.ask(d, "BET BOARD")
+        self.assertEqual(rows(out)[3][1:], ["Cy", "1", "+50"])
+        self.assertEqual(rows(out)[4][1:], ["Di", "1", "-50"])
+        # Bets close after two minutes.
+        sid = await self.battle(b, a)
+        self.now += online_betting.BET_SECONDS + 1
+        out = (await self.ask(c, "BET LIST 50"))[1]
+        self.assertEqual(rows(out)[0][1], "0", out)
 
 
 if __name__ == "__main__":

@@ -47,6 +47,7 @@ s32 Online_StatusNum(const char *key, u32 field);
 #define ONL_ARG_MON    2 // after the numbers: party slot VAR_0x8005 as species level shiny ability-number nickname
 #define ONL_ARG_MONEY  4 // after the numbers: the player's money
 #define ONL_ARG_NAME   8 // after the numbers: the player's name
+#define ONL_ARG_COINS 16 // after the numbers: the player's Game Corner coins
 
 struct OnlineRequest
 {

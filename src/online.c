@@ -1,4 +1,5 @@
 #include "global.h"
+#include "coins.h"
 #include "event_data.h"
 #include "event_object_movement.h"
 #include "field_player_avatar.h"
@@ -36,7 +37,7 @@
 //   row 0:   message|code|var1|var2|var3
 //            message goes to gStringVar4 ("~" is a new line, "^" a new
 //            page), code to VAR_0x800B, var1-3 to gStringVar1-3.
-//   actions: +ITEM|id|count, -ITEM|id|count, +MONEY|n, -MONEY|n,
+//   actions: +ITEM|id|count, -ITEM|id|count, +MONEY|n, -MONEY|n, +COINS|n, -COINS|n,
 //            +MON|species|level|shiny: applied as soon as the answer comes.
 //   N|text:  a notice, shown once the player is free.
 //   S|key|.. the status of a feature (Online_Status).
@@ -266,6 +267,10 @@ static void TakeRows(bool32 background)
             AddMoney(&gSaveBlock1Ptr->money, a);
         else if (StrEq(what, "-MONEY"))
             RemoveMoney(&gSaveBlock1Ptr->money, a);
+        else if (StrEq(what, "+COINS"))
+            AddCoins(a);
+        else if (StrEq(what, "-COINS"))
+            RemoveCoins(a);
         else if (StrEq(what, "+MON"))
             GiveMon(a, b, Npx_Num(row, 3));
         else if (StrEq(what, "N"))
@@ -360,6 +365,8 @@ static void BuildRequest(const struct OnlineRequest *req)
         NpxRpc_Num(GetMoney(&gSaveBlock1Ptr->money));
     if (req->flags & ONL_ARG_NAME)
         NpxRpc_Name(gSaveBlock2Ptr->playerName);
+    if (req->flags & ONL_ARG_COINS)
+        NpxRpc_Num(GetCoins());
     if (req->build != NULL)
         req->build();
 }
