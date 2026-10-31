@@ -568,5 +568,8 @@ stylist has a theme (CUTE, COOL, NATURAL, ROYAL or FUN); TODAY'S LOOK with
 a lead Pokémon wearing an accessory of that theme wins the day's prize
 (a Heart Scale, PP Up, Star Piece, Big Pearl or Rare Candy, by the day).
 **R > PASTIMES > FASHION** lists the accessories, their themes, which are
-owned and which is worn, and today's theme. Screenshots:
+owned and which is worn, and today's theme. Online, other players see the
+accessory on your follower too: it goes with the look (`LOOK follower mount
+accessory`, `docs/world.md`), and `Fashion_ShowRemote` puts it on their
+copy of your follower. Screenshots:
 `tools/pastime_shots/fashion.lua`.

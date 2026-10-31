@@ -40,12 +40,15 @@ class WorldTest(unittest.IsolatedAsyncioTestCase):
         a = await self.connect("Ash")
         b = await self.connect("Misty")
         await a.send("LOOK 16409 0")
-        self.assertEqual(await b.recv(), f"LOOK {a.id} 16409 0")
+        self.assertEqual(await b.recv(), f"LOOK {a.id} 16409 0 0")
+        # The follower's accessory (Pokémon fashion) goes with the look.
+        await a.send("LOOK 16409 0 6")
+        self.assertEqual(await b.recv(), f"LOOK {a.id} 16409 0 6")
         await a.send("HOUSE 1 " + "03" * 2 + "00" * 14)
         self.assertEqual(await b.recv(), f"HOUSE {a.id} 1 0303" + "00" * 14)
         c = await self.connect("Brock")
         await c.send("WORLD")
-        self.assertEqual(await c.recv(), f"LOOK {a.id} 16409 0")
+        self.assertEqual(await c.recv(), f"LOOK {a.id} 16409 0 6")
         self.assertEqual(await c.recv(), f"HOUSE {a.id} 1 0303" + "00" * 14)
         self.assertTrue((await c.recv()).startswith("HUNT "))
 

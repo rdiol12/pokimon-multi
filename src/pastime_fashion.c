@@ -3,6 +3,7 @@
 #include "event_object_movement.h"
 #include "malloc.h"
 #include "money.h"
+#include "netplay.h"
 #include "party_menu.h"
 #include "pastime.h"
 #include "pastime_spots.h"
@@ -84,7 +85,7 @@ static u32 TodaysTheme(void)
 }
 
 // The accessory the following Pokémon wears + 1, or 0.
-static u32 WornNow(void)
+u32 Fashion_WornNow(void)
 {
     struct Pokemon *lead = GetFirstLiveMon();
 
@@ -123,18 +124,18 @@ static const struct SpriteTemplate sAccessoryTemplate =
 };
 
 static EWRAM_DATA u8 sAccessorySpriteId = 0;
+// Other players' followers' accessories (src/world_online.c), by netplay slot.
+static EWRAM_DATA u8 sRemoteSpriteIds[NETPLAY_MAX_REMOTES] = {0};
 
 #define TILES_PER_ACCESSORY 4
 
-// Rides on the follower's sprite, a step in front of it.
-static void SpriteCB_Accessory(struct Sprite *sprite)
+// Rides on a follower's sprite, a step in front of it.
+static void PlaceAccessory(struct Sprite *sprite, struct ObjectEvent *follower, u32 worn)
 {
-    struct ObjectEvent *follower = GetFollowerObject();
-    u32 worn = WornNow();
     const struct Accessory *accessory;
     struct Sprite *mon;
 
-    if (follower == NULL || worn == 0)
+    if (follower == NULL || worn == 0 || worn > FASHION_ACCESSORIES)
     {
         sprite->invisible = TRUE;
         return;
@@ -152,6 +153,77 @@ static void SpriteCB_Accessory(struct Sprite *sprite)
                      || (accessory->front && follower->facingDirection == DIR_NORTH);
 }
 
+static void SpriteCB_Accessory(struct Sprite *sprite)
+{
+    PlaceAccessory(sprite, GetFollowerObject(), Fashion_WornNow());
+}
+
+#define sSlot     data[0]
+#define sWorn     data[1]
+#define sObjectId data[2]
+
+static void SpriteCB_RemoteAccessory(struct Sprite *sprite)
+{
+    struct ObjectEvent *follower = &gObjectEvents[sprite->sObjectId];
+
+    PlaceAccessory(sprite, follower->active ? follower : NULL, sprite->sWorn);
+}
+
+static bool32 LoadAccessoryGfx(void)
+{
+    if (GetSpriteTileStartByTag(TAG_ACCESSORY) == 0xFFFF)
+        LoadSpriteSheet(&sAccessorySheet);
+    if (IndexOfSpritePaletteTag(TAG_ACCESSORY) == 0xFF)
+        LoadSpritePalette(&sAccessoryPalette);
+    return GetSpriteTileStartByTag(TAG_ACCESSORY) != 0xFFFF && IndexOfSpritePaletteTag(TAG_ACCESSORY) != 0xFF;
+}
+
+static bool32 IsRemoteSpriteUp(u32 slot)
+{
+    struct Sprite *sprite = &gSprites[sRemoteSpriteIds[slot]];
+
+    return sprite->inUse && sprite->callback == SpriteCB_RemoteAccessory && sprite->sSlot == slot;
+}
+
+// Called every overworld frame for each other player online: puts what
+// their follower (object followerObjectId, or OBJECT_EVENTS_COUNT for none)
+// wears on it, worn being the accessory + 1 (0: nothing).
+void Fashion_ShowRemote(u32 slot, u8 followerObjectId, u32 worn)
+{
+    struct Sprite *sprite;
+
+    if (slot >= NETPLAY_MAX_REMOTES)
+        return;
+    if (followerObjectId == OBJECT_EVENTS_COUNT || worn == 0 || worn > FASHION_ACCESSORIES)
+    {
+        if (IsRemoteSpriteUp(slot))
+            DestroySprite(&gSprites[sRemoteSpriteIds[slot]]);
+        return;
+    }
+    if (!IsRemoteSpriteUp(slot))
+    {
+        u8 spriteId;
+
+        if (!LoadAccessoryGfx())
+            return;
+        spriteId = CreateSprite(&sAccessoryTemplate, 0, 0, 0);
+        if (spriteId == MAX_SPRITES)
+            return;
+        sRemoteSpriteIds[slot] = spriteId;
+        gSprites[spriteId].callback = SpriteCB_RemoteAccessory;
+        gSprites[spriteId].coordOffsetEnabled = TRUE;
+        gSprites[spriteId].sSlot = slot;
+    }
+    sprite = &gSprites[sRemoteSpriteIds[slot]];
+    sprite->sWorn = worn;
+    sprite->sObjectId = followerObjectId;
+    SpriteCB_RemoteAccessory(sprite);
+}
+
+#undef sSlot
+#undef sWorn
+#undef sObjectId
+
 static bool32 IsAccessorySpriteUp(void)
 {
     return gSprites[sAccessorySpriteId].inUse && gSprites[sAccessorySpriteId].callback == SpriteCB_Accessory;
@@ -160,12 +232,10 @@ static bool32 IsAccessorySpriteUp(void)
 // Pastime_Update: makes the accessory sprite when the follower wears one.
 void Fashion_Update(void)
 {
-    if (WornNow() == 0 || GetFollowerObject() == NULL || IsAccessorySpriteUp())
+    if (Fashion_WornNow() == 0 || GetFollowerObject() == NULL || IsAccessorySpriteUp())
         return;
-    if (GetSpriteTileStartByTag(TAG_ACCESSORY) == 0xFFFF)
-        LoadSpriteSheet(&sAccessorySheet);
-    if (IndexOfSpritePaletteTag(TAG_ACCESSORY) == 0xFF)
-        LoadSpritePalette(&sAccessoryPalette);
+    if (!LoadAccessoryGfx())
+        return;
     sAccessorySpriteId = CreateSprite(&sAccessoryTemplate, 0, 0, 0);
     if (sAccessorySpriteId == MAX_SPRITES)
         return;
@@ -262,7 +332,7 @@ void Fashion_Dress(void)
 void Fashion_Judge(void)
 {
     struct Pokemon *lead = GetFirstLiveMon();
-    u32 worn = WornNow();
+    u32 worn = Fashion_WornNow();
 
     StringCopy(gStringVar1, sThemeNames[TodaysTheme()]);
     if (lead != NULL)
@@ -295,7 +365,7 @@ static void GetLine(u16 index, u8 *dest)
     dest = StringCopy(dest, COMPOUND_STRING("{CLEAR_TO 96}"));
     dest = StringCopy(dest, sThemeNames[sAccessories[index].theme]);
     dest = StringCopy(dest, COMPOUND_STRING("{CLEAR_TO 152}"));
-    if (WornNow() == index + 1)
+    if (Fashion_WornNow() == index + 1)
         StringCopy(dest, COMPOUND_STRING("{COLOR GREEN}{SHADOW LIGHT_GREEN}WORN"));
     else if (sSave.fashionOwned & (1 << index))
         StringCopy(dest, COMPOUND_STRING("OWNED"));
