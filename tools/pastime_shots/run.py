@@ -17,7 +17,7 @@ here = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(here, "..", "world_shots"))
 import run as world_run  # noqa: E402
 
-world_run.SYMBOLS += ["gPastimeSavePtr", "gLocalTime", "gQuizRound"]
+world_run.SYMBOLS += ["gPastimeSavePtr", "gLocalTime", "gQuizRound", "gBugContest", "gSchoolTest", "gCarnival", "gOrchestra", "gArtStudio", "gPokemonStoragePtr", "gLifeShowcase", "gDig", "gLighthouse"]
 world_run.HELPERS += """
 -- struct PastimeSaveData (include/pastime_save.h) in SaveBlock3.
 function Driver.pastimeAddr(offset)
@@ -34,9 +34,12 @@ function Driver.pastimeRead32(offset) return E.read32(Driver.pastimeAddr(offset)
 
 -- R menu: RIDE, ACHIEVEMENTS, RECORDS, QUESTS, LEADERBOARDS, SAFARI HUNT,
 -- PHOTO, ADVENTURE, PASTIMES, CLOSE. Opens R > PASTIMES and picks row.
+-- Builds with more R menu rows (other features merged in) set
+-- Driver.PASTIMES_ROW.
+Driver.PASTIMES_ROW = 8
 function Driver.pastimeMenu(row)
     Driver.press(Driver.KEY.R, 40)
-    for _ = 1, 8 do Driver.press(Driver.KEY.DOWN, 8) end
+    for _ = 1, Driver.PASTIMES_ROW do Driver.press(Driver.KEY.DOWN, 8) end
     Driver.press(Driver.KEY.A, 40)
     for _ = 1, row do Driver.press(Driver.KEY.DOWN, 8) end
     Driver.press(Driver.KEY.A, 40)

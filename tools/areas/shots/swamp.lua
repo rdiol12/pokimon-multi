@@ -1,0 +1,68 @@
+-- Mirebough Marsh: the guide in Fortree, the rainy marsh and its boardwalks,
+-- the Bog Witch's three ingredients, her Goomy egg, and the Stunfisk in the mud.
+dofile(INSTANCE_DIR .. "/../driver_lib.lua")
+local D, K = Driver, Driver.KEY
+local MM = MAPS.MAP_MIREBOUGH_MARSH
+
+local function say(dir, name, pages)
+    D.talk(dir, name, pages)
+    D.wait(30)
+end
+
+local function pickup(x, y, dir, name)
+    D.scene(12, MM, x, y)
+    D.wait(30)
+    D.talk(dir, name, 1)
+    for _ = 1, 4 do D.press(K.A, 40) end
+    D.wait(30)
+end
+
+D.run(function()
+    D.boot()
+    D.wait(60)
+    D.season(1)
+    D.flag("FLAG_BADGE06_GET", false)
+    D.scene(12, MAPS.MAP_FORTREE_CITY, 5, 9)
+    D.wait(240)
+    say(K.LEFT, "01-guide-no-badge", 2)
+    D.press(K.A, 60)
+    D.flag("FLAG_BADGE06_GET", true)
+    say(K.LEFT, "02-guide", 2)
+    D.press(K.A, 40)
+    D.shot("02-guide-go")
+    D.press(K.A, 40)
+    D.press(K.A, 40)
+    D.wait(200)
+    D.waitFor("the overworld", 1200, D.inOverworld)
+    D.wait(120)
+    D.shot("03-arrive")
+    D.scene(12, MM, 14, 23); D.wait(60); D.hold(K.RIGHT, 16 * 13); D.wait(60); D.shot("04-boardwalk")
+    D.scene(12, MM, 8, 9); D.wait(60); D.hold(K.RIGHT, 16 * 8); D.wait(60); D.shot("05-north-boardwalk")
+    D.scene(12, MM, 5, 9)
+    say(K.LEFT, "06-witch-asks", 3)
+    for _ = 1, 4 do D.press(K.A, 30) end
+    pickup(50, 23, K.UP, "07-tiny-mushroom")
+    pickup(33, 5, K.UP, "08-big-root")
+    pickup(8, 37, K.UP, "09-black-sludge")
+    D.scene(12, MM, 5, 9)
+    say(K.LEFT, "10-witch-has-all", 1)
+    D.press(K.A, 20)
+    D.press(K.A, 300)
+    D.shot("12-egg")
+    D.press(K.A, 200)
+    D.shot("13-witch-after")
+    for _ = 1, 4 do D.press(K.A, 30) end
+    D.scene(12, MM, 33, 32); say(K.UP, "14-wooper", 1)
+    D.press(K.A, 60)
+    D.scene(12, MM, 46, 29); say(K.UP, "15-goomy", 1)
+    D.press(K.A, 60)
+    D.scene(12, MM, 24, 41)
+    D.wait(90)
+    D.hold(K.UP, 36)
+    D.wait(40)
+    D.shot("16-stunfisk")
+    D.waitFor("the battle", 1500, D.inBattle, function(i) if i % 40 == 0 then D.press(K.A, 0) end end)
+    D.wait(400)
+    D.shot("17-stunfisk-battle")
+    D.result("ok")
+end)

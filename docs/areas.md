@@ -118,6 +118,70 @@ Mauville City leads you there once you have Winona's badge.
   Trapinch, Cacnea, Hippopotas, Baltoy, Silicobra, Gible, Sigilyph…).
 - Map ids: MAP_SUNSCAR_DESERT, MAP_SUNSCAR_RUINS_HALL, MAP_SUNSCAR_RUINS_VAULT.
 
+## Hollowmere and Hollowmere Manor
+
+An abandoned town in the fog that only appears at night. An old ferryman
+in Lilycove City rows you there, but only at night and only once you have
+the Mind Badge (`gettimeofday`).
+
+- Quest: the caretaker's four little ghosts have wandered off: a Gastly
+  and a Duskull in town, a Shuppet in a house and a Misdreavus in the
+  manor. Talk to each to send it home. With all four home she gives a
+  Spell Tag and the Manor Key, and the butler steps aside from the stairs.
+- Hollowmere Manor is dark (it needs Flash to see far). Portraits whose
+  eyes follow you, Gentleman Mortimer, and upstairs the master's doll
+  collection, Hex Maniac Elvira, a Reaper Cloth and a Mimikyu (Lv40).
+- An inn where a ghostly keeper lets you rest, a Drifloon that wants to
+  hold your hand, Hex Maniac Vesper and Psychic Luna, TM Shadow Ball, Dusk
+  Stone, Rare Candy, Max Elixir and hidden items. Wild ghosts Lv37–42,
+  Frillish and Jellicent in the pond.
+- The manor reuses the Lilycove Museum layouts with new events. Map ids:
+  MAP_HOLLOWMERE, _INN, _HOUSE, _MANOR_1F, _MANOR_2F.
+
+## Mirebough Marsh
+
+A rainy swamp of ponds and reeds west of Fortree City, crossed by wooden
+boardwalks. A guide in Fortree City takes you there once you have the
+Feather Badge.
+
+- Quest: the Bog Witch lives in a clearing you can only reach over the
+  north boardwalk. Her stew needs a Tiny Mushroom, a Big Root and some
+  Black Sludge, all lying around the marsh. Hand them over and she gives
+  you a Goomy egg.
+- A Stunfisk hides in the mud by the south reeds and attacks when you step
+  on it (Lv38).
+- Fisherman Finn, Aroma Lady Marsha, Bug Maniac Otto and Ranger Ivy; a
+  Wooper, a Goomy and a Croagunk to talk to; TM Sludge Bomb, Damp Rock,
+  Ultra Ball and hidden items. Wild Wooper, Croagunk, Goomy, Lotad,
+  Shroomish, Yanma, Skorupi, Stunfisk and their evolutions Lv34–39;
+  Barboach, Whiscash and Poliwag on a rod. Map id: MAP_MIREBOUGH_MARSH.
+
+## Sunfair Carnival
+
+A fairground by the sea. A sailor in Slateport City takes you there by boat
+at any time.
+
+- New art drawn for it in Emerald's style (`tools/areas/carnival_art.py`):
+  a Ferris wheel, big top tents, striped market stalls, an entrance arch
+  you walk under, lamp posts and balloon carts. They live in a new
+  secondary tileset, `gTileset_Carnival`, which is Petalburg's tiles plus
+  the new ones (palettes 7 and 11), so the town style can still lay out the
+  ground.
+- Quest: the Ringmaster's Spinda spun itself dizzy and wobbled off. Find
+  it by the bowling ground and he gives you a Mime Jr. egg.
+- Stalls: a drinks stall and a sweets stall (Lava Cookie, Rage Candy Bar,
+  Casteliacone…) are shops; the ring toss costs ¥500 a throw and sometimes
+  wins a Rare Candy, Heart Scale or Lemonade. A fortune teller, a balloon
+  seller, a Mr. Mime, and trainers Kindler Blaze, Twins Kit & Kat (double),
+  Ninja Boy Shade (hiding behind the big top) and Guitarist Riff.
+- Games: the hosts for the Ferris wheel (29,12), bowling (9,13), mini golf
+  (39,26) and soccer (12,26) call `Carnival_EventScript_FerrisWheel`,
+  `_Bowling`, `_Golf` and `_Soccer` in `data/scripts/areas/carnival_games.inc`.
+  For now they say "coming soon"; the minigames branch fills them in.
+  Open ground left for the games: bowling lanes x 40–54, y 4–11; soccer
+  pitch x 4–21, y 27–36; golf green x 38–54, y 27–37. Map id:
+  MAP_SUNFAIR_CARNIVAL.
+
 ## How the maps are made
 
 - `tools/areas/tiles.py` renders any tileset or layout to PNG.
@@ -131,7 +195,9 @@ Mauville City leads you there once you have Winona's badge.
   from real maps, 3x3 edge sets like ponds, events) and registers maps,
   layouts, scripts, region map sections, encounters and trainers.
 - Screenshots: `python3 tools/areas/shots/run.py tools/areas/shots/<area>.lua OUT`
-  (needs a built ROM and libmgba-dev). `Driver.flag(name, on)` sets any flag.
+  (needs a built ROM and libmgba-dev). `Driver.flag(name, on)` sets any flag,
+  `Driver.where()` gives the player's position and `Driver.season(s)`
+  forces a season.
 
 ## Area flags and trainers
 

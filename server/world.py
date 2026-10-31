@@ -30,7 +30,7 @@ import time
 log = logging.getLogger("netplay.world")
 
 BOARDS = {0: "fish", 1: "berries", 2: "hardcore", 3: "hunt", 8: "dungeon", 9: "treasure",
-          10: "factory", 11: "arena", 12: "pyramid", 16: "quiz", 17: "cooking"}
+          10: "factory", 11: "arena", 12: "pyramid", 16: "quiz", 17: "cooking", 18: "bugs"}
 BOARD_ROWS = 10
 HUNT_SECONDS = 30 * 60
 MAX_PHOTO_BYTES = 256 * 1024

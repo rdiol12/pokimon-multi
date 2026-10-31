@@ -39,6 +39,7 @@
 #include "party_menu.h"
 #include "pokedex.h"
 #include "pokeblock.h"
+#include "pastime.h"
 #include "pokemon.h"
 #include "pokemon_animation.h"
 #include "pokemon_icon.h"
@@ -5036,6 +5037,8 @@ bool32 CanLearnTeachableMove(enum Species species, enum Move move)
     const u16 *teachableLearnset = GetSpeciesTeachableLearnset(species);
     if (species == SPECIES_EGG)
         return FALSE;
+    if (Pastime_CanLearnTeachableMove(species, move))
+        return TRUE;
     for (u32 i = 0; teachableLearnset[i] != MOVE_UNAVAILABLE; i++)
     {
         if (teachableLearnset[i] == move)

@@ -87,6 +87,7 @@
 #include "netplay.h"
 #include "netplay_ext.h"
 #include "world.h"
+#include "pastime.h"
 #include "life.h"
 #include "community.h"
 
@@ -1950,6 +1951,7 @@ void CB2_NewGame(void)
     StopMapMusic();
     ResetSafariZoneFlag_();
     NewGameInitData();
+    NewGamePlus_AfterInit();
     ResetInitialPlayerAvatarState();
     PlayTimeCounter_Start();
     ScriptContext_Init();

@@ -158,7 +158,7 @@ class Area:
         self.warps.append({'x': x, 'y': y, 'elevation': elevation, 'dest_map': dest_map, 'dest_warp_id': str(dest_warp)})
         return len(self.warps) - 1
 
-    def coord(self, x, y, script, var='0', var_value='0', elevation=3):
+    def coord(self, x, y, script, var='VAR_TEMP_0', var_value='0', elevation=3):
         self.coords.append({'type': 'trigger', 'x': x, 'y': y, 'elevation': elevation, 'var': var,
                             'var_value': var_value, 'script': script})
 
@@ -362,12 +362,12 @@ def npc(gfx, x, y, script, move='MOVEMENT_TYPE_FACE_DOWN', local_id=None, flag='
 
 
 def interior(name, map_id, layout, doors, outside_map, outside_warp, objects, scripts, mapsec, group,
-             music='MUS_NONE', bgs=(), extra_warps=()):
+             music='MUS_NONE', bgs=(), extra_warps=(), requires_flash=False):
     """A room using an existing layout. doors: (x, y) cells of its exit."""
     warps = [{'x': x, 'y': y, 'elevation': 0, 'dest_map': outside_map, 'dest_warp_id': str(outside_warp)} for x, y in doors]
     warps += list(extra_warps)
     m = {'id': map_id, 'name': name, 'layout': layout, 'music': music, 'region': 'REGION_HOENN',
-         'region_map_section': mapsec, 'requires_flash': False, 'weather': 'WEATHER_NONE', 'map_type': 'MAP_TYPE_INDOOR',
+         'region_map_section': mapsec, 'requires_flash': requires_flash, 'weather': 'WEATHER_NONE', 'map_type': 'MAP_TYPE_INDOOR',
          'allow_cycling': False, 'allow_escaping': False, 'allow_running': False, 'show_map_name': False,
          'battle_scene': 'MAP_BATTLE_SCENE_NORMAL', 'connections': None, 'object_events': objects,
          'warp_events': warps, 'coord_events': [], 'bg_events': list(bgs)}

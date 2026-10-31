@@ -9,6 +9,26 @@ Pastime_EventScript_Menu::
 	dynmultipush Pastime_Text_MenuHotel, PASTIME_MENU_HOTEL
 	dynmultipush Pastime_Text_MenuCafe, PASTIME_MENU_CAFE
 	dynmultipush Pastime_Text_MenuCooking, PASTIME_MENU_COOKING
+	dynmultipush Pastime_Text_MenuBugContest, PASTIME_MENU_BUG_CONTEST
+	dynmultipush Pastime_Text_MenuTrading, PASTIME_MENU_TRADING
+	dynmultipush Pastime_Text_MenuDojo, PASTIME_MENU_DOJO
+	dynmultipush Pastime_Text_MenuRanger, PASTIME_MENU_RANGER
+	dynmultipush Pastime_Text_MenuSchool, PASTIME_MENU_SCHOOL
+	dynmultipush Pastime_Text_MenuGarden, PASTIME_MENU_GARDEN
+	dynmultipush Pastime_Text_MenuWeather, PASTIME_MENU_WEATHER
+	dynmultipush Pastime_Text_MenuStars, PASTIME_MENU_STARS
+	dynmultipush Pastime_Text_MenuCarnival, PASTIME_MENU_CARNIVAL
+	dynmultipush Pastime_Text_MenuOrchestra, PASTIME_MENU_ORCHESTRA
+	dynmultipush Pastime_Text_MenuArt, PASTIME_MENU_ART
+	dynmultipush Pastime_Text_MenuDetective, PASTIME_MENU_DETECTIVE
+	dynmultipush Pastime_Text_MenuTrack, PASTIME_MENU_TRACK
+	dynmultipush Pastime_Text_MenuNewGamePlus, PASTIME_MENU_NEW_GAME_PLUS
+	dynmultipush Pastime_Text_MenuFestivals, PASTIME_MENU_FESTIVALS
+	dynmultipush Pastime_Text_MenuDig, PASTIME_MENU_DIG
+	dynmultipush Pastime_Text_MenuAlphas, PASTIME_MENU_ALPHAS
+	dynmultipush Pastime_Text_MenuLighthouse, PASTIME_MENU_LIGHTHOUSE
+	dynmultipush Pastime_Text_MenuBottles, PASTIME_MENU_BOTTLES
+	dynmultipush Pastime_Text_MenuFashion, PASTIME_MENU_FASHION
 	dynmultipush Pastime_Text_MenuClose, PASTIME_MENU_CLOSE
 	dynmultistack 0, 0, FALSE, 6, FALSE, PASTIME_MENU_LOST_FOUND, DYN_MULTICHOICE_CB_NONE
 	switch VAR_RESULT
@@ -20,6 +40,26 @@ Pastime_EventScript_Menu::
 	case PASTIME_MENU_HOTEL, Pastime_EventScript_Hotel
 	case PASTIME_MENU_CAFE, Pastime_EventScript_Cafe
 	case PASTIME_MENU_COOKING, Pastime_EventScript_Cooking
+	case PASTIME_MENU_BUG_CONTEST, Pastime_EventScript_BugContest
+	case PASTIME_MENU_TRADING, Pastime_EventScript_Trading
+	case PASTIME_MENU_DOJO, Pastime_EventScript_Dojo
+	case PASTIME_MENU_RANGER, Pastime_EventScript_Ranger
+	case PASTIME_MENU_SCHOOL, Pastime_EventScript_School
+	case PASTIME_MENU_GARDEN, Pastime_EventScript_Garden
+	case PASTIME_MENU_WEATHER, Pastime_EventScript_Weather
+	case PASTIME_MENU_STARS, Pastime_EventScript_Stars
+	case PASTIME_MENU_CARNIVAL, Pastime_EventScript_CarnivalList
+	case PASTIME_MENU_ORCHESTRA, Pastime_EventScript_Orchestra
+	case PASTIME_MENU_ART, Pastime_EventScript_Art
+	case PASTIME_MENU_DETECTIVE, Pastime_EventScript_Detective
+	case PASTIME_MENU_TRACK, Pastime_EventScript_Track
+	case PASTIME_MENU_NEW_GAME_PLUS, Pastime_EventScript_NewGamePlus
+	case PASTIME_MENU_FESTIVALS, Pastime_EventScript_Festivals
+	case PASTIME_MENU_DIG, Pastime_EventScript_Dig
+	case PASTIME_MENU_ALPHAS, Pastime_EventScript_Alphas
+	case PASTIME_MENU_LIGHTHOUSE, Pastime_EventScript_Lighthouse
+	case PASTIME_MENU_BOTTLES, Pastime_EventScript_Bottles
+	case PASTIME_MENU_FASHION, Pastime_EventScript_Fashion
 Pastime_EventScript_MenuDone::
 	releaseall
 	end
@@ -86,6 +126,112 @@ Pastime_EventScript_CookChamps:
 	releaseall
 	end
 
+Pastime_EventScript_BugContest:
+	dynmultipush Pastime_Text_CookRecords, 0
+	dynmultipush Pastime_Text_BugChamps, 1
+	dynmultistack 0, 0, FALSE, 2, FALSE, 0, DYN_MULTICHOICE_CB_NONE
+	goto_if_eq VAR_RESULT, 1, Pastime_EventScript_BugChamps
+	goto_if_ne VAR_RESULT, 0, Pastime_EventScript_MenuDone
+	callnative BugContest_ShowList, waitstate=1
+	releaseall
+	end
+
+Pastime_EventScript_BugChamps:
+	setvar VAR_0x8004, WORLD_BOARD_BUG_CONTEST
+	callnative WorldOnline_ShowBoard, waitstate=1
+	releaseall
+	end
+
+Pastime_EventScript_Trading:
+	callnative Trading_ShowList, waitstate=1
+	releaseall
+	end
+
+Pastime_EventScript_Dojo:
+	callnative Dojo_ShowList, waitstate=1
+	releaseall
+	end
+
+Pastime_EventScript_Ranger:
+	callnative Ranger_ShowList, waitstate=1
+	releaseall
+	end
+
+Pastime_EventScript_School:
+	callnative School_ShowList, waitstate=1
+	releaseall
+	end
+
+Pastime_EventScript_Garden:
+	callnative Garden_ShowList, waitstate=1
+	releaseall
+	end
+
+Pastime_EventScript_Weather:
+	callnative Weather_ShowList, waitstate=1
+	releaseall
+	end
+
+Pastime_EventScript_Stars:
+	callnative Star_ShowList, waitstate=1
+	releaseall
+	end
+
+Pastime_EventScript_CarnivalList:
+	callnative Carnival_ShowList, waitstate=1
+	releaseall
+	end
+
+Pastime_EventScript_Orchestra:
+	callnative Orchestra_ShowList, waitstate=1
+	releaseall
+	end
+
+Pastime_EventScript_Art:
+	callnative Art_ShowList, waitstate=1
+	releaseall
+	end
+
+Pastime_EventScript_Detective:
+	callnative Detective_ShowList, waitstate=1
+	releaseall
+	end
+
+Pastime_EventScript_Track:
+	callnative Track_ShowList, waitstate=1
+	releaseall
+	end
+
+Pastime_EventScript_Festivals:
+	callnative Festival_ShowList, waitstate=1
+	releaseall
+	end
+
+Pastime_EventScript_Dig:
+	callnative Dig_ShowList, waitstate=1
+	releaseall
+	end
+
+Pastime_EventScript_Alphas:
+	callnative Alpha_ShowList, waitstate=1
+	releaseall
+	end
+
+Pastime_EventScript_Lighthouse:
+	callnative Lighthouse_ShowList, waitstate=1
+	releaseall
+	end
+
+Pastime_EventScript_Bottles:
+	callnative Bottle_ShowList, waitstate=1
+	releaseall
+	end
+
+Pastime_EventScript_Fashion:
+	callnative Fashion_ShowList, waitstate=1
+	releaseall
+	end
+
 Pastime_Text_MenuLostFound:
 	.string "LOST & FOUND$"
 Pastime_Text_MenuMuseum:
@@ -110,5 +256,47 @@ Pastime_Text_CookRecords:
 	.string "MY RECORDS$"
 Pastime_Text_CookChamps:
 	.string "COOK-OFF CHAMPS$"
+Pastime_Text_MenuBugContest:
+	.string "BUG CONTEST$"
+Pastime_Text_BugChamps:
+	.string "BUG CONTEST BOARD$"
+Pastime_Text_MenuTrading:
+	.string "TRADING POST$"
+Pastime_Text_MenuDojo:
+	.string "BATTLE DOJO$"
+Pastime_Text_MenuRanger:
+	.string "RANGER$"
+Pastime_Text_MenuSchool:
+	.string "TRAINER SCHOOL$"
+Pastime_Text_MenuGarden:
+	.string "GARDEN$"
+Pastime_Text_MenuWeather:
+	.string "WEATHER LAB$"
+Pastime_Text_MenuStars:
+	.string "STAR MAP$"
+Pastime_Text_MenuCarnival:
+	.string "CARNIVAL$"
+Pastime_Text_MenuOrchestra:
+	.string "ORCHESTRA$"
+Pastime_Text_MenuArt:
+	.string "ART STUDIO$"
+Pastime_Text_MenuDetective:
+	.string "CASE FILES$"
+Pastime_Text_MenuTrack:
+	.string "REWARD TRACK$"
+Pastime_Text_MenuNewGamePlus:
+	.string "NEW GAME+$"
+Pastime_Text_MenuFestivals:
+	.string "FESTIVALS$"
+Pastime_Text_MenuDig:
+	.string "DIG SITES$"
+Pastime_Text_MenuAlphas:
+	.string "ALPHAS$"
+Pastime_Text_MenuLighthouse:
+	.string "LIGHTHOUSE$"
+Pastime_Text_MenuBottles:
+	.string "BOTTLE MAPS$"
+Pastime_Text_MenuFashion:
+	.string "FASHION$"
 Pastime_Text_MenuClose:
 	.string "CLOSE$"

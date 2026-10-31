@@ -21,6 +21,7 @@ void RoamingWeather_ApplyToCurrentMap(void);
 void RoamingWeather_Update(void);
 enum Species RoamingWeather_ModifyWildSpecies(enum Species species, u8 level);
 void RoamingWeather_GetForecast(void);
+u16 RoamingWeather_GetFrontMap(u32 front, u32 hoursAhead);
 
 // Day/night (world_daynight.c).
 void DayNight_UpdateFlags(void);
@@ -85,6 +86,7 @@ void World_ShowToast(const u8 *title, const u8 *text);
 // Timing meter minigame (world_meter.c).
 void TimingMeter_Start(u8 rounds, u8 zoneTiles, u8 speed);
 s32 TimingMeter_GetResult(void);
+s32 TimingMeter_GetLastOffset(void);
 
 // Fishing: the reel meter replaces the "press A on a bite" check; the zone
 // is 4 tiles wide with the Old Rod, 3 with the Good Rod and 2 with the Super.

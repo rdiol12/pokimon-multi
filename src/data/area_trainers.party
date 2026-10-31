@@ -372,3 +372,201 @@ Level: 38
 Garchomp
 Level: 36
 /* end Sunscar */
+
+/* begin Hollowmere */
+=== AREA_TRAINER_HOLLOW_VESPER ===
+Name: VESPER
+Class: Hex Maniac
+Pic: Hex Maniac
+Gender: Female
+Music: Suspicious
+Double Battle: No
+AI: Basic Trainer
+
+Haunter
+Level: 39
+
+Pumpkaboo
+Level: 39
+
+Lampent
+Level: 40
+
+=== AREA_TRAINER_HOLLOW_LUNA ===
+Name: LUNA
+Class: Psychic
+Pic: Psychic F
+Gender: Female
+Music: Intense
+Double Battle: No
+AI: Basic Trainer
+
+Mismagius
+Level: 40
+
+Musharna
+Level: 40
+
+=== AREA_TRAINER_HOLLOW_MORTIMER ===
+Name: MORTIMER
+Class: Gentleman
+Pic: Gentleman
+Gender: Male
+Music: Rich
+Double Battle: No
+AI: Basic Trainer
+
+Sinistea
+Level: 40
+
+Dusclops
+Level: 41
+
+=== AREA_TRAINER_HOLLOW_ELVIRA ===
+Name: ELVIRA
+Class: Hex Maniac
+Pic: Hex Maniac
+Gender: Female
+Music: Suspicious
+Double Battle: No
+AI: Basic Trainer
+
+Banette
+Level: 41
+
+Froslass
+Level: 41
+
+Gengar
+Level: 42
+/* end Hollowmere */
+
+/* begin MireboughMarsh */
+=== AREA_TRAINER_MIRE_FINN ===
+Name: FINN
+Class: Fisherman
+Pic: Fisherman
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Basic Trainer
+
+Whiscash
+Level: 37
+
+Quagsire
+Level: 37
+
+=== AREA_TRAINER_MIRE_MARSHA ===
+Name: MARSHA
+Class: Aroma Lady
+Pic: Aroma Lady
+Gender: Female
+Music: Girl
+Double Battle: No
+AI: Basic Trainer
+
+Lombre
+Level: 36
+
+Amoonguss
+Level: 38
+
+=== AREA_TRAINER_MIRE_OTTO ===
+Name: OTTO
+Class: Bug Maniac
+Pic: Bug Maniac
+Gender: Male
+Music: Suspicious
+Double Battle: No
+AI: Basic Trainer
+
+Yanmega
+Level: 38
+
+Skorupi
+Level: 36
+
+=== AREA_TRAINER_MIRE_IVY ===
+Name: IVY
+Class: Pkmn Ranger
+Pic: Pokemon Ranger F
+Gender: Female
+Music: Cool
+Double Battle: No
+AI: Basic Trainer
+
+Toxicroak
+Level: 39
+
+Sliggoo
+Level: 38
+/* end MireboughMarsh */
+
+/* begin SunfairCarnival */
+=== AREA_TRAINER_CARNIVAL_BLAZE ===
+Name: BLAZE
+Class: Kindler
+Pic: Kindler
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Basic Trainer
+
+Litleo
+Level: 24
+
+Slugma
+Level: 24
+
+Magby
+Level: 25
+
+=== AREA_TRAINER_CARNIVAL_KIT_AND_KAT ===
+Name: KIT & KAT
+Class: Twins
+Pic: Twins
+Gender: Female
+Music: Girl
+Double Battle: Yes
+AI: Basic Trainer
+
+Minun
+Level: 24
+
+Plusle
+Level: 24
+
+=== AREA_TRAINER_CARNIVAL_SHADE ===
+Name: SHADE
+Class: Ninja Boy
+Pic: Ninja Boy
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Basic Trainer
+
+Croagunk
+Level: 24
+
+Nincada
+Level: 23
+
+Zubat
+Level: 24
+
+=== AREA_TRAINER_CARNIVAL_RIFF ===
+Name: RIFF
+Class: Guitarist
+Pic: Guitarist
+Gender: Male
+Music: Intense
+Double Battle: No
+AI: Basic Trainer
+
+Toxel
+Level: 24
+
+Loudred
+Level: 25
+/* end SunfairCarnival */
