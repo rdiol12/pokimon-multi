@@ -48,7 +48,7 @@ def main():
     shutil.rmtree(out, ignore_errors=True)
     os.makedirs(out)
     harness = os.path.join(out, "harness")
-    subprocess.check_call(["gcc", "-O1", "-o", harness, os.path.join(HERE, "harness.c"), "-lmgba"])
+    subprocess.check_call(["gcc", "-O1", "-o", harness, os.path.join(HERE, "harness.c")] + run_e2e.mgba_flags())
     syms = run_e2e.read_symbols(os.path.join(ROOT, "pokeemerald.map"))
     with open(os.path.join(out, "symbols.lua"), "w") as f:
         f.write("return {\n")
