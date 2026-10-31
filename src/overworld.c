@@ -87,6 +87,7 @@
 #include "netplay.h"
 #include "netplay_ext.h"
 #include "world.h"
+#include "community.h"
 
 STATIC_ASSERT((B_FLAG_FOLLOWERS_DISABLED == 0 || OW_FOLLOWERS_ENABLED), FollowersFlagAssignedWithoutEnablingThem);
 
@@ -1666,7 +1667,7 @@ static void DoCB1_Overworld(u16 newKeys, u16 heldKeys)
     FieldGetPlayerInput(&inputStruct, newKeys, heldKeys);
     CancelSignPostMessageBox(&inputStruct);
     // Netplay and the plaza both run every frame; either may start a script.
-    if ((Netplay_OverworldUpdate() | NetplayExt_OverworldUpdate()) || World_OverworldUpdate())
+    if ((Netplay_OverworldUpdate() | NetplayExt_OverworldUpdate()) || World_OverworldUpdate() || Community_OverworldUpdate())
     {
         LockPlayerFieldControls();
         HideMapNamePopUpWindow();
