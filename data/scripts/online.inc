@@ -36,6 +36,7 @@ Online_EventScript_Hub::
 	dynmultipush Online_Text_HubTeams, ONLINE_HUB_TEAMS
 	dynmultipush Online_Text_HubGuild, ONLINE_HUB_GUILD
 	dynmultipush Online_Text_HubRacing, ONLINE_HUB_RACING
+	dynmultipush Online_Text_HubHide, ONLINE_HUB_HIDE
 	dynmultipush Online_Text_HubClose, ONLINE_HUB_CLOSE
 	dynmultistack 0, 0, FALSE, 6, FALSE, 0, DYN_MULTICHOICE_CB_NONE
 	switch VAR_RESULT
@@ -53,6 +54,7 @@ Online_EventScript_Hub::
 	case ONLINE_HUB_TEAMS, Online_EventScript_Teams
 	case ONLINE_HUB_GUILD, Online_EventScript_GuildHall
 	case ONLINE_HUB_RACING, Online_EventScript_Racing
+	case ONLINE_HUB_HIDE, Online_EventScript_Hide
 	releaseall
 	end
 
@@ -126,6 +128,9 @@ Online_Text_HubGuild:
 Online_Text_HubRacing:
 	.string "MOUNT RACING$"
 
+Online_Text_HubHide:
+	.string "HIDE AND SEEK$"
+
 Online_Text_HubClose:
 	.string "CLOSE$"
 
@@ -142,6 +147,7 @@ Online_Text_HubClose:
 	.include "data/scripts/online/teams.inc"
 	.include "data/scripts/online/guilds.inc"
 	.include "data/scripts/online/racing.inc"
+	.include "data/scripts/online/hide.inc"
 
 @ Ranked doubles: the ladder (the battles start from talking to a player).
 Online_EventScript_Doubles::

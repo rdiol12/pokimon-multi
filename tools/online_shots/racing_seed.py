@@ -36,9 +36,9 @@ def route_grid(name, tilesets):
     return free
 
 
-def plan(free, start, avoid=frozenset()):
-    """The path to the west edge (x = 0) with the fewest steps and turns, as
-    the corners to ride to. Ledges are jumped only the way they go."""
+def plan(free, start, avoid=frozenset(), goal=lambda p: p[0] == 0):
+    """The path to the goal (the west edge) with the fewest steps and turns,
+    as the corners to go to. Ledges are jumped only the way they go."""
     import heapq
     dirs = [(-1, 0), (0, -1), (0, 1), (1, 0)]
     best = {(start, (-1, 0)): 0}
@@ -47,7 +47,7 @@ def plan(free, start, avoid=frozenset()):
     end = None
     while queue:
         cost, cur, facing = heapq.heappop(queue)
-        if cur[0] == 0:
+        if goal(cur):
             end = (cur, facing)
             break
         for d in dirs:

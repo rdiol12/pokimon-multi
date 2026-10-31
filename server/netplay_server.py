@@ -139,6 +139,7 @@ class Player:
         self.tid = 0
         self.map = None
         self.room = None  # players on a map only see those in the same room (see room_of)
+        self.unseen = set()  # ids of players on the map that this one can't see now (see can_see)
         self.pos = (0, 0, 0, 0, 0)  # x, y, facing, elevation, gfx
         self.session = None
         self.watching = None  # the battle session this player spectates
@@ -238,6 +239,20 @@ class Server:
         """Splits a map into rooms whose players don't see each other, like a
         guild hall (server/online_guilds.py replaces this)."""
         return None
+
+    def can_see(self, viewer, other):
+        """Whether `viewer` sees `other` on their map: a hide-and-seek seeker
+        only sees hiders close by (server/online_hide.py replaces this)."""
+        return True
+
+    def show(self, viewer, other):
+        """Sends `viewer` where `other` is, or that they're gone from sight."""
+        if self.can_see(viewer, other):
+            viewer.unseen.discard(other.id)
+            viewer.send(other.describe())
+        elif other.id not in viewer.unseen:
+            viewer.unseen.add(other.id)
+            viewer.send(f"GONE {other.id}")
 
     def on_map(self, map_key, exclude=None, room=None):
         return [
@@ -352,9 +367,16 @@ class Server:
                 self.broadcast_map(old_map, f"GONE {player.id}", exclude=player, room=old_room)
                 for other in self.on_map(old_map, exclude=player, room=old_room):
                     player.send(f"GONE {other.id}")
+            player.unseen.clear()
             for other in self.on_map(new_map, exclude=player, room=new_room):
-                player.send(other.describe())
-        self.broadcast_map(new_map, player.describe(), exclude=player, room=new_room)
+                self.show(player, other)
+        else:
+            # Moving changes what this player sees, too.
+            for other in self.on_map(new_map, exclude=player, room=new_room):
+                if (other.id in player.unseen) == self.can_see(player, other):
+                    self.show(player, other)
+        for other in self.on_map(new_map, exclude=player, room=new_room):
+            self.show(other, player)
 
     def cmd_req(self, player, kind, target_id):
         if kind not in KINDS:

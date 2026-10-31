@@ -100,7 +100,6 @@ struct Race
     u8 state;
     u8 course;
     u8 gate;
-    u8 hudTaskId;
     u16 countdown; // frames
     u16 frames;
     struct WarpData back;
@@ -119,11 +118,11 @@ static bool32 OnMap(u16 map)
     return gSaveBlock1Ptr->location.mapGroup == MAP_GROUP(map) && gSaveBlock1Ptr->location.mapNum == MAP_NUM(map);
 }
 
-static void SetRaceRules(bool32 on)
+// The engine's own switches (include/config/overworld.h and
+// wild_encounter.h) leave racers and hide-and-seek players alone. EWRAM
+// starts idle, so a game saved halfway is cleared on the next boot.
+void Online_SetQuietRules(bool32 on)
 {
-    // The engine's own switches (include/config/overworld.h and
-    // wild_encounter.h) leave racers alone. EWRAM starts at RACE_IDLE, so a
-    // race saved halfway is cleared on the next boot.
     if (on)
     {
         FlagSet(OW_FLAG_NO_TRAINER_SEE);
@@ -136,42 +135,20 @@ static void SetRaceRules(bool32 on)
     }
 }
 
-// The HUD -------------------------------------------------------------------
-
-static const struct WindowTemplate sHudWindow =
+bool32 Online_QuietRulesOn(void)
 {
-    .bg = 0,
-    .tilemapLeft = 20,
-    .tilemapTop = 1,
-    .width = 9,
-    .height = 2,
-    .paletteNum = 15,
-    .baseBlock = 0x2C0,
-};
-
-#define tWindowId data[0]
-#define tTimer    data[1]
-
-static u8 *FormatTime(u8 *dest, u32 frames)
-{
-    u32 cs = frames * 100 / 60;
-
-    dest = ConvertIntToDecimalStringN(dest, cs / 6000, STR_CONV_MODE_LEFT_ALIGN, 2);
-    *dest++ = CHAR_COLON;
-    dest = ConvertIntToDecimalStringN(dest, cs / 100 % 60, STR_CONV_MODE_LEADING_ZEROS, 2);
-    *dest++ = CHAR_PERIOD;
-    return ConvertIntToDecimalStringN(dest, cs % 100, STR_CONV_MODE_LEADING_ZEROS, 2);
+    return FlagGet(WE_FLAG_NO_ENCOUNTER);
 }
 
-static void DrawHud(u8 windowId)
+// The HUD's text.
+static void RaceHudText(u8 *text)
 {
-    u8 text[24];
     u8 *end;
 
     if (sRace.state == RACE_RUNNING || sRace.state == RACE_FINISHED)
     {
-        end = FormatTime(text, sRace.frames);
-        end = StringCopy(end, COMPOUND_STRING(" "));
+        end = Online_FormatTime(text, sRace.frames, TRUE);
+        *end++ = CHAR_SPACE;
         end = ConvertIntToDecimalStringN(end, sRace.gate, STR_CONV_MODE_LEFT_ALIGN, 1);
         *end++ = CHAR_SLASH;
         ConvertIntToDecimalStringN(end, RACE_GATES, STR_CONV_MODE_LEFT_ALIGN, 1);
@@ -185,51 +162,7 @@ static void DrawHud(u8 windowId)
     {
         StringCopy(text, COMPOUND_STRING("GO!"));
     }
-    // Another window closing (an achievement's banner) may have cleared ours.
-    DrawStdWindowFrame(windowId, FALSE);
-    FillWindowPixelBuffer(windowId, PIXEL_FILL(1));
-    AddTextPrinterParameterized(windowId, FONT_NORMAL, text, 2, 1, TEXT_SKIP_DRAW, NULL);
-    PutWindowTilemap(windowId);
-    CopyWindowToVram(windowId, COPYWIN_FULL);
 }
-
-static void CloseHud(u8 taskId)
-{
-    ClearStdWindowAndFrameToTransparent(gTasks[taskId].tWindowId, FALSE);
-    ClearWindowTilemap(gTasks[taskId].tWindowId);
-    RemoveWindow(gTasks[taskId].tWindowId);
-    ScheduleBgCopyTilemapToVram(0);
-    DestroyTask(taskId);
-    sRace.hudTaskId = TASK_NONE;
-}
-
-static void Task_Hud(u8 taskId)
-{
-    // Anything that takes over the screen closes it; it opens again after.
-    if (sRace.state == RACE_IDLE || gMain.callback2 != CB2_Overworld
-     || (ArePlayerFieldControlsLocked() && sRace.state != RACE_READY))
-    {
-        CloseHud(taskId);
-        return;
-    }
-    if (++gTasks[taskId].tTimer % 6 == 0)
-        DrawHud(gTasks[taskId].tWindowId);
-}
-
-static void OpenHud(void)
-{
-    u8 taskId;
-
-    if (sRace.hudTaskId != TASK_NONE && FuncIsActiveTask(Task_Hud))
-        return;
-    taskId = CreateTask(Task_Hud, 90);
-    gTasks[taskId].tWindowId = AddWindow(&sHudWindow);
-    DrawHud(gTasks[taskId].tWindowId);
-    sRace.hudTaskId = taskId;
-}
-
-#undef tWindowId
-#undef tTimer
 
 // The race --------------------------------------------------------------------
 
@@ -266,8 +199,8 @@ bool32 Online_RaceUpdate(void)
     switch (sRace.state)
     {
     case RACE_IDLE:
-        if (FlagGet(WE_FLAG_NO_ENCOUNTER))
-            SetRaceRules(FALSE);
+        if (FlagGet(WE_FLAG_NO_ENCOUNTER) && !Online_HideIsOn())
+            Online_SetQuietRules(FALSE);
         return FALSE;
     case RACE_COUNTDOWN:
         if (!free)
@@ -289,7 +222,7 @@ bool32 Online_RaceUpdate(void)
         }
         else if (free)
         {
-            OpenHud();
+            Online_ShowHud(RaceHudText, FALSE);
         }
         return FALSE;
     case RACE_FINISHED:
@@ -342,14 +275,13 @@ void Online_RaceStart(void)
     sRace.countdown = max(gSpecialVar_0x800B, 3) * 60;
     sRace.frames = 0;
     sRace.gate = 0;
-    sRace.hudTaskId = TASK_NONE;
     sRace.state = RACE_COUNTDOWN;
     sRace.back = gSaveBlock1Ptr->location;
     PlayerGetDestCoords(&sRace.back.x, &sRace.back.y);
     sRace.back.x -= MAP_OFFSET;
     sRace.back.y -= MAP_OFFSET;
     sRace.back.warpId = WARP_ID_NONE;
-    SetRaceRules(TRUE);
+    Online_SetQuietRules(TRUE);
     course = &sCourses[sRace.course];
     SetWarpDestination(MAP_GROUP(course->map), MAP_NUM(course->map), WARP_ID_NONE,
                        course->lanes[lane][0], course->lanes[lane][1]);
@@ -378,7 +310,7 @@ void Online_RaceCountdown(void)
     ObjectEventTurn(&gObjectEvents[gPlayerAvatar.objectEventId], sCourses[sRace.course].facing);
     if (!Mount_IsRiding())
         Mount_Toggle();
-    OpenHud();
+    Online_ShowHud(RaceHudText, TRUE);
     CreateTask(Task_Countdown, 80);
 }
 
@@ -387,7 +319,7 @@ void Online_RaceSetResult(void)
 {
     gSpecialVar_0x8005 = sRace.course;
     gSpecialVar_0x8006 = sRace.frames;
-    FormatTime(gStringVar1, sRace.frames);
+    Online_FormatTime(gStringVar1, sRace.frames, TRUE);
 }
 
 // Ends the race (finished or given up) and warps back to where the player
@@ -395,7 +327,8 @@ void Online_RaceSetResult(void)
 void Online_RaceEnd(void)
 {
     sRace.state = RACE_IDLE;
-    SetRaceRules(FALSE);
+    Online_HideHud();
+    Online_SetQuietRules(FALSE);
     SetWarpDestination(sRace.back.mapGroup, sRace.back.mapNum, WARP_ID_NONE, sRace.back.x, sRace.back.y);
     DoWarp();
 }

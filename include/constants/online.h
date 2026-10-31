@@ -94,7 +94,14 @@
 #define ONL_REQ_RACE_BOARD    77 // the course picked from RACE_LIST
 #define ONL_REQ_RACE_FINISH   78 // VAR_0x8005 course, VAR_0x8006 time in frames
 #define ONL_REQ_RACE_QUIT     79
-#define ONL_REQ_COUNT         80
+#define ONL_REQ_HIDE_LIST     80
+#define ONL_REQ_HIDE_JOIN     81 // the arena picked from HIDE_LIST
+#define ONL_REQ_HIDE_GO       82
+#define ONL_REQ_HIDE_TAG      83 // VAR_0x8007: the player talked to
+#define ONL_REQ_HIDE_END      84
+#define ONL_REQ_HIDE_QUIT     85
+#define ONL_REQ_HIDE_BOARD    86
+#define ONL_REQ_COUNT         87
 
 // The hub's rows (VAR_RESULT of its menu).
 #define ONLINE_HUB_GOALS    0
@@ -111,6 +118,7 @@
 #define ONLINE_HUB_TEAMS    11
 #define ONLINE_HUB_GUILD    12
 #define ONLINE_HUB_RACING   13
+#define ONLINE_HUB_HIDE     14
 #define ONLINE_HUB_CLOSE    127
 
 // VAR_0x800B of the co-op fishing requests.

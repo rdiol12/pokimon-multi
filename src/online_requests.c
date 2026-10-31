@@ -85,4 +85,11 @@ const struct OnlineRequest gOnlineRequests[ONL_REQ_COUNT] =
     [ONL_REQ_RACE_BOARD]  = {"RACE BOARD", .flags = ONL_ARG_CHOSEN},
     [ONL_REQ_RACE_FINISH] = {"RACE FINISH", 2},
     [ONL_REQ_RACE_QUIT]   = {"RACE QUIT"},
+    [ONL_REQ_HIDE_LIST]  = {"HIDE LIST"},
+    [ONL_REQ_HIDE_JOIN]  = {"HIDE JOIN", .flags = ONL_ARG_CHOSEN, .build = Online_AddHideTalents},
+    [ONL_REQ_HIDE_GO]    = {"HIDE GO"},
+    [ONL_REQ_HIDE_TAG]   = {"HIDE TAG", .build = Online_AddTalkedPlayer},
+    [ONL_REQ_HIDE_END]   = {"HIDE END"},
+    [ONL_REQ_HIDE_QUIT]  = {"HIDE QUIT"},
+    [ONL_REQ_HIDE_BOARD] = {"HIDEBOARD"},
 };

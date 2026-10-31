@@ -1,5 +1,6 @@
 import asyncio
 import os
+import re
 import sys
 import unittest
 
@@ -14,6 +15,7 @@ import online_duo  # noqa: E402
 import online_fishing  # noqa: E402
 import online_goals  # noqa: E402
 import online_guilds  # noqa: E402
+import online_hide  # noqa: E402
 import online_mentors  # noqa: E402
 import online_pageant  # noqa: E402
 import online_pquests  # noqa: E402
@@ -39,11 +41,13 @@ class OnlineTest(unittest.IsolatedAsyncioTestCase):
                                     [online_goals, online_sightings, online_web, online_fishing, online_coopfish, online_shops,
                                      online_pageant, online_duo, online_mentors,
                                      online_pquests, online_betting,
-                                     online_doubles, online_teams, online_guilds, online_racing], clock=lambda: self.now)
+                                     online_doubles, online_teams, online_guilds, online_racing, online_hide],
+                                    clock=lambda: self.now)
         online_betting.install(self.server)
         online_doubles.install(self.server)
         online_teams.install(self.server)
         online_guilds.install(self.server)
+        online_hide.install(self.server)
         self.srv = await asyncio.start_server(self.server.handle, "127.0.0.1", 0)
         self.port = self.srv.sockets[0].getsockname()[1]
         self.clients = []
@@ -731,6 +735,119 @@ class RacingTest(OnlineTest):
         self.assertIn(["+MONEY", str(online_racing.WIN_MONEY)], rows(out))
         self.assertTrue(any(r[0] == "N" and "gave up" in r[1] for r in rows(out)))
         self.assertEqual(self.server.race_heats, [])
+
+
+
+class HideTest(OnlineTest):
+    async def drain(self, c):
+        lines = []
+        while True:
+            try:
+                lines.append(await asyncio.wait_for(c.recv(), 0.2))
+            except asyncio.TimeoutError:
+                return lines
+
+    async def test_game(self):
+        a, b, c = [await self.connect(n, i) for i, n in enumerate(("Ann", "Ben", "Cat"), 1)]
+        woods = " ".join(map(str, MAPS["PETALBURG_WOODS"]))
+        for x, at in ((a, "24 10"), (b, "8 33"), (c, "10 33")):
+            await x.send(f"POS {woods} {at} 1 3 0")
+        status, out = await self.ask(a, "HIDE JOIN 0")
+        self.assertEqual(rows(out)[1][:5], [str(online_hide.SEEKER), "0", "0", "30", "120"])
+        status, out = await self.ask(b, "HIDE LIST")
+        self.assertEqual(rows(out)[1], ["PETALBURG WOODS: JOIN Ann", "0"])
+        status, out = await self.ask(b, "HIDE JOIN 0")
+        self.assertEqual(rows(out)[1][:3], [str(online_hide.HIDER), "0", "0"])
+        await self.ask(c, "HIDE JOIN 0")
+        self.now += online_hide.LOBBY
+        status, out = await self.ask(a, "HIDE GO")
+        self.assertEqual(rows(out)[0][1], "2")
+        # Hiding: Ann doesn't see Ben, far away, but Cat sees him.
+        await self.drain(a)
+        await self.drain(c)
+        await b.send(f"POS {woods} 9 33 1 3 0")
+        self.assertIn(f"GONE {self.pid('Ben')}", await self.drain(a))
+        self.assertTrue(any(l.startswith(f"PLAYER {self.pid('Ben')} ") for l in await self.drain(c)))
+        # Not yet seeking.
+        self.assertEqual((await self.ask(a, f"HIDE TAG {self.pid('Ben')}"))[0], 1)
+        self.now += online_hide.HIDE
+        # Ann walks up to Ben: she sees him again, and finds him.
+        await self.drain(a)
+        await a.send(f"POS {woods} 10 33 1 3 0")
+        self.assertTrue(any(l.startswith(f"PLAYER {self.pid('Ben')} ") for l in await self.drain(a)))
+        status, out = await self.ask(a, f"HIDE TAG {self.pid('Ben')}")
+        self.assertEqual(rows(out)[0][1], "1")
+        # Cat runs out of the woods: out.
+        await c.send(f"POS {' '.join(map(str, MAPS['ROUTE104']))} 5 5 1 3 0")
+        status, out = await self.ask(a, "OSTAT")
+        self.assertIn(["S", "HIDE", "0", "0", "1", str(self.server.hide_games[0].id), str(online_hide.SEEK), "0"],
+                      rows(out))
+        status, out = await self.ask(a, "HIDE END")
+        self.assertEqual(rows(out)[1], ["+MONEY", str(online_hide.FIND_MONEY)])
+        status, out = await self.ask(b, "HIDE END")
+        self.assertIn("found", rows(out)[0][0])
+        status, out = await self.ask(c, "HIDE END")
+        self.assertIn("out", rows(out)[0][0])
+        status, out = await self.ask(a, "HIDEBOARD")
+        self.assertEqual(rows(out)[3], ["*1", "Ann", str(online_hide.FIND_POINTS)])
+
+    async def test_hidden_till_the_end(self):
+        a, b = await self.connect("Ann", 1), await self.connect("Ben", 2)
+        await self.ask(a, "HIDE JOIN 1")
+        await self.ask(b, "HIDE JOIN 1")
+        self.now += online_hide.LOBBY + online_hide.HIDE + online_hide.SEEK
+        status, out = await self.ask(b, "HIDE END")
+        self.assertEqual(rows(out)[1], ["+MONEY", str(online_hide.HIDDEN_MONEY)])
+        status, out = await self.ask(a, "HIDE END")
+        self.assertEqual(rows(out)[0][0], "You found 0 of 1.")
+        self.assertEqual(self.server.hide_games[0].paid, {("Ann", 1), ("Ben", 2)})
+
+    async def test_talents(self):
+        a, b, c = [await self.connect(n, i) for i, n in enumerate(("Ann", "Ben", "Cat"), 1)]
+        woods = " ".join(map(str, MAPS["PETALBURG_WOODS"]))
+        for x, at in ((a, "10 20"), (b, "10 25"), (c, "13 20")):
+            await x.send(f"POS {woods} {at} 1 3 0")
+        # Ann's Kirlia senses hiders; Ben's Gastly helps him blend in.
+        status, out = await self.ask(a, f"HIDE JOIN 0 {online_hide.SENSE} 0 {SPECIES['KIRLIA']}")
+        self.assertIn("KIRLIA can sense", re.sub("[~^]", " ", rows(out)[0][0]))
+        status, out = await self.ask(b, f"HIDE JOIN 0 0 {online_hide.BLEND_IN} {SPECIES['GASTLY']}")
+        self.assertIn("GASTLY helps you blend in", re.sub("[~^]", " ", rows(out)[0][0]))
+        await self.ask(c, "HIDE JOIN 0")
+        self.now += online_hide.LOBBY + online_hide.HIDE
+        game = self.server.hide_games[0]
+        # Cat is 3 tiles away: seen. Ben, blending in, only from 1.
+        ann, ben, cat = (self.server.players[self.pid(n)] for n in ("Ann", "Ben", "Cat"))
+        self.assertTrue(self.server.can_see(ann, cat))
+        ben.pos = (10, 22, 1, 3, 0)
+        self.assertFalse(self.server.can_see(ann, ben))
+        ben.pos = (10, 21, 1, 3, 0)
+        self.assertTrue(self.server.can_see(ann, ben))
+        # Sharp eyes see 2 tiles farther.
+        game.seek_talent = online_hide.SHARP_EYES
+        ben.pos = (10, 23, 1, 3, 0)
+        self.assertTrue(self.server.can_see(ann, ben))
+        # Sensing: HOT with Cat 3 tiles away; COLD once she's found and Ben is far.
+        game.seek_talent = online_hide.SENSE
+        status, out = await self.ask(a, "OSTAT")
+        self.assertEqual(next(r for r in rows(out) if r[:2] == ["S", "HIDE"])[7], "3")
+        game.found[cat.key] = "found"
+        ben.pos = (10, 40, 1, 3, 0)
+        status, out = await self.ask(a, "OSTAT")
+        self.assertEqual(next(r for r in rows(out) if r[:2] == ["S", "HIDE"])[7], "1")
+        # Hiders don't sense.
+        status, out = await self.ask(b, "OSTAT")
+        self.assertEqual(next(r for r in rows(out) if r[:2] == ["S", "HIDE"])[7], "0")
+
+    async def test_nobody_came(self):
+        a = await self.connect("Ann", 1)
+        await self.ask(a, "HIDE JOIN 0")
+        self.now += online_hide.LOBBY
+        status, out = await self.ask(a, "HIDE GO")
+        self.assertEqual(rows(out)[0][1], "0")
+        self.assertEqual(self.server.hide_games, [])
+
+    def pid(self, name):
+        return next(p.id for p in self.server.players.values() if p.name == name)
 
 
 if __name__ == "__main__":
