@@ -61,6 +61,10 @@ const struct GuideEntry gGuideEntries[] =
              MAPSEC_RUSTBORO_CITY, 0, 0, FLAG_ADVENTURE_CRAFTING),
     ACTIVITY("TRAINER SKILLS", "The teacher in RUSTBORO's POKéMON SCHOOL\nteaches a skill for every second badge.",
              MAPSEC_RUSTBORO_CITY, 0, 1, FLAG_MECH_MET_SKILL_TEACHER),
+#ifdef FLAG_COBBLE_ASSAY_DONE
+    AREA("COBBLEROCK", "A guide in RUSTBORO CITY leads you to the\nold mining town.",
+         MAPSEC_RUSTBORO_CITY, MAP_COBBLEROCK, 1, FLAG_COBBLE_ASSAY_DONE),
+#endif
     ACTIVITY("MAIL ROUTES", "The PIDGEY & WINGULL POST in RUSTBORO,\nSLATEPORT, MAUVILLE and LILYCOVE.",
              MAPSEC_RUSTBORO_CITY, 0, 0, 0),
     ACTIVITY("UNDERGROUND MINING", "The digger by the rock in RUSTURF TUNNEL\nlends out digging tools.",
