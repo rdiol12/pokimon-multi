@@ -27,6 +27,7 @@ static const struct PastimeSpotList sSpotLists[] =
 {
     {gLostFoundSpots, LOST_FOUND_COUNT * 2},
     {gMuseumSpots, MUSEUM_SPOT_COUNT},
+    {gDeliverySpots, DELIVERY_TOWN_COUNT + 1},
 };
 
 #define MAX_SHOWN (LOCALID_PASTIME_LAST - LOCALID_PASTIME_FIRST + 1)
@@ -130,6 +131,7 @@ void Pastime_Update(void)
         return;
     sTimer = 0;
     UpdateSpots();
+    Delivery_Update();
 }
 
 // A pressed facing (x, y), map coordinates with MAP_OFFSET.

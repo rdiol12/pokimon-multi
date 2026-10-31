@@ -19,6 +19,14 @@ struct PastimeSaveData
     u16 museumRare[MUSEUM_RARE_SLOTS];  // rare Pokémon shown, by species
     u8 museumRewards;                   // milestone rewards given
     u8 museumFiller[3];
+    // Delivery jobs: the parcel being carried, if any.
+    u8 deliveryFrom;    // town index, DELIVERY_NONE if no parcel
+    u8 deliveryTo;
+    u8 deliveryParcel;  // what's in it
+    bool8 deliveryLate; // the "late" notice was shown
+    u32 deliveryStart;  // play time in seconds when it was picked up
+    u16 deliveryLimit;  // seconds allowed
+    u16 deliveries;     // parcels delivered
 };
 
 #endif // GUARD_PASTIME_SAVE_H

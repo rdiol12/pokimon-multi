@@ -7,8 +7,8 @@ Usage: run.py <scenario.lua> <out dir> [frames] [players]
 The same runner as tools/world_shots/run.py (Driver.scene, two players
 with a server, ...), plus helpers that set up a scene by writing straight
 into struct PastimeSaveData (include/pastime_save.h):
-    Driver.pastime8(offset, value), Driver.pastime16(offset, value),
-    Driver.pastimeRead8(offset), Driver.pastimeMenu(row).
+    Driver.pastime8/16/32(offset, value), Driver.pastimeRead8/32(offset),
+    Driver.pastimeMenu(row).
 """
 import os
 import sys
@@ -28,7 +28,9 @@ function Driver.pastime16(offset, v)
     E.write8(Driver.pastimeAddr(offset), v & 0xFF)
     E.write8(Driver.pastimeAddr(offset) + 1, (v >> 8) & 0xFF)
 end
+function Driver.pastime32(offset, v) E.write32(Driver.pastimeAddr(offset), v) end
 function Driver.pastimeRead8(offset) return E.read8(Driver.pastimeAddr(offset)) end
+function Driver.pastimeRead32(offset) return E.read32(Driver.pastimeAddr(offset)) end
 
 -- R menu: RIDE, ACHIEVEMENTS, RECORDS, QUESTS, LEADERBOARDS, SAFARI HUNT,
 -- PHOTO, ADVENTURE, PASTIMES, CLOSE. Opens R > PASTIMES and picks row.

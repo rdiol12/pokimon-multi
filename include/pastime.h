@@ -38,4 +38,12 @@ void Museum_CheckReward(void);
 void Museum_DescribeStatue(void);
 void Museum_ShowList(void);
 
+// Delivery jobs (pastime_delivery.c).
+void Delivery_Update(void);
+void Delivery_Talk(void);
+void Delivery_Accept(void);
+void Delivery_Deliver(void);
+void Delivery_Cancel(void);
+void Delivery_ShowList(void);
+
 #endif // GUARD_PASTIME_H
