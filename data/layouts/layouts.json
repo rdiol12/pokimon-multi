@@ -9815,6 +9815,16 @@
       "secondary_tileset": "gTileset_Prison",
       "border_filepath": "data/layouts/IronmoorPrison_Solitary/border.bin",
       "blockdata_filepath": "data/layouts/IronmoorPrison_Solitary/map.bin"
+    },
+    {
+      "id": "LAYOUT_HAVEN_RESERVE",
+      "name": "HavenReserve_Layout",
+      "width": 36,
+      "height": 30,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Petalburg",
+      "border_filepath": "data/layouts/HavenReserve/border.bin",
+      "blockdata_filepath": "data/layouts/HavenReserve/map.bin"
     }
   ]
 }

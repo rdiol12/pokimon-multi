@@ -27,6 +27,7 @@
 #include "constants/event_objects.h"
 #include "constants/rgb.h"
 #include "constants/songs.h"
+#include "constants/trainers.h"
 
 // The trainer look (docs/trainer_look.md).
 //
@@ -298,6 +299,88 @@ void TrainerLook_ApplyToObjectEvent(struct ObjectEvent *objectEvent)
     if (look == 0 && !IsPoolTag(GetSpritePaletteTagByPaletteNum(gSprites[objectEvent->spriteId].oam.paletteNum)))
         return;
     ApplyLookPalette(&gSprites[objectEvent->spriteId], objectEvent->graphicsId, look, TRUE);
+}
+
+// Big trainer pictures -------------------------------------------------------
+//
+// Brendan's and May's front and back pictures share one palette each, laid
+// out like their overworld sprites but with their own ramps.
+
+static const u8 sPicIndices[LOOK_COLOUR_PARTS][BODY_COUNT][4] =
+{
+    [LOOK_SKIN]    = {{1, 2, 3, 4}, {1, 2, 3, 4}},
+    [LOOK_HAT]     = {{9},          {7, 8}},
+    [LOOK_BAND]    = {{10, 11},     {10, 11}},
+    [LOOK_CLOTHES] = {{12, 13},     {12, 13}},
+    [LOOK_DARK]    = {{5, 6, 7, 8}, {5, 6}},
+};
+static const u8 sPicIndexCount[LOOK_COLOUR_PARTS][BODY_COUNT] =
+{
+    [LOOK_SKIN]    = {4, 4},
+    [LOOK_HAT]     = {1, 2},
+    [LOOK_BAND]    = {2, 2},
+    [LOOK_CLOTHES] = {2, 2},
+    [LOOK_DARK]    = {4, 2},
+};
+
+static u16 MixColour(u16 a, u16 b, u32 weightB) // weightB of 4
+{
+    u32 r = (GET_R(a) * (4 - weightB) + GET_R(b) * weightB) / 4;
+    u32 g = (GET_G(a) * (4 - weightB) + GET_G(b) * weightB) / 4;
+    u32 bl = (GET_B(a) * (4 - weightB) + GET_B(b) * weightB) / 4;
+
+    return RGB(r, g, bl);
+}
+
+// Recolours the 16 colours at palette offset `offset` (0-511) drawn as
+// trainer picture `trainerPic`, if that is Brendan or May.
+void TrainerLook_RecolorTrainerPic(u16 offset, u16 trainerPic, u32 look)
+{
+    u32 body, part, i;
+    u16 *pal = &gPlttBufferUnfaded[offset];
+
+    if (trainerPic == TRAINER_PIC_BRENDAN)
+        body = BODY_BRENDAN;
+    else if (trainerPic == TRAINER_PIC_MAY)
+        body = BODY_MAY;
+    else
+        return;
+    if ((look & LOOK_COLOUR_MASK) == 0 || offset > PLTT_BUFFER_SIZE - 16)
+        return;
+    for (part = 0; part < LOOK_COLOUR_PARTS; part++)
+    {
+        const struct LookPart *p = &sLookParts[part];
+        u32 choice = LOOK_FIELD(look, part);
+        u32 n = sPicIndexCount[part][body];
+        const u16 *c;
+        u16 ramp[4];
+
+        if (choice == 0 || choice >= p->count)
+            continue;
+        c = p->colours[choice - 1];
+        if (part == LOOK_SKIN)
+        {
+            for (i = 0; i < 4; i++)
+                ramp[i] = c[i];
+        }
+        else if (n == 4)
+        {
+            // Light, main, between, shade.
+            ramp[0] = MixColour(c[0], RGB_WHITE, 1);
+            ramp[1] = c[0];
+            ramp[2] = MixColour(c[0], c[1], 2);
+            ramp[3] = c[1];
+        }
+        else
+        {
+            ramp[0] = c[0];
+            ramp[1] = c[1];
+        }
+        for (i = 0; i < n; i++)
+            pal[sPicIndices[part][body][i]] = ramp[i];
+    }
+    if (!gPaletteFade.active)
+        CpuCopy16(pal, &gPlttBufferFaded[offset], PLTT_SIZE_4BPP);
 }
 
 // Accessories -------------------------------------------------------------

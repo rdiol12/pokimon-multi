@@ -1,4 +1,5 @@
 #include "global.h"
+#include "breed_fusion.h"
 #include "pokemon.h"
 #include "egg_hatch.h"
 #include "pokedex.h"
@@ -320,6 +321,7 @@ static void AddHatchedMonToParty(u8 id)
     species = GetMonData(mon, MON_DATA_SPECIES);
     StringCopy(name, GetSpeciesName(species));
     SetMonData(mon, MON_DATA_NICKNAME, name);
+    BreedFusion_SetHatchedName(mon);
 
     nationalDexNum = SpeciesToNationalPokedexNum(species);
     GetSetPokedexFlag(nationalDexNum, FLAG_SET_SEEN);

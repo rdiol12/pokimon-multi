@@ -62,7 +62,8 @@ struct WorldMailbox
     /*0x034*/ struct WorldRemoteLook remotes[NETPLAY_MAX_REMOTES];
     /*0x0F4*/ struct WorldBoardRow rows[WORLD_BOARD_ROWS];
     /*0x194*/ u8 accessory;  // this player's follower's accessory + 1, sent with the look
-    /*0x195*/ u8 filler[3];
+    /*0x195*/ u8 clockSet;   // set by the bridge once clockMinute holds the server's clock
+    /*0x196*/ u16 clockMinute; // the server's time of day, in minutes since midnight (0-1439)
     /*0x198*/ u32 trainerLook; // this player's colours and accessories (include/trainer_look.h)
     /*0x19C*/ u32 remoteTrainerLooks[NETPLAY_MAX_REMOTES]; // by slot, like remotes[]
 }; // size 0x1BC

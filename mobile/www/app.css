@@ -158,7 +158,14 @@ html, body {
     .screen-wrap { position: absolute; inset: 0; align-items: center; pointer-events: none; }
     /* Leave each side room for the D-pad or the A/B buttons. */
     #screen { width: min(calc(100vw - 2 * 196px - var(--safe-left) - var(--safe-right)), calc((100vh - var(--safe-top) - var(--safe-bottom)) * 1.5)); max-width: none; }
-    .pad { position: absolute; inset: 0; grid-template-areas: "sh sh" "dpad face" "meta meta"; padding: 44px 20px 10px; }
+    /* Absolutely placed, so the safe areas (the Dynamic Island / notch side)
+       are added here rather than inherited from #game's padding. */
+    .pad {
+        position: absolute;
+        inset: 0;
+        grid-template-areas: "sh sh" "dpad face" "meta meta";
+        padding: calc(44px + var(--safe-top)) calc(20px + var(--safe-right)) calc(10px + var(--safe-bottom)) calc(20px + var(--safe-left));
+    }
     .dpad { justify-self: start; }
     .face { justify-self: end; }
     .meta { justify-content: space-between; padding: 0 4px; }

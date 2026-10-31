@@ -36,6 +36,49 @@ Pokémon at the same levels as by day:
 Morning, day and evening use the normal tables. The overworld is tinted by
 time of day (the expansion's DNS).
 
+![Petalburg through the day, lit windows, day and night Pokémon, two players online sharing one night](images/daynight-cycle.png)
+
+**Day, night or both.** Every wild Pokémon is out by day, by night or at
+both times (`sNightSpecies` and `sDaySpecies` in `src/world_daynight.c`;
+anything not listed is out at both). Night: Hoothoot, Spinarak, Oddish,
+Venonat, Zubat, Gastly, Duskull, Shuppet, Murkrow, Sneasel, Houndour,
+Zorua, Volbeat/Illumise, Clefairy, Lunatone, Chinchou and the other owls,
+moths and ghosts. Day: Pidgey, Taillow, Wingull, Swablu, Ledyba, Combee,
+Sunkern, Hoppip, Ponyta, Tauros, Solrock and the other birds and sun-lovers.
+Morning and day are day, night is night, and evening (7-8 pm) is twilight
+when both are out. When the slot a table rolls belongs to a Pokémon that is
+asleep at this hour, the roll is redone (`DayNight_PickSlot`, for grass,
+water, rocks and fishing), so the tables need no changes and are never
+empty: if nobody in a table is awake the first roll stands. The tags only
+apply outdoors; caves, buildings and the sea floor are dark all day, and
+Mt. Pyre's misty slopes keep their ghosts. Seasonal swaps
+(`src/life_seasons.c`) still apply after the pick.
+
+**Lit windows.** In the evening and at night house windows glow with warm
+lamplight instead of darkening (`DayNight_UpdateLights`). The colours that
+light up are listed per tileset in `src/data/daynight_lights.h`, picked with
+`tools/daynight/render_map.py` (renders a map from source; `--mark t:pal:idx`
+paints a colour magenta, `--night` previews the lights). It uses the DNS
+light bit (bit 15 of a colour, which the GBA ignores), so it costs no
+palettes and no EWRAM. Covered: the General tileset's houses (Oldale,
+Petalburg, Lavaridge, Slateport, Fortree...), Littleroot, Rustboro,
+Mauville and Verdanturf, Fallarbor and Lilycove. Street lamps share their
+glass colour with walls, so they stay dark for now.
+
+**One clock online.** Online, the game runs on the server's clock instead
+of the cartridge's: the server sends `CLOCK seconds` (seconds since
+midnight) after `WORLD` and once a minute, the bridge keeps it ticking in
+`gWorldMailbox.clockMinute`, and `RtcCalcLocalTime` takes the hour and
+minute from it (`DayNight_GetServerClock`; the date stays the
+cartridge's). Players online at the same moment share the sky, the lit
+windows, the wild Pokémon, time-based evolutions (Umbreon, Weavile,
+Gliscor...) and the roaming weather. The server's clock is its local time,
+or UTC plus `NETPLAY_CLOCK_UTC_OFFSET` minutes; other server modules ask
+`world.time_of_day()`. Offline, the cartridge clock rules as before.
+
+Screenshots: `python3 tools/world_shots/run.py tools/world_shots/daynight_cycle.lua OUT 400000`,
+and online `NETPLAY_CLOCK_UTC_OFFSET=... python3 tools/world_shots/run.py tools/world_shots/daynight_online.lua OUT 60000 2`.
+
 Night-only visitors (shown from 8 pm, `DayNight_UpdateFlags` in
 `src/world_daynight.c`):
 

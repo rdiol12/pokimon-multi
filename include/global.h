@@ -30,9 +30,11 @@
 #include "adventure_save.h"
 #include "life_save.h"
 #include "mechanics_save.h"
+#include "breed_fusion_save.h"
 #include "pastime_save.h"
 #include "area_save.h"
 #include "guide_save.h"
+#include "reserve_save.h"
 
 // Prevent cross-jump optimization.
 #define BLOCK_CROSS_JUMP asm("");
@@ -286,6 +288,8 @@ struct SaveBlock3
     struct PastimeSaveData pastime;
     struct AreaSaveData areas;
     struct GuideSaveData guide;
+    struct BreedFusionSaveData breedFusion;
+    struct ReserveSaveData reserve;
 }; /* max size 1624 bytes */
 
 extern struct SaveBlock3 *gSaveBlock3Ptr;

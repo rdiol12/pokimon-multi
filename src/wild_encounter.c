@@ -527,6 +527,12 @@ void CreateWildMon(enum Species species, u8 level)
 #define TRY_GET_ABILITY_INFLUENCED_WILD_MON_INDEX(wildPokemon, type, ability, ptr, count) TryGetAbilityInfluencedWildMonIndex(wildPokemon, type, ability, ptr)
 #endif
 
+// Day/night rerolls (src/world_daynight.c) go through these.
+static u32 RerollLand(u32 arg) { return ChooseWildMonIndex_Land(); }
+static u32 RerollWater(u32 arg) { return ChooseWildMonIndex_Water(); }
+static u32 RerollRocks(u32 arg) { return ChooseWildMonIndex_Rocks(); }
+static u32 RerollFishing(u32 rod) { return ChooseWildMonIndex_Fishing(rod); }
+
 bool8 TryGenerateWildMon(const struct WildPokemonInfo *wildMonInfo, enum WildPokemonArea area, u8 flags)
 {
     u8 wildMonIndex = 0;
@@ -548,7 +554,7 @@ bool8 TryGenerateWildMon(const struct WildPokemonInfo *wildMonInfo, enum WildPok
         if (OW_STORM_DRAIN >= GEN_8 && TRY_GET_ABILITY_INFLUENCED_WILD_MON_INDEX(wildMonInfo->wildPokemon, TYPE_WATER, ABILITY_STORM_DRAIN, &wildMonIndex, NUM_LAND_MONS_ENCOUNTER_SLOTS))
             break;
 
-        wildMonIndex = ChooseWildMonIndex_Land();
+        wildMonIndex = DayNight_PickSlot(wildMonInfo->wildPokemon, ChooseWildMonIndex_Land(), RerollLand, 0);
         break;
     case WILD_AREA_WATER:
         if (TRY_GET_ABILITY_INFLUENCED_WILD_MON_INDEX(wildMonInfo->wildPokemon, TYPE_STEEL, ABILITY_MAGNET_PULL, &wildMonIndex, NUM_WATER_MONS_ENCOUNTER_SLOTS))
@@ -564,10 +570,10 @@ bool8 TryGenerateWildMon(const struct WildPokemonInfo *wildMonInfo, enum WildPok
         if (OW_STORM_DRAIN >= GEN_8 && TRY_GET_ABILITY_INFLUENCED_WILD_MON_INDEX(wildMonInfo->wildPokemon, TYPE_WATER, ABILITY_STORM_DRAIN, &wildMonIndex, NUM_WATER_MONS_ENCOUNTER_SLOTS))
             break;
 
-        wildMonIndex = ChooseWildMonIndex_Water();
+        wildMonIndex = DayNight_PickSlot(wildMonInfo->wildPokemon, ChooseWildMonIndex_Water(), RerollWater, 0);
         break;
     case WILD_AREA_ROCKS:
-        wildMonIndex = ChooseWildMonIndex_Rocks();
+        wildMonIndex = DayNight_PickSlot(wildMonInfo->wildPokemon, ChooseWildMonIndex_Rocks(), RerollRocks, 0);
         break;
     default:
     case WILD_AREA_FISHING:
@@ -587,7 +593,7 @@ bool8 TryGenerateWildMon(const struct WildPokemonInfo *wildMonInfo, enum WildPok
 
 static u16 GenerateFishingWildMon(const struct WildPokemonInfo *wildMonInfo, u8 rod)
 {
-    u8 wildMonIndex = ChooseWildMonIndex_Fishing(rod);
+    u8 wildMonIndex = DayNight_PickSlot(wildMonInfo->wildPokemon, ChooseWildMonIndex_Fishing(rod), RerollFishing, rod);
     enum Species wildMonSpecies = wildMonInfo->wildPokemon[wildMonIndex].species;
     u8 level = ChooseWildMonLevel(wildMonInfo->wildPokemon, wildMonIndex, WILD_AREA_FISHING);
 

@@ -1,4 +1,5 @@
 #include "global.h"
+#include "world.h"
 #include "life.h"
 #include "battle_pyramid.h"
 #include "bg.h"
@@ -1027,11 +1028,13 @@ void CopySecondaryTilesetToVramUsingHeap(struct MapLayout const *mapLayout)
 static void LoadPrimaryTilesetPalette(struct MapLayout const *mapLayout)
 {
     LoadTilesetPalette(mapLayout->primaryTileset, 0, GetNumPalsInPrimary(mapLayout) * PLTT_SIZE_4BPP, FALSE, GetNumPalsInPrimary(mapLayout));
+    DayNight_UpdateLights();
 }
 
 void LoadSecondaryTilesetPalette(struct MapLayout const *mapLayout, bool8 skipFaded)
 {
     LoadTilesetPalette(mapLayout->secondaryTileset, GetNumPalsInPrimary(mapLayout) * 16, (NUM_PALS_TOTAL - GetNumPalsInPrimary(mapLayout)) * PLTT_SIZE_4BPP, skipFaded, GetNumPalsInPrimary(mapLayout));
+    DayNight_UpdateLights();
 }
 
 void CopyMapTilesetsToVram(struct MapLayout const *mapLayout)

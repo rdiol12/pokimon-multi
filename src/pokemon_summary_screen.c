@@ -1,4 +1,5 @@
 #include "global.h"
+#include "breed_fusion.h"
 #include "injury.h"
 #include "main.h"
 #include "battle.h"
@@ -3592,7 +3593,16 @@ static void BufferMonTrainerMemo(void)
 static void PrintMonTrainerMemo(void)
 {
     if (!sMonSummaryScreen->summary.isEgg)
-        Injury_BufferSummaryMemo(&sMonSummaryScreen->currentMon.box, gStringVar4);
+    {
+        u8 *memo = BreedFusion_BufferSummaryLine(&sMonSummaryScreen->currentMon.box, gStringVar3);
+
+        if (Injury_BufferSummaryMemo(&sMonSummaryScreen->currentMon.box, memo) || memo != gStringVar3)
+        {
+            if (!Injury_BufferSummaryMemo(&sMonSummaryScreen->currentMon.box, memo))
+                StringCopy(memo, gStringVar4);
+            StringCopy(gStringVar4, gStringVar3);
+        }
+    }
     PrintTextOnWindow(AddWindowFromTemplateList(sPageInfoTemplate, PSS_DATA_WINDOW_INFO_MEMO), gStringVar4, 0, 1, 0, 0);
 }
 
@@ -4347,10 +4357,15 @@ static void SetMonTypeIcons(void)
     }
     else
     {
-        SetTypeSpritePosAndPal(GetSpeciesType(summary->species, 0), 120, 48, SPRITE_ARR_ID_TYPE);
-        if (GetSpeciesType(summary->species, 0) != GetSpeciesType(summary->species, 1))
+        enum Type types[3];
+
+        types[0] = GetSpeciesType(summary->species, 0);
+        types[1] = GetSpeciesType(summary->species, 1);
+        BreedFusion_SetBattlerTypes(&sMonSummaryScreen->currentMon.box, summary->species, types);
+        SetTypeSpritePosAndPal(types[0], 120, 48, SPRITE_ARR_ID_TYPE);
+        if (types[0] != types[1])
         {
-            SetTypeSpritePosAndPal(GetSpeciesType(summary->species, 1), 160, 48, SPRITE_ARR_ID_TYPE + 1);
+            SetTypeSpritePosAndPal(types[1], 160, 48, SPRITE_ARR_ID_TYPE + 1);
             SetSpriteInvisibility(SPRITE_ARR_ID_TYPE + 1, FALSE);
         }
         else

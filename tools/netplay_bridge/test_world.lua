@@ -82,6 +82,17 @@ function tests.asks_for_the_world_and_sends_our_look()
     eq(#net.take(), 0, "nothing new")
 end
 
+function tests.server_clock_ticks_in_the_mailbox()
+    local bridge, mem, net = online()
+    eq(mem.read8(WLD + 0x195), 0, "no clock yet")
+    net.push("CLOCK " .. (22 * 3600 + 59 * 60 + 30)) -- 22:59:30
+    bridge:onFrame()
+    eq(mem.read8(WLD + 0x195), 1, "clock set")
+    eq(mem.read16(WLD + 0x196), 22 * 60 + 59, "22:59")
+    for _ = 1, 1800 do bridge:onFrame() end -- half a minute later
+    eq(mem.read16(WLD + 0x196), 23 * 60, "ticked to 23:00")
+end
+
 function tests.other_players_looks_go_in_their_slot()
     local bridge, mem, net = online()
     net.push("PLAYER 7 Misty 0 9 4 4 1 0 100")

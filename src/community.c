@@ -1,4 +1,5 @@
 #include "global.h"
+#include "breed_fusion.h"
 #include "battle_setup.h"
 #include "community.h"
 #include "data.h"
@@ -114,6 +115,7 @@ bool32 Community_OverworldUpdate(void)
     Community_InitMailbox();
     if (gCommunityShowcase.pending && !ArePlayerFieldControlsLocked())
         RunShowcase();
+    BreedFusion_OverworldUpdate();
     if (CommunityChat_OverworldUpdate != NULL && CommunityChat_OverworldUpdate())
         return TRUE;
     if (CommunityTour_OverworldUpdate != NULL && CommunityTour_OverworldUpdate())

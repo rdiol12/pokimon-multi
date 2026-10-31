@@ -38,6 +38,10 @@ void TrainerLook_ApplyToObjectEvent(struct ObjectEvent *objectEvent);
 // accessory layers on the player and other players in step.
 void TrainerLook_UpdateOverlays(void);
 
+// Recolours a Brendan or May trainer picture's 16 colours at palette
+// offset `offset` (0-511) for look. Other pictures are left alone.
+void TrainerLook_RecolorTrainerPic(u16 offset, u16 trainerPic, u32 look);
+
 // The Look screen. Goes to returnCallback when done.
 void TrainerLook_OpenScreen(void (*returnCallback)(void), bool32 newGame);
 

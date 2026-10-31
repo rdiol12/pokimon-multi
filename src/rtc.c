@@ -8,6 +8,7 @@
 #include "text.h"
 #include "fake_rtc.h"
 #include "overworld.h"
+#include "world.h"
 
 // iwram bss
 static u16 sErrorStatus;
@@ -316,8 +317,17 @@ void RtcCalcTimeDifference(struct SiiRtcInfo *rtc, struct Time *result, struct T
 
 void RtcCalcLocalTime(void)
 {
+    s32 hours, minutes;
+
     RtcGetInfo(&sRtc);
     RtcCalcTimeDifference(&sRtc, &gLocalTime, &gSaveBlock2Ptr->localTimeOffset);
+    // Online, everyone shares the server's hour (src/world_daynight.c).
+    // Only the time of day changes: the date stays the cartridge's.
+    if (DayNight_GetServerClock(&hours, &minutes))
+    {
+        gLocalTime.hours = hours;
+        gLocalTime.minutes = minutes;
+    }
 }
 
 bool8 IsBetweenHours(s32 hours, s32 begin, s32 end)

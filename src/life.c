@@ -2,6 +2,7 @@
 #include "life.h"
 #include "money.h"
 #include "pokemon.h"
+#include "rovers.h"
 
 // Entry points the overworld calls for the fifth batch of features
 // (docs/life.md), and the showcase settings the screenshot driver uses
@@ -42,7 +43,7 @@ bool32 Life_OverworldUpdate(void)
     Seasons_Update();
     LifePhoto_Update();
     LifeGhost_Update();
-    return FALSE;
+    return Rovers_OverworldUpdate();
 }
 
 void Life_OnMapTransition(void)
@@ -51,6 +52,7 @@ void Life_OnMapTransition(void)
     LifePhoto_OnMapTransition();
     LifeEclipse_UpdateObjects();
     LifeGhost_OnMapTransition();
+    Rovers_OnMapTransition();
 }
 
 enum Species Life_ModifyWildSpecies(enum Species species, u8 level)

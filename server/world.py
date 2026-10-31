@@ -14,12 +14,20 @@ Protocol (one line each, client -> server):
     HUNT                          ask for the current Safari hunt
     PHOTO hexchunk                part of a PNG screenshot
     PHOTOEND group num            the photo is complete
-    WORLD                         after WELCOME: send me everyone's LOOK and HOUSE, and HUNT
+    CLOCK                         ask for the server's time of day
+    WORLD                         after WELCOME: send me everyone's LOOK and HOUSE, HUNT and CLOCK
 Server -> client:
     LOOK id follower mount accessory trainer   sent to everyone
     HOUSE id open hexdecor        likewise
     WROW board rank name value extra ... WBOARDEND board myrank
     HUNT id minutesleft           id 0: no hunt
+    CLOCK seconds                 the server's time of day, seconds since midnight
+
+Day and night: everyone online shares the server's clock (CLOCK), so players
+on the same map see the same sky and the same wild Pokemon. The clock is the
+server machine's local time, or UTC plus NETPLAY_CLOCK_UTC_OFFSET minutes if
+that is set. Other server modules (the living NPC trainers, for example) ask
+`time_of_day()` what part of the day it is.
 """
 
 import json
@@ -45,6 +53,34 @@ def current_hunt(now=None):
     hunt_id = slot % 0xFFFF + 1
     left = HUNT_SECONDS - (now - slot * HUNT_SECONDS)
     return hunt_id, max(1, int(left // 60))
+
+
+# The game's times of day (include/constants/rtc.h, OW_TIMES_OF_DAY Gen 8+):
+# morning 6-10, day 10-19, evening 19-20, night 20-6.
+MORNING, DAY, EVENING, NIGHT = "morning", "day", "evening", "night"
+
+
+def clock_seconds(now=None):
+    """The shared clock: seconds since midnight on the server."""
+    now = time.time() if now is None else now
+    offset = os.environ.get("NETPLAY_CLOCK_UTC_OFFSET")
+    if offset is not None and offset.strip().lstrip("-").isdigit():
+        t = time.gmtime(now + int(offset) * 60)
+    else:
+        t = time.localtime(now)
+    return t.tm_hour * 3600 + t.tm_min * 60 + t.tm_sec
+
+
+def time_of_day(now=None):
+    """morning, day, evening or night, as the game counts them."""
+    hour = clock_seconds(now) // 3600
+    if 6 <= hour < 10:
+        return MORNING
+    if 10 <= hour < 19:
+        return DAY
+    if hour == 19:
+        return EVENING
+    return NIGHT
 
 
 class WorldStore:
@@ -143,6 +179,10 @@ def cmd_hunt(self, player):
     player.send(f"HUNT {hunt_id} {left}")
 
 
+def cmd_clock(self, player):
+    player.send(f"CLOCK {clock_seconds()}")
+
+
 def cmd_photo(self, player, chunk):
     w = _world(player)
     w.photo += bytes.fromhex(_check_hex(chunk))
@@ -173,14 +213,15 @@ def cmd_photoend(self, player, group, num):
 
 
 def cmd_world(self, player):
-    """Sent by the bridge after WELCOME: everyone's look and house, and
-    the current hunt."""
+    """Sent by the bridge after WELCOME: everyone's look and house, the
+    current hunt and the clock."""
     for p in self.players.values():
         if p is player or p.name is None or not hasattr(p, "world"):
             continue
         player.send(f"LOOK {p.id} {' '.join(map(str, p.world.look))}")
         player.send(f"HOUSE {p.id} {p.world.house[0]} {p.world.house[1]}")
     cmd_hunt(self, player)
+    cmd_clock(self, player)
 
 
 def broadcast_all(self, line, exclude=None):
@@ -191,7 +232,7 @@ def broadcast_all(self, line, exclude=None):
 
 def install(server_cls):
     """Adds the world commands to the netplay Server class."""
-    for fn in (cmd_look, cmd_house, cmd_score, cmd_wboard, cmd_hunt, cmd_photo, cmd_photoend, cmd_world, broadcast_all):
+    for fn in (cmd_look, cmd_house, cmd_score, cmd_wboard, cmd_hunt, cmd_clock, cmd_photo, cmd_photoend, cmd_world, broadcast_all):
         setattr(server_cls, fn.__name__, fn)
 
 

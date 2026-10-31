@@ -1,4 +1,5 @@
 #include "global.h"
+#include "breed_fusion.h"
 #include "battle.h"
 #include "mechanics.h"
 #include "battle_hold_effects.h"
@@ -78,6 +79,7 @@
 #include "data/battle_move_effects.h"
 #include "test/battle.h"
 #include "follower_npc.h"
+#include "rovers.h"
 #include "load_save.h"
 
 // Helper for accessing command arguments and advancing gBattlescriptCurrInstr.
@@ -3250,6 +3252,7 @@ static void Cmd_switchindataupdate(void)
 
     gBattleMons[battler].types[0] = GetSpeciesType(gBattleMons[battler].species, 0);
     gBattleMons[battler].types[1] = GetSpeciesType(gBattleMons[battler].species, 1);
+    BreedFusion_SetBattlerTypes(&GetBattlerMon(battler)->box, gBattleMons[battler].species, gBattleMons[battler].types);
     gBattleMons[battler].types[2] = TYPE_MYSTERY;
     gBattleMons[battler].ability = GetAbilityBySpecies(gBattleMons[battler].species, gBattleMons[battler].abilityNum);
     #if TESTING
@@ -10336,7 +10339,7 @@ void BS_JumpIfNoWhiteOut(void)
 {
     NATIVE_ARGS(const u8 *jumpInstr);
 
-    if (FlagGet(B_FLAG_NO_WHITEOUT))
+    if (FlagGet(B_FLAG_NO_WHITEOUT) || Rovers_IsWatching())
         gBattlescriptCurrInstr = cmd->jumpInstr;
     else
         gBattlescriptCurrInstr = cmd->nextInstr;
