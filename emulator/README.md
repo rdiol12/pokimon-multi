@@ -19,8 +19,9 @@ emulator/build.sh qt         # desktop player (Qt)
 emulator/build.sh wasm       # mgba.js + mgba.wasm for the phone app (needs emcc)
 ```
 
-Output goes to `build/emulator/`. `make check` uses it with
-`make check ROMTEST=build/emulator/headless/mgba-headless`.
+Output goes to `build/emulator/`. `make check` uses `build/emulator/headless/mgba-headless`
+automatically once it exists (it needs libelf for ELF loading), and the netplay e2e
+tests link the harness against `build/emulator/headless/libmgba.so`.
 
 ## Hardware
 
