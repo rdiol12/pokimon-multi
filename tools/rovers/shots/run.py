@@ -14,8 +14,16 @@ here = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(here, "..", "..", "world_shots"))
 import run  # noqa: E402
 
-run.SYMBOLS += ["gRoverShowcase", "gNetplayExtMailbox", "gBattleOutcome", "gLifeShowcase", "gSpecialVar_Result"]
+run.SYMBOLS += ["gAdventureShowcase", "gRoverShowcase", "gNetplayExtMailbox", "gBattleOutcome", "gLifeShowcase", "gSpecialVar_Result"]
 run.HELPERS += """
+-- The Rift Below's next floor is this one (src/adventure.c showcase).
+function Driver.riftFloor(n)
+    local s = Driver.SYM.gAdventureShowcase
+    E.write8(s + 37, n)
+    E.write8(s, 1)
+    Driver.waitFor("the adventure scene", 1800, function() return E.read8(s) == 0 end)
+    Driver.wait(10)
+end
 -- Summer (the seasons feature would otherwise follow the clock).
 function Driver.summer() E.write8(Driver.SYM.gLifeShowcase + 2, 2) end
 

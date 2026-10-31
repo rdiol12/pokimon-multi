@@ -331,7 +331,6 @@ static void PlayerPartnerHandleChoosePokemon(enum BattlerId battler)
 static void PlayerPartnerHandleIntroTrainerBallThrow(enum BattlerId battler)
 {
     const u16 *trainerPal;
-    enum DifficultyLevel difficulty = GetBattlePartnerDifficultyLevel(gPartnerTrainerId);
 
     if (gRoverTagTrainers != NULL)
         trainerPal = GetTrainerFrontPicPalette(gRoverTagTrainers[0].trainerPic);

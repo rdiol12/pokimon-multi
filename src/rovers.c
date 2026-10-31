@@ -74,6 +74,7 @@ enum
     RS_DUEL,
     RS_DUEL_OVER,
     RS_LEAVING,
+    RS_BUDDY,          // exploring a cave floor with the player
 };
 
 enum
@@ -98,6 +99,7 @@ enum
     REQ_MAJORS,
     REQ_MAJOR_CLEAR,
     REQ_GIFT,
+    REQ_EXPLORED,
 };
 
 enum
@@ -206,6 +208,11 @@ struct RoverState
     u8 tradeSlot;
     u8 startRival;     // 1 + the actor walking up to challenge the player
     u8 tagA, tagB;     // the two rovers a tag battle is against
+    // A cave floor explored together.
+    u8 buddy;          // 1 + the actor exploring with the player
+    u8 farewellId;     // 1 + the rover id that just parted ways
+    u16 farewellItem;
+    u8 farewellDelay;  // frames, so the map's name shows first
     // Watching.
     bool8 watching;
     u8 duelResult;     // a watched duel's result, 1 + left won, for the map
@@ -237,6 +244,7 @@ extern const u8 Rovers_EventScript_Talk[];
 extern const u8 Rovers_EventScript_Charger[];
 extern const u8 Rovers_EventScript_Board[];
 extern const u8 Rovers_EventScript_Rival[];
+extern const u8 Rovers_EventScript_BuddyBye[];
 enum Direction GetDirectionToFace(s16 x1, s16 y1, s16 x2, s16 y2);
 
 static void Actor_Remove(u32 i);
@@ -316,6 +324,12 @@ static bool32 IsOutdoorsOrCave(void)
     default:
         return FALSE;
     }
+}
+
+static bool32 IsRift(void)
+{
+    return gSaveBlock1Ptr->location.mapGroup == MAP_GROUP(MAP_ADVENTURE_DUNGEON)
+        && gSaveBlock1Ptr->location.mapNum == MAP_NUM(MAP_ADVENTURE_DUNGEON);
 }
 
 static bool32 IsTown(void)
@@ -1097,6 +1111,14 @@ static bool32 SendRequest(const struct RoverRequest *r)
         NpxRpc_Num(r->b);
         NpxRpc_Num(r->c);
         break;
+    case REQ_EXPLORED:
+        if (!NpxRpc_Begin("ROVER"))
+            return FALSE;
+        NpxRpc_Word("EXPLORED");
+        NpxRpc_Num(r->a);
+        NpxRpc_Num(gSaveBlock1Ptr->location.mapGroup);
+        NpxRpc_Num(gSaveBlock1Ptr->location.mapNum);
+        break;
     case REQ_MAJOR_CLEAR:
         if (!NpxRpc_Begin("MAJOR"))
             return FALSE;
@@ -1180,6 +1202,18 @@ static void UpdateRequests(void)
 
 void Rovers_OnMapTransition(void)
 {
+    // A floor explored together ends here; the rover shares a find.
+    if (sRovers.buddy != 0)
+    {
+        static const u16 sFinds[] = {ITEM_RED_SHARD, ITEM_BLUE_SHARD, ITEM_YELLOW_SHARD, ITEM_GREEN_SHARD,
+                                     ITEM_TINY_MUSHROOM, ITEM_BIG_MUSHROOM, ITEM_STARDUST, ITEM_ESCAPE_ROPE};
+        struct RoverActor *a = &sRovers.actors[sRovers.buddy - 1];
+        sRovers.farewellId = a->w.id + 1;
+        sRovers.farewellItem = (Random() % 8 == 0) ? ITEM_STAR_PIECE : sFinds[Random() % ARRAY_COUNT(sFinds)];
+        sRovers.farewellDelay = 40;
+        QueueRequest(REQ_EXPLORED, a->w.id, 0, 0, 0);
+        sRovers.buddy = 0;
+    }
     memset(sRovers.actors, 0, sizeof(sRovers.actors));
     sRovers.queued = 0;
     sRovers.spawned = FALSE;
@@ -1206,7 +1240,8 @@ static void SpawnOffline(void)
     u32 seed = gSaveBlock1Ptr->location.mapGroup * 131 + gSaveBlock1Ptr->location.mapNum * 17 + Random();
 
     sRovers.spawned = TRUE;
-    if (room == 0 || (Random() % 3) != 0)
+    // Divers are common in the Rift Below.
+    if (room == 0 || (Random() % (IsRift() ? 2 : 3)) != 0)
         return;
     count = 1 + (Random() % 3 == 0);
     count = min(count, room);
@@ -1397,6 +1432,79 @@ static void UpdateWander(u32 i)
             dir = dir % 4 + 1;
         }
     }
+}
+
+// Next to the player, where nobody stands, if there's such a tile.
+static bool32 SpotNextToPlayer(s16 *outX, s16 *outY)
+{
+    struct ObjectEvent *player = &gObjectEvents[gPlayerAvatar.objectEventId];
+    u32 k, back = Opposite(player->facingDirection);
+
+    for (k = 0; k < 4; k++)
+    {
+        u32 dir = (back + k - 1) % 4 + 1;
+        s16 x = player->currentCoords.x, y = player->currentCoords.y;
+        Step(&x, &y, dir);
+        if (CanStandAt(x, y, TRUE))
+        {
+            *outX = x;
+            *outY = y;
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+// Exploring with the player: keep up, a step behind.
+static void UpdateBuddy(u32 i)
+{
+    struct ObjectEvent *t = TrainerObj(i);
+    struct ObjectEvent *player = &gObjectEvents[gPlayerAvatar.objectEventId];
+    s16 dx, dy;
+    u32 dir, other;
+
+    if (t == NULL || Busy(t) || Busy(MonObj(i)))
+        return;
+    dx = player->currentCoords.x - t->currentCoords.x;
+    dy = player->currentCoords.y - t->currentCoords.y;
+    if (abs(dx) + abs(dy) <= 1)
+    {
+        // In the way of where the player faces: step aside.
+        s16 fx = player->currentCoords.x, fy = player->currentCoords.y;
+        Step(&fx, &fy, player->facingDirection);
+        if (fx == t->currentCoords.x && fy == t->currentCoords.y)
+        {
+            u32 face = player->facingDirection;
+            u32 side = (face == DIR_NORTH || face == DIR_SOUTH) ? DIR_WEST : DIR_NORTH;
+            if (!TryWalk(i, side) && !TryWalk(i, Opposite(side)))
+                TryWalk(i, face);
+        }
+        return;
+    }
+    if (abs(dx) + abs(dy) > 6)
+    {
+        s16 x, y;
+        if (SpotNextToPlayer(&x, &y))
+        {
+            MoveObjectEventToMapCoords(t, x, y);
+            FollowerStep(i, x, y);
+            sRovers.actors[i].x = x;
+            sRovers.actors[i].y = y;
+        }
+        return;
+    }
+    if (abs(dx) >= abs(dy))
+    {
+        dir = dx > 0 ? DIR_EAST : DIR_WEST;
+        other = dy > 0 ? DIR_SOUTH : DIR_NORTH;
+    }
+    else
+    {
+        dir = dy > 0 ? DIR_SOUTH : DIR_NORTH;
+        other = dx > 0 ? DIR_EAST : DIR_WEST;
+    }
+    if (!TryWalk(i, dir) && (dx == 0 || dy == 0 || !TryWalk(i, other)))
+        ObjectEventTurn(t, dir);
 }
 
 static void UpdateLeaving(u32 i)
@@ -2092,6 +2200,11 @@ void Rovers_BufferTalk(void)
         gSpecialVar_Result = 1;
         return;
     }
+    if (a->state == RS_BUDDY)
+    {
+        gSpecialVar_Result = 3;
+        return;
+    }
     if (a->state != RS_WANDER && a->state != RS_DUEL_OVER && a->state != RS_LEAVING)
     {
         gSpecialVar_Result = 2;
@@ -2293,6 +2406,49 @@ void Rovers_StartTag(void)
     CreateNPCTrainerPartyFromTrainer(gParties[B_TRAINER_OPPONENT_B], &sTagTrainers[2]);
     CreateNPCTrainerPartyFromTrainer(gParties[B_TRAINER_PARTNER], &sTagTrainers[0]);
     BattleSetup_StartRoverWatch(CB2_EndRoverTag);
+}
+
+// Caves and the Rift Below: the rover talked to may explore this floor
+// with the player. VAR_RESULT TRUE if it would.
+void Rovers_BuddyOffer(void)
+{
+    struct RoverActor *a = &sRovers.actors[sRovers.talk];
+    gSpecialVar_Result = gMapHeader.mapType == MAP_TYPE_UNDERGROUND && sRovers.buddy == 0
+                      && a->state == RS_WANDER && a->w.count != 0 && a->w.hurt < 3;
+}
+
+void Rovers_StartBuddy(void)
+{
+    struct RoverActor *a = &sRovers.actors[sRovers.talk];
+    a->state = RS_BUDDY;
+    a->timer = 0;
+    sRovers.buddy = sRovers.talk + 1;
+}
+
+// Wild Pokémon met while exploring together: two of them, against the
+// player and the rover (src/battle_setup.c, src/wild_encounter.c).
+bool32 Rovers_HasBuddy(void)
+{
+    return sRovers.buddy != 0 && OnRoverMap() && sRovers.actors[sRovers.buddy - 1].state == RS_BUDDY;
+}
+
+void Rovers_PrepareBuddyBattle(void)
+{
+    BuildTrainerInto(&sRovers.actors[sRovers.buddy - 1], &sTagTrainers[0], sRoverParty, MULTI_PARTY_SIZE);
+    gRoverTagTrainers = sTagTrainers;
+    gPartnerTrainerId = TRAINER_PARTNER(PARTNER_STEVEN);
+    CreateNPCTrainerPartyFromTrainer(gParties[B_TRAINER_PARTNER], &sTagTrainers[0]);
+    ApplyInjuries(gParties[B_TRAINER_PARTNER], &sRovers.actors[sRovers.buddy - 1]);
+}
+
+void Rovers_AfterBuddyBattle(void)
+{
+    if (gRoverTagTrainers == NULL)
+        return;
+    if (sRovers.buddy != 0)
+        ReadInjuries(gParties[B_TRAINER_PARTNER], &sRovers.actors[sRovers.buddy - 1]);
+    gRoverTagTrainers = NULL;
+    gPartnerTrainerId = 0;
 }
 
 // Friends' presents (waitstate): VAR_0x8004 the item, VAR_0x8005 how many,
@@ -2738,9 +2894,16 @@ static void RespawnMissing(void)
             a->missing = 0;
             continue;
         }
-        if (++a->missing < 60)
+        if (++a->missing < (a->state == RS_BUDDY ? 2 : 60))
             continue;
         a->missing = 0;
+        if (a->state == RS_BUDDY)
+        {
+            s16 x, y;
+            if (SpotNextToPlayer(&x, &y))
+                SpawnActor(i, x, y, DIR_SOUTH);
+            continue;
+        }
         if (a->state == RS_DUEL || a->state == RS_DUEL_OVER)
             a->state = RS_WANDER;
         {
@@ -2789,6 +2952,14 @@ bool32 Rovers_OverworldUpdate(void)
         ScriptContext_SetupScript(Rovers_EventScript_Talk);
         return TRUE;
     }
+    if (sRovers.farewellId != 0 && (sRovers.farewellDelay == 0 || --sRovers.farewellDelay == 0))
+    {
+        StringCopy(gStringVar1, gRoverCast[sRovers.farewellId - 1].name);
+        gSpecialVar_0x8004 = sRovers.farewellItem;
+        sRovers.farewellId = 0;
+        ScriptContext_SetupScript(Rovers_EventScript_BuddyBye);
+        return TRUE;
+    }
     if (ObjByLocalId(LOCALID_ROVER_BOARD) == NULL && IsTown())
         SpawnBoard();
     RespawnMissing();
@@ -2814,6 +2985,9 @@ bool32 Rovers_OverworldUpdate(void)
             break;
         case RS_LEAVING:
             UpdateLeaving(i);
+            break;
+        case RS_BUDDY:
+            UpdateBuddy(i);
             break;
         }
     }

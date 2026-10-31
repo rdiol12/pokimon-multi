@@ -160,6 +160,22 @@ class RoverTest(unittest.IsolatedAsyncioTestCase):
         here, _ = parse_here((await self.ask(b, f"ROVER HERE {G} {N} 4"))[1])
         self.assertTrue(all(w[-2] == 0 for w in here))
 
+    async def test_rift_divers(self):
+        a = await self.connect("Ash", 1)
+        await self.ask(a, f"ROVER HERE {G} {N} 4")
+        self.league.db.execute("UPDATE rovers SET badges = 2")
+        seen = set()
+        for _ in range(30):
+            here, _ = parse_here((await self.ask(a, "ROVER HERE 75 1 4"))[1])
+            self.assertLessEqual(len(here), 1)
+            seen.update(w[0] for w in here)
+        self.assertTrue(seen)
+        rid = next(iter(seen))
+        # Visiting only: it's still on its own map.
+        self.assertNotEqual(rovers.load(self.league.db, rid).map, "75.1")
+        self.assertEqual(await self.ask(a, f"ROVER EXPLORED {rid} 75 1"), (0, b""))
+        self.assertEqual(rovers.bond(self.league.db, rid, ("Ash", 1))["friendship"], 2)
+
     async def test_majors(self):
         a = await self.connect("Ash", 1)
         status, answer = await self.ask(a, f"MAJOR LIST {G} {N}")

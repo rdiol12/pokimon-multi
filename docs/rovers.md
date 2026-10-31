@@ -16,6 +16,24 @@ heal at Pokémon Centers. The player meets them anywhere and can:
   get has the rover as its trainer).
 - see their **rankings and news** on the quest board in every town. They
   are not on the PvP ladder, which stays for players.
+- make **rivals**: a rover the player beats remembers it. Online, a rival
+  up to two maps away comes looking for them, shows a "!" when it spots
+  the player, walks up and battles them (no saying no) until it wins one
+  back. Rivals train harder.
+- make **friends**: trading, exploring together and the like build
+  friendship (per player, on the server). A friend greets the player
+  warmly and has a present for them once a day (the best thing it
+  crafted, else something from its bag).
+- **team up** with one for a tag battle: with two other rovers on the map,
+  the one talked to offers a 2-on-2 against them (the partner's front
+  picture stands next to the player). Both opponents' records count it.
+- **explore a cave floor together**: in a cave or the Rift Below, a rover
+  talked to offers to come along. It follows a step behind (stepping
+  aside when it's in the way), every wild Pokémon met comes in pairs and
+  the rover fights beside the player (a 2-on-2 wild battle with it as the
+  in-game partner), and when the player leaves the floor it says goodbye and shares a find
+  (a Shard, Mushroom, Stardust, Escape Rope, now and then a Star Piece).
+  Rovers dive in the Rift Below more often than they walk other caves.
 
 Also here:
 
@@ -94,7 +112,7 @@ experience is given and nothing is saved.
 
 - Object local ids 130-149 (`include/constants/rovers.h`), spawned in C; no
   map.json edits. Rover objects aren't removed when they walk off screen.
-- No flags, vars or save data. EWRAM: about 900 bytes.
+- No flags, vars or save data. EWRAM: about 1,200 bytes.
 - Hooks: `Life_OverworldUpdate`/`Life_OnMapTransition` (src/life.c), talk
   scripts in `field_control_avatar.c`, `IsAiVsAiBattle` (battle_controllers.c),
   `CanInjureInBattle` (injury.c), `CB2_EndLifeTrainerBattle` and
@@ -105,6 +123,15 @@ experience is given and nothing is saved.
   in-game partner's text read a name that isn't there and overran the stack)
   and no white-out text when the left rover loses (`BS_JumpIfNoWhiteOut`),
   and the trade scene's names for a rover trade (`trade.c`).
+- Tag battles and cave partners: `gRoverTagTrainers` in
+  `GetTrainerStructFromId` (include/data.h) gives the partner and the two
+  opponents (ids `TRAINER_PARTNER(PARTNER_STEVEN)`, `ROVER_TAG_FOE_A/B`), so
+  names, pictures and parties come out right; the partner's front picture
+  in `battle_controller_player_partner.c` and its name in `frontier_util.c`.
+  Cave partners: `Rovers_HasBuddy` in `TryDoDoubleWildBattle`
+  (wild_encounter.c) and `DoStandardWildBattle`/`CB2_EndWildBattle`
+  (battle_setup.c). The trainers are in EWRAM, not on the heap: battle
+  start resets the heap (`MoveSaveBlocks_ResetHeap`).
 - The Haven Reserve (`server/community_reserve.py`, other branch): a rover that
   lets a Pokémon go drops it there, and rovers in Verdanturf sometimes catch
   one. Optional: rovers.py works without it.

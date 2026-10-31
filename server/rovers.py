@@ -632,6 +632,9 @@ def hops(a, b, limit):
 
 # Commands -----------------------------------------------------------------------
 
+RIFT = "75.1"  # MAP_ADVENTURE_DUNGEON, dug out anew each floor (src/dungeon.c)
+
+
 def map_key(args, i):
     return "%d.%d" % (int(args[i]), int(args[i + 1]))
 
@@ -662,6 +665,11 @@ def cmd_here(ctx, args, data):
             r.map = key
             r.save(ctx.db)
             here.append(r)
+    if key == RIFT and not here:
+        # Divers in the Rift Below: a rover with a badge or more, now and then.
+        divers = [r for r in rovers if r.badges >= 1]
+        if divers and rng.random() < 0.5:
+            here.append(rng.choice(divers))  # visiting; it stays on its own map
     here = here[:most]
     major = ctx.db.execute("SELECT id, species, level FROM majors WHERE map = ? AND cleared_by IS NULL",
                            (key,)).fetchone() or (0, 0, 0)
@@ -770,6 +778,19 @@ def cmd_leave(ctx, args, data):
     return b""
 
 
+def cmd_explored(ctx, args, data):
+    """ROVER EXPLORED <id> <group> <num>: the rover explored a cave floor
+    with the player; they're a little closer friends."""
+    r = load(ctx.db, int(args[1]))
+    key = map_key(args, 2)
+    b = bond(ctx.db, r.id, ctx.key)
+    b["friendship"] += 2
+    save_bond(ctx.db, r.id, ctx.key, b)
+    where = "the Rift Below" if key == RIFT else title(key) if key in WORLD else "a cave"
+    news(ctx.db, f"{r.name} explored {where} with {ctx.key[0]}.")
+    return b""
+
+
 def cmd_board(ctx, args, data):
     """ROVER BOARD: the 10 best rovers (name|badges|wins|losses|lead species|
     lead level), then the latest news, one line each after a '-' row."""
@@ -833,7 +854,7 @@ def cmd_major_clear(ctx, args, data):
     return b""
 
 
-ROVER = {"GIFT": cmd_gift, "HERE": cmd_here, "SYNC": cmd_sync, "FIGHT": cmd_fight, "BEAT": cmd_beat, "LEAVE": cmd_leave,
+ROVER = {"GIFT": cmd_gift, "HERE": cmd_here, "SYNC": cmd_sync, "FIGHT": cmd_fight, "BEAT": cmd_beat, "LEAVE": cmd_leave, "EXPLORED": cmd_explored,
          "BOARD": cmd_board, "INFO": cmd_ask}
 MAJOR = {"LIST": cmd_majors, "CLEAR": cmd_major_clear}
 

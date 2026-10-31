@@ -6,6 +6,7 @@ Rovers_EventScript_Talk::
 	callnative Rovers_BufferTalk
 	goto_if_eq VAR_RESULT, 1, Rovers_EventScript_Duel
 	goto_if_eq VAR_RESULT, 2, Rovers_EventScript_Busy
+	goto_if_eq VAR_RESULT, 3, Rovers_EventScript_BuddyTalk
 	faceplayer
 	callnative Rovers_IsFriend
 	goto_if_eq VAR_RESULT, TRUE, Rovers_EventScript_FriendHello
@@ -13,6 +14,11 @@ Rovers_EventScript_Talk::
 Rovers_EventScript_AfterHello:
 	callnative Rovers_BufferTalkStats
 	msgbox gStringVar4, MSGBOX_DEFAULT
+	callnative Rovers_BuddyOffer
+	goto_if_eq VAR_RESULT, FALSE, Rovers_EventScript_TagOffer
+	msgbox Rovers_Text_BuddyAsk, MSGBOX_YESNO
+	goto_if_eq VAR_RESULT, YES, Rovers_EventScript_Buddy
+Rovers_EventScript_TagOffer:
 	callnative Rovers_TagOffer
 	goto_if_eq VAR_RESULT, FALSE, Rovers_EventScript_AskBattle
 	msgbox Rovers_Text_TagAsk, MSGBOX_YESNO
@@ -45,6 +51,26 @@ Rovers_EventScript_Bye:
 	waitstate
 	callnative Rovers_AfterTrade
 	msgbox Rovers_Text_TradeThanks, MSGBOX_DEFAULT
+	release
+	end
+
+Rovers_EventScript_Buddy:
+	callnative Rovers_StartBuddy
+	msgbox Rovers_Text_BuddyGo, MSGBOX_DEFAULT
+	release
+	end
+
+@ Leaving a floor explored together: the rover shares a find.
+Rovers_EventScript_BuddyBye::
+	lock
+	msgbox Rovers_Text_BuddyBye, MSGBOX_DEFAULT
+	giveitem VAR_0x8004
+	release
+	end
+
+Rovers_EventScript_BuddyTalk:
+	faceplayer
+	msgbox Rovers_Text_BuddyTalk, MSGBOX_DEFAULT
 	release
 	end
 
@@ -186,6 +212,22 @@ Rovers_Text_After:
 Rovers_Text_Bye:
 	.string "Maybe next time.\n"
 	.string "I've got Pokémon to catch!$"
+
+Rovers_Text_BuddyAsk:
+	.string "This cave's a maze. Want to explore\n"
+	.string "this floor together?$"
+
+Rovers_Text_BuddyGo:
+	.string "Great! I'll stick with you. Anything\n"
+	.string "that jumps out, we take on together!$"
+
+Rovers_Text_BuddyBye:
+	.string "{STR_VAR_1}: That was fun exploring!\n"
+	.string "Here, you should have this.$"
+
+Rovers_Text_BuddyTalk:
+	.string "{STR_VAR_1}: Let's keep going!\n"
+	.string "I bet there's treasure down here.$"
 
 Rovers_Text_TagAsk:
 	.string "{STR_VAR_2} and {STR_VAR_3} are\n"
