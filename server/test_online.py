@@ -7,6 +7,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 import ext  # noqa: E402
 import netplay_server as ns  # noqa: E402
 import online  # noqa: E402
+import online_fishing  # noqa: E402
 import online_goals  # noqa: E402
 import online_sightings  # noqa: E402
 import online_web  # noqa: E402
@@ -24,7 +25,7 @@ class OnlineTest(unittest.IsolatedAsyncioTestCase):
         self.league = ns.League(":memory:")
         self.server = ns.Server(self.league)
         self.online = online.Online(self.server, ext.install(self.server),
-                                    [online_goals, online_sightings, online_web], clock=lambda: self.now)
+                                    [online_goals, online_sightings, online_web, online_fishing], clock=lambda: self.now)
         self.srv = await asyncio.start_server(self.server.handle, "127.0.0.1", 0)
         self.port = self.srv.sockets[0].getsockname()[1]
         self.clients = []
@@ -128,6 +129,41 @@ class WebTest(OnlineTest):
         png = route(f"/sprite/{absol}.png")[2]
         self.assertTrue(png.startswith(b"\x89PNG") and b"tRNS" in png)
         self.assertIsNone(route("/sprite/999999.png"))
+
+
+class FishingTest(OnlineTest):
+    async def test_tournament_scores_and_prizes(self):
+        online_fishing.START, online_fishing.PERIOD, online_fishing.LENGTH = self.now - 60, 7200, 600
+        online_fishing._announced.update(started=None, finished=None)
+        a = await self.connect("Ann", 1)
+        b = await self.connect("Ben", 2)
+        status, out = await self.ask(a, "OSTAT")
+        fisht = next(r for r in rows(out) if r[:2] == ["S", "FISHT"])
+        self.assertEqual(fisht[2:4], ["1", "9"])
+        k = int(fisht[7])
+        rare = SPECIES[online_fishing.rares(k)[0]]
+        self.assertIn("N", [r[0] for r in rows(out)])  # it started
+        await self.ask(a, f"OEV FISH 129 900")      # Magikarp, 90 cm
+        await self.ask(b, f"OEV FISH {rare} 450")   # rare, 45 cm + 50
+        await self.ask(a, f"OEV FISH 129 300")
+        status, out = await self.ask(a, "FISHT BOARD")
+        lines = rows(out)
+        self.assertEqual(lines[3][:3], ["*1", "Ann", "120"])
+        self.assertEqual(lines[4][:3], ["2", "Ben", "95"])
+        self.assertEqual(lines[0][1], "0")
+        # Over: Ann is first, Ben second; both collect.
+        self.now += 700
+        status, out = await self.ask(a, "FISHT BOARD")
+        self.assertEqual(rows(out)[0][1], "1")
+        self.assertIn("RESULTS", rows(out)[1][0])
+        status, out = await self.ask(b, "FISHT CLAIM")
+        self.assertIn(["+ITEM", str(ITEMS["RARE_CANDY"]), "3"], rows(out))
+        status, out = await self.ask(a, "FISHT CLAIM")
+        self.assertIn(["+MONEY", "20000"], rows(out))
+        self.assertEqual((await self.ask(a, "FISHT CLAIM"))[0], 1)
+        # Reports outside a tournament don't count.
+        await self.ask(a, "OEV FISH 129 900")
+        self.assertEqual(self.league.db.execute("SELECT COUNT(*) FROM online_fish_scores").fetchone()[0], 2)
 
 
 if __name__ == "__main__":

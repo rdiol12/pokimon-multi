@@ -10,7 +10,8 @@ Like tools/world_shots/run.py (whose driver helpers it reuses), plus:
   before the games start: it can play other players with raw protocol lines
   (see `Fake` below) to fill boards. `seed` may return a function, which is
   then run in a thread alongside the games (`after(port, out)`). The server
-  also serves its web pages, on port `Fake.http`.
+  also serves its web pages, on port `Fake.http`. A seed's `ENV` dict is
+  added to the server's environment.
 """
 import importlib.util
 import os
@@ -98,6 +99,13 @@ def main():
                 thread.start()
         return real_call(cmd, *a, **kw)
 
+    if seed_path:
+        # A seed's ENV (e.g. a tournament's schedule) is the server's environment.
+        spec = importlib.util.spec_from_file_location("seed_env", seed_path)
+        mod = importlib.util.module_from_spec(spec)
+        mod.Fake = Fake
+        spec.loader.exec_module(mod)
+        os.environ.update({k: str(v) for k, v in getattr(mod, "ENV", {}).items()})
     subprocess.Popen, subprocess.call = popen, call
     world_run.main()
 

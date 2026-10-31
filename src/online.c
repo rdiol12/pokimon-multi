@@ -20,6 +20,8 @@
 #include "task.h"
 #include "text.h"
 #include "wild_encounter.h"
+#include "world.h"
+#include "random.h"
 #include "battle.h"
 #include "battle_setup.h"
 #include "window.h"
@@ -75,6 +77,18 @@ struct OnlineState
 };
 
 static EWRAM_DATA struct OnlineState sOnline = {0};
+
+// The wild Pokémon of the current battle (gEnemyParty may be cleared by the
+// time the battle ends).
+struct OnlineWild
+{
+    u16 species;
+    bool8 fished;
+    u8 filler;
+    u32 personality;
+};
+
+static EWRAM_DATA struct OnlineWild sWild = {0};
 
 // The screenshot driver (tools/online_shots/) writes a scene here; the next
 // free overworld frame plays it.
@@ -754,9 +768,15 @@ bool32 Online_OverworldUpdate(void)
 // for the server's board (and a notice for everyone online).
 void Online_OnWildBattleStart(void)
 {
-    u16 species = GetMonData(&gEnemyParty[0], MON_DATA_SPECIES);
+    u16 species;
     s32 args[4];
 
+    if (gIsFishingEncounter)
+        Online_TournamentBite();
+    species = GetMonData(&gEnemyParty[0], MON_DATA_SPECIES);
+    sWild.species = species;
+    sWild.personality = GetMonData(&gEnemyParty[0], MON_DATA_PERSONALITY);
+    sWild.fished = gIsFishingEncounter;
     if (species == SPECIES_NONE || species >= NUM_SPECIES)
         return;
     if (!(gBattleTypeFlags & BATTLE_TYPE_ROAMER) && !gSpeciesInfo[species].isRestrictedLegendary
@@ -778,8 +798,13 @@ void Online_OnCatch(void)
     args[1] = gBattleResults.shinyWildMon;
     args[2] = gSaveBlock1Ptr->location.mapGroup;
     args[3] = gSaveBlock1Ptr->location.mapNum;
-    args[4] = gIsFishingEncounter;
+    args[4] = sWild.fished && sWild.species == gBattleResults.caughtMonSpecies;
     Online_Report("CATCH", ARRAY_COUNT(args), args);
+    if (args[4])
+    {
+        args[1] = Records_SizeOf(sWild.species, sWild.personality);
+        Online_Report("FISH", 2, args);
+    }
 }
 
 // For the ONLINE menu.

@@ -54,6 +54,30 @@ map's tiles and finds each species' picture and shiny palette. The Docker
 image now copies `graphics/pokemon`, `server/static` and every bridge
 script (the Online Plaza's `netplay_ext.lua` was missing from it).
 
+## Fishing tournaments
+
+![Start notice, both players' live boards, the results notice and board, a prize](images/online-fishing.png)
+
+Every two hours, for half an hour, the server runs a fishing tournament
+(`server/online_fishing.py`, `src/online_fishing.c`). Everyone online is
+told when one starts. While it's on:
+
+- a third of the Pokémon that bite are one of the tournament's three rare
+  species (Feebas, Relicanth, Luvdisc, Lapras, Dratini, Mantine…, a
+  different three each time), at the level of the Pokémon they replace;
+- every Pokémon landed with a rod scores its size in centimetres (the same
+  size as R → RECORDS), plus 50 for a rare one, and the player is told how
+  many points it got.
+
+HUB → FISHING TOURNEY shows the live standings, or the last results and when
+the next one starts. When it ends everyone online hears the top three, who
+win 5 Rare Candies and ¥20,000, 3 Rare Candies and ¥10,000, and 10 Ultra
+Balls and ¥5,000; everyone else who entered gets 3 Dive Balls. Prizes are
+collected from the same board.
+
+`NETPLAY_FISHT_PERIOD`, `NETPLAY_FISHT_LENGTH` and `NETPLAY_FISHT_START`
+(seconds) change the schedule.
+
 ## How it talks to the server
 
 These features use the Online Plaza's request channel (`NpxRpc_*` in
@@ -77,7 +101,7 @@ lines; a line starting with `*` is the player's own (red), and
 `%|percent|text|right text|count` is a progress bar.
 
 In the background the game reports what happens (`OEV CATCH species shiny
-mapGroup mapNum fished`, `OEV SIGHT ...`) and asks for the live features' status (`OSTAT`)
+mapGroup mapNum fished`, `OEV SIGHT ...`, `OEV FISH species size`) and asks for the live features' status (`OSTAT`)
 every ten seconds; both answers bring any notices.
 
 On the server, `server/online.py` adds these words to the plaza's request
