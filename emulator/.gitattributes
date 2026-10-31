@@ -1,0 +1,4 @@
+patches/*.patch -text
+*.sh text eol=lf
+MGBA_COMMIT text eol=lf
+WASM_COMMIT text eol=lf

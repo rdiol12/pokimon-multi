@@ -224,6 +224,11 @@ MAPJSON      := $(TOOLS_DIR)/mapjson/mapjson$(EXE)
 JSONPROC     := $(TOOLS_DIR)/jsonproc/jsonproc$(EXE)
 TRAINERPROC  := $(TOOLS_DIR)/trainerproc/trainerproc$(EXE)
 PATCHELF     := $(TOOLS_DIR)/patchelf/patchelf$(EXE)
+# The game needs our mGBA fork's extended EWRAM (emulator/README.md); stock mGBA
+# stops on its red screen. `emulator/build.sh headless` builds the test runner.
+ifneq ($(wildcard build/emulator/headless/mgba-headless$(EXE)),)
+    ROMTEST ?= $(CURDIR)/build/emulator/headless/mgba-headless$(EXE)
+endif
 ifeq ($(shell uname),Darwin)
     ROMTEST ?= $(shell command -v mgba-rom-test-mac 2>/dev/null || echo $(TOOLS_DIR)/mgba/mgba-rom-test-mac)
     ROMTESTHYDRA := $(shell command -v mgba-rom-test-hydra 2>/dev/null || echo $(TOOLS_DIR)/mgba-rom-test-hydra/mgba-rom-test-hydra)

@@ -18,12 +18,25 @@
 #define TEST_RTC_DEFAULT 1793437200LL
 #include <unistd.h>
 
+#if __has_include(<mgba/script/base.h>)
+// mGBA 0.11+ (our fork, emulator/)
+#include <mgba/flags.h>
+#define HARNESS_MGBA_011
+#endif
 #include <mgba/core/core.h>
 #include <mgba/core/log.h>
 #include <mgba/core/scripting.h>
+#ifdef HARNESS_MGBA_011
+#include <mgba/script/base.h>
+#include <mgba/script/console.h>
+#endif
 #include <mgba/script/context.h>
 #include <mgba/internal/script/lua.h>
 #include <mgba-util/vfs.h>
+
+#ifdef HARNESS_MGBA_011
+typedef mColor color_t;
+#endif
 
 #define MAX_INSTANCES 4
 #define GBA_WIDTH 240
@@ -152,7 +165,10 @@ int main(int argc, char** argv) {
 		bool allDone = true;
 		for (int i = 0; i < count; i++) {
 			instances[i].core->runFrame(instances[i].core);
+			#ifndef HARNESS_MGBA_011
+			// mGBA 0.11 fires "frame" itself once the core is attached
 			mScriptContextTriggerCallback(&instances[i].context, "frame");
+#endif
 			if (!isDone(instances[i].lua))
 				allDone = false;
 		}
