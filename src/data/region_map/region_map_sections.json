@@ -1634,6 +1634,10 @@
     {
       "id": "MAPSEC_STARFALL_ISLE",
       "name": "STARFALL ISLE"
+    },
+    {
+      "id": "MAPSEC_AMBERWOOD_HOLLOW",
+      "name": "AMBERWOOD HOLLOW"
     }
   ]
 }

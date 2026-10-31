@@ -58,12 +58,12 @@
 #define FLAG_STARFALL_JIRACHI_DONE    0x24 // Caught or defeated Jirachi in Starfall Cave
 #define FLAG_STARFALL_EXPLORER_REWARD    0x25 // Got the explorer's reward for meeting Jirachi
 #define FLAG_ITEM_STARFALL_GROVE_BIG_NUGGET    0x26 // Item ball in the hidden grove on Starfall Isle
-#define FLAG_UNUSED_0x027    0x27 // Unused Flag
-#define FLAG_UNUSED_0x028    0x28 // Unused Flag
-#define FLAG_UNUSED_0x029    0x29 // Unused Flag
-#define FLAG_UNUSED_0x02A    0x2A // Unused Flag
-#define FLAG_UNUSED_0x02B    0x2B // Unused Flag
-#define FLAG_UNUSED_0x02C    0x2C // Unused Flag
+#define FLAG_AMBERWOOD_LANTERN_1    0x27 // Lit the lantern by the Amberwood Hollow campsite
+#define FLAG_AMBERWOOD_LANTERN_2    0x28 // Lit the lantern in the Amberwood Hollow meadow
+#define FLAG_AMBERWOOD_LANTERN_3    0x29 // Lit the lantern by the Amberwood Hollow lake
+#define FLAG_AMBERWOOD_CELEBI_DONE    0x2A // Caught or defeated Celebi in the Amberwood shrine
+#define FLAG_ITEM_AMBERWOOD_CLEARING    0x2B // Item ball in the secret Amberwood clearing
+#define FLAG_AMBERWOOD_CAMPER_REWARD    0x2C // Got the camper's reward for opening the Amberwood shrine
 #define FLAG_UNUSED_0x02D    0x2D // Unused Flag
 #define FLAG_UNUSED_0x02E    0x2E // Unused Flag
 #define FLAG_UNUSED_0x02F    0x2F // Unused Flag
@@ -692,7 +692,7 @@
 #define FLAG_HIDDEN_ITEM_STARFALL_STAR_PIECE  0x27D // Hidden item: Starfall Isle grove
 #define FLAG_HIDDEN_ITEM_STARFALL_RARE_CANDY  0x27E // Hidden item: behind the Starfall Isle elder's house
 #define FLAG_HIDDEN_ITEM_STARFALL_PP_MAX  0x27F // Hidden item: Starfall Isle meadow
-#define FLAG_UNUSED_0x280  0x280 // Unused Flag
+#define FLAG_HIDDEN_ITEM_AMBERWOOD_LAKE  0x280 // Hidden item: Amberwood Hollow lakeshore
 #define FLAG_UNUSED_0x281  0x281 // Unused Flag
 #define FLAG_UNUSED_0x282  0x282 // Unused Flag
 #define FLAG_UNUSED_0x283  0x283 // Unused Flag

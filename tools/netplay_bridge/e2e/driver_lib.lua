@@ -107,6 +107,8 @@ function Driver.partyMon(slot)
     return { nickname = decodeName(base + 8, 10), ot = decodeName(base + 20, 7) }
 end
 
+-- Level of a Pokémon in gParties[party] (0 player, 1 opponent A, 2 partner, 3 opponent B).
+function Driver.partyLevel(party, slot) return E.read8(SYM.gParties + (party * 6 + slot) * 100 + 84) end
 function Driver.partyCount() return E.read8(SYM.gPartiesCount) end
 
 -- Money is stored xor'd with the save's encryption key.

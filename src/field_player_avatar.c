@@ -1635,6 +1635,20 @@ u16 GetPlayerAvatarGraphicsIdByStateId(u8 state)
     return sPlayerStyleAvatarGfxIds[GetPlayerStyle()][state];
 }
 
+// Whether graphicsId is any style's surfing or diving sprite.
+bool32 IsPlayerSurfingGraphicsId(u16 graphicsId)
+{
+    u32 style;
+
+    for (style = 0; style < PLAYER_STYLE_COUNT; style++)
+    {
+        if (sPlayerStyleAvatarGfxIds[style][PLAYER_AVATAR_STATE_SURFING] == graphicsId
+         || sPlayerStyleAvatarGfxIds[style][PLAYER_AVATAR_STATE_UNDERWATER] == graphicsId)
+            return TRUE;
+    }
+    return FALSE;
+}
+
 enum PlayerStyle GetPlayerStyle(void)
 {
     u8 style = gSaveBlock2Ptr->playerStyle;

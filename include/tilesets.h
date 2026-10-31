@@ -19,6 +19,7 @@ extern const struct Tileset gTileset_Mauville;
 extern const struct Tileset gTileset_Slateport;
 extern const struct Tileset gTileset_Dewford;
 extern const struct Tileset gTileset_Lilycove;
+extern const struct Tileset gTileset_Amberwood;
 extern const struct Tileset gTileset_Mossdeep;
 extern const struct Tileset gTileset_Sootopolis;
 extern const struct Tileset gTileset_EverGrande;

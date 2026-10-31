@@ -1,6 +1,7 @@
 #include "global.h"
 #include "netplay.h"
 #include "battle.h"
+#include "battle_frontier.h"
 #include "battle_setup.h"
 #include "config/netplay.h"
 #include "cable_club.h"
@@ -11,6 +12,8 @@
 #include "field_player_avatar.h"
 #include "follower_helper.h"
 #include "field_screen_effect.h"
+#include "frontier_util.h"
+#include "region_map.h"
 #include "field_weather.h"
 #include "fieldmap.h"
 #include "link.h"
@@ -22,6 +25,7 @@
 #include "play_time.h"
 #include "overworld.h"
 #include "palette.h"
+#include "party_menu.h"
 #include "pokedex.h"
 #include "pokemon.h"
 #include "pokemon_storage_system.h"
@@ -36,11 +40,13 @@
 #include "trade.h"
 #include "window.h"
 #include "constants/battle.h"
+#include "constants/battle_frontier.h"
 #include "constants/cable_club.h"
 #include "constants/characters.h"
 #include "constants/event_object_movement.h"
 #include "constants/event_objects.h"
 #include "constants/field_effects.h"
+#include "constants/map_types.h"
 #include "constants/flags.h"
 #include "constants/items.h"
 #include "constants/map_groups.h"
@@ -100,6 +106,7 @@ struct NetplayLinkState
 EWRAM_DATA struct NetplayMailbox gNetplayMailbox = {0};
 
 static EWRAM_DATA struct NetplaySession sSession = {0};
+static EWRAM_DATA u8 sSavedFrontierLvlMode = 0; // put back after a co-op battle
 static EWRAM_DATA struct NetplayInvite sInvite = {0};
 static EWRAM_DATA struct NetplayLinkState sLink = {0};
 static EWRAM_DATA struct NetplayRequest sRequestQueue[REQUEST_QUEUE_SIZE] = {0};
@@ -138,6 +145,11 @@ void Netplay_Init(void)
 static bool32 IsOnline(void)
 {
     return gNetplayMailbox.bridgeState == NETPLAY_ONLINE;
+}
+
+bool32 Netplay_IsOnline(void)
+{
+    return IsOnline();
 }
 
 // JOIN ONLINE on the title menu: lets the bridge connect to the server.
@@ -269,6 +281,8 @@ static void ReceiveEvent(void)
     gNetplayMailbox.eventAck = gNetplayMailbox.event.seq;
 }
 
+static void ReportBattle(void);
+
 // Called once per frame from the main loop.
 void Netplay_Update(void)
 {
@@ -285,6 +299,7 @@ void Netplay_Update(void)
     }
     ReceiveEvent();
     FlushRequest();
+    ReportBattle();
 
     if (sSession.peerLeft && gReceivedRemoteLinkPlayers && sSession.peerLeftTimer != 0
      && --sSession.peerLeftTimer == 0)
@@ -467,6 +482,8 @@ void Netplay_OnBattleEnd(u8 battleOutcome)
 {
     u16 result;
 
+    if (sSession.active && sSession.kind == NETPLAY_KIND_COOP)
+        gSaveBlock2Ptr->frontier.lvlMode = sSavedFrontierLvlMode;
     if (!sSession.active || sSession.kind != NETPLAY_KIND_BATTLE)
         return;
     // Running from a link battle sets B_OUTCOME_LINK_BATTLE_RAN on top of won/lost.
@@ -519,6 +536,9 @@ void Netplay_SendInvite(void)
         break;
     case NETPLAY_KIND_DEAL:
         type = NETPLAY_REQ_DEAL;
+        break;
+    case NETPLAY_KIND_COOP:
+        type = NETPLAY_REQ_COOP;
         break;
     default:
         type = NETPLAY_REQ_TRADE;
@@ -631,6 +651,61 @@ void Netplay_StartActivity(void)
     gTasks[taskId].tTimer = 0;
 }
 
+static bool32 IsBattleKind(u8 kind)
+{
+    return kind == NETPLAY_KIND_BATTLE || kind == NETPLAY_KIND_COOP;
+}
+
+// Co-op: the two players against two Battle Frontier trainers, in the
+// Battle Tower's link multi battle. Both games pick the same trainers from
+// the session id; the host's game makes their parties and the battle sends
+// them to the guest. The trainers' Pokémon match the host's strongest.
+#define COOP_PARTY_SIZE 3
+
+// Frontier parties don't say whether a Pokémon may Dynamax or Terastallize,
+// and the AI takes "not set" as yes, so block both like trainer_util.c does.
+static void PrepareCoopOpponent(struct Pokemon *mon, u8 level)
+{
+    u16 species = GetMonData(mon, MON_DATA_SPECIES);
+    u32 data;
+
+    if (species == SPECIES_NONE)
+        return;
+    data = BLOCK_AI_DYNAMAX;
+    SetMonData(mon, MON_DATA_DYNAMAX_LEVEL, &data);
+    data = TYPE_MYSTERY;
+    SetMonData(mon, MON_DATA_TERA_TYPE, &data);
+    SetMonData(mon, MON_DATA_EXP, &gExperienceTables[gSpeciesInfo[species].growthRate][level]);
+    SetMonData(mon, MON_DATA_LEVEL, &level);
+    CalculateMonStats(mon);
+}
+
+static void SetUpCoopBattle(void)
+{
+    u32 i;
+    u8 level = GetHighestLevelInPlayerParty();
+
+    gBattleTypeFlags = BATTLE_TYPE_LINK | BATTLE_TYPE_TRAINER | BATTLE_TYPE_DOUBLE | BATTLE_TYPE_MULTI
+                     | BATTLE_TYPE_TOWER_LINK_MULTI | BATTLE_TYPE_BATTLE_TOWER;
+    gBattleScripting.specialTrainerBattleType = FACILITY_BATTLE_TOWER;
+    TRAINER_BATTLE_PARAM.opponentA = (sSession.id * 37) % FRONTIER_TRAINERS_COUNT;
+    TRAINER_BATTLE_PARAM.opponentB = (TRAINER_BATTLE_PARAM.opponentA + FRONTIER_TRAINERS_COUNT / 2) % FRONTIER_TRAINERS_COUNT;
+    VarSet(VAR_FRONTIER_BATTLE_MODE, FRONTIER_MODE_LINK_MULTIS);
+    sSavedFrontierLvlMode = gSaveBlock2Ptr->frontier.lvlMode;
+    gSaveBlock2Ptr->frontier.lvlMode = FRONTIER_LVL_OPEN;
+    FillFrontierTrainersParties(COOP_PARTY_SIZE);
+    for (i = 0; i < COOP_PARTY_SIZE; i++)
+    {
+        PrepareCoopOpponent(&gParties[B_TRAINER_OPPONENT_A][i], level);
+        PrepareCoopOpponent(&gParties[B_TRAINER_OPPONENT_B][i], level);
+    }
+}
+
+bool32 Netplay_IsCoopBattle(void)
+{
+    return sSession.active && sSession.kind == NETPLAY_KIND_COOP && gMain.inBattle;
+}
+
 static void LinkupFailed(u8 taskId)
 {
     CloseLink();
@@ -653,7 +728,7 @@ static void Task_Linkup(u8 taskId)
     switch (tState)
     {
     case 0:
-        gLinkType = sSession.kind == NETPLAY_KIND_BATTLE ? LINKTYPE_SINGLE_BATTLE : LINKTYPE_TRADE_SETUP;
+        gLinkType = IsBattleKind(sSession.kind) ? LINKTYPE_SINGLE_BATTLE : LINKTYPE_TRADE_SETUP;
         gBattleTypeFlags = 0;
         OpenLinkTimed();
         ResetLinkPlayerCount();
@@ -682,9 +757,9 @@ static void Task_Linkup(u8 taskId)
         ScriptContext_Init();
         UnlockPlayerFieldControls();
         FadeScreen(FADE_TO_BLACK, 0);
-        if (sSession.kind == NETPLAY_KIND_BATTLE)
+        if (IsBattleKind(sSession.kind))
         {
-            gSpecialVar_0x8004 = USING_SINGLE_BATTLE;
+            gSpecialVar_0x8004 = sSession.kind == NETPLAY_KIND_COOP ? USING_BATTLE_TOWER : USING_SINGLE_BATTLE;
             gLinkType = LINKTYPE_BATTLE;
             HealPlayerParty();
             SavePlayerParty();
@@ -716,9 +791,16 @@ static void Task_Linkup(u8 taskId)
         if (!gReceivedRemoteLinkPlayers)
         {
             PlayMapChosenOrBattleBGM(MUS_VS_TRAINER);
-            gBattleTypeFlags = BATTLE_TYPE_LINK | BATTLE_TYPE_TRAINER;
             CleanupOverworldWindowsAndTilemaps();
-            TRAINER_BATTLE_PARAM.opponentA = TRAINER_LINK_OPPONENT;
+            if (sSession.kind == NETPLAY_KIND_COOP)
+            {
+                SetUpCoopBattle();
+            }
+            else
+            {
+                gBattleTypeFlags = BATTLE_TYPE_LINK | BATTLE_TYPE_TRAINER;
+                TRAINER_BATTLE_PARAM.opponentA = TRAINER_LINK_OPPONENT;
+            }
             sSession.inActivity = TRUE;
             SetMainCallback2(CB2_InitBattle);
             gMain.savedCallback = CB2_ReturnFromCableClubBattle;
@@ -736,7 +818,8 @@ static void Task_Linkup(u8 taskId)
 // For automated tests (tools/netplay_bridge/e2e): a test driver writes
 // NETPLAY_TEST_BOOT_MAGIC | n into the mailbox's first padding byte on the
 // title screen, and "New Game" then skips the intro and drops player TESTn
-// with a small party in front of the Oldale Town Pokémon Center.
+// with a small party in front of the Oldale Town Pokémon Center (or inside
+// it, from player 3 on).
 
 #define NETPLAY_TEST_BOOT_MAGIC 0xB0
 
@@ -760,7 +843,11 @@ static void CB2_TestNewGame(void)
     ScriptGiveMon(n & 1 ? SPECIES_MUDKIP : SPECIES_TREECKO, 30, ITEM_NONE);
     ScriptGiveMon(n & 1 ? SPECIES_POOCHYENA : SPECIES_ZIGZAGOON, 30, ITEM_NONE);
 
-    SetWarpDestination(MAP_GROUP(MAP_OLDALE_TOWN), MAP_NUM(MAP_OLDALE_TOWN), WARP_ID_NONE, 4 + 2 * n, 17);
+    // Players 1 and 2 meet outside; any more (spectators) wait indoors.
+    if (n <= 2)
+        SetWarpDestination(MAP_GROUP(MAP_OLDALE_TOWN), MAP_NUM(MAP_OLDALE_TOWN), WARP_ID_NONE, 4 + 2 * n, 17);
+    else
+        SetWarpDestination(MAP_GROUP(MAP_OLDALE_TOWN_POKEMON_CENTER_1F), MAP_NUM(MAP_OLDALE_TOWN_POKEMON_CENTER_1F), WARP_ID_NONE, 7, 6);
     WarpIntoMap();
     gFieldCallback = FieldCB_WarpExitFadeFromBlack;
     SetMainCallback2(CB2_LoadMap);
@@ -1658,7 +1745,9 @@ static u8 *BufferLadderRecord(u8 *dest, const struct NetplayLadderEntry *entry)
     return ConvertIntToDecimalStringN(dest, entry->draws, STR_CONV_MODE_LEFT_ALIGN, 4);
 }
 
-// Columns: rank, name, rating, wins-losses-draws.
+static const u8 *GetTierName(u16 rating);
+
+// Columns: rank, name, tier, rating, wins-losses-draws.
 static void PrintLadderRow(u8 windowId, u32 y, u32 rank, const struct NetplayLadderEntry *entry)
 {
     u8 *str;
@@ -1676,10 +1765,11 @@ static void PrintLadderRow(u8 windowId, u32 y, u32 rank, const struct NetplayLad
     AddTextPrinterParameterized(windowId, FONT_SMALL, gStringVar4, 6, y, TEXT_SKIP_DRAW, NULL);
     BufferLadderName(gStringVar4, entry->name);
     AddTextPrinterParameterized(windowId, FONT_SMALL, gStringVar4, 30, y, TEXT_SKIP_DRAW, NULL);
+    AddTextPrinterParameterized(windowId, FONT_SMALL, GetTierName(entry->rating), 78, y, TEXT_SKIP_DRAW, NULL);
     ConvertIntToDecimalStringN(gStringVar4, entry->rating, STR_CONV_MODE_LEFT_ALIGN, 5);
-    AddTextPrinterParameterized(windowId, FONT_SMALL, gStringVar4, 110, y, TEXT_SKIP_DRAW, NULL);
+    AddTextPrinterParameterized(windowId, FONT_SMALL, gStringVar4, 130, y, TEXT_SKIP_DRAW, NULL);
     BufferLadderRecord(gStringVar4, entry);
-    AddTextPrinterParameterized(windowId, FONT_SMALL, gStringVar4, 160, y, TEXT_SKIP_DRAW, NULL);
+    AddTextPrinterParameterized(windowId, FONT_SMALL, gStringVar4, 172, y, TEXT_SKIP_DRAW, NULL);
 }
 
 static void DrawLadder(u8 windowId, const u8 *message)
@@ -1705,9 +1795,10 @@ static void DrawLadder(u8 windowId, const u8 *message)
             PrintLadderRow(windowId, LADDER_LINE_HEIGHT * (i + 1), i + 1, &ladder->top[i]);
         if (ladder->count == 0)
             AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("No rated battles yet."), 30, LADDER_LINE_HEIGHT + 2, TEXT_SKIP_DRAW, NULL);
-        AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("PvP LADDER"), 30, 0, TEXT_SKIP_DRAW, NULL);
-        AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("RATING"), 110, 0, TEXT_SKIP_DRAW, NULL);
-        AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("W-L-D"), 160, 0, TEXT_SKIP_DRAW, NULL);
+        AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("PvP LADDER"), 2, 0, TEXT_SKIP_DRAW, NULL);
+        AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("TIER"), 78, 0, TEXT_SKIP_DRAW, NULL);
+        AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("RATING"), 130, 0, TEXT_SKIP_DRAW, NULL);
+        AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("W-L-D"), 172, 0, TEXT_SKIP_DRAW, NULL);
     }
     CopyWindowToVram(windowId, COPYWIN_FULL);
 }
@@ -1977,3 +2068,1291 @@ static void Task_EmoteMenu(u8 taskId)
 
 #undef tWindowId
 #undef tTimer
+
+// Friends ------------------------------------------------------------------
+//
+// Talk to a player > Add friend puts them on your list (kept by the server).
+// START > ONLINE > FRIENDS shows the list with where each friend is, and
+// travels to an online friend who is outdoors.
+
+#define FRIEND_ANSWER_TIMEOUT (3 * 60)
+#define FRIEND_LINE_HEIGHT    11
+
+#define tState      data[0]
+#define tWindowId   data[1]
+#define tSeq        data[2]
+#define tTimer      data[3]
+#define tCursor     data[4]
+#define tConfirmDel data[5]
+
+static void Task_WaitForFriendAdd(u8 taskId);
+static void Task_Friends(u8 taskId);
+
+void Netplay_AddFriend(void)
+{
+    u8 taskId = CreateTask(Task_WaitForFriendAdd, 80);
+
+    gTasks[taskId].tSeq = gNetplayMailbox.friends.addSeq;
+    gTasks[taskId].tTimer = 0;
+    QueueRequest(NETPLAY_REQ_FRIEND_ADD, gSpecialVar_0x8007, 0, 0);
+}
+
+static void Task_WaitForFriendAdd(u8 taskId)
+{
+    struct Task *task = &gTasks[taskId];
+
+    if (gNetplayMailbox.friends.addSeq != (u8)task->tSeq)
+        gSpecialVar_Result = gNetplayMailbox.friends.addResult;
+    else if (++task->tTimer > FRIEND_ANSWER_TIMEOUT || !IsOnline())
+        gSpecialVar_Result = NETPLAY_FRIEND_ADD_NO_ANSWER;
+    else
+        return;
+    DestroyTask(taskId);
+    ScriptContext_Enable();
+}
+
+static const struct WindowTemplate sFriendsWindowTemplate =
+{
+    .bg = 0,
+    .tilemapLeft = 1,
+    .tilemapTop = 1,
+    .width = 28,
+    .height = 17,
+    .paletteNum = 15,
+    .baseBlock = 0x008,
+};
+
+enum
+{
+    FRIENDS_STATE_WAIT,
+    FRIENDS_STATE_SHOWN,
+    FRIENDS_STATE_MESSAGE,
+};
+
+// Why the player can't travel to this friend, or NULL if they can.
+static const u8 *CantTravelReason(const struct NetplayFriend *friend)
+{
+    const struct MapHeader *header;
+
+    if (friend->playerId == 0)
+        return COMPOUND_STRING("They're offline.");
+    if (friend->busy)
+        return COMPOUND_STRING("They're busy right now.");
+    if (IsPlayerSurfingGraphicsId(friend->graphicsId))
+        return COMPOUND_STRING("They're out on the water.");
+    header = Overworld_GetMapHeaderByGroupAndId(friend->mapGroup, friend->mapNum);
+    if (header->mapType != MAP_TYPE_TOWN && header->mapType != MAP_TYPE_CITY && header->mapType != MAP_TYPE_ROUTE)
+        return COMPOUND_STRING("You can only travel to friends\nwho are outdoors.");
+    return NULL;
+}
+
+static void BufferFriendName(u8 *dest, const struct NetplayFriend *friend)
+{
+    u32 i;
+
+    for (i = 0; i < NETPLAY_NAME_LENGTH && friend->name[i] != EOS; i++)
+        dest[i] = friend->name[i];
+    dest[i] = EOS;
+}
+
+static void DrawFriends(struct Task *task, const u8 *message)
+{
+    const struct NetplayFriends *friends = &gNetplayMailbox.friends;
+    u8 windowId = task->tWindowId;
+    s32 i;
+
+    // Drawn bottom-up: lines are closer together than the font's box.
+    FillWindowPixelBuffer(windowId, PIXEL_FILL(1));
+    if (message != NULL)
+        AddTextPrinterParameterized(windowId, FONT_NORMAL, message, 8, FRIEND_LINE_HEIGHT * 11 - 4, TEXT_SKIP_DRAW, NULL);
+    else if (task->tConfirmDel)
+        AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("Press SELECT again to remove. B: keep"), 8, FRIEND_LINE_HEIGHT * 11 + 2, TEXT_SKIP_DRAW, NULL);
+    else if (task->tState == FRIENDS_STATE_SHOWN && friends->count != 0)
+        AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("A: TRAVEL  SELECT: REMOVE  B: BACK"), 8, FRIEND_LINE_HEIGHT * 11 + 2, TEXT_SKIP_DRAW, NULL);
+
+    if (task->tState != FRIENDS_STATE_WAIT)
+    {
+        for (i = friends->count - 1; i >= 0; i--)
+        {
+            const struct NetplayFriend *friend = &friends->list[i];
+            u32 y = FRIEND_LINE_HEIGHT * (i + 1);
+
+            BufferFriendName(gStringVar4, friend);
+            AddTextPrinterParameterized(windowId, FONT_SMALL, gStringVar4, 12, y, TEXT_SKIP_DRAW, NULL);
+            if (friend->playerId == 0)
+            {
+                AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("offline"), 70, y, TEXT_SKIP_DRAW, NULL);
+            }
+            else
+            {
+                const struct MapHeader *header = Overworld_GetMapHeaderByGroupAndId(friend->mapGroup, friend->mapNum);
+
+                GetMapName(gStringVar4, header->regionMapSectionId, 0);
+                if (friend->busy)
+                    StringAppend(gStringVar4, COMPOUND_STRING(" (busy)"));
+                AddTextPrinterParameterized(windowId, FONT_SMALL, gStringVar4, 70, y, TEXT_SKIP_DRAW, NULL);
+            }
+            if (i == task->tCursor)
+                AddTextPrinterParameterized(windowId, FONT_SMALL, gText_SelectorArrow3, 2, y, TEXT_SKIP_DRAW, NULL);
+        }
+        if (friends->count == 0)
+            AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("No friends yet. Talk to a player and\npick Add friend."), 12, FRIEND_LINE_HEIGHT, TEXT_SKIP_DRAW, NULL);
+    }
+    else
+    {
+        AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("Loading…"), 12, FRIEND_LINE_HEIGHT, TEXT_SKIP_DRAW, NULL);
+    }
+    AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("FRIENDS"), 12, 0, TEXT_SKIP_DRAW, NULL);
+    AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("WHERE"), 70, 0, TEXT_SKIP_DRAW, NULL);
+    CopyWindowToVram(windowId, COPYWIN_FULL);
+}
+
+static void RequestFriends(struct Task *task)
+{
+    task->tSeq = gNetplayMailbox.friends.seq;
+    task->tTimer = 0;
+    task->tState = FRIENDS_STATE_WAIT;
+    QueueRequest(NETPLAY_REQ_FRIENDS, 0, 0, 0);
+}
+
+void ShowNetplayFriends(void)
+{
+    u8 taskId = CreateTask(Task_Friends, 80);
+    struct Task *task = &gTasks[taskId];
+
+    task->tWindowId = AddWindow(&sFriendsWindowTemplate);
+    task->tCursor = 0;
+    task->tConfirmDel = FALSE;
+    DrawStdWindowFrame(task->tWindowId, FALSE);
+    PutWindowTilemap(task->tWindowId);
+    if (IsOnline())
+    {
+        RequestFriends(task);
+        DrawFriends(task, NULL);
+    }
+    else
+    {
+        task->tState = FRIENDS_STATE_MESSAGE;
+        DrawFriends(task, COMPOUND_STRING("Not online."));
+    }
+    ScheduleBgCopyTilemapToVram(0);
+}
+
+static void CloseFriends(u8 taskId)
+{
+    ClearStdWindowAndFrameToTransparent(gTasks[taskId].tWindowId, FALSE);
+    ClearWindowTilemap(gTasks[taskId].tWindowId);
+    RemoveWindow(gTasks[taskId].tWindowId);
+    ScheduleBgCopyTilemapToVram(0);
+    DestroyTask(taskId);
+}
+
+static void TravelToFriend(u8 taskId, const struct NetplayFriend *friend)
+{
+    CloseFriends(taskId);
+    SetWarpDestination(friend->mapGroup, friend->mapNum, WARP_ID_NONE, friend->x, friend->y);
+    DoWarp();
+    ResetInitialPlayerAvatarState();
+}
+
+static void Task_Friends(u8 taskId)
+{
+    struct Task *task = &gTasks[taskId];
+    const struct NetplayFriends *friends = &gNetplayMailbox.friends;
+
+    switch (task->tState)
+    {
+    case FRIENDS_STATE_WAIT:
+        if (friends->seq != (u8)task->tSeq)
+        {
+            task->tState = FRIENDS_STATE_SHOWN;
+            if (task->tCursor >= friends->count)
+                task->tCursor = friends->count == 0 ? 0 : friends->count - 1;
+            DrawFriends(task, NULL);
+        }
+        else if (++task->tTimer > FRIEND_ANSWER_TIMEOUT || !IsOnline())
+        {
+            task->tState = FRIENDS_STATE_MESSAGE;
+            DrawFriends(task, COMPOUND_STRING("The server didn't answer."));
+        }
+        else if (JOY_NEW(B_BUTTON))
+        {
+            break;
+        }
+        return;
+    case FRIENDS_STATE_MESSAGE:
+        if (JOY_NEW(A_BUTTON | B_BUTTON))
+        {
+            PlaySE(SE_SELECT);
+            if (friends->count != 0 && IsOnline())
+            {
+                task->tState = FRIENDS_STATE_SHOWN;
+                DrawFriends(task, NULL);
+                return;
+            }
+            break;
+        }
+        return;
+    case FRIENDS_STATE_SHOWN:
+        if (JOY_NEW(DPAD_UP) && task->tCursor > 0)
+        {
+            PlaySE(SE_SELECT);
+            task->tCursor--;
+            task->tConfirmDel = FALSE;
+            DrawFriends(task, NULL);
+        }
+        else if (JOY_NEW(DPAD_DOWN) && task->tCursor + 1 < friends->count)
+        {
+            PlaySE(SE_SELECT);
+            task->tCursor++;
+            task->tConfirmDel = FALSE;
+            DrawFriends(task, NULL);
+        }
+        else if (JOY_NEW(SELECT_BUTTON) && friends->count != 0)
+        {
+            PlaySE(SE_SELECT);
+            if (task->tConfirmDel)
+            {
+                QueueRequest(NETPLAY_REQ_FRIEND_DEL, 0, 0, task->tCursor);
+                task->tConfirmDel = FALSE;
+                RequestFriends(task);
+            }
+            else
+            {
+                task->tConfirmDel = TRUE;
+            }
+            DrawFriends(task, NULL);
+        }
+        else if (JOY_NEW(A_BUTTON) && friends->count != 0 && !task->tConfirmDel)
+        {
+            const struct NetplayFriend *friend = &friends->list[task->tCursor];
+            const u8 *reason = CantTravelReason(friend);
+
+            if (reason == NULL)
+            {
+                TravelToFriend(taskId, friend);
+                return;
+            }
+            PlaySE(SE_FAILURE);
+            task->tState = FRIENDS_STATE_MESSAGE;
+            DrawFriends(task, reason);
+        }
+        else if (JOY_NEW(B_BUTTON))
+        {
+            PlaySE(SE_SELECT);
+            if (task->tConfirmDel)
+            {
+                task->tConfirmDel = FALSE;
+                DrawFriends(task, NULL);
+                return;
+            }
+            break;
+        }
+        return;
+    }
+    CloseFriends(taskId);
+    ScriptUnfreezeObjectEvents();
+    UnlockPlayerFieldControls();
+}
+
+#undef tState
+#undef tWindowId
+#undef tSeq
+#undef tTimer
+#undef tCursor
+#undef tConfirmDel
+
+// Seasons -----------------------------------------------------------------
+//
+// The ladder runs in seasons (server/seasons.py). Your rating puts you in a
+// tier; when a season ends, everyone who played gets their tier's Pokémon,
+// claimed from START > ONLINE > SEASON. The tiers match the server's.
+
+struct SeasonTier
+{
+    const u8 *name;
+    u16 floor;
+    u16 species;
+    u8 level;
+};
+
+static const struct SeasonTier sSeasonTiers[] =
+{
+    {COMPOUND_STRING("BRONZE"),   0,    SPECIES_EEVEE,    10},
+    {COMPOUND_STRING("SILVER"),   1000, SPECIES_DRATINI,  15},
+    {COMPOUND_STRING("GOLD"),     1100, SPECIES_BELDUM,   15},
+    {COMPOUND_STRING("PLATINUM"), 1200, SPECIES_GIBLE,    20},
+    {COMPOUND_STRING("DIAMOND"),  1300, SPECIES_DREEPY,   20},
+    {COMPOUND_STRING("MASTER"),   1400, SPECIES_LARVESTA, 25},
+};
+
+#define SEASON_LINE_HEIGHT 11
+
+static u32 GetTier(u16 rating)
+{
+    u32 i, tier = 0;
+
+    for (i = 0; i < ARRAY_COUNT(sSeasonTiers); i++)
+    {
+        if (rating >= sSeasonTiers[i].floor)
+            tier = i;
+    }
+    return tier;
+}
+
+static const u8 *GetTierName(u16 rating)
+{
+    return sSeasonTiers[GetTier(rating)].name;
+}
+
+#define tState     data[0]
+#define tWindowId  data[1]
+#define tSeq       data[2]
+#define tTimer     data[3]
+
+enum
+{
+    SEASON_STATE_WAIT,
+    SEASON_STATE_SHOWN,
+    SEASON_STATE_CLAIMING,
+    SEASON_STATE_SAVE,
+    SEASON_STATE_MESSAGE,
+};
+
+static void Task_Season(u8 taskId);
+
+static void DrawSeason(struct Task *task, const u8 *message)
+{
+    const struct NetplaySeason *season = &gNetplayMailbox.season;
+    u8 windowId = task->tWindowId;
+    u8 *str;
+    s32 i;
+    u32 y, myTier = GetTier(season->rating);
+
+    FillWindowPixelBuffer(windowId, PIXEL_FILL(1));
+    if (task->tState == SEASON_STATE_WAIT)
+    {
+        AddTextPrinterParameterized(windowId, FONT_NORMAL, COMPOUND_STRING("Loading…"), 8, 1, TEXT_SKIP_DRAW, NULL);
+        CopyWindowToVram(windowId, COPYWIN_FULL);
+        return;
+    }
+
+    // Drawn bottom-up: lines are closer together than the font's box.
+    y = SEASON_LINE_HEIGHT * 10 + 8;
+    if (message != NULL)
+    {
+        AddTextPrinterParameterized(windowId, FONT_SMALL, message, 8, y, TEXT_SKIP_DRAW, NULL);
+    }
+    else if (season->rewardTier < ARRAY_COUNT(sSeasonTiers))
+    {
+        str = StringCopy(gStringVar4, COMPOUND_STRING("Season "));
+        str = ConvertIntToDecimalStringN(str, season->rewardSeason, STR_CONV_MODE_LEFT_ALIGN, 4);
+        str = StringCopy(str, COMPOUND_STRING(" reward: "));
+        str = StringCopy(str, GetSpeciesName(sSeasonTiers[season->rewardTier].species));
+        StringCopy(str, COMPOUND_STRING("!  A: CLAIM"));
+        AddTextPrinterParameterized(windowId, FONT_SMALL, gStringVar4, 8, y, TEXT_SKIP_DRAW, NULL);
+    }
+    else
+    {
+        AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("Finish in a tier to win its POKéMON."), 8, y, TEXT_SKIP_DRAW, NULL);
+    }
+
+    for (i = ARRAY_COUNT(sSeasonTiers) - 1; i >= 0; i--)
+    {
+        const struct SeasonTier *tier = &sSeasonTiers[i];
+
+        y = SEASON_LINE_HEIGHT * (4 + ARRAY_COUNT(sSeasonTiers) - 1 - i) + 4;
+        if (season->rated && (u32)i == myTier)
+            AddTextPrinterParameterized(windowId, FONT_SMALL, gText_SelectorArrow3, 2, y, TEXT_SKIP_DRAW, NULL);
+        AddTextPrinterParameterized(windowId, FONT_SMALL, tier->name, 12, y, TEXT_SKIP_DRAW, NULL);
+        str = ConvertIntToDecimalStringN(gStringVar4, tier->floor, STR_CONV_MODE_LEFT_ALIGN, 4);
+        StringCopy(str, COMPOUND_STRING("+"));
+        AddTextPrinterParameterized(windowId, FONT_SMALL, gStringVar4, 70, y, TEXT_SKIP_DRAW, NULL);
+        str = StringCopy(gStringVar4, GetSpeciesName(tier->species));
+        str = StringCopy(str, COMPOUND_STRING(" Lv"));
+        ConvertIntToDecimalStringN(str, tier->level, STR_CONV_MODE_LEFT_ALIGN, 3);
+        AddTextPrinterParameterized(windowId, FONT_SMALL, gStringVar4, 116, y, TEXT_SKIP_DRAW, NULL);
+    }
+    AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("TIER"), 12, SEASON_LINE_HEIGHT * 3 + 2, TEXT_SKIP_DRAW, NULL);
+    AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("RATING"), 70, SEASON_LINE_HEIGHT * 3 + 2, TEXT_SKIP_DRAW, NULL);
+    AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("END-OF-SEASON PRIZE"), 116, SEASON_LINE_HEIGHT * 3 + 2, TEXT_SKIP_DRAW, NULL);
+
+    if (season->rated)
+    {
+        str = StringCopy(gStringVar4, COMPOUND_STRING("You: "));
+        str = StringCopy(str, sSeasonTiers[myTier].name);
+        str = StringCopy(str, COMPOUND_STRING(", rating "));
+        ConvertIntToDecimalStringN(str, season->rating, STR_CONV_MODE_LEFT_ALIGN, 5);
+    }
+    else
+    {
+        StringCopy(gStringVar4, COMPOUND_STRING("You: no rated battles this season yet"));
+    }
+    AddTextPrinterParameterized(windowId, FONT_SMALL, gStringVar4, 8, SEASON_LINE_HEIGHT + 4, TEXT_SKIP_DRAW, NULL);
+
+    str = StringCopy(gStringVar4, COMPOUND_STRING("LADDER SEASON "));
+    str = ConvertIntToDecimalStringN(str, season->season, STR_CONV_MODE_LEFT_ALIGN, 4);
+    str = StringCopy(str, COMPOUND_STRING(" - "));
+    str = ConvertIntToDecimalStringN(str, season->daysLeft, STR_CONV_MODE_LEFT_ALIGN, 4);
+    StringCopy(str, season->daysLeft == 1 ? COMPOUND_STRING(" day left") : COMPOUND_STRING(" days left"));
+    AddTextPrinterParameterized(windowId, FONT_NORMAL, gStringVar4, 8, 0, TEXT_SKIP_DRAW, NULL);
+    CopyWindowToVram(windowId, COPYWIN_FULL);
+}
+
+void ShowNetplaySeason(void)
+{
+    u8 taskId = CreateTask(Task_Season, 80);
+    struct Task *task = &gTasks[taskId];
+
+    task->tWindowId = AddWindow(&sLadderWindowTemplate);
+    DrawStdWindowFrame(task->tWindowId, FALSE);
+    PutWindowTilemap(task->tWindowId);
+    task->tSeq = gNetplayMailbox.season.seq;
+    task->tTimer = 0;
+    task->tState = SEASON_STATE_WAIT;
+    if (IsOnline())
+        QueueRequest(NETPLAY_REQ_SEASON, 0, 0, 0);
+    DrawSeason(task, NULL);
+    ScheduleBgCopyTilemapToVram(0);
+}
+
+static void GiveSeasonReward(u32 tier)
+{
+    u16 species = sSeasonTiers[tier].species;
+
+    ScriptGiveMon(species, sSeasonTiers[tier].level, ITEM_NONE);
+    GetSetPokedexFlag(SpeciesToNationalPokedexNum(species), FLAG_SET_SEEN);
+    GetSetPokedexFlag(SpeciesToNationalPokedexNum(species), FLAG_SET_CAUGHT);
+}
+
+static void Task_Season(u8 taskId)
+{
+    struct Task *task = &gTasks[taskId];
+    const struct NetplaySeason *season = &gNetplayMailbox.season;
+
+    switch (task->tState)
+    {
+    case SEASON_STATE_WAIT:
+    case SEASON_STATE_CLAIMING:
+    {
+        bool32 answered = task->tState == SEASON_STATE_WAIT ? season->seq != (u8)task->tSeq
+                                                           : season->claimSeq != (u8)task->tSeq;
+        if (answered && task->tState == SEASON_STATE_CLAIMING)
+        {
+            if (season->claimedTier < ARRAY_COUNT(sSeasonTiers))
+            {
+                // Saved on the next frame, once the message is on screen:
+                // the save holds up the game for a moment.
+                GiveSeasonReward(season->claimedTier);
+                StringCopy(gStringVar1, GetSpeciesName(sSeasonTiers[season->claimedTier].species));
+                StringExpandPlaceholders(gStringVar2, COMPOUND_STRING("You received {STR_VAR_1}! Saving…"));
+                task->tState = SEASON_STATE_SAVE;
+                DrawSeason(task, gStringVar2);
+            }
+            else
+            {
+                task->tState = SEASON_STATE_MESSAGE;
+                DrawSeason(task, COMPOUND_STRING("Nothing to claim."));
+            }
+        }
+        else if (answered)
+        {
+            task->tState = SEASON_STATE_SHOWN;
+            DrawSeason(task, NULL);
+        }
+        else if (++task->tTimer > LADDER_TIMEOUT || !IsOnline())
+        {
+            task->tState = SEASON_STATE_MESSAGE;
+            DrawSeason(task, COMPOUND_STRING("The server didn't answer.  B: back"));
+        }
+        return;
+    }
+    case SEASON_STATE_SAVE:
+        TrySavingData(SAVE_NORMAL);
+        PlayFanfare(MUS_OBTAIN_ITEM);
+        StringExpandPlaceholders(gStringVar2, COMPOUND_STRING("You received {STR_VAR_1}!  B: back"));
+        task->tState = SEASON_STATE_MESSAGE;
+        DrawSeason(task, gStringVar2);
+        return;
+    case SEASON_STATE_SHOWN:
+        if (JOY_NEW(A_BUTTON) && season->rewardTier < ARRAY_COUNT(sSeasonTiers))
+        {
+            PlaySE(SE_SELECT);
+            if (gPartiesCount[B_TRAINER_PLAYER] >= PARTY_SIZE)
+            {
+                task->tState = SEASON_STATE_MESSAGE;
+                DrawSeason(task, COMPOUND_STRING("Make room in your party first."));
+                return;
+            }
+            task->tSeq = season->claimSeq;
+            task->tTimer = 0;
+            task->tState = SEASON_STATE_CLAIMING;
+            QueueRequest(NETPLAY_REQ_CLAIM, 0, 0, 0);
+            return;
+        }
+        if (!JOY_NEW(B_BUTTON))
+            return;
+        break;
+    case SEASON_STATE_MESSAGE:
+        if (!JOY_NEW(A_BUTTON | B_BUTTON))
+            return;
+        break;
+    }
+    PlaySE(SE_SELECT);
+    ClearStdWindowAndFrameToTransparent(task->tWindowId, FALSE);
+    ClearWindowTilemap(task->tWindowId);
+    RemoveWindow(task->tWindowId);
+    ScheduleBgCopyTilemapToVram(0);
+    DestroyTask(taskId);
+    ScriptUnfreezeObjectEvents();
+    UnlockPlayerFieldControls();
+}
+
+#undef tState
+#undef tWindowId
+#undef tSeq
+#undef tTimer
+
+// Market board ------------------------------------------------------------
+//
+// A board on the wall of every Poké Mart. Players list a Pokémon for a price
+// and can log off; a buyer pays the price, which the server keeps until the
+// seller next opens a board. Server side: server/market.py.
+
+#define MARKET_MAX_PRICE     999999
+#define MARKET_PRICE_DIGITS  6
+#define MARKET_DEFAULT_PRICE 1000
+#define MARKET_ROW_Y(i)      (26 + (i) * 14)
+#define MARKET_NO_SLOT       0xFF
+
+enum
+{
+    MARKET_STATE_LOAD,     // waiting for a page
+    MARKET_STATE_BROWSE,
+    MARKET_STATE_CONFIRM,  // A again to buy or take back
+    MARKET_STATE_PRICE,    // setting the price of the Pokémon to sell
+    MARKET_STATE_ANSWER,   // waiting for the server to answer a request
+    MARKET_STATE_SAVE,     // the message is up; save on this frame
+};
+
+struct NetplayMarketScreen
+{
+    u8 state;
+    u8 windowId;
+    u8 cursor;
+    u8 page;
+    u8 seq;        // gNetplayMailbox.market.seq or .answerSeq being waited on
+    u8 request;    // the request being answered
+    u8 sellSlot;   // party slot picked to sell, or MARKET_NO_SLOT
+    u8 priceDigit;
+    bool8 collected;
+    u16 timer;
+    u32 price;
+    const u8 *status;
+    u8 statusText[64];
+};
+
+static EWRAM_DATA struct NetplayMarketScreen sMarket = {0};
+
+static void Task_MarketScreen(u8 taskId);
+
+bool32 Netplay_MarketAvailable(void)
+{
+    return IsOnline();
+}
+
+void Netplay_MarketBegin(void)
+{
+    memset(&sMarket, 0, sizeof(sMarket));
+    sMarket.sellSlot = MARKET_NO_SLOT;
+}
+
+static void SetMarketStatus(const u8 *text)
+{
+    StringExpandPlaceholders(sMarket.statusText, text);
+    sMarket.status = sMarket.statusText;
+}
+
+static u8 *BufferPrice(u8 *dest, u32 price)
+{
+    dest = StringCopy(dest, COMPOUND_STRING("¥"));
+    return ConvertIntToDecimalStringN(dest, price, STR_CONV_MODE_LEFT_ALIGN, MARKET_PRICE_DIGITS);
+}
+
+static void DrawMarket(void)
+{
+    const struct NetplayMarket *market = &gNetplayMailbox.market;
+    u8 windowId = sMarket.windowId;
+    u8 *str;
+    u32 i;
+
+    FillWindowPixelBuffer(windowId, PIXEL_FILL(1));
+    str = StringCopy(gStringVar4, COMPOUND_STRING("MARKET BOARD"));
+    if (sMarket.state != MARKET_STATE_LOAD || market->count != 0)
+    {
+        str = StringCopy(str, COMPOUND_STRING("  page "));
+        str = ConvertIntToDecimalStringN(str, market->page + 1, STR_CONV_MODE_LEFT_ALIGN, 3);
+        str = StringCopy(str, COMPOUND_STRING("/"));
+        ConvertIntToDecimalStringN(str, market->pages, STR_CONV_MODE_LEFT_ALIGN, 3);
+    }
+    AddTextPrinterParameterized(windowId, FONT_NORMAL, gStringVar4, 4, 0, TEXT_SKIP_DRAW, NULL);
+    BufferPrice(gStringVar4, GetMoney(&gSaveBlock1Ptr->money));
+    AddTextPrinterParameterized(windowId, FONT_SMALL, gStringVar4, 172, 2, TEXT_SKIP_DRAW, NULL);
+
+    if (sMarket.state == MARKET_STATE_PRICE)
+    {
+        struct Pokemon *mon = &gParties[B_TRAINER_PLAYER][sMarket.sellSlot];
+
+        GetMonNickname(mon, gStringVar1);
+        StringExpandPlaceholders(gStringVar4, COMPOUND_STRING("Sell {STR_VAR_1} for how much?"));
+        AddTextPrinterParameterized(windowId, FONT_NORMAL, gStringVar4, 8, MARKET_ROW_Y(1), TEXT_SKIP_DRAW, NULL);
+        // The price, with a caret under the digit being changed.
+        str = StringCopy(gStringVar4, COMPOUND_STRING("¥"));
+        ConvertIntToDecimalStringN(str, sMarket.price, STR_CONV_MODE_LEADING_ZEROS, MARKET_PRICE_DIGITS);
+        AddTextPrinterParameterized(windowId, FONT_NORMAL, gStringVar4, 80, MARKET_ROW_Y(2) + 4, TEXT_SKIP_DRAW, NULL);
+        AddTextPrinterParameterized(windowId, FONT_NORMAL, COMPOUND_STRING("{UP_ARROW}"),
+                                    80 + 6 * (1 + MARKET_PRICE_DIGITS - 1 - sMarket.priceDigit), MARKET_ROW_Y(3), TEXT_SKIP_DRAW, NULL);
+        AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("{DPAD_UPDOWN} change  {DPAD_LEFTRIGHT} digit  A: list it  B: back"),
+                                    4, MARKET_ROW_Y(5) + 12, TEXT_SKIP_DRAW, NULL);
+        CopyWindowToVram(windowId, COPYWIN_FULL);
+        return;
+    }
+
+    if (sMarket.state == MARKET_STATE_LOAD && market->count == 0)
+        AddTextPrinterParameterized(windowId, FONT_NORMAL, COMPOUND_STRING("Loading…"), 8, MARKET_ROW_Y(0), TEXT_SKIP_DRAW, NULL);
+    else if (market->count == 0)
+        AddTextPrinterParameterized(windowId, FONT_NORMAL, COMPOUND_STRING("Nothing for sale yet."), 8, MARKET_ROW_Y(0), TEXT_SKIP_DRAW, NULL);
+
+    for (i = 0; i < market->count && i < NETPLAY_MARKET_PAGE_SIZE; i++)
+    {
+        const struct NetplayMarketListing *listing = &market->listings[i];
+        u32 y = MARKET_ROW_Y(i);
+
+        if (i == sMarket.cursor)
+            AddTextPrinterParameterized(windowId, FONT_NORMAL, gText_SelectorArrow3, 0, y, TEXT_SKIP_DRAW, NULL);
+        AddTextPrinterParameterized(windowId, FONT_NORMAL, GetSpeciesName(listing->species), 8, y, TEXT_SKIP_DRAW, NULL);
+        str = StringCopy(gStringVar4, COMPOUND_STRING("Lv"));
+        ConvertIntToDecimalStringN(str, listing->level, STR_CONV_MODE_LEFT_ALIGN, 3);
+        AddTextPrinterParameterized(windowId, FONT_SMALL, gStringVar4, 78, y + 2, TEXT_SKIP_DRAW, NULL);
+        BufferPrice(gStringVar4, listing->price);
+        AddTextPrinterParameterized(windowId, FONT_SMALL, gStringVar4, 106, y + 2, TEXT_SKIP_DRAW, NULL);
+        if (listing->mine)
+        {
+            AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("YOURS"), 160, y + 2, TEXT_SKIP_DRAW, NULL);
+        }
+        else
+        {
+            StringCopyN(gStringVar4, listing->seller, PLAYER_NAME_LENGTH);
+            gStringVar4[PLAYER_NAME_LENGTH] = EOS;
+            AddTextPrinterParameterized(windowId, FONT_SMALL, gStringVar4, 160, y + 2, TEXT_SKIP_DRAW, NULL);
+        }
+    }
+
+    if (sMarket.state == MARKET_STATE_CONFIRM)
+    {
+        const struct NetplayMarketListing *listing = &market->listings[sMarket.cursor];
+
+        StringCopy(gStringVar1, GetSpeciesName(listing->species));
+        if (listing->mine)
+        {
+            StringExpandPlaceholders(gStringVar4, COMPOUND_STRING("Take back {STR_VAR_1}? A: yes  B: no"));
+        }
+        else
+        {
+            BufferPrice(gStringVar2, listing->price);
+            StringExpandPlaceholders(gStringVar4, COMPOUND_STRING("Buy {STR_VAR_1} for {STR_VAR_2}? A: yes  B: no"));
+        }
+        AddTextPrinterParameterized(windowId, FONT_SMALL, gStringVar4, 4, MARKET_ROW_Y(5) + 2, TEXT_SKIP_DRAW, NULL);
+    }
+    else if (sMarket.status != NULL)
+    {
+        AddTextPrinterParameterized(windowId, FONT_SMALL, sMarket.status, 4, MARKET_ROW_Y(5) + 2, TEXT_SKIP_DRAW, NULL);
+    }
+    AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("A: buy  SELECT: sell  {DPAD_LEFTRIGHT} page  B: exit"),
+                                4, MARKET_ROW_Y(5) + 12, TEXT_SKIP_DRAW, NULL);
+    CopyWindowToVram(windowId, COPYWIN_FULL);
+}
+
+static void MarketRequest(u8 type, u16 arg)
+{
+    sMarket.request = type;
+    sMarket.timer = 0;
+    if (type == NETPLAY_REQ_MARKET)
+    {
+        sMarket.seq = gNetplayMailbox.market.seq;
+        sMarket.state = MARKET_STATE_LOAD;
+    }
+    else
+    {
+        sMarket.seq = gNetplayMailbox.market.answerSeq;
+        sMarket.state = MARKET_STATE_ANSWER;
+    }
+    QueueRequest(type, 0, 0, arg);
+}
+
+// Shows the board until the player leaves it (VAR_RESULT
+// NETPLAY_MARKET_SCREEN_QUIT) or picks SELECT to choose a Pokémon to sell
+// (NETPLAY_MARKET_SCREEN_SELL); Netplay_MarketPickedMon then brings the
+// choice back here.
+void Netplay_MarketScreen(void)
+{
+    CreateTask(Task_MarketScreen, 80);
+    sMarket.windowId = AddWindow(&sLadderWindowTemplate);
+    DrawStdWindowFrame(sMarket.windowId, FALSE);
+    PutWindowTilemap(sMarket.windowId);
+    if (sMarket.sellSlot != MARKET_NO_SLOT)
+    {
+        sMarket.state = MARKET_STATE_PRICE;
+        sMarket.price = MARKET_DEFAULT_PRICE;
+        sMarket.priceDigit = 3;
+    }
+    else if (!sMarket.collected)
+    {
+        sMarket.collected = TRUE;
+        MarketRequest(NETPLAY_REQ_MARKET_COLLECT, 0);
+    }
+    else
+    {
+        MarketRequest(NETPLAY_REQ_MARKET, sMarket.page);
+    }
+    DrawMarket();
+    ScheduleBgCopyTilemapToVram(0);
+}
+
+// After the party menu: VAR_0x8004 is the chosen slot (PARTY_SIZE or more
+// if none).
+void Netplay_MarketPickedMon(void)
+{
+    u8 slot = gSpecialVar_0x8004;
+
+    sMarket.sellSlot = MARKET_NO_SLOT;
+    sMarket.status = NULL;
+    if (slot >= gPartiesCount[B_TRAINER_PLAYER])
+        return;
+    if (GetMonData(&gParties[B_TRAINER_PLAYER][slot], MON_DATA_IS_EGG))
+        SetMarketStatus(COMPOUND_STRING("Eggs can't go on the board."));
+    else
+        sMarket.sellSlot = slot;
+}
+
+static void EndMarketScreen(u8 taskId, u16 result)
+{
+    ClearStdWindowAndFrameToTransparent(sMarket.windowId, FALSE);
+    ClearWindowTilemap(sMarket.windowId);
+    RemoveWindow(sMarket.windowId);
+    ScheduleBgCopyTilemapToVram(0);
+    gSpecialVar_Result = result;
+    DestroyTask(taskId);
+    ScriptContext_Enable();
+}
+
+static void AddMarketMonToParty(void)
+{
+    struct Pokemon *mon = &gParties[B_TRAINER_PLAYER][gPartiesCount[B_TRAINER_PLAYER]];
+    u16 species;
+
+    *mon = gNetplayMailbox.market.mon;
+    mon->mail = MAIL_NONE;
+    species = GetMonData(mon, MON_DATA_SPECIES);
+    GetSetPokedexFlag(SpeciesToNationalPokedexNum(species), FLAG_SET_SEEN);
+    GetSetPokedexFlag(SpeciesToNationalPokedexNum(species), FLAG_SET_CAUGHT);
+    CalculatePlayerPartyCount();
+    GetMonNickname(mon, gStringVar1);
+}
+
+// The server answered: apply it to the save. Returns TRUE if the save changed.
+static bool32 ApplyMarketAnswer(void)
+{
+    const struct NetplayMarket *market = &gNetplayMailbox.market;
+
+    switch (market->answer)
+    {
+    case NETPLAY_MARKET_GONE:
+        SetMarketStatus(COMPOUND_STRING("Someone got there first."));
+        return FALSE;
+    case NETPLAY_MARKET_FULL:
+        SetMarketStatus(COMPOUND_STRING("You can list up to 5 POKéMON at a time."));
+        return FALSE;
+    case NETPLAY_MARKET_SELF:
+        SetMarketStatus(COMPOUND_STRING("That's your own listing."));
+        return FALSE;
+    case NETPLAY_MARKET_OK:
+        break;
+    default:
+        return FALSE;
+    }
+
+    switch (sMarket.request)
+    {
+    case NETPLAY_REQ_MARKET_COLLECT:
+        if (market->sales == 0)
+            return FALSE;
+        AddMoney(&gSaveBlock1Ptr->money, market->money);
+        ConvertIntToDecimalStringN(gStringVar1, market->sales, STR_CONV_MODE_LEFT_ALIGN, 3);
+        BufferPrice(gStringVar2, market->money);
+        SetMarketStatus(COMPOUND_STRING("Sold {STR_VAR_1} since your last visit: +{STR_VAR_2}!"));
+        return TRUE;
+    case NETPLAY_REQ_MARKET_BUY:
+        RemoveMoney(&gSaveBlock1Ptr->money, market->money);
+        AddMarketMonToParty();
+        SetMarketStatus(COMPOUND_STRING("You bought {STR_VAR_1}!"));
+        return TRUE;
+    case NETPLAY_REQ_MARKET_CANCEL:
+        AddMarketMonToParty();
+        SetMarketStatus(COMPOUND_STRING("{STR_VAR_1} is back with you."));
+        return TRUE;
+    case NETPLAY_REQ_MARKET_SELL:
+        GetMonNickname(&gParties[B_TRAINER_PLAYER][sMarket.sellSlot], gStringVar1);
+        ZeroMonData(&gParties[B_TRAINER_PLAYER][sMarket.sellSlot]);
+        CompactPartySlots();
+        CalculatePlayerPartyCount();
+        sMarket.sellSlot = MARKET_NO_SLOT;
+        SetMarketStatus(COMPOUND_STRING("{STR_VAR_1} is on the board!"));
+        return TRUE;
+    }
+    return FALSE;
+}
+
+static void HandleMarketBrowseInput(u8 taskId)
+{
+    const struct NetplayMarket *market = &gNetplayMailbox.market;
+
+    if (JOY_NEW(B_BUTTON))
+    {
+        PlaySE(SE_SELECT);
+        EndMarketScreen(taskId, NETPLAY_MARKET_SCREEN_QUIT);
+        return;
+    }
+    if (JOY_NEW(SELECT_BUTTON))
+    {
+        PlaySE(SE_SELECT);
+        if (gPartiesCount[B_TRAINER_PLAYER] <= 1)
+        {
+            SetMarketStatus(COMPOUND_STRING("You can't sell your last POKéMON."));
+            DrawMarket();
+            return;
+        }
+        EndMarketScreen(taskId, NETPLAY_MARKET_SCREEN_SELL);
+        return;
+    }
+    if (JOY_NEW(DPAD_UP) && sMarket.cursor > 0)
+    {
+        sMarket.cursor--;
+    }
+    else if (JOY_NEW(DPAD_DOWN) && sMarket.cursor + 1 < market->count)
+    {
+        sMarket.cursor++;
+    }
+    else if (JOY_NEW(DPAD_LEFT) && market->page > 0)
+    {
+        sMarket.page = market->page - 1;
+        sMarket.cursor = 0;
+        MarketRequest(NETPLAY_REQ_MARKET, sMarket.page);
+    }
+    else if (JOY_NEW(DPAD_RIGHT) && market->page + 1 < market->pages)
+    {
+        sMarket.page = market->page + 1;
+        sMarket.cursor = 0;
+        MarketRequest(NETPLAY_REQ_MARKET, sMarket.page);
+    }
+    else if (JOY_NEW(A_BUTTON) && sMarket.cursor < market->count)
+    {
+        const struct NetplayMarketListing *listing = &market->listings[sMarket.cursor];
+
+        if (gPartiesCount[B_TRAINER_PLAYER] >= PARTY_SIZE)
+            SetMarketStatus(COMPOUND_STRING("Make room in your party first."));
+        else if (!listing->mine && !IsEnoughMoney(&gSaveBlock1Ptr->money, listing->price))
+            SetMarketStatus(COMPOUND_STRING("You don't have enough money."));
+        else
+            sMarket.state = MARKET_STATE_CONFIRM;
+    }
+    else
+    {
+        return;
+    }
+    PlaySE(SE_SELECT);
+    DrawMarket();
+}
+
+static void HandleMarketPriceInput(void)
+{
+    static const u32 sPowers[MARKET_PRICE_DIGITS] = {1, 10, 100, 1000, 10000, 100000};
+    u32 step = sPowers[sMarket.priceDigit];
+    struct Pokemon *mon;
+
+    if (JOY_NEW(DPAD_UP))
+    {
+        sMarket.price = min(sMarket.price + step, MARKET_MAX_PRICE);
+    }
+    else if (JOY_NEW(DPAD_DOWN))
+    {
+        sMarket.price = sMarket.price > step ? sMarket.price - step : 1;
+    }
+    else if (JOY_NEW(DPAD_LEFT) && sMarket.priceDigit < MARKET_PRICE_DIGITS - 1)
+    {
+        sMarket.priceDigit++;
+    }
+    else if (JOY_NEW(DPAD_RIGHT) && sMarket.priceDigit > 0)
+    {
+        sMarket.priceDigit--;
+    }
+    else if (JOY_NEW(A_BUTTON))
+    {
+        mon = &gParties[B_TRAINER_PLAYER][sMarket.sellSlot];
+        gNetplayMailbox.market.mon = *mon;
+        gNetplayMailbox.market.sellPrice = sMarket.price;
+        gNetplayMailbox.market.sellSpecies = GetMonData(mon, MON_DATA_SPECIES);
+        gNetplayMailbox.market.sellLevel = GetMonData(mon, MON_DATA_LEVEL);
+        sMarket.status = NULL;
+        MarketRequest(NETPLAY_REQ_MARKET_SELL, 0);
+    }
+    else if (JOY_NEW(B_BUTTON))
+    {
+        sMarket.sellSlot = MARKET_NO_SLOT;
+        sMarket.status = NULL;
+        MarketRequest(NETPLAY_REQ_MARKET, sMarket.page);
+    }
+    else
+    {
+        return;
+    }
+    PlaySE(SE_SELECT);
+    DrawMarket();
+}
+
+static void Task_MarketScreen(u8 taskId)
+{
+    const struct NetplayMarket *market = &gNetplayMailbox.market;
+
+    switch (sMarket.state)
+    {
+    case MARKET_STATE_LOAD:
+    case MARKET_STATE_ANSWER:
+        if (sMarket.state == MARKET_STATE_LOAD ? market->seq != sMarket.seq : market->answerSeq != sMarket.seq)
+        {
+            if (sMarket.state == MARKET_STATE_LOAD)
+            {
+                if (sMarket.cursor >= market->count)
+                    sMarket.cursor = market->count ? market->count - 1 : 0;
+                sMarket.state = MARKET_STATE_BROWSE;
+            }
+            else if (ApplyMarketAnswer())
+            {
+                // Saved on the next frame, once the message is on screen.
+                sMarket.state = MARKET_STATE_SAVE;
+                if (sMarket.request != NETPLAY_REQ_MARKET_COLLECT)
+                    PlayFanfare(MUS_OBTAIN_ITEM);
+            }
+            else
+            {
+                MarketRequest(NETPLAY_REQ_MARKET, sMarket.page);
+            }
+            DrawMarket();
+        }
+        else if (++sMarket.timer > LADDER_TIMEOUT || !IsOnline())
+        {
+            PlaySE(SE_FAILURE);
+            EndMarketScreen(taskId, NETPLAY_MARKET_SCREEN_QUIT);
+        }
+        break;
+    case MARKET_STATE_SAVE:
+        TrySavingData(SAVE_NORMAL);
+        MarketRequest(NETPLAY_REQ_MARKET, sMarket.page);
+        DrawMarket();
+        break;
+    case MARKET_STATE_BROWSE:
+        HandleMarketBrowseInput(taskId);
+        break;
+    case MARKET_STATE_CONFIRM:
+        if (JOY_NEW(A_BUTTON))
+        {
+            PlaySE(SE_SELECT);
+            sMarket.status = NULL;
+            MarketRequest(market->listings[sMarket.cursor].mine ? NETPLAY_REQ_MARKET_CANCEL : NETPLAY_REQ_MARKET_BUY,
+                          sMarket.cursor);
+            DrawMarket();
+        }
+        else if (JOY_NEW(B_BUTTON))
+        {
+            PlaySE(SE_SELECT);
+            sMarket.state = MARKET_STATE_BROWSE;
+            DrawMarket();
+        }
+        break;
+    case MARKET_STATE_PRICE:
+        HandleMarketPriceInput();
+        break;
+    }
+}
+
+// Spectating -------------------------------------------------------------
+//
+// The host of a PvP battle reports both active Pokémon and the battle's
+// messages (ReportBattle); the server passes them on to anyone watching from
+// START > ONLINE > WATCH.
+
+static void FillBattleSide(struct NetplayBattleSide *side, u32 position, u32 party)
+{
+    const struct BattlePokemon *mon = &gBattleMons[GetBattlerAtPosition(position)];
+    u32 i;
+
+    side->species = mon->species;
+    side->level = mon->level;
+    side->hp = mon->hp;
+    side->maxHP = mon->maxHP;
+    side->alive = 0;
+    side->partySize = 0;
+    for (i = 0; i < PARTY_SIZE; i++)
+    {
+        struct Pokemon *partyMon = &gParties[party][i];
+
+        if (GetMonData(partyMon, MON_DATA_SPECIES) == SPECIES_NONE || GetMonData(partyMon, MON_DATA_IS_EGG))
+            continue;
+        side->partySize++;
+        if (GetMonData(partyMon, MON_DATA_HP) != 0)
+            side->alive++;
+    }
+}
+
+static void ReportBattle(void)
+{
+    struct NetplayBattleReport *report = &gNetplayMailbox.battleReport;
+    struct NetplayBattleSide sides[2];
+    u8 text[NETPLAY_BATTLE_TEXT_LENGTH];
+    u32 i;
+
+    if (!sSession.active || sSession.kind != NETPLAY_KIND_BATTLE || sSession.role != 0
+     || !gMain.inBattle || gBattleMons[0].species == SPECIES_NONE)
+        return;
+
+    memset(sides, 0, sizeof(sides));
+    FillBattleSide(&sides[0], B_POSITION_PLAYER_LEFT, B_TRAINER_PLAYER);
+    FillBattleSide(&sides[1], B_POSITION_OPPONENT_LEFT, B_TRAINER_OPPONENT_A);
+    // The healthboxes print nicknames through the same buffer; a battle
+    // message has a space or a line break.
+    memcpy(text, report->text, sizeof(text));
+    text[NETPLAY_BATTLE_TEXT_LENGTH - 1] = EOS;
+    for (i = 0; i < NETPLAY_BATTLE_TEXT_LENGTH - 1 && gDisplayedStringBattle[i] != EOS; i++)
+    {
+        if (gDisplayedStringBattle[i] == CHAR_SPACE || gDisplayedStringBattle[i] == CHAR_NEWLINE)
+            break;
+    }
+    if (i < NETPLAY_BATTLE_TEXT_LENGTH - 1 && gDisplayedStringBattle[i] != EOS)
+    {
+        for (i = 0; i < NETPLAY_BATTLE_TEXT_LENGTH - 1 && gDisplayedStringBattle[i] != EOS; i++)
+            text[i] = gDisplayedStringBattle[i];
+        text[i] = EOS;
+    }
+    if (memcmp(sides, report->sides, sizeof(sides)) == 0 && memcmp(text, report->text, sizeof(text)) == 0)
+        return;
+    memcpy(report->sides, sides, sizeof(sides));
+    memcpy(report->text, text, sizeof(text));
+    report->seq++;
+}
+
+#define WATCH_REFRESH (2 * 60)
+
+enum
+{
+    WATCH_STATE_LIST,
+    WATCH_STATE_VIEW,
+};
+
+#define tState     data[0]
+#define tWindowId  data[1]
+#define tSeq       data[2]
+#define tTimer     data[3]
+#define tCursor    data[4]
+#define tViewSeq   data[5]
+#define tLoaded    data[6]
+#define tWatching  data[7]
+
+static void Task_Watch(u8 taskId);
+
+static void BufferWatchName(u8 *dest, const u8 *name)
+{
+    StringCopyN(dest, name, PLAYER_NAME_LENGTH);
+    dest[PLAYER_NAME_LENGTH] = EOS;
+}
+
+static void DrawBattleSide(u8 windowId, const struct NetplayBattleSide *side, const u8 *trainer, u32 y)
+{
+    u8 *str;
+    u32 width, barWidth = 64, i;
+
+    AddTextPrinterParameterized(windowId, FONT_SMALL, trainer, 8, y, TEXT_SKIP_DRAW, NULL);
+    // One ball per party Pokémon: filled while it can still fight.
+    for (i = 0; i < side->partySize; i++)
+        FillWindowPixelRect(windowId, PIXEL_FILL(i < side->alive ? 4 : 13), 64 + i * 8, y + 4, 6, 6);
+    if (side->species == SPECIES_NONE)
+        return;
+    AddTextPrinterParameterized(windowId, FONT_NORMAL, GetSpeciesName(side->species), 8, y + 12, TEXT_SKIP_DRAW, NULL);
+    str = StringCopy(gStringVar4, COMPOUND_STRING("Lv"));
+    ConvertIntToDecimalStringN(str, side->level, STR_CONV_MODE_LEFT_ALIGN, 3);
+    AddTextPrinterParameterized(windowId, FONT_SMALL, gStringVar4, 84, y + 14, TEXT_SKIP_DRAW, NULL);
+
+    // HP bar: green, yellow under half, red under a fifth.
+    width = side->maxHP ? side->hp * barWidth / side->maxHP : 0;
+    if (side->hp != 0 && width == 0)
+        width = 1;
+    FillWindowPixelRect(windowId, PIXEL_FILL(2), 108, y + 17, barWidth + 2, 6);
+    FillWindowPixelRect(windowId, PIXEL_FILL(1), 109, y + 18, barWidth, 4);
+    if (width != 0)
+        FillWindowPixelRect(windowId, PIXEL_FILL(side->hp * 5 <= side->maxHP ? 4 : side->hp * 2 <= side->maxHP ? 12 : 6),
+                            109, y + 18, width, 4);
+    str = ConvertIntToDecimalStringN(gStringVar4, side->hp, STR_CONV_MODE_LEFT_ALIGN, 4);
+    str = StringCopy(str, COMPOUND_STRING("/"));
+    ConvertIntToDecimalStringN(str, side->maxHP, STR_CONV_MODE_LEFT_ALIGN, 4);
+    AddTextPrinterParameterized(windowId, FONT_SMALL, gStringVar4, 178, y + 14, TEXT_SKIP_DRAW, NULL);
+}
+
+static void DrawWatch(struct Task *task)
+{
+    const struct NetplayWatch *watch = &gNetplayMailbox.watch;
+    u8 windowId = task->tWindowId;
+    u32 i;
+
+    FillWindowPixelBuffer(windowId, PIXEL_FILL(1));
+    if (task->tState == WATCH_STATE_LIST)
+    {
+        AddTextPrinterParameterized(windowId, FONT_NORMAL, COMPOUND_STRING("LIVE BATTLES"), 4, 0, TEXT_SKIP_DRAW, NULL);
+        if (!task->tLoaded)
+            AddTextPrinterParameterized(windowId, FONT_NORMAL, COMPOUND_STRING("Loading…"), 12, 20, TEXT_SKIP_DRAW, NULL);
+        else if (watch->count == 0)
+            AddTextPrinterParameterized(windowId, FONT_NORMAL, COMPOUND_STRING("No one is battling right now."), 12, 20, TEXT_SKIP_DRAW, NULL);
+        for (i = 0; task->tLoaded && i < watch->count; i++)
+        {
+            BufferWatchName(gStringVar1, watch->list[i].host);
+            BufferWatchName(gStringVar2, watch->list[i].guest);
+            StringExpandPlaceholders(gStringVar4, COMPOUND_STRING("{STR_VAR_1}  vs  {STR_VAR_2}"));
+            if (i == task->tCursor)
+                AddTextPrinterParameterized(windowId, FONT_NORMAL, gText_SelectorArrow3, 2, 20 + i * 16, TEXT_SKIP_DRAW, NULL);
+            AddTextPrinterParameterized(windowId, FONT_NORMAL, gStringVar4, 12, 20 + i * 16, TEXT_SKIP_DRAW, NULL);
+        }
+        AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("A: watch  B: back"), 4, 122, TEXT_SKIP_DRAW, NULL);
+    }
+    else
+    {
+        const struct NetplayLiveBattle *battle = &watch->list[task->tWatching];
+        const struct NetplayBattleReport *view = &watch->view;
+
+        BufferWatchName(gStringVar1, battle->host);
+        BufferWatchName(gStringVar2, battle->guest);
+        StringExpandPlaceholders(gStringVar4, COMPOUND_STRING("WATCHING {STR_VAR_1} vs {STR_VAR_2}"));
+        AddTextPrinterParameterized(windowId, FONT_NORMAL, gStringVar4, 4, 0, TEXT_SKIP_DRAW, NULL);
+        DrawBattleSide(windowId, &view->sides[1], gStringVar2, 18);
+        DrawBattleSide(windowId, &view->sides[0], gStringVar1, 52);
+        FillWindowPixelRect(windowId, PIXEL_FILL(2), 4, 88, 216, 1);
+        if (watch->ended)
+            AddTextPrinterParameterized(windowId, FONT_NORMAL, COMPOUND_STRING("The battle is over."), 8, 92, TEXT_SKIP_DRAW, NULL);
+        else if (view->text[0] != EOS)
+            AddTextPrinterParameterized(windowId, FONT_NORMAL, view->text, 8, 92, TEXT_SKIP_DRAW, NULL);
+        else
+            AddTextPrinterParameterized(windowId, FONT_NORMAL, COMPOUND_STRING("Waiting for the battle…"), 8, 92, TEXT_SKIP_DRAW, NULL);
+        AddTextPrinterParameterized(windowId, FONT_SMALL, COMPOUND_STRING("B: stop watching"), 4, 122, TEXT_SKIP_DRAW, NULL);
+    }
+    CopyWindowToVram(windowId, COPYWIN_FULL);
+}
+
+static void RefreshLiveBattles(struct Task *task)
+{
+    task->tSeq = gNetplayMailbox.watch.listSeq;
+    task->tTimer = 0;
+    QueueRequest(NETPLAY_REQ_LIVE, 0, 0, 0);
+}
+
+void ShowNetplayWatch(void)
+{
+    u8 taskId = CreateTask(Task_Watch, 80);
+    struct Task *task = &gTasks[taskId];
+
+    task->tWindowId = AddWindow(&sLadderWindowTemplate);
+    DrawStdWindowFrame(task->tWindowId, FALSE);
+    PutWindowTilemap(task->tWindowId);
+    task->tState = WATCH_STATE_LIST;
+    task->tCursor = 0;
+    task->tLoaded = FALSE;
+    RefreshLiveBattles(task);
+    DrawWatch(task);
+    ScheduleBgCopyTilemapToVram(0);
+}
+
+static void Task_Watch(u8 taskId)
+{
+    struct Task *task = &gTasks[taskId];
+    const struct NetplayWatch *watch = &gNetplayMailbox.watch;
+
+    if (task->tState == WATCH_STATE_VIEW)
+    {
+        if (watch->view.seq != (u8)task->tViewSeq)
+        {
+            task->tViewSeq = watch->view.seq;
+            DrawWatch(task);
+        }
+        if (JOY_NEW(B_BUTTON) || !IsOnline())
+        {
+            PlaySE(SE_SELECT);
+            QueueRequest(NETPLAY_REQ_UNWATCH, 0, 0, 0);
+            task->tState = WATCH_STATE_LIST;
+            task->tLoaded = FALSE;
+            RefreshLiveBattles(task);
+            DrawWatch(task);
+        }
+        return;
+    }
+
+    if (watch->listSeq != (u8)task->tSeq)
+    {
+        task->tSeq = watch->listSeq;
+        task->tLoaded = TRUE;
+        if (task->tCursor >= watch->count)
+            task->tCursor = watch->count ? watch->count - 1 : 0;
+        DrawWatch(task);
+    }
+    else if (++task->tTimer > WATCH_REFRESH && IsOnline())
+    {
+        RefreshLiveBattles(task);
+    }
+
+    if (JOY_NEW(DPAD_UP) && task->tCursor > 0)
+    {
+        PlaySE(SE_SELECT);
+        task->tCursor--;
+        DrawWatch(task);
+    }
+    else if (JOY_NEW(DPAD_DOWN) && task->tCursor + 1 < watch->count)
+    {
+        PlaySE(SE_SELECT);
+        task->tCursor++;
+        DrawWatch(task);
+    }
+    else if (JOY_NEW(A_BUTTON) && task->tLoaded && task->tCursor < watch->count)
+    {
+        PlaySE(SE_SELECT);
+        task->tWatching = task->tCursor;
+        task->tViewSeq = watch->view.seq;
+        task->tState = WATCH_STATE_VIEW;
+        QueueRequest(NETPLAY_REQ_WATCH, 0, 0, task->tCursor);
+        DrawWatch(task);
+    }
+    else if (JOY_NEW(B_BUTTON))
+    {
+        PlaySE(SE_SELECT);
+        ClearStdWindowAndFrameToTransparent(task->tWindowId, FALSE);
+        ClearWindowTilemap(task->tWindowId);
+        RemoveWindow(task->tWindowId);
+        ScheduleBgCopyTilemapToVram(0);
+        DestroyTask(taskId);
+        ScriptUnfreezeObjectEvents();
+        UnlockPlayerFieldControls();
+    }
+}
+
+#undef tState
+#undef tWindowId
+#undef tSeq
+#undef tTimer
+#undef tCursor
+#undef tViewSeq
+#undef tLoaded
+#undef tWatching

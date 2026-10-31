@@ -42,7 +42,7 @@ local function setup()
     local mem, net = fakeMemory(), fakeNet()
     mem.write32(BASE, 0x4E4D4B50)
     mem.write32(BASE + 4, 0x3154454E)
-    mem.write8(BASE + 0x08, 2)
+    mem.write8(BASE + 0x08, 3)
     mem.write8(BASE + 0x0D2, 1) -- JOIN ONLINE picked
     for i, c in ipairs({ string.byte("play.example.org", 1, -1) }) do mem.write8(BASE + 0x35C + i - 1, c) end
     mem.write16(BASE + 0x384, 7000)
@@ -111,6 +111,42 @@ function tests.emotes_go_both_ways()
     eq(mem.read8(BASE + 0x0CE), 2, "emote")
 end
 
+local function request(mem, type, target, arg)
+    mem.write8(BASE + 0x0C1, type)
+    mem.write16(BASE + 0x0C2, target or 0)
+    mem.write16(BASE + 0x0C6, arg or 0)
+    mem.write8(BASE + 0x0C0, mem.read8(BASE + 0x0C0) + 1)
+end
+
+function tests.friends()
+    local bridge, mem, net = online()
+    local F = BASE + 0x43C
+    request(mem, 11, 7) -- REQ_FRIEND_ADD
+    bridge:onFrame()
+    eq(net.take()[1], "FRIEND ADD 7", "add")
+    net.push("FRIENDADD ok Misty")
+    bridge:onFrame()
+    eq(mem.read8(F + 2), 1, "answered")
+    eq(mem.read8(F + 3), 1, "ok")
+    request(mem, 10) -- REQ_FRIENDS
+    bridge:onFrame()
+    eq(net.take()[1], "FRIENDS", "list asked")
+    net.push("FRIEND Misty 22 7 3 4 -2 8 100 1")
+    net.push("FRIEND Brock 5 0 0 0 0 0 0 0")
+    net.push("FRIENDSEND")
+    bridge:onFrame()
+    eq(mem.read8(F), 1, "published")
+    eq(mem.read8(F + 1), 2, "count")
+    eq(mem.read16(F + 4 + 8), 7, "online id")
+    eq(mem.read8(F + 4 + 10), 3, "map group")
+    eq(mem.read16(F + 4 + 12), 0xFFFE, "x")
+    eq(mem.read8(F + 4 + 18), 1, "busy")
+    eq(mem.read16(F + 24 + 8), 0, "offline")
+    request(mem, 12, 0, 1) -- REQ_FRIEND_DEL, second friend
+    bridge:onFrame()
+    eq(net.take()[1], "FRIEND DEL Brock 5", "delete by index")
+end
+
 function tests.ladder_request_fills_the_mailbox()
     local bridge, mem, net = online()
     local L = BASE + 0x388
@@ -131,6 +167,153 @@ function tests.ladder_request_fills_the_mailbox()
     eq(mem.read8(L + 0x14), 0xC7, "first name starts with M")
     eq(mem.read16(L + 0x14 + 8), 1032, "first rating")
     eq(mem.read16(L + 0x24 + 12), 1, "second's losses")
+end
+
+function tests.season_and_claim()
+    local bridge, mem, net = online()
+    local S = BASE + 0x508
+    request(mem, 13, 0, 0) -- REQ_SEASON
+    bridge:onFrame()
+    eq(net.take()[1], "SEASON", "asked for the season")
+    net.push("SEASON 3 12 1 1150 2 2")
+    bridge:onFrame()
+    eq(mem.read8(S), 1, "published")
+    eq(mem.read8(S + 1), 2, "reward tier")
+    eq(mem.read16(S + 2), 3, "season")
+    eq(mem.read16(S + 4), 12, "days left")
+    eq(mem.read16(S + 6), 1150, "rating")
+    eq(mem.read8(S + 8), 1, "rated")
+    eq(mem.read16(S + 12), 2, "reward season")
+    request(mem, 14, 0, 0) -- REQ_CLAIM
+    bridge:onFrame()
+    eq(net.take()[1], "CLAIM", "claimed")
+    net.push("CLAIMED 2 2")
+    bridge:onFrame()
+    eq(mem.read8(S + 9), 1, "claim answered")
+    eq(mem.read8(S + 10), 2, "claimed tier")
+    eq(mem.read8(S + 1), 0xFF, "nothing left to claim")
+    net.push("CLAIMED -1 0")
+    bridge:onFrame()
+    eq(mem.read8(S + 10), 0xFF, "nothing claimed")
+end
+
+function tests.market_board()
+    local bridge, mem, net = online()
+    local M = BASE + 0x518
+    request(mem, 15, 0, 1) -- REQ_MARKET, page 1
+    bridge:onFrame()
+    eq(net.take()[1], "MARKET LIST 1", "asked for a page")
+    net.push("MITEM 41 Misty 25 12 123456 0")
+    net.push("MITEM 40 Ash 1 5 10 1")
+    net.push("MARKETEND 1 3")
+    bridge:onFrame()
+    eq(mem.read8(M), 1, "published")
+    eq(mem.read8(M + 1), 2, "count")
+    eq(mem.read8(M + 2) .. "/" .. mem.read8(M + 3), "1/3", "page")
+    eq(mem.read16(M + 0x0C), 25, "species")
+    eq(mem.read8(M + 0x0E), 12, "level")
+    eq(mem.read32(M + 0x10), 123456, "price")
+    eq(mem.read8(M + 0x14), 0xC7, "seller starts with M")
+    eq(mem.read8(M + 0x1C + 3), 1, "second is mine")
+
+    request(mem, 17, 0, 0) -- REQ_MARKET_BUY, first row
+    bridge:onFrame()
+    eq(net.take()[1], "MARKET BUY 41", "buy by id")
+    net.push("MBOUGHT ok 123456 " .. string.rep("0a", 100))
+    bridge:onFrame()
+    eq(mem.read8(M + 4), 1, "answered")
+    eq(mem.read8(M + 5), 1, "ok")
+    eq(mem.read32(M + 8), 123456, "paid")
+    eq(mem.read8(M + 0x64 + 99), 10, "the Pokémon")
+
+    mem.write32(M + 0x5C, 700)
+    mem.write16(M + 0x60, 133)
+    mem.write8(M + 0x62, 20)
+    request(mem, 16, 0, 0) -- REQ_MARKET_SELL
+    bridge:onFrame()
+    eq(net.take()[1], "MARKET SELL 133 20 700 " .. string.rep("0a", 100), "sell")
+    net.push("MLISTED full 0")
+    bridge:onFrame()
+    eq(mem.read8(M + 5), 3, "full")
+
+    request(mem, 18, 0, 4) -- REQ_MARKET_CANCEL, no such row
+    bridge:onFrame()
+    eq(mem.read8(M + 5), 2, "gone without asking")
+
+    request(mem, 19, 0, 0) -- REQ_MARKET_COLLECT
+    bridge:onFrame()
+    eq(net.take()[1], "MARKET COLLECT", "collect")
+    net.push("MCOLLECT 900 2")
+    bridge:onFrame()
+    eq(mem.read32(M + 8), 900, "earned")
+    eq(mem.read16(M + 6), 2, "sales")
+end
+
+function tests.reports_the_battle_it_hosts()
+    local bridge, mem, net = online()
+    net.push("START 7 battle 8 0")
+    bridge:onFrame()
+    net.take()
+    local R = BASE + 0x5E0
+    mem.write16(R + 4, 258); mem.write8(R + 6, 30); mem.write8(R + 7, 2)
+    mem.write16(R + 8, 45); mem.write16(R + 10, 90); mem.write8(R + 12, 2)
+    mem.write16(R + 16, 263); mem.write8(R + 18, 30); mem.write8(R + 19, 1)
+    mem.write16(R + 20, 0); mem.write16(R + 22, 70); mem.write8(R + 24, 2)
+    -- "Go! A!" with a newline and a color code in it
+    local text = { 0xC1, 0xE3, 0xAB, 0xFE, 0xFC, 0x01, 0xBB, 0xAB, 0xFF }
+    for i, c in ipairs(text) do mem.write8(R + 0x1C + i - 1, c) end
+    mem.write8(R, 1)
+    bridge:onFrame()
+    local sent = net.take()
+    eq(sent[1], "BSTATE 7 258 30 45 90 2 2 263 30 0 70 1 2", "state")
+    eq(sent[2], "BTEXT 7 Go! A!", "text")
+end
+
+function tests.watches_a_battle()
+    local bridge, mem, net = online()
+    local W = BASE + 0x63C
+    local V = W + 0x68
+    request(mem, 20, 0, 0) -- REQ_LIVE
+    bridge:onFrame()
+    eq(net.take()[1], "LIVE", "asked for live battles")
+    net.push("LIVE 7 Misty Brock")
+    net.push("LIVEEND")
+    bridge:onFrame()
+    eq(mem.read8(W), 1, "list published")
+    eq(mem.read8(W + 1), 1, "count")
+    eq(mem.read16(W + 4), 7, "session")
+    eq(mem.read8(W + 6), 0xC7, "host starts with M")
+    eq(mem.read8(W + 14), 0xBC, "guest starts with B")
+    request(mem, 21, 0, 0) -- REQ_WATCH, first
+    bridge:onFrame()
+    eq(net.take()[1], "WATCH 7", "watch")
+    net.push("WATCHING 7")
+    net.push("WSTATE 7 258 30 45 90 2 2 263 30 0 70 1 2")
+    net.push("WTEXT 7 Go! A!")
+    bridge:onFrame()
+    eq(mem.read16(V + 4), 258, "host species")
+    eq(mem.read16(V + 8), 45, "host hp")
+    eq(mem.read8(V + 7), 2, "host alive")
+    eq(mem.read16(V + 22), 70, "guest max hp")
+    eq(mem.read8(V + 0x1C), 0xC1, "G")
+    eq(mem.read8(V + 0x1C + 2), 0xAB, "!")
+    eq(mem.read8(V + 0x1C + 6), 0xFF, "end of text")
+    net.push("WEND 7")
+    bridge:onFrame()
+    eq(mem.read8(W + 2), 1, "ended")
+end
+
+function tests.hooks_see_lines_and_frames()
+    local bridge, mem, net = online()
+    local seen, frames = nil, 0
+    bridge:addHook({
+        onLine = function(args) if args[1] == "MARKET" then seen = args[2]; return true end end,
+        onFrame = function(m) frames = frames + 1 end,
+    })
+    net.push("MARKET 42")
+    bridge:onFrame()
+    eq(seen, "42", "hook got its line")
+    eq(frames, 1, "hook ran each frame")
 end
 
 function tests.connects_and_reports_position()

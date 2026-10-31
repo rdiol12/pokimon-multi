@@ -51,7 +51,7 @@ local function online(shot)
     local mem, net = fakeMemory(), fakeNet()
     mem.write32(NET, 0x4E4D4B50)
     mem.write32(NET + 4, 0x3154454E)
-    mem.write8(NET + 0x08, 2)
+    mem.write8(NET + 0x08, 3)
     mem.write8(NET + 0x0D2, 1)
     for i, c in ipairs({ 0xBB, 0xE7, 0xDC, 0xFF }) do mem.write8(NET + 0x0C + i - 1, c) end
     mem.write8(NET + 0x17, 9)
