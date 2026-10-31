@@ -65,7 +65,7 @@ local function waitForMarketReload()
 end
 
 -- Rows of the menu when talking to another player (data/scripts/netplay.inc).
-local TALK = { BATTLE = 1, DOUBLE = 2, TRADE = 3, DEAL = 4, FRIEND = 5, COOP = 6 }
+local TALK = { BATTLE = 1, TRADE = 2, DEAL = 3, FRIEND = 4, COOP = 5, DOUBLE = 6, MULTI = 7 }
 
 local function talkToOtherPlayer(choice)
     -- Player 2 stands at x=7 facing west, next to player 1 at x=6.
@@ -103,7 +103,9 @@ local function spectate()
     D.wait(20)
     D.shot("watch-list")
     D.press(K.A, 10)
-    D.waitFor("the battle view", 600, function() return D.mb16(0x6A8) ~= 0 end)
+    -- The battle is listed once both players accept; the first report comes
+    -- after the link-up and the battle intro, which can take over 10 seconds.
+    D.waitFor("the battle view", 1800, function() return D.mb16(0x6A8) ~= 0 end)
     D.wait(10)
     D.shot("watching")
     local lastSeq, shots = D.mb8(0x6A4), 0
