@@ -17,7 +17,7 @@ roaming NPC trainers.
   lodge) takes any Pokémon from your party except an egg or your last one
   that can battle. It runs off into the meadow at once. Online it goes to
   the server and every player can meet it; offline it is kept in your save
-  (up to six) and roams your own reserve.
+  (up to 40) and roams your own reserve.
 - **Meeting one**: walk up to a roaming Pokémon and talk to it to see what
   it is, its level and who left it. Challenge it to a wild battle with the
   Pokémon exactly as its trainer left it (moves, nickname, original
@@ -52,9 +52,10 @@ The list of who's in each spot lives in EWRAM (400 bytes) and is rebuilt when yo
 you continue a save inside the reserve it is rebuilt from what's known
 offline.
 
-Offline Pokémon are saved compactly in `SaveBlock3.reserve` (80 bytes: six
-Pokémon as species, level, personality and IVs, plus the day's strays and a
-couple of counters). Making one again keeps its species, level, nature,
+Offline Pokémon are saved compactly: the first six in `SaveBlock3.reserve`
+(80 bytes, with the day's strays and a couple of counters), the other 34 in
+`SaveBlockExt.reserveMoreMons` (the extended save, include/save_ext.h; without
+it the limit stays six). Each is species, level, personality and IVs. Making one again keeps its species, level, nature,
 gender, shininess and IVs.
 
 ### Server requests

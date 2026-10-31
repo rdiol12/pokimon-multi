@@ -14,11 +14,18 @@
 #define SAVE_EXT_HEADER_SIZE 32
 #define SAVE_EXT_MAX_SIZE (SAVE_EXT_SLOT_SIZE - SAVE_EXT_HEADER_SIZE)
 
+#include "breed_fusion_save.h"
+#include "reserve_save.h"
+#include "pokemon_storage_system.h"
+
 struct SaveBlockExt
 {
     u32 version;
     u32 reserved[7];
     // New saved data goes below.
+    struct ReserveLocalMon reserveMoreMons[RESERVE_LOCAL_MAX - RESERVE_LOCAL_SAVED]; // Haven Reserve drop-offs 7-40
+    struct FusionRecipe fusionMoreRecipes[FUSION_RECIPE_TOTAL - FUSION_RECIPE_COUNT]; // fusion colors 13-252
+    struct PokemonStorageMore pcMoreBoxes; // PC boxes 15-32
 };
 
 extern struct SaveBlockExt gSaveBlockExt;

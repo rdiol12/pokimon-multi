@@ -1,4 +1,5 @@
 #include "global.h"
+#include "save_ext.h"
 #include "breed_fusion.h"
 #include "community.h"
 #include "main.h"
@@ -335,15 +336,30 @@ u32 BreedFusion_GetIconPalIndex(u32 species, u32 personality, u32 palIndex)
 // ---------------------------------------------------------------------------
 // Fusions built by the server
 
+// The saved recipes: the first few in SaveBlock3, the rest in the extended
+// save, which only an emulator with hardware v3 keeps.
+static u32 RecipeCount(void)
+{
+    return SaveExt_IsAvailable() ? FUSION_RECIPE_TOTAL : FUSION_RECIPE_COUNT;
+}
+
+static struct FusionRecipe *Recipe(u32 i)
+{
+    if (i < FUSION_RECIPE_COUNT)
+        return &gSaveBlock3Ptr->breedFusion.recipes[i];
+    return &gSaveBlockExt.fusionMoreRecipes[i - FUSION_RECIPE_COUNT];
+}
+
 static struct FusionRecipe *FindRecipe(u32 species, u32 partner)
 {
-    struct BreedFusionSaveData *save = &gSaveBlock3Ptr->breedFusion;
-    u32 i;
+    u32 i, n = RecipeCount();
 
-    for (i = 0; i < FUSION_RECIPE_COUNT; i++)
+    for (i = 0; i < n; i++)
     {
-        if (save->recipes[i].count != 0 && save->recipes[i].species == species && save->recipes[i].partner == partner)
-            return &save->recipes[i];
+        struct FusionRecipe *r = Recipe(i);
+
+        if (r->count != 0 && r->species == species && r->partner == partner)
+            return r;
     }
     return NULL;
 }
@@ -366,7 +382,7 @@ static void SaveRecipe(const u8 *data, u32 len)
 {
     struct BreedFusionSaveData *save = &gSaveBlock3Ptr->breedFusion;
     struct FusionRecipe *recipe;
-    u32 species, partner, count, i;
+    u32 species, partner, count, i, n = RecipeCount(), slot = 0;
 
     if (len < 4 + 2 + FUSION_RECIPE_COLORS * 4)
         return;
@@ -379,21 +395,30 @@ static void SaveRecipe(const u8 *data, u32 len)
     if (recipe == NULL)
     {
         // An empty slot, else the next one whose fusion isn't in the party.
-        for (i = 0; i < FUSION_RECIPE_COUNT && recipe == NULL; i++)
+        for (i = 0; i < n && recipe == NULL; i++)
         {
-            if (save->recipes[i].count == 0)
-                recipe = &save->recipes[i];
+            if (Recipe(i)->count == 0)
+            {
+                recipe = Recipe(i);
+                slot = i;
+            }
         }
-        for (i = 0; i < FUSION_RECIPE_COUNT && recipe == NULL; i++)
+        for (i = 0; i < n && recipe == NULL; i++)
         {
-            struct FusionRecipe *r = &save->recipes[(save->nextSlot + i) % FUSION_RECIPE_COUNT];
+            struct FusionRecipe *r = Recipe((save->nextSlot + i) % n);
 
             if (!PartyNeedsRecipe(r->species, r->partner))
+            {
                 recipe = r;
+                slot = (save->nextSlot + i) % n;
+            }
         }
         if (recipe == NULL)
-            recipe = &save->recipes[save->nextSlot % FUSION_RECIPE_COUNT];
-        save->nextSlot = (recipe - save->recipes + 1) % FUSION_RECIPE_COUNT;
+        {
+            slot = save->nextSlot % n;
+            recipe = Recipe(slot);
+        }
+        save->nextSlot = (slot + 1) % n;
     }
     recipe->species = species;
     recipe->partner = partner;

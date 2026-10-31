@@ -17,7 +17,7 @@ struct ReserveLocalMon
 // The Haven Reserve's save data (src/reserve.c), in SaveBlock3.
 struct ReserveSaveData
 {
-    struct ReserveLocalMon mons[RESERVE_LOCAL_MAX];
+    struct ReserveLocalMon mons[RESERVE_LOCAL_SAVED]; // then SaveBlockExt.reserveMoreMons
     u16 strayDay;   // the day the strays below are for
     u8 straysGone;  // strays caught or knocked out that day, one bit each
     u8 count;       // Pokémon in mons[]

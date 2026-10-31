@@ -4,7 +4,8 @@
 // Fusion colors the server built (src/breed_fusion.c), one per mother
 // species + father species pair the player has had. When a pair has none
 // yet (offline, or a slot was reused), the game builds the colors itself.
-#define FUSION_RECIPE_COUNT   12
+#define FUSION_RECIPE_COUNT   12  // in SaveBlock3
+#define FUSION_RECIPE_TOTAL   252 // the rest in the extended save (include/save_ext.h); nextSlot is a u8
 #define FUSION_RECIPE_COLORS  4
 
 struct FusionRecipe

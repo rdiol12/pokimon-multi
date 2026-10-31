@@ -24,7 +24,7 @@
 // Berry Juice, Miltank's Moomoo Milk, Chansey's Lucky Egg...). Most of it
 // is what crafting needs.
 
-#define RANCH_BOX            (TOTAL_BOXES_COUNT - 1)
+#define RANCH_BOX            (SAVED_BOXES_COUNT - 1) // box 14, where older saves keep it
 #define RANCH_HOURS_PER_FIND 6
 #define RANCH_MAX_HOURS      24
 #define RANCH_MAX_HAUL       40
