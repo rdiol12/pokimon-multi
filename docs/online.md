@@ -276,6 +276,33 @@ Server: `server/online_guilds.py` (tables `online_guild_chest`,
 `online_guild_raids`). Game: `data/scripts/online/guilds.inc`,
 `data/maps/OnlineGuildHall/`, `src/online_guilds.c`.
 
+## Mount racing
+
+![The courses, joining a heat, the countdown at the start line on Route 102, racing (the timer and gates top right), the finish, TEST1 wins and TEST2 comes in 2nd, the record notice, the week's best times](images/online-racing.png)
+
+HUB > MOUNT RACING (with a Pokémon you can ride in the party) picks one of
+three courses: PETALBURG RUN (Route 102, east to west), SLATEPORT SPRINT
+(Route 110, south to north) and ASHEN DASH (Route 113, east to west).
+Everyone who joins a course within the same 20 seconds races it together,
+up to four, each from their own lane on the start line: the game warps them
+there, puts them on their mount and counts down. A small window shows the
+time and the gates passed; the last gate is the next town. Racers ride
+through other players and the other things the game's extra features put on
+the map (local ids 200 and up), wild Pokémon and trainers leave them alone
+(the engine's `WE_FLAG_NO_ENCOUNTER` and `OW_FLAG_NO_TRAINER_SEE`, flags
+`0x4C1` and `0x4C0`), and notices wait for the finish. At the finish the
+time goes to the server, and the player goes back to where they joined.
+
+The first racer across the line in a heat of two or more wins $1000 for
+each racer beaten; when everyone is in, all of them get the results. Each
+course has a board of the week's best times, and a new best is announced to
+everyone online. Giving up (MOUNT RACING again during a race) takes the
+player back.
+
+Server: `server/online_racing.py` (heats in memory, table
+`online_race_times`). Game: `src/online_racing.c` (courses, gates, the
+timer), `data/scripts/online/racing.inc`.
+
 ## How it talks to the server
 
 These features use the Online Plaza's request channel (`NpxRpc_*` in
@@ -310,7 +337,8 @@ and optionally `setup(db)`, `EVENTS` (reports it listens to) and
 numbers; `tools/online/gen_ids.py` writes it from the headers.
 
 Numbers this batch owns (agreed with the other feature threads): flags
-`0x4C0`–`0x4DF`, vars `0x40BB` and `0x40DB`, object local ids 241–248 on
+`0x4C0`–`0x4DF` (`0x4C0` and `0x4C1` are the race's no-trainers and
+no-encounters switches), vars `0x40BB` and `0x40DB`, object local ids 241–248 on
 shared maps.
 
 ## Tests and screenshots

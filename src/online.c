@@ -793,6 +793,8 @@ void Online_PollStatusSoon(void)
 // Called every overworld frame. Returns TRUE if it started a script.
 bool32 Online_OverworldUpdate(void)
 {
+    if (Online_RaceUpdate())
+        return TRUE;
     if (!IsOnline())
     {
         sOnline.background = FALSE;
@@ -806,6 +808,10 @@ bool32 Online_OverworldUpdate(void)
     // Only while no script runs: a script may be reading the last answer.
     else if (!ArePlayerFieldControlsLocked())
         SendBackground();
+
+    // Racers aren't stopped for notices or invites; they wait for the finish.
+    if (Online_RaceIsOn())
+        return FALSE;
 
     if (gOnlineShowcase.kind != SHOWCASE_NONE && !ArePlayerFieldControlsLocked())
         return RunShowcase();

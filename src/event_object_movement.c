@@ -1,6 +1,7 @@
 #include "global.h"
 #include "malloc.h"
 #include "netplay.h"
+#include "online.h"
 #include "battle_anim.h"
 #include "battle_pyramid.h"
 #include "battle_util.h"
@@ -6557,6 +6558,7 @@ u32 GetObjectObjectCollidesWith(struct ObjectEvent *objectEvent, s16 x, s16 y, b
         curObject = &gObjectEvents[i];
         if (curObject->active && (curObject->movementType != MOVEMENT_TYPE_FOLLOW_PLAYER || objectEvent != &gObjectEvents[gPlayerAvatar.objectEventId]) && curObject != objectEvent
          && !FollowerNPC_IsCollisionExempt(curObject, objectEvent)
+         && !Online_RacePassesThrough(objectEvent, curObject)
          )
         {
             // check for collision if curObject is active, not the object in question, and not exempt from collisions
