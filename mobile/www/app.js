@@ -2,6 +2,7 @@
 // game with touch controls, saves kept on the phone, and the netplay bridge.
 
 import { applyBps, crc32, patchInfo, PatchError } from './bps.js';
+import { describeWrongRom, isZip, unzipRom } from './rom.js';
 import { storage, keepData } from './storage.js';
 import { Emulator, loadCore } from './emulator.js';
 import { attachControls } from './controls.js';
@@ -72,7 +73,8 @@ async function onRomPicked(file) {
     msg.classList.remove('error');
     msg.textContent = 'Checking your ROM…';
     try {
-        const rom = await readFile(file);
+        let rom = await readFile(file);
+        if (isZip(rom)) rom = await unzipRom(rom);
         const patch = (await bundledPatch()) || (await storage.get('patch'));
         if (!patch) {
             await storage.set('rom', rom);
@@ -102,7 +104,15 @@ async function installRom(rom, patch) {
     $('#setup-msg').textContent = 'Patching… (this takes a few seconds)';
     await new Promise((r) => setTimeout(r, 30)); // let the message paint
     const target = patchInfo(patch).target;
-    const game = crc32(rom) === target ? rom : applyBps(rom, patch);
+    let game = rom;
+    if (crc32(rom) !== target) {
+        try {
+            game = applyBps(rom, patch);
+        } catch (e) {
+            if (e.code === 'wrong-rom') throw new PatchError('wrong-rom', describeWrongRom(rom));
+            throw e;
+        }
+    }
     await storage.set('rom', rom);
     await storage.set('game', game);
     await storage.set('gameCrc', target);
