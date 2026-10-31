@@ -298,11 +298,20 @@ int main(int argc, char *argv[])
         } else {
             fseek(infile, 0, SEEK_END);
             size = ftell(infile);
-            for (bit=31; bit>=0; bit--) if (size & (1<<bit)) break;
-            if (size != (1<<bit))
+            if (size > 0x2000000)
             {
-                int todo = (1<<(bit+1)) - size;
+                // Extended GBA ROMs past 32 MiB: pad to whole 16 MiB regions instead
+                int todo = ((size + 0xFFFFFF) & ~0xFFFFFF) - size;
                 while (todo--) fputc(0xFF, infile);
+            }
+            else
+            {
+                for (bit=31; bit>=0; bit--) if (size & (1<<bit)) break;
+                if (size != (1<<bit))
+                {
+                    int todo = (1<<(bit+1)) - size;
+                    while (todo--) fputc(0xFF, infile);
+                }
             }
         }
     }

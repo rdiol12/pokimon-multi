@@ -66,6 +66,18 @@
 // Version 3: 1 MiB of battery-backed RAM saved with the flash save. CPU access only (no DMA).
 #define PKX_SAVE             (PKX_VIDEO + 0x100000)
 #define PKX_SAVE_SIZE        0x100000
+// Version 4: CPU overclock. Write PKX_SET_OVERCLOCK | n (n = 1..8) to the control register;
+// control bits 8-11 read back the current multiplier.
+#define PKX_SET_OVERCLOCK    0x4300
+#ifndef PKX_OVERCLOCK
+#define PKX_OVERCLOCK        4 // the game's multiplier
+#endif
+// Version 4: ROMs up to 64 MiB. The first 32 MiB stay at ROM_START (and its 0x0A000000 mirror,
+// which script function tags use); the rest shows at PKX_ROM2. Put big read-only data there with
+// ROM2_DATA. Only valid on extended hardware v4.
+#define PKX_ROM2             0x0C000000
+#define PKX_ROM2_SIZE        0x2000000
+#define ROM2_DATA            __attribute__((section(".rom2")))
 #define IWRAM_START 0x03000000
 #define IWRAM_END   (IWRAM_START + 0x8000)
 
