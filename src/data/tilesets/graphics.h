@@ -66,6 +66,29 @@ const u16 gTilesetPalettes_Petalburg[][16] =
     INCGFX_U16("data/tilesets/secondary/petalburg/palettes/15.pal", ".gbapal"),
 };
 
+// The carnival (tools/areas/carnival_art.py): Petalburg's tiles plus new art.
+const u32 gTilesetTiles_Carnival[] = INCGFX_U32("data/tilesets/secondary/carnival/tiles.png", ".4bpp.fastSmol", "-num_tiles 356 -Wnum_tiles");
+
+const u16 gTilesetPalettes_Carnival[][16] =
+{
+    INCGFX_U16("data/tilesets/secondary/carnival/palettes/00.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/carnival/palettes/01.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/carnival/palettes/02.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/carnival/palettes/03.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/carnival/palettes/04.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/carnival/palettes/05.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/carnival/palettes/06.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/carnival/palettes/07.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/carnival/palettes/08.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/carnival/palettes/09.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/carnival/palettes/10.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/carnival/palettes/11.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/carnival/palettes/12.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/carnival/palettes/13.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/carnival/palettes/14.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/carnival/palettes/15.pal", ".gbapal"),
+};
+
 const u32 gTilesetTiles_Rustboro[] = INCGFX_U32("data/tilesets/secondary/rustboro/tiles.png", ".4bpp.fastSmol", "-num_tiles 498 -Wnum_tiles");
 
 const u16 gTilesetPalettes_Rustboro[][16] =
