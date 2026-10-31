@@ -1839,8 +1839,8 @@ static void CB2_NewGameBirchSpeech_ReturnFromLookScreen(void)
     taskId = FindTaskIdByFunc(Task_NewGameBirchSpeech_ReturnFromNamingScreenShowTextbox);
     gTasks[taskId].func = Task_NewGameBirchSpeech_ReturnFromLookScreen;
     // Brendan and May wear the look just picked.
-    TrainerLook_RecolorTrainerPic(OBJ_PLTT_ID(gSprites[gTasks[taskId].tBrendanSpriteId].oam.paletteNum), TRAINER_PIC_BRENDAN, TrainerLook_Get());
-    TrainerLook_RecolorTrainerPic(OBJ_PLTT_ID(gSprites[gTasks[taskId].tMaySpriteId].oam.paletteNum), TRAINER_PIC_MAY, TrainerLook_Get());
+    TrainerLook_RecolorTrainerPic(OBJ_PLTT_ID(GetSpritePaletteSlot(&gSprites[gTasks[taskId].tBrendanSpriteId])), TRAINER_PIC_BRENDAN, TrainerLook_Get());
+    TrainerLook_RecolorTrainerPic(OBJ_PLTT_ID(GetSpritePaletteSlot(&gSprites[gTasks[taskId].tMaySpriteId])), TRAINER_PIC_MAY, TrainerLook_Get());
 }
 
 static void CB2_NewGameBirchSpeech_ReturnFromNamingScreen(void)

@@ -248,16 +248,16 @@ static u8 LoadLookPalette(const u16 *colours, bool32 inField)
 // frees the pool palette they leave if nobody else uses it.
 static void SwitchPalette(struct Sprite *sprite, u8 slot)
 {
-    u8 old = sprite->oam.paletteNum;
+    u8 old = GetSpritePaletteSlot(sprite);
     u32 i;
 
     if (slot == 0xFF || slot == old)
         return;
-    sprite->oam.paletteNum = slot;
+    SetSpritePaletteSlot(sprite, slot);
     for (i = 0; i < MAX_SPRITES; i++)
     {
-        if (gSprites[i].inUse && gSprites[i].callback == SpriteCB_LookOverlay && gSprites[i].oam.paletteNum == old)
-            gSprites[i].oam.paletteNum = slot;
+        if (gSprites[i].inUse && gSprites[i].callback == SpriteCB_LookOverlay && GetSpritePaletteSlot(&gSprites[i]) == old)
+            SetSpritePaletteSlot(&gSprites[i], slot);
     }
     if (IsPoolTag(GetSpritePaletteTagByPaletteNum(old)))
         FieldEffectFreePaletteIfUnused(old);
@@ -279,12 +279,12 @@ static void ApplyLookPalette(struct Sprite *sprite, u16 graphicsId, u32 look, bo
     if ((look & LOOK_COLOUR_MASK) == 0)
     {
         // Back to the colours it was drawn with.
-        if (IsPoolTag(GetSpritePaletteTagByPaletteNum(sprite->oam.paletteNum)))
+        if (IsPoolTag(GetSpritePaletteTagByPaletteNum(GetSpritePaletteSlot(sprite))))
             SwitchPalette(sprite, LoadObjectEventPalette(info->paletteTag));
         return;
     }
     BuildPalette(colours, base, body, look, outfit);
-    if (memcmp(&gPlttBufferUnfaded[OBJ_PLTT_ID(sprite->oam.paletteNum)], colours, sizeof(colours)) == 0)
+    if (memcmp(&gPlttBufferUnfaded[OBJ_PLTT_ID(GetSpritePaletteSlot(sprite))], colours, sizeof(colours)) == 0)
         return;
     SwitchPalette(sprite, LoadLookPalette(colours, inField));
 }
@@ -296,7 +296,7 @@ void TrainerLook_ApplyToObjectEvent(struct ObjectEvent *objectEvent)
     if (!objectEvent->active || objectEvent->spriteId >= MAX_SPRITES)
         return;
     look = LookOf(objectEvent);
-    if (look == 0 && !IsPoolTag(GetSpritePaletteTagByPaletteNum(gSprites[objectEvent->spriteId].oam.paletteNum)))
+    if (look == 0 && !IsPoolTag(GetSpritePaletteTagByPaletteNum(GetSpritePaletteSlot(&gSprites[objectEvent->spriteId]))))
         return;
     ApplyLookPalette(&gSprites[objectEvent->spriteId], objectEvent->graphicsId, look, TRUE);
 }
@@ -483,7 +483,7 @@ static bool32 SyncOverlay(struct Sprite *ov, const struct Sprite *wearer, u16 gr
     ov->coordOffsetEnabled = wearer->coordOffsetEnabled;
     ov->oam.priority = wearer->oam.priority;
     ov->subpriority = wearer->subpriority > 0 ? wearer->subpriority - 1 : 0;
-    ov->oam.paletteNum = wearer->oam.paletteNum;
+    SetSpritePaletteSlot(ov, GetSpritePaletteSlot(wearer));
     ov->oam.objMode = wearer->oam.objMode;
     if (wearer->oam.affineMode == ST_OAM_AFFINE_OFF)
     {
@@ -788,7 +788,7 @@ static void RemovePreview(void)
 {
     if (sLook->wearer < MAX_SPRITES)
     {
-        u8 pal = gSprites[sLook->wearer].oam.paletteNum;
+        u8 pal = GetSpritePaletteSlot(&gSprites[sLook->wearer]);
 
         // The 2x matrices are shared with the accessory layer: keep them.
         gSprites[sLook->wearer].oam.affineMode = ST_OAM_AFFINE_OFF;
