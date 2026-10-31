@@ -120,6 +120,9 @@ const u16 gMetatileAttributes_BrendansMaysHouse[] = INCBIN_U16("data/tilesets/se
 const u16 gMetatiles_Lab[] = INCBIN_U16("data/tilesets/secondary/lab/metatiles.bin");
 const u16 gMetatileAttributes_Lab[] = INCBIN_U16("data/tilesets/secondary/lab/metatile_attributes.bin");
 
+const u16 gMetatiles_Abyss[] = INCBIN_U16("data/tilesets/secondary/abyss/metatiles.bin");
+const u16 gMetatileAttributes_Abyss[] = INCBIN_U16("data/tilesets/secondary/abyss/metatile_attributes.bin");
+
 const u16 gMetatiles_Underwater[] = INCBIN_U16("data/tilesets/secondary/underwater/metatiles.bin");
 const u16 gMetatileAttributes_Underwater[] = INCBIN_U16("data/tilesets/secondary/underwater/metatile_attributes.bin");
 

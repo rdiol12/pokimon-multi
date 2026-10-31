@@ -966,6 +966,29 @@ const u16 gTilesetPalettes_Lab[][16] =
     INCGFX_U16("data/tilesets/secondary/lab/palettes/15.pal", ".gbapal"),
 };
 
+// The sea floor (tools/areas/abyss_art.py): the underwater tiles plus new art.
+const u32 gTilesetTiles_Abyss[] = INCGFX_U32("data/tilesets/secondary/abyss/tiles.png", ".4bpp.fastSmol", "-num_tiles 512 -Wnum_tiles");
+
+const u16 gTilesetPalettes_Abyss[][16] =
+{
+    INCGFX_U16("data/tilesets/secondary/abyss/palettes/00.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/abyss/palettes/01.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/abyss/palettes/02.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/abyss/palettes/03.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/abyss/palettes/04.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/abyss/palettes/05.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/abyss/palettes/06.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/abyss/palettes/07.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/abyss/palettes/08.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/abyss/palettes/09.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/abyss/palettes/10.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/abyss/palettes/11.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/abyss/palettes/12.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/abyss/palettes/13.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/abyss/palettes/14.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/abyss/palettes/15.pal", ".gbapal"),
+};
+
 const u32 gTilesetTiles_Underwater[] = INCGFX_U32("data/tilesets/secondary/underwater/tiles.png", ".4bpp.fastSmol", "-num_tiles 500 -Wnum_tiles");
 
 const u16 gTilesetPalettes_Underwater[][16] =

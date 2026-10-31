@@ -9,17 +9,12 @@ Writes data/tilesets/secondary/carnival/ and tools/areas/carnival_tiles.json
 (object name -> rows of metatile ids, -1 where the object is see-through,
 and the blocks you can walk under).
 """
-import json, os, shutil, struct
+import os, sys
 import numpy as np
-from PIL import Image
+sys.path.insert(0, os.path.dirname(__file__))
+from art import Canvas, pack, ROOT
 
-ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-SRC = f'{ROOT}/data/tilesets/secondary/petalburg'
-OUT = f'{ROOT}/data/tilesets/secondary/carnival'
-NUM_PRIMARY = 512
 GROUND = 0x001            # General's grass shows under see-through pixels
-LAYER_NORMAL = 0          # top layer over sprites (walk-under parts)
-LAYER_COVERED = 1         # both layers under sprites
 
 OUTLINE = (41, 49, 90)
 # Palette 7: the wheel and anything metal.
@@ -34,51 +29,6 @@ W_OUT, W_STEEL_D, W_STEEL, W_LIGHT, W_WHITE = 1, 2, 3, 4, 5
 W_RED_D, W_RED, W_RED_L, W_YEL_D, W_YEL, W_BLUE_D, W_BLUE, W_GRN_D, W_GRN, W_GLASS = range(6, 16)
 T_OUT, T_RED_D, T_RED, T_RED_L, T_WHITE_D, T_WHITE, T_BLUE_D, T_BLUE, T_BLUE_L = range(1, 10)
 T_YEL_D, T_YEL, T_WOOD_D, T_WOOD, T_WOOD_L, T_DARK = range(10, 16)
-
-
-# ---------------------------------------------------------------- drawing helpers
-class Canvas:
-    def __init__(self, w, h):
-        self.a = np.zeros((h, w), np.uint8)
-        self.h, self.w = h, w
-
-    def px(self, x, y, c):
-        x, y = int(round(x)), int(round(y))
-        if 0 <= x < self.w and 0 <= y < self.h:
-            self.a[y, x] = c
-
-    def rect(self, x0, y0, x1, y1, c):
-        self.a[max(0, y0):y1 + 1, max(0, x0):x1 + 1] = c
-
-    def disc(self, cx, cy, r, c, r_in=-1):
-        yy, xx = np.mgrid[0:self.h, 0:self.w]
-        d = np.hypot(xx + 0.5 - cx, yy + 0.5 - cy)
-        self.a[(d <= r) & (d > r_in)] = c
-
-    def line(self, x0, y0, x1, y1, c, width=1):
-        n = int(max(abs(x1 - x0), abs(y1 - y0)) * 2) + 1
-        for t in np.linspace(0, 1, n):
-            x, y = x0 + (x1 - x0) * t, y0 + (y1 - y0) * t
-            for dx in range(width):
-                self.px(x - width // 2 + dx, y, c)
-
-    def outline(self, c=1, where=None):
-        """Dark outline around everything drawn so far (outside edge only)."""
-        f = self.a > 0
-        n = np.zeros_like(f)
-        n[1:, :] |= f[:-1, :]
-        n[:-1, :] |= f[1:, :]
-        n[:, 1:] |= f[:, :-1]
-        n[:, :-1] |= f[:, 1:]
-        m = n & ~f
-        if where is not None:
-            m &= where
-        self.a[m] = c
-
-    def mirror(self):
-        """Left half mirrored onto the right half (objects are symmetric, so flipped tiles are shared)."""
-        h = self.w // 2
-        self.a[:, self.w - h:] = self.a[:, :h][:, ::-1]
 
 
 # ---------------------------------------------------------------- the objects
@@ -300,7 +250,6 @@ def balloons():
     return c
 
 
-MB_COUNTER = 0x80
 # name: (draw, palette, options). over: blocks drawn over sprites; walk: blocks
 # you can walk on; counter: blocks you can talk across.
 STALL = {'over': lambda r, c: r == 0, 'counter': lambda r, c: r == 2}
@@ -315,93 +264,9 @@ OBJECTS = {
 }
 
 
-# ---------------------------------------------------------------- packing into a tileset
-def write_pal(path, cols):
-    with open(path, 'w', newline='\r\n') as f:
-        f.write('JASC-PAL\n0100\n16\n')
-        for r, g, b in cols:
-            f.write(f'{r} {g} {b}\n')
-
-
 def main():
-    os.makedirs(f'{OUT}/palettes', exist_ok=True)
-    for i in range(16):
-        shutil.copy(f'{SRC}/palettes/{i:02d}.pal', f'{OUT}/palettes/{i:02d}.pal')
-    write_pal(f'{OUT}/palettes/07.pal', PAL_WHEEL)
-    write_pal(f'{OUT}/palettes/11.pal', PAL_TENT)
-
-    base = Image.open(f'{SRC}/tiles.png')
-    ba = np.array(base)
-    tiles = [ba[y:y + 8, x:x + 8].copy() for y in range(0, ba.shape[0], 8) for x in range(0, ba.shape[1], 8)]
-    n_base = len(tiles)
-    lookup = {}
-
-    def add_tile(t):
-        """Index (in the secondary set) and flips for an 8x8 tile, sharing mirrored copies."""
-        for hf in (0, 1):
-            for vf in (0, 1):
-                v = t[:, ::-1] if hf else t
-                v = v[::-1, :] if vf else v
-                k = v.tobytes()
-                if k in lookup:
-                    return lookup[k], hf, vf
-        tiles.append(t.copy())
-        lookup[t.tobytes()] = len(tiles) - 1
-        return len(tiles) - 1, 0, 0
-
-    meta = list(struct.unpack(f'<{os.path.getsize(SRC + "/metatiles.bin") // 2}H', open(f'{SRC}/metatiles.bin', 'rb').read()))
-    attrs = list(struct.unpack(f'<{os.path.getsize(SRC + "/metatile_attributes.bin") // 2}H',
-                               open(f'{SRC}/metatile_attributes.bin', 'rb').read()))
-    gen = open(f'{ROOT}/data/tilesets/primary/general/metatiles.bin', 'rb').read()
-    ground_bottom = list(struct.unpack('<4H', gen[GROUND * 16:GROUND * 16 + 8]))
-    first_new = NUM_PRIMARY + len(attrs)
-    table, walk = {}, {}
-    no = lambda r, c: False
-    for name, (fn, pal, opt) in OBJECTS.items():
-        over, can_walk, counter = (opt.get(k, no) for k in ('over', 'walk', 'counter'))
-        walk[name] = []
-        art = fn().a
-        h, w = art.shape
-        rows = []
-        for by in range(0, h, 16):
-            row = []
-            for bx in range(0, w, 16):
-                block = art[by:by + 16, bx:bx + 16]
-                if not block.any():
-                    row.append(-1)
-                    continue
-                top = []
-                for ty, tx in ((0, 0), (0, 8), (8, 0), (8, 8)):
-                    t = block[ty:ty + 8, tx:tx + 8]
-                    if not t.any():
-                        top.append(0)
-                        continue
-                    i, hf, vf = add_tile(t)
-                    top.append((NUM_PRIMARY + i) | hf << 10 | vf << 11 | pal << 12)
-                meta += ground_bottom + top
-                r, c = by // 16, bx // 16
-                attrs.append((LAYER_NORMAL if over(r, c) else LAYER_COVERED) << 12 | (MB_COUNTER if counter(r, c) else 0))
-                if can_walk(r, c):
-                    walk[name].append([r, c])
-                row.append(NUM_PRIMARY + len(attrs) - 1)
-            rows.append(row)
-        table[name] = rows
-    assert len(tiles) <= 512, f'{len(tiles)} tiles'
-    assert len(attrs) <= 512, f'{len(attrs)} metatiles'
-
-    n = len(tiles)
-    cols = 16
-    img = np.zeros(((n + cols - 1) // cols * 8, cols * 8), np.uint8)
-    for i, t in enumerate(tiles):
-        img[i // cols * 8:i // cols * 8 + 8, i % cols * 8:i % cols * 8 + 8] = t
-    out = Image.fromarray(img, 'P')
-    out.putpalette(base.getpalette())
-    out.save(f'{OUT}/tiles.png')
-    open(f'{OUT}/metatiles.bin', 'wb').write(struct.pack(f'<{len(meta)}H', *meta))
-    open(f'{OUT}/metatile_attributes.bin', 'wb').write(struct.pack(f'<{len(attrs)}H', *attrs))
-    json.dump({'num_tiles': n, 'first_new_metatile': first_new, 'objects': table, 'walkable': walk},
-              open(f'{ROOT}/tools/areas/carnival_tiles.json', 'w'), indent=1)
-    print(f'carnival tileset: {n} tiles ({n - n_base} new), {len(attrs)} metatiles')
+    pack('data/tilesets/secondary/petalburg', 'data/tilesets/secondary/carnival', OBJECTS,
+         {7: PAL_WHEEL, 11: PAL_TENT}, GROUND, f'{ROOT}/tools/areas/carnival_tiles.json')
 
 
 if __name__ == '__main__':

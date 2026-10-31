@@ -154,7 +154,11 @@
     "Hollowmere_Manor_1F",
     "Hollowmere_Manor_2F",
     "MireboughMarsh",
-    "SunfairCarnival"
+    "SunfairCarnival",
+    "CorallineReef",
+    "Abyssia",
+    "Abyssia_Temple",
+    "CorallineReef_Wreck"
   ],
   "gMapGroup_IndoorLittleroot": [
     "LittlerootTown_BrendansHouse_1F",

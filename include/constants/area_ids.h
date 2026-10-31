@@ -4,7 +4,7 @@
 // Flags, vars and trainers of each new area. AREA_TRAINER_* index the area
 // trainer table; TRAINER_* are the ids scripts battle.
 
-#define AREA_TRAINERS_COUNT 68
+#define AREA_TRAINERS_COUNT 76
 
 /* begin ElderwoodForest */
 #define FLAG_ELDERWOOD_BOUNSWEET_HOME         AREA_FLAG(0)
@@ -229,5 +229,39 @@
 #define AREA_TRAINER_CARNIVAL_RIFF            67
 #define TRAINER_CARNIVAL_RIFF                 AREA_TRAINER(AREA_TRAINER_CARNIVAL_RIFF)
 /* end SunfairCarnival */
+
+/* begin CorallineReef */
+#define FLAG_ABYSS_LAMP_1                     AREA_FLAG(216)
+#define FLAG_ABYSS_LAMP_2                     AREA_FLAG(217)
+#define FLAG_ABYSS_LAMP_3                     AREA_FLAG(218)
+#define FLAG_ABYSS_LAMP_4                     AREA_FLAG(219)
+#define FLAG_ABYSS_TEMPLE_OPEN                AREA_FLAG(220)
+#define FLAG_ABYSS_MARINA_TALKED              AREA_FLAG(221)
+#define FLAG_ABYSS_MARINA_REWARD              AREA_FLAG(222)
+#define FLAG_ABYSS_RELICANTH_DONE             AREA_FLAG(223)
+#define FLAG_ABYSS_DHELMISE_DONE              AREA_FLAG(224)
+#define FLAG_REEF_CLAM_PEARL                  AREA_FLAG(225)
+#define FLAG_ITEM_REEF_DEEP_SEA_SCALE         AREA_FLAG(226)
+#define FLAG_ITEM_REEF_DEEP_SEA_TOOTH         AREA_FLAG(227)
+#define FLAG_ITEM_REEF_TM_WATER_PULSE         AREA_FLAG(228)
+#define FLAG_ITEM_REEF_MAX_REVIVE             AREA_FLAG(229)
+#define FLAG_ITEM_WRECK_NUGGET                AREA_FLAG(230)
+#define FLAG_ITEM_WRECK_RARE_CANDY            AREA_FLAG(231)
+#define FLAG_ITEM_ABYSS_MYSTIC_WATER          AREA_FLAG(232)
+#define FLAG_ITEM_ABYSS_PRISM_SCALE           AREA_FLAG(233)
+#define FLAG_ITEM_TEMPLE_HEART_SCALE          AREA_FLAG(234)
+#define FLAG_HIDDEN_ITEM_REEF_PEARL           AREA_FLAG(235)
+#define FLAG_HIDDEN_ITEM_REEF_STAR_PIECE      AREA_FLAG(236)
+#define FLAG_HIDDEN_ITEM_ABYSS_BIG_PEARL      AREA_FLAG(237)
+#define FLAG_HIDE_ABYSS_RELICANTH             AREA_FLAG(238)
+#define AREA_TRAINER_REEF_NERISSA             72
+#define TRAINER_REEF_NERISSA                  AREA_TRAINER(AREA_TRAINER_REEF_NERISSA)
+#define AREA_TRAINER_REEF_DORIAN              73
+#define TRAINER_REEF_DORIAN                   AREA_TRAINER(AREA_TRAINER_REEF_DORIAN)
+#define AREA_TRAINER_REEF_PELAGIA             74
+#define TRAINER_REEF_PELAGIA                  AREA_TRAINER(AREA_TRAINER_REEF_PELAGIA)
+#define AREA_TRAINER_ABYSS_TRITON             75
+#define TRAINER_ABYSS_TRITON                  AREA_TRAINER(AREA_TRAINER_ABYSS_TRITON)
+/* end CorallineReef */
 
 #endif // GUARD_CONSTANTS_AREA_IDS_H
