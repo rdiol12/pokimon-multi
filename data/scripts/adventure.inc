@@ -6,3 +6,4 @@
 	.include "data/scripts/adventure/ranch.inc"
 	.include "data/scripts/adventure/dungeon.inc"
 	.include "data/scripts/adventure/treasure.inc"
+	.include "data/scripts/adventure/frontier.inc"

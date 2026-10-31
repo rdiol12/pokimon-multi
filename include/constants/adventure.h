@@ -11,6 +11,7 @@
 #define ADVENTURE_MENU_DAILY_QUESTS  2
 #define ADVENTURE_MENU_CRAFTING      3
 #define ADVENTURE_MENU_TREASURE_MAP  4
+#define ADVENTURE_MENU_FRONTIER      5
 #define ADVENTURE_MENU_CLOSE         15
 
 // Flags (FLAG_UNUSED_0x264-0x27C and 0x281-0x28D are this batch's).
@@ -64,6 +65,9 @@
 #define TREASURE_TALK_NEW   1 // today's map
 #define TREASURE_TALK_STILL 2 // still hunting today's
 #define TREASURE_TALK_DONE  3 // found today's
+
+// The online Battle Frontier (src/frontier_online.c): Factory, Arena, Pyramid.
+#define FRONTIER_ONLINE_FACILITIES 3
 
 // Dungeon, the Rift Below (src/dungeon.c).
 #define DUNGEON_MAX_FLOOR 99

@@ -6,14 +6,16 @@ Adventure_EventScript_Menu::
 	dynmultipush Adventure_Text_MenuDailyQuests, ADVENTURE_MENU_DAILY_QUESTS
 	dynmultipush Adventure_Text_MenuCrafting, ADVENTURE_MENU_CRAFTING
 	dynmultipush Adventure_Text_MenuTreasureMap, ADVENTURE_MENU_TREASURE_MAP
+	dynmultipush Adventure_Text_MenuFrontier, ADVENTURE_MENU_FRONTIER
 	dynmultipush Adventure_Text_MenuClose, ADVENTURE_MENU_CLOSE
-	dynmultistack 0, 0, FALSE, 6, FALSE, ADVENTURE_MENU_TRAINER_LEVEL, DYN_MULTICHOICE_CB_NONE
+	dynmultistack 0, 0, FALSE, 7, FALSE, ADVENTURE_MENU_TRAINER_LEVEL, DYN_MULTICHOICE_CB_NONE
 	switch VAR_RESULT
 	case ADVENTURE_MENU_TRAINER_LEVEL, Adventure_EventScript_TrainerLevel
 	case ADVENTURE_MENU_OUTFITS, Adventure_EventScript_Outfits
 	case ADVENTURE_MENU_DAILY_QUESTS, Adventure_EventScript_DailyQuests
 	case ADVENTURE_MENU_CRAFTING, Adventure_EventScript_Crafting
 	case ADVENTURE_MENU_TREASURE_MAP, Adventure_EventScript_TreasureMap
+	case ADVENTURE_MENU_FRONTIER, Adventure_EventScript_FrontierRecords
 Adventure_EventScript_MenuDone::
 	releaseall
 	end
@@ -49,6 +51,8 @@ Adventure_Text_MenuCrafting:
 	.string "CRAFTING$"
 Adventure_Text_MenuTreasureMap:
 	.string "TREASURE MAP$"
+Adventure_Text_MenuFrontier:
+	.string "FRONTIER RECORDS$"
 Adventure_Text_MenuClose:
 	.string "CLOSE$"
 

@@ -93,6 +93,15 @@ class WorldTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(await a.recv(), "WROW 9 1 Ash 2 4")
         self.assertEqual(await a.recv(), "WBOARDEND 9 1")
 
+    async def test_frontier_boards_keep_the_best_streak(self):
+        a = await self.connect("Ash")
+        for board in (10, 11, 12):
+            await a.send(f"SCORE {board} 0 20 0")
+            await a.send(f"SCORE {board} 0 7 1")  # a worse streak: ignored
+            await a.send(f"WBOARD {board} 0")
+            self.assertEqual(await a.recv(), f"WROW {board} 1 Ash 20 0")
+            self.assertEqual(await a.recv(), f"WBOARDEND {board} 1")
+
     async def test_photo_goes_to_the_gallery(self):
         a = await self.connect("Ash")
         png = b"\x89PNG\r\n\x1a\n" + bytes(range(200))

@@ -45,6 +45,11 @@ struct AdventureSaveData
     u8 treasureState;
     u16 treasuresFound;
     u16 filler2;
+    // Online Battle Frontier: the Factory, Arena and Pyramid streaks added up,
+    // last time they were looked at.
+    u16 frontierWins[FRONTIER_ONLINE_FACILITIES];
+    u8 frontierStarted;
+    u8 filler3;
 };
 
 #endif // GUARD_ADVENTURE_SAVE_H
