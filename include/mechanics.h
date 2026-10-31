@@ -37,4 +37,13 @@ u8 Mechanics_GetColorVariant(u32 personality);
 const u8 *Mechanics_GetColorVariantName(u8 variant);
 const u16 *Mechanics_ApplyColorVariant(const u16 *palette, u32 personality);
 
+// Pokémon personalities (src/mechanics_personality.c).
+struct ScriptContext;
+struct ObjectEvent;
+u8 Mechanics_GetPersona(u32 personality);
+const u8 *Mechanics_GetPersonaName(u8 persona);
+void Mechanics_AdjustFollowerMoods(struct Pokemon *mon, u8 *weights);
+bool32 Mechanics_TryFollowerPersonaLine(struct ScriptContext *ctx, struct Pokemon *mon, struct ObjectEvent *follower);
+void Mechanics_UpdatePersonaFollower(void);
+
 #endif // GUARD_MECHANICS_H

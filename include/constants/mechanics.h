@@ -34,6 +34,17 @@
 #define COLOR_MIDNIGHT      3
 #define COLOR_VARIANT_COUNT 3
 
+// Pokémon personalities (src/mechanics_personality.c).
+#define PERSONA_PLAYFUL 0
+#define PERSONA_SHY     1
+#define PERSONA_PROUD   2
+#define PERSONA_LAZY    3
+#define PERSONA_CURIOUS 4
+#define PERSONA_BRAVE   5
+#define PERSONA_GENTLE  6
+#define PERSONA_GRUMPY  7
+#define PERSONA_COUNT   8
+
 // Flags (FLAG_UNUSED_0x881-0x887 and 0x8E5-0x8EF belong to the mechanics).
 #define FLAG_MECH_MET_TUTOR    FLAG_UNUSED_0x881
 #define FLAG_MECH_RULE_INVERSE FLAG_UNUSED_0x882 // B_FLAG_INVERSE_BATTLE

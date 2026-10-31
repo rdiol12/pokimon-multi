@@ -72,6 +72,7 @@ struct MechanicsShowcase
     u8 level;
     u8 variant;   // ...with this COLOR_* variant...
     u8 wild;      // ...given as the lead (0) or met in a wild battle (1)
+    u8 persona;   // PERSONA_* + 1, or 0 for any
 };
 
 EWRAM_DATA struct MechanicsShowcase gMechanicsShowcase = {0};
@@ -96,7 +97,8 @@ static void RunShowcase(void)
 
         do
             personality = Random32();
-        while (Mechanics_GetColorVariant(personality) != gMechanicsShowcase.variant);
+        while (Mechanics_GetColorVariant(personality) != gMechanicsShowcase.variant
+            || (gMechanicsShowcase.persona != 0 && Mechanics_GetPersona(personality) != gMechanicsShowcase.persona - 1));
         if (gMechanicsShowcase.wild)
         {
             ZeroEnemyPartyMons();
@@ -110,6 +112,8 @@ static void RunShowcase(void)
         gMechanicsShowcase.species = SPECIES_NONE;
         if (gMechanicsShowcase.wild)
             BattleSetup_StartWildBattle();
+        else
+            UpdateFollowingPokemon();
     }
 }
 
@@ -148,6 +152,7 @@ void Mechanics_Update(void)
 {
     if (gMechanicsShowcase.pending)
         RunShowcase();
+    Mechanics_UpdatePersonaFollower();
     if (++sTimer < 8 || ArePlayerFieldControlsLocked())
         return;
     sTimer = 0;
