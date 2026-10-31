@@ -1,4 +1,4 @@
-"""Online contests (docs/community.md#online-contests).
+"""Online contests (docs/community/contests.md).
 
 A player enters one Pokémon in a category (COOL, BEAUTY, CUTE, SMART,
 TOUGH). It is judged against the latest entries other players made in that

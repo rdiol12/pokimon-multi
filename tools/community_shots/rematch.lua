@@ -1,0 +1,33 @@
+dofile(INSTANCE_DIR .. "/../driver_lib.lua")
+local D, K = Driver, Driver.KEY
+D.run(function()
+    D.boot()
+    D.showcase({ gameClear = true, badges = 8, level = 95, party = { "SWAMPERT", "GARDEVOIR", "MANECTRIC", "SKARMORY" },
+                 flags = { 0x500 + 265 } })
+    for slot = 0, 3 do D.setMove(slot, 304) end -- Hyper Voice hits both foes
+    -- Roxanne: the rematch at your level.
+    D.scene(13, MAPS.MAP_RUSTBORO_CITY_GYM, 5, 3)
+    D.talk(K.UP, "roxanne-ask")
+    D.wait(60)
+    D.shot("roxanne-yesno")
+    D.press(K.A, 30)
+    D.winBattle("roxanne-battle")
+    D.wait(30)
+    D.shot("roxanne-won")
+    D.press(K.A, 30)
+    D.wait(60)
+    -- The gym's ace, by the entrance.
+    D.scene(13, MAPS.MAP_RUSTBORO_CITY_GYM, 8, 19)
+    D.talk(K.UP, "ace-intro")
+    D.winBattle("ace-battle")
+    D.wait(30)
+    D.shot("ace-reward")
+    D.press(K.A, 30)
+    D.wait(120)
+    D.shot("ace-item")
+    D.press(K.A, 30)
+    D.wait(60)
+    D.shot("ace-after")
+    D.press(K.A, 30)
+    D.wait(60)
+end)

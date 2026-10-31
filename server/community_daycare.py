@@ -1,4 +1,4 @@
-"""The shared daycare (docs/community.md#shared-daycare).
+"""The shared daycare (docs/community/daycare.md).
 
 Two trainers each sign up one Pokémon as a parent (a copy: the Pokémon
 stays in their party). Once both parents are in, an egg is ready after

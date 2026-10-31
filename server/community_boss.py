@@ -1,4 +1,4 @@
-"""The server boss (docs/community.md#server-boss).
+"""The server boss (docs/community/boss.md).
 
 One huge wild Pokémon at a time is shared by everyone on the server. Each
 player battles it in their own game; whatever damage they deal comes off
@@ -79,8 +79,8 @@ class Boss:
         """Returns True when this hit brought it down."""
         if boss_id != self.state["id"] or not self.alive():
             return False
-        damage = max(0, min(int(damage), MAX_HIT))
-        self.state["hp"] = max(0, self.state["hp"] - damage)
+        damage = max(0, min(int(damage), MAX_HIT, self.state["hp"]))
+        self.state["hp"] -= damage
         self.state["damage"][ident] = self.state["damage"].get(ident, 0) + damage
         fell = self.state["hp"] == 0
         if fell:

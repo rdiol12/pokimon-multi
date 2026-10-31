@@ -1,4 +1,4 @@
-"""Chat and lobby rooms (docs/community.md#chat).
+"""Chat and lobby rooms (docs/community/chat.md).
 
 Players talk in rooms with Easy Chat phrases (six words from the game's
 word list, so there's nothing to filter). Rooms: everyone's PLAZA, TRADING

@@ -58,7 +58,7 @@ WEB_ROUTES = {}  # path -> (link title, fn(server) -> (status, content type, bod
 
 _TO_GAME = {" ": 0x00, "é": 0x1B, "&": 0x2D, "+": 0x2E, "=": 0x35, "%": 0x5B, "(": 0x5C, ")": 0x5D,
             "!": 0xAB, "?": 0xAC, ".": 0xAD, "-": 0xAE, "·": 0xAF, '"': 0xB1, "'": 0xB4, "♂": 0xB5,
-            "♀": 0xB6, ",": 0xB8, "/": 0xBA, ":": 0xF0}
+            "♀": 0xB6, ",": 0xB8, "/": 0xBA, ":": 0xF0, ">": 0x86, "▶": 0xEF}
 _FROM_GAME = {v: k for k, v in _TO_GAME.items()}
 
 
@@ -184,7 +184,7 @@ def cmd_c(self, player, req_type, a0, a1, a2, a3):
     args = [int(a) for a in (a0, a1, a2, a3)]
     handler = HANDLERS.get(req_type)
     if handler is None:
-        answer = Answer("COMMUNITY", ["This server doesn't have that yet."], status=OFFLINE)
+        answer = Answer("COMMUNITY", ["The server doesn't have it yet."], status=OFFLINE)
     else:
         try:
             answer = handler(self, player, args, data)

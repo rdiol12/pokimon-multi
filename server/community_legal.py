@@ -1,4 +1,4 @@
-"""Legality checks (docs/community.md#legality-checks).
+"""Legality checks (docs/community/legality.md).
 
 The server reads the raw Pokémon data the games send and checks that it
 could have come from the game: a valid checksum, a real species, moves it
@@ -12,6 +12,8 @@ Where it applies:
   server asks both games for their party. An illegal party ends a trade or
   deal on the spot, and keeps a battle off the ladder.
 - The market board refuses to list an illegal Pokémon.
+These run for games with the community bridge (netplay_community.lua, part
+of the bridge download), which is what answers the party requests.
 - START > ONLINE > COMMUNITY > CHECK TEAM checks your own party.
 Every illegal Pokémon seen is logged in the legality_reports table.
 """
@@ -292,7 +294,7 @@ def install(server_cls):
     cmd_market = server_cls.cmd_market
 
     def legal_market(self, player, action, *args):
-        if action == "SELL" and len(args) == 4:
+        if action == "SELL" and len(args) == 4 and community.is_community(player):
             try:
                 raw = bytes.fromhex(args[3])
             except ValueError:

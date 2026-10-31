@@ -5,7 +5,7 @@ FROM python:3.12-slim
 
 WORKDIR /app
 COPY server/*.py server/
-COPY tools/netplay_bridge/netplay_bridge.lua tools/netplay_bridge/
+COPY tools/netplay_bridge/*.lua tools/netplay_bridge/
 
 RUN useradd --system --home-dir /data netplay && mkdir -p /data && chown netplay /data
 USER netplay

@@ -1,3 +1,4 @@
+import asyncio
 import os
 import struct
 import sys
@@ -5,6 +6,7 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(__file__))
 import community_legal as legal  # noqa: E402
+from test_community import CommunityCase  # noqa: E402
 
 SPECIES_TREECKO, MOVE_POUND, MOVE_LEER, MOVE_ABSORB = 252, 1, 43, 71
 MOVE_SPORE = 147  # Treecko can't learn it in any game
@@ -85,6 +87,69 @@ def _with_species(species):
         return make_mon(species=species)
     finally:
         growth.pop(species, None)
+
+
+class LegalityOnlineTest(CommunityCase):
+    async def answer_party(self, c, party):
+        nonce = (await self.until(c, "CPARTY")).split()[1]
+        for i, mon in enumerate(party):
+            await c.send(f"CPARTYMON {nonce} {i} {mon.hex()}")
+        await c.send(f"CPARTYEND {nonce} {len(party)}")
+
+    async def start(self, kind, host, guest):
+        await host.send(f"REQ {kind} {guest.id}")
+        sid = (await self.until(host, "PENDING")).split()[1]
+        await self.until(guest, "INVITE")
+        await guest.send(f"ACCEPT {sid}")
+        return sid
+
+    async def test_team_check(self):
+        ash = await self.connect("ASH")
+        rows, status, args, _ = await self.ask(ash, legal.REQ_CHECK, party=[make_mon(), make_mon(level=12, met_level=3)])
+        self.assertEqual((status, args[:2], rows[1]), (legal.ALL_LEGAL, [2, 0], "All 2 POKéMON are legal."))
+        rows, status, args, _ = await self.ask(ash, legal.REQ_CHECK, party=[make_mon(), make_mon(moves=(MOVE_SPORE,))])
+        self.assertEqual((status, args[:2], rows[1:3]), (legal.SOME_ILLEGAL, [2, 1], ["2. TREECKO:", "it can't learn Spore"]))
+        reports = self.league.db.execute("SELECT name, species, reason, context FROM legality_reports").fetchall()
+        self.assertEqual(reports, [("ASH", SPECIES_TREECKO, "it can't learn Spore", "team check")])
+
+    async def test_an_illegal_party_stops_a_trade(self):
+        ash, may = await self.connect("ASH", 1), await self.connect("MAY", 2)
+        sid = await self.start("trade", ash, may)
+        await self.answer_party(ash, [make_mon()])
+        await self.answer_party(may, [make_mon(evs=(255, 255, 0, 0, 0, 0))])
+        self.assertEqual(await self.until(may, "ERR"), "ERR illegal Pokémon in your party")
+        self.assertEqual(await self.until(may, "ENDED"), f"ENDED {sid}")
+        self.assertEqual(await self.until(ash, "ENDED"), f"ENDED {sid}")
+        self.assertEqual(self.server.sessions, {})
+
+    async def test_an_illegal_party_keeps_a_battle_off_the_ladder(self):
+        ash, may = await self.connect("ASH", 1), await self.connect("MAY", 2)
+        sid = await self.start("battle", ash, may)
+        await self.answer_party(ash, [make_mon(level=50, exp=100)])
+        await self.answer_party(may, [make_mon()])
+        await asyncio.sleep(0.05)
+        await ash.send(f"RESULT {sid} win")
+        await may.send(f"RESULT {sid} loss")
+        await asyncio.sleep(0.05)
+        self.assertEqual(self.league.rank_of(("ASH", 1))[2:4], (0, 0))
+        # A legal rematch counts.
+        for c in (ash, may):
+            await c.send(f"QUIT {sid}")
+        sid = await self.start("battle", ash, may)
+        await self.answer_party(ash, [make_mon()])
+        await self.answer_party(may, [make_mon()])
+        await asyncio.sleep(0.05)
+        await ash.send(f"RESULT {sid} win")
+        await may.send(f"RESULT {sid} loss")
+        await asyncio.sleep(0.05)
+        self.assertEqual(self.league.rank_of(("ASH", 1))[2:4], (1, 0))
+
+    async def test_the_market_refuses_illegal_listings(self):
+        ash = await self.connect("ASH")
+        await ash.send(f"MARKET SELL 252 5 100 {make_mon(moves=(MOVE_SPORE,)).hex()}")
+        self.assertEqual(await self.until(ash, "MLISTED"), "MLISTED full 0")
+        await ash.send(f"MARKET SELL 252 5 100 {make_mon().hex()}")
+        self.assertTrue((await self.until(ash, "MLISTED")).startswith("MLISTED ok"))
 
 
 if __name__ == "__main__":

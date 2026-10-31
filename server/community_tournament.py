@@ -1,4 +1,4 @@
-"""Online tournaments (docs/community.md#tournaments).
+"""Online tournaments (docs/community/tournaments.md).
 
 There is always one cup open for sign-ups. It starts when it is full, or
 once TOUR_SIGNUP_SECONDS have passed with at least two players in it; the
@@ -265,8 +265,8 @@ def bracket_rows(tours, cup):
             if an is None or bn is None:
                 rows.append(f"{_short(an or bn):<7} bye")
                 continue
-            mark_a = "*" if (wn, wt) == (an, at) else " "
-            mark_b = "*" if (wn, wt) == (bn, bt) else " "
+            mark_a = "▶" if (wn, wt) == (an, at) else " "
+            mark_b = "▶" if (wn, wt) == (bn, bt) else " "
             rows.append(f"{mark_a}{an:<7} vs {mark_b}{bn}")
     return rows
 
@@ -392,16 +392,23 @@ def page(server):
     if cup is not None:
         title = cup_name(cup)
         cols = []
-        for rnd in range(1, tours.rounds(cup) + 1):
+        size = len(tours.matches(cup, 1))  # matches in round 1; each later round has half
+        rnd = 1
+        while size >= 1:
             cells = []
-            for _, _, an, at, bn, bt, wn, wt in tours.matches(cup, rnd):
+            played = tours.matches(cup, rnd)
+            for _, _, an, at, bn, bt, wn, wt in played:
                 def side(n, t):
                     if n is None:
                         return '<div class="p bye">bye</div>'
                     won = ' win' if (wn, wt) == (n, t) else ''
                     return f'<div class="p{won}">{html.escape(n)}</div>'
                 cells.append(f'<div class="m">{side(an, at)}{side(bn, bt)}</div>')
-            cols.append(f'<div class="r"><h3>Round {rnd}</h3>{"".join(cells)}</div>')
+            cells += ['<div class="m"><div class="p tbd">?</div><div class="p tbd">?</div></div>'] * (size - len(played))
+            label = "Final" if size == 1 else "Semifinals" if size == 2 else "Quarterfinals" if size == 4 else f"Round {rnd}"
+            cols.append(f'<div class="r"><h3>{label}</h3>{"".join(cells)}</div>')
+            size //= 2
+            rnd += 1
         body = f'<div class="b">{"".join(cols)}</div>'
         champ = tours.db.execute("SELECT name FROM tour_entrants WHERE cup = ? AND place = 1", (cup,)).fetchone()
         if champ:
@@ -420,13 +427,14 @@ PAGE = """<!doctype html>
 <style>
 body {{ font-family: system-ui, sans-serif; margin: 0 auto; max-width: 60rem; padding: 1rem; }}
 .b {{ display: flex; gap: 1.5rem; overflow-x: auto; }}
-.r {{ display: flex; flex-direction: column; justify-content: space-around; min-width: 9rem; }}
-.r h3 {{ font-size: .9rem; color: #555; margin: 0 0 .5rem; }}
+.r {{ display: flex; flex-direction: column; justify-content: space-around; min-width: 9rem; padding-top: 1.4rem; position: relative; }}
+.r h3 {{ font-size: .9rem; color: #555; margin: 0; position: absolute; top: 0; }}
 .m {{ border: 1px solid #bbb; border-radius: 4px; margin: .4rem 0; }}
 .p {{ padding: .25rem .5rem; }}
 .p + .p {{ border-top: 1px solid #ddd; }}
 .win {{ font-weight: bold; background: #e6f4e6; }}
-.bye {{ color: #999; font-style: italic; }}
+.bye, .tbd {{ color: #999; font-style: italic; }}
+.r h3 + .m {{ margin-top: 0; }}
 </style></head><body>
 <p><a href="/">League</a></p>
 <h1>{title}</h1>

@@ -1,4 +1,4 @@
-"""Trainer cards (docs/community.md#trainer-cards).
+"""Trainer cards (docs/community/cards.md).
 
 Opening CARDS sends the player's card (name, look, badges, Pokédex, play
 time, team) to the server. Anyone can then look at the cards of the players
