@@ -9515,6 +9515,36 @@
       "secondary_tileset": "gTileset_Carnival",
       "border_filepath": "data/layouts/SunfairCarnival/border.bin",
       "blockdata_filepath": "data/layouts/SunfairCarnival/map.bin"
+    },
+    {
+      "id": "LAYOUT_CORALLINE_REEF",
+      "name": "CorallineReef_Layout",
+      "width": 56,
+      "height": 44,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Abyss",
+      "border_filepath": "data/layouts/CorallineReef/border.bin",
+      "blockdata_filepath": "data/layouts/CorallineReef/map.bin"
+    },
+    {
+      "id": "LAYOUT_ABYSSIA",
+      "name": "Abyssia_Layout",
+      "width": 56,
+      "height": 44,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Abyss",
+      "border_filepath": "data/layouts/Abyssia/border.bin",
+      "blockdata_filepath": "data/layouts/Abyssia/map.bin"
+    },
+    {
+      "id": "LAYOUT_ABYSSIA_TEMPLE",
+      "name": "Abyssia_Temple_Layout",
+      "width": 20,
+      "height": 16,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Abyss",
+      "border_filepath": "data/layouts/Abyssia_Temple/border.bin",
+      "blockdata_filepath": "data/layouts/Abyssia_Temple/map.bin"
     }
   ]
 }

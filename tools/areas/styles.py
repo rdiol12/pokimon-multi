@@ -122,3 +122,18 @@ def town():
                                 'LAYOUT_ROUTE101', 'LAYOUT_ROUTE102', 'LAYOUT_ROUTE103'],
                                wall_classes={'T': TREES}, colors=True)
     return _cache['town']
+
+
+def abyss():
+    """Hoenn's underwater routes: sea-floor trenches between rock walls,
+    seaweed as the grass. Drawn with gTileset_Abyss, the same tiles plus the
+    reef and sunken city art (tools/areas/abyss_art.py)."""
+    if 'abyss' not in _cache:
+        st = Style('gTileset_General', 'gTileset_Underwater',
+                   ['LAYOUT_UNDERWATER_ROUTE124', 'LAYOUT_UNDERWATER_ROUTE126', 'LAYOUT_UNDERWATER_ROUTE127',
+                    'LAYOUT_UNDERWATER_ROUTE125', 'LAYOUT_UNDERWATER_ROUTE128', 'LAYOUT_UNDERWATER_ROUTE129',
+                    'LAYOUT_UNDERWATER_ROUTE105'],
+                   classes={'"': {0x201, 0x281}})
+        st.secondary = 'gTileset_Abyss'
+        _cache['abyss'] = st
+    return _cache['abyss']

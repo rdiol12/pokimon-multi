@@ -182,6 +182,31 @@ at any time.
   pitch x 4–21, y 27–36; golf green x 38–54, y 27–37. Map id:
   MAP_SUNFAIR_CARNIVAL.
 
+## Coralline Reef, the shipwreck and Abyssia
+
+Two sea-floor maps south of Pacifidlog Town. A diver in Pacifidlog takes
+you down once you have the Mind Badge, and back up again from the reef.
+
+- Coralline Reef: coral gardens between rock walls, seaweed with
+  Clamperl, Chinchou, Luvdisc, Corsola and Relicanth, a giant clam with a
+  Big Pearl, and a shipwreck. Swim in through the hole in its hull to find
+  the captain's log, a Nugget, a Rare Candy and a Dhelmise (Lv44). Three
+  swimmers, Deep Sea Scale and Tooth, TM Water Pulse, Max Revive.
+- Abyssia, the sunken city, north of the reef: glass domes, columns and a
+  sealed temple. Marina the researcher explains the carving: "When the four
+  lights shine, the temple wakes." Turn the cranks on the four lamp
+  pillars and the temple opens; a Relicanth (Lv48) rests at its altar.
+  Marina gives a Deep Sea Scale and Tooth, and an Alomomola heals your
+  team. Swimmer Triton, Mystic Water, Prism Scale.
+- New art (`tools/areas/abyss_art.py`): coral, a giant clam, domes,
+  columns, lamp pillars (dark and lit), the temple (shut and open), the
+  wreck, an anchor and a glowing exit ring, in `gTileset_Abyss`: the
+  underwater tiles kept in place (their seaweed animates) plus the new
+  tiles in the slots nothing used, palette 12. `tools/areas/art.py` holds
+  the drawing and packing code shared with the carnival.
+- Map ids: MAP_CORALLINE_REEF, _REEF_WRECK (the Abandoned Ship's flooded
+  hold), MAP_ABYSSIA, _TEMPLE.
+
 ## How the maps are made
 
 - `tools/areas/tiles.py` renders any tileset or layout to PNG.

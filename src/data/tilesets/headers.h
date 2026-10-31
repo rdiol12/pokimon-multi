@@ -514,6 +514,17 @@ const struct Tileset gTileset_Lab =
     .callback = NULL,
 };
 
+const struct Tileset gTileset_Abyss =
+{
+    .isCompressed = TRUE,
+    .isSecondary = TRUE,
+    .tiles = gTilesetTiles_Abyss,
+    .palettes = gTilesetPalettes_Abyss,
+    .metatiles = gMetatiles_Abyss,
+    .metatileAttributes = gMetatileAttributes_Abyss,
+    .callback = InitTilesetAnim_Underwater,
+};
+
 const struct Tileset gTileset_Underwater =
 {
     .isCompressed = TRUE,

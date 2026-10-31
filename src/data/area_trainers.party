@@ -570,3 +570,71 @@ Level: 24
 Loudred
 Level: 25
 /* end SunfairCarnival */
+
+/* begin CorallineReef */
+=== AREA_TRAINER_REEF_NERISSA ===
+Name: NERISSA
+Class: Swimmer F
+Pic: Swimmer F
+Gender: Female
+Music: Swimmer
+Double Battle: No
+AI: Basic Trainer
+
+Lumineon
+Level: 42
+
+Corsola
+Level: 42
+
+=== AREA_TRAINER_REEF_DORIAN ===
+Name: DORIAN
+Class: Swimmer M
+Pic: Swimmer M
+Gender: Male
+Music: Swimmer
+Double Battle: No
+AI: Basic Trainer
+
+Seaking
+Level: 41
+
+Qwilfish
+Level: 41
+
+Sharpedo
+Level: 43
+
+=== AREA_TRAINER_REEF_PELAGIA ===
+Name: PELAGIA
+Class: Swimmer F
+Pic: Swimmer F
+Gender: Female
+Music: Swimmer
+Double Battle: No
+AI: Basic Trainer
+
+Mantine
+Level: 43
+
+Lanturn
+Level: 43
+
+=== AREA_TRAINER_ABYSS_TRITON ===
+Name: TRITON
+Class: Swimmer M
+Pic: Swimmer M
+Gender: Male
+Music: Swimmer
+Double Battle: No
+AI: Basic Trainer
+
+Gorebyss
+Level: 44
+
+Huntail
+Level: 44
+
+Kingdra
+Level: 45
+/* end CorallineReef */

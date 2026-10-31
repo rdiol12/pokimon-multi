@@ -1674,6 +1674,14 @@
     {
       "id": "MAPSEC_SUNFAIR_CARNIVAL",
       "name": "SUNFAIR CARNIVAL"
+    },
+    {
+      "id": "MAPSEC_CORALLINE_REEF",
+      "name": "CORALLINE REEF"
+    },
+    {
+      "id": "MAPSEC_ABYSSIA",
+      "name": "ABYSSIA"
     }
   ]
 }
