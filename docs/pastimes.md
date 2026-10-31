@@ -337,3 +337,25 @@ kinds. Ranks: TRAINEE, ASSISTANT at 10 (Heat Rock), RESEARCHER at 30
 (Smooth Rock), METEOROLOGIST at 60 (Icy Rock). **R > PASTIMES > WEATHER
 LAB** shows the rank, readings waiting, the kinds logged and where the
 fronts are now. Screenshots: `tools/pastime_shots/weather.lua`.
+
+## Star map and meteor shower nights
+
+![Star map](images/pastime-stars.png)
+
+At night (20:00 to 4:59) a stargazer stands at eight lookouts: Lilycove,
+Route 120, Fallarbor, Fortree, Route 113, Mossdeep, Route 114 and Dewford.
+Looking through their telescope draws a constellation star by star in a
+small chart window (THE SKY WHALE, THE SERPENT, THE WISHING STAR...), then
+shows the Pokémon it's named after, and adds it to the **STAR MAP**. The
+astronomer at the Mossdeep Space Center gives a prize at 2, 4, 6 and 8
+constellations (Stardust, Star Piece, Moon Stone, Comet Shard) and says how
+many nights until the next meteor shower.
+
+Every fifth night is a **meteor shower**: shooting stars (original sprite,
+`graphics/pastime/meteor.png`) streak across the sky on outdoor maps, a
+meteorite lands on each of Routes 111, 113, 114, 115 and 120 (one find each
+a night, mostly Stardust), and a quarter of the land encounters on those
+routes are Pokémon from space (Clefairy, Minior, Beldum, Elgyem, Solrock,
+Lunatone). **R > PASTIMES > STAR MAP** lists the constellations found, the
+next shower and the meteorites found. Screenshots:
+`tools/pastime_shots/stars.lua`.

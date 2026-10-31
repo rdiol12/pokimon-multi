@@ -45,6 +45,7 @@ static const struct PastimeSpotList sSpotLists[] =
     {gSchoolSpots, 1},
     {gGardenSpots, 1 + GARDEN_PLOTS},
     {gWeatherSpots, 1},
+    {gStarSpots, 1 + STAR_CONSTELLATIONS + STAR_METEORITES},
 };
 
 #define MAX_SHOWN (LOCALID_PASTIME_LAST - LOCALID_PASTIME_FIRST + 1)
@@ -156,6 +157,7 @@ void Pastime_Update(void)
     BugContest_Update();
     Garden_Update();
     Weather_Update();
+    Star_Update();
 }
 
 // A pressed facing (x, y), map coordinates with MAP_OFFSET.
@@ -222,7 +224,8 @@ void Pastime_OnWildBattleEnd(void)
 // World_ModifyWildSpecies: changes the species of a wild encounter.
 u16 Pastime_ModifyWildSpecies(u16 species)
 {
-    return BugContest_ModifyWildSpecies(species);
+    species = BugContest_ModifyWildSpecies(species);
+    return Star_ModifyWildSpecies(species);
 }
 
 // Back from a trainer battle.

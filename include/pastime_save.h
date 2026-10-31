@@ -103,6 +103,12 @@ struct PastimeSaveData
     u8 weatherFiller;
     u16 weatherPoints;
     u16 weatherTotal;    // readings reported
+    // Star map and meteor showers (src/pastime_stars.c)
+    u16 starSeen;        // a bit per constellation
+    u8 starRewards;      // the astronomer's prizes given
+    u8 meteorPicked;     // a bit per meteorite, on night meteorNight - 1
+    u16 meteorNight;
+    u16 meteorFound;
 };
 
 #endif // GUARD_PASTIME_SAVE_H

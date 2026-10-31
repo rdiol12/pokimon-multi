@@ -16,3 +16,4 @@
 	.include "data/scripts/pastime/school.inc"
 	.include "data/scripts/pastime/garden.inc"
 	.include "data/scripts/pastime/weather.inc"
+	.include "data/scripts/pastime/stars.inc"
