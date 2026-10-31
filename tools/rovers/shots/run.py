@@ -38,14 +38,16 @@ end
 -- 6 rampaging Pokémon, 7 catch.
 function Driver.rovers(scene, ids, level, teamSize, offline, talk, levelB)
     local s = Driver.SYM.gRoverShowcase
+    local MAX = 10 -- ROVERS_MAX_HERE (include/constants/rovers.h)
     E.write8(s + 1, scene)
-    for i = 1, 4 do E.write8(s + 1 + i, ids[i] or 0) end
-    E.write8(s + 6, #ids)
-    E.write8(s + 7, level or 20)
-    E.write8(s + 8, teamSize or 3)
-    E.write8(s + 9, offline == false and 0 or 1)
-    E.write8(s + 10, talk or 0)
-    E.write8(s + 11, levelB or 0)
+    for i = 1, MAX do E.write8(s + 1 + i, ids[i] or 0) end
+    local o = s + 2 + MAX
+    E.write8(o, #ids)
+    E.write8(o + 1, level or 20)
+    E.write8(o + 2, teamSize or 3)
+    E.write8(o + 3, offline == false and 0 or 1)
+    E.write8(o + 4, talk or 0)
+    E.write8(o + 5, levelB or 0)
     E.write8(s, 1)
     Driver.wait(2)
 end

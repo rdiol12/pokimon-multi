@@ -141,7 +141,9 @@ def main():
     for n in range(1, players + 1):
         os.makedirs(os.path.join(out, f"p{n}"))
     harness = os.path.join(out, "harness")
-    subprocess.check_call(["gcc", "-O1", "-o", harness, os.path.join(e2e, "harness.c"), "-lmgba"])
+    sys.path.insert(0, e2e)
+    from run_e2e import mgba_flags  # links our mGBA fork (the game needs the extended GBA)
+    subprocess.check_call(["gcc", "-O1", "-o", harness, os.path.join(e2e, "harness.c")] + mgba_flags())
 
     syms = {}
     prev = None

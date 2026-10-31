@@ -95,7 +95,11 @@ enum Language
 // capacities of various saveblock objects
 #define DAYCARE_MON_COUNT 2
 #define POKEBLOCKS_COUNT 40
-#define OBJECT_EVENTS_COUNT 16
+// People and Pokémon on the overworld at once. The GBA had room for 16; the
+// extended GBA's RAM and sprite slots allow 64. The save file still keeps 16
+// (OBJECT_EVENTS_SAVED): the rest respawn from the map when a save is loaded.
+#define OBJECT_EVENTS_COUNT 64
+#define OBJECT_EVENTS_SAVED 16
 #define MAIL_COUNT (10 + PARTY_SIZE)
 #define SECRET_BASES_COUNT 20
 #define POKE_NEWS_COUNT 16

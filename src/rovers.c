@@ -207,7 +207,7 @@ struct RoverState
     u8 savedName[PLAYER_NAME_LENGTH + 1];
 };
 
-static EWRAM_DATA struct RoverState sRovers = {0};
+static EWRAM_EXT_DATA struct RoverState sRovers = {0};
 static EWRAM_DATA struct TrainerMon sRoverParty[PARTY_SIZE] = {0};
 static EWRAM_DATA struct Trainer sRoverTrainer = {0};
 EWRAM_DATA struct RoverShowcase gRoverShowcase = {0};
@@ -395,6 +395,20 @@ static u32 CountFreeObjects(void)
     for (i = 0; i < OBJECT_EVENTS_COUNT; i++)
     {
         if (!gObjectEvents[i].active)
+            n++;
+    }
+    return n;
+}
+
+// Sprites left for battle transitions, weather and field effects.
+#define SPRITE_HEADROOM 24
+
+static u32 CountFreeSprites(void)
+{
+    u32 i, n = 0;
+    for (i = 0; i < MAX_SPRITES; i++)
+    {
+        if (!gSprites[i].inUse)
             n++;
     }
     return n;
@@ -837,10 +851,13 @@ static void StartDuel(u32 i, u32 j)
 
 static u32 MaxHere(void)
 {
-    u32 objs = CountFreeObjects(), pals = CountFreePaletteSlots(), n;
-    if (objs < 6 || pals < 3)
+    u32 objs = CountFreeObjects(), pals = CountFreePaletteSlots(), sprites = CountFreeSprites(), n;
+    if (objs < 6 || pals < 3 || sprites < SPRITE_HEADROOM + 6)
         return 0;
+    // Each rover is a trainer and a Pokémon, and each of those can bring a
+    // shadow or a reflection.
     n = min((objs - 3) / 2, (pals - 2) / 2);
+    n = min(n, (sprites - SPRITE_HEADROOM) / 4);
     return min(n, ROVERS_MAX_HERE);
 }
 
@@ -1967,8 +1984,9 @@ static s32 ActorOfObject(struct ObjectEvent *obj)
 
 bool32 Rovers_IsRoverObject(struct ObjectEvent *obj)
 {
-    return obj->localId >= LOCALID_ROVER_FIRST && obj->localId <= LOCALID_ROVER_LAST && obj->active
-        && OnRoverMap();
+    bool32 misc = obj->localId >= LOCALID_ROVER_FIRST && obj->localId <= LOCALID_ROVER_MISC_LAST;
+    bool32 actor = obj->localId >= LOCALID_ROVER_TRAINER && obj->localId <= LOCALID_ROVER_LAST;
+    return (misc || actor) && obj->active && OnRoverMap();
 }
 
 const u8 *Rovers_GetTalkScript(struct ObjectEvent *obj)
