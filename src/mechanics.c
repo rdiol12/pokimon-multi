@@ -17,6 +17,7 @@
 
 extern const u8 Mechanics_EventScript_MoveTutor[];
 extern const u8 Mechanics_EventScript_Referee[];
+extern const u8 Mechanics_EventScript_CupHost[];
 
 struct MechNpc
 {
@@ -43,11 +44,17 @@ static bool32 InSlateportTent(void)
     return IsMap(MAP_SLATEPORT_CITY_BATTLE_TENT_LOBBY);
 }
 
+static bool32 InVerdanturfTent(void)
+{
+    return IsMap(MAP_VERDANTURF_TOWN_BATTLE_TENT_LOBBY);
+}
+
 // Indexed by local id - LOCALID_MECH_FIRST.
 static const struct MechNpc sMechNpcs[] =
 {
     {InPokemonCenter, 13, 5, OBJ_EVENT_GFX_EXPERT_M, MOVEMENT_TYPE_FACE_LEFT, Mechanics_EventScript_MoveTutor},
     {InSlateportTent, 9, 6, OBJ_EVENT_GFX_GENTLEMAN, MOVEMENT_TYPE_FACE_DOWN, Mechanics_EventScript_Referee},
+    {InVerdanturfTent, 4, 6, OBJ_EVENT_GFX_REPORTER_M, MOVEMENT_TYPE_FACE_DOWN, Mechanics_EventScript_CupHost},
 };
 
 static EWRAM_DATA u8 sTimer = 0;
@@ -68,13 +75,13 @@ static void RunShowcase(void)
     u32 i;
 
     gMechanicsShowcase.pending = FALSE;
-    for (i = 0; gMechanicsShowcase.fixMoves && i < gPlayerPartyCount; i++)
+    for (i = 0; gMechanicsShowcase.fixMoves && i < gPartiesCount[B_TRAINER_PLAYER]; i++)
     {
-        if (GetMonData(&gPlayerParty[i], MON_DATA_MOVE1) == MOVE_NONE)
-            GiveMonInitialMoveset(&gPlayerParty[i]);
+        if (GetMonData(&gParties[B_TRAINER_PLAYER][i], MON_DATA_MOVE1) == MOVE_NONE)
+            GiveMonInitialMoveset(&gParties[B_TRAINER_PLAYER][i]);
     }
     for (i = 0; gMechanicsShowcase.moves[0] && i < MAX_MON_MOVES; i++)
-        SetMonMoveSlot(&gPlayerParty[0], gMechanicsShowcase.moves[i], i);
+        SetMonMoveSlot(&gParties[B_TRAINER_PLAYER][0], gMechanicsShowcase.moves[i], i);
     gMechanicsShowcase.moves[0] = MOVE_NONE;
 }
 

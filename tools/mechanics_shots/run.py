@@ -36,7 +36,9 @@ end
 -- takes a screenshot every that many frames, up to maxShots.
 function Driver.fight(name, shotEvery, maxShots)
     local n, t = 0, 0
-    Driver.waitFor("the battle", 1200, Driver.inBattle)
+    Driver.waitFor("the battle", 1200, Driver.inBattle, function(i)
+        if i % 60 == 0 then Driver.press(Driver.KEY.A, 0) end
+    end)
     Driver.waitFor("the end of the battle", 40000, Driver.inOverworld, function(i)
         if Driver.callback2() == STATIC_CB2_UpdatePartyMenu then
             t = t + 1

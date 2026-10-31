@@ -80,9 +80,9 @@ u8 Mechanics_GetPartyBattleLevel(void)
     {
         u8 level;
 
-        if (GetMonData(&gPlayerParty[i], MON_DATA_SPECIES) == SPECIES_NONE || GetMonData(&gPlayerParty[i], MON_DATA_IS_EGG))
+        if (GetMonData(&gParties[B_TRAINER_PLAYER][i], MON_DATA_SPECIES) == SPECIES_NONE || GetMonData(&gParties[B_TRAINER_PLAYER][i], MON_DATA_IS_EGG))
             continue;
-        level = GetMonData(&gPlayerParty[i], MON_DATA_LEVEL);
+        level = GetMonData(&gParties[B_TRAINER_PLAYER][i], MON_DATA_LEVEL);
         for (j = 0; j < FRONTIER_PARTY_SIZE; j++)
         {
             if (level > top[j])
@@ -96,6 +96,17 @@ u8 Mechanics_GetPartyBattleLevel(void)
     for (i = 0; i < FRONTIER_PARTY_SIZE; i++)
         sum += top[i];
     return sum / FRONTIER_PARTY_SIZE;
+}
+
+// Frontier sets don't say whether a Pokémon may Dynamax or Terastallize,
+// and the AI takes "not set" as yes (see netplay.c), so block both.
+void Mechanics_PrepareOpponentMon(struct Pokemon *mon)
+{
+    u32 data = BLOCK_AI_DYNAMAX;
+
+    SetMonData(mon, MON_DATA_DYNAMAX_LEVEL, &data);
+    data = TYPE_MYSTERY;
+    SetMonData(mon, MON_DATA_TERA_TYPE, &data);
 }
 
 // A Battle Frontier trainer about as strong as a party of this level.
@@ -114,7 +125,6 @@ void Mechanics_FillFacilityParty(u16 trainerId, u8 count, u8 level)
     u16 chosen[PARTY_SIZE];
     u32 setSize, i = 0, j, tries = 0;
     u32 otId = Random32();
-    u32 data;
 
     gFacilityTrainers = gBattleFrontierTrainers;
     gFacilityTrainerMons = gBattleFrontierMons;
@@ -138,12 +148,7 @@ void Mechanics_FillFacilityParty(u16 trainerId, u8 count, u8 level)
         chosen[i] = monId;
         CreateFacilityMon(&gFacilityTrainerMons[monId], level, GetFrontierTrainerFixedIvs(trainerId), otId, 0,
                           &gParties[B_TRAINER_OPPONENT_A][i]);
-        // Frontier sets don't say whether a Pokémon may Dynamax or
-        // Terastallize, and the AI takes "not set" as yes (see netplay.c).
-        data = BLOCK_AI_DYNAMAX;
-        SetMonData(&gParties[B_TRAINER_OPPONENT_A][i], MON_DATA_DYNAMAX_LEVEL, &data);
-        data = TYPE_MYSTERY;
-        SetMonData(&gParties[B_TRAINER_OPPONENT_A][i], MON_DATA_TERA_TYPE, &data);
+        Mechanics_PrepareOpponentMon(&gParties[B_TRAINER_OPPONENT_A][i]);
         i++;
     }
 }
