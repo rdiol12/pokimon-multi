@@ -173,6 +173,17 @@ const struct Tileset gTileset_Crystal =
     .callback = InitTilesetAnim_Cave,
 };
 
+const struct Tileset gTileset_Oasis =
+{
+    .isCompressed = TRUE,
+    .isSecondary = TRUE,
+    .tiles = gTilesetTiles_Oasis,
+    .palettes = gTilesetPalettes_Oasis,
+    .metatiles = gMetatiles_Oasis,
+    .metatileAttributes = gMetatileAttributes_Oasis,
+    .callback = NULL,
+};
+
 const struct Tileset gTileset_Bamboo =
 {
     .isCompressed = TRUE,

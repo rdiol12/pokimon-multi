@@ -1286,3 +1286,86 @@ Level: 33
 Bronzong
 Level: 34
 /* end PrismCaverns */
+
+/* begin Mirage */
+=== AREA_TRAINER_MIRAGE_RASHID ===
+Name: RASHID
+Class: Hiker
+Pic: Hiker
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Basic Trainer
+
+Hippowdon
+Level: 49
+
+Krookodile
+Level: 50
+
+=== AREA_TRAINER_MIRAGE_ZAHRA ===
+Name: ZAHRA
+Class: Cooltrainer
+Pic: Cooltrainer F
+Gender: Female
+Music: Cool
+Double Battle: No
+AI: Basic Trainer
+
+Cacturne
+Level: 49
+
+Flygon
+Level: 50
+
+Maractus
+Level: 49
+
+=== AREA_TRAINER_MIRAGE_DUNSTAN ===
+Name: DUNSTAN
+Class: Ruin Maniac
+Pic: Ruin Maniac
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Basic Trainer
+
+Sandaconda
+Level: 50
+
+Garchomp
+Level: 51
+
+=== AREA_TRAINER_MIRAGE_NEFERA ===
+Name: NEFERA
+Class: Hex Maniac
+Pic: Hex Maniac
+Gender: Female
+Music: Suspicious
+Double Battle: No
+AI: Basic Trainer
+
+Cofagrigus
+Level: 50
+
+Runerigus
+Level: 50
+
+Sigilyph
+Level: 51
+
+=== AREA_TRAINER_MIRAGE_OMAR ===
+Name: OMAR
+Class: Expert
+Pic: Expert M
+Gender: Male
+Music: Intense
+Double Battle: No
+AI: Basic Trainer
+
+Claydol
+Level: 51
+
+Golurk
+Level: 52
+/* end Mirage */

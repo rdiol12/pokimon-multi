@@ -1,0 +1,163 @@
+{
+  "id": "MAP_MIRAGE_OASIS_SUNKEN_COURT",
+  "name": "MirageOasis_SunkenCourt",
+  "layout": "LAYOUT_MIRAGE_OASIS_SUNKEN_COURT",
+  "music": "MUS_DESERT",
+  "region": "REGION_HOENN",
+  "region_map_section": "MAPSEC_MIRAGE_OASIS",
+  "requires_flash": false,
+  "weather": "WEATHER_NONE",
+  "map_type": "MAP_TYPE_UNDERGROUND",
+  "allow_cycling": true,
+  "allow_escaping": true,
+  "allow_running": true,
+  "show_map_name": false,
+  "battle_scene": "MAP_BATTLE_SCENE_NORMAL",
+  "connections": null,
+  "object_events": [
+    {
+      "graphics_id": "OBJ_EVENT_GFX_HEX_MANIAC",
+      "x": 31,
+      "y": 13,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_FACE_DOWN",
+      "movement_range_x": 0,
+      "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NORMAL",
+      "trainer_sight_or_berry_tree_id": "3",
+      "script": "MirageOasis_SunkenCourt_EventScript_Nefera",
+      "flag": "0"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_ITEM_BALL",
+      "x": 35,
+      "y": 22,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_LOOK_AROUND",
+      "movement_range_x": 0,
+      "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE",
+      "trainer_sight_or_berry_tree_id": "0",
+      "script": "MirageOasis_SunkenCourt_EventScript_Item_TmEarthquake",
+      "flag": "FLAG_ITEM_MIRAGE_TM_EARTHQUAKE"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_ITEM_BALL",
+      "x": 4,
+      "y": 20,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_LOOK_AROUND",
+      "movement_range_x": 0,
+      "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE",
+      "trainer_sight_or_berry_tree_id": "0",
+      "script": "MirageOasis_SunkenCourt_EventScript_Item_BigNugget",
+      "flag": "FLAG_ITEM_MIRAGE_BIG_NUGGET"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_ITEM_BALL",
+      "x": 11,
+      "y": 7,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_LOOK_AROUND",
+      "movement_range_x": 0,
+      "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE",
+      "trainer_sight_or_berry_tree_id": "0",
+      "script": "MirageOasis_SunkenCourt_EventScript_Item_MaxRevive",
+      "flag": "FLAG_ITEM_MIRAGE_MAX_REVIVE"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_ITEM_BALL",
+      "x": 23,
+      "y": 7,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_LOOK_AROUND",
+      "movement_range_x": 0,
+      "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE",
+      "trainer_sight_or_berry_tree_id": "0",
+      "script": "MirageOasis_SunkenCourt_EventScript_Item_FullRestore",
+      "flag": "FLAG_ITEM_MIRAGE_FULL_RESTORE"
+    }
+  ],
+  "warp_events": [
+    {
+      "x": 8,
+      "y": 22,
+      "elevation": 0,
+      "dest_map": "MAP_MIRAGE_DUNES",
+      "dest_warp_id": "0"
+    },
+    {
+      "x": 32,
+      "y": 22,
+      "elevation": 0,
+      "dest_map": "MAP_MIRAGE_DUNES",
+      "dest_warp_id": "0"
+    },
+    {
+      "x": 20,
+      "y": 22,
+      "elevation": 0,
+      "dest_map": "MAP_MIRAGE_DUNES",
+      "dest_warp_id": "0"
+    },
+    {
+      "x": 8,
+      "y": 5,
+      "elevation": 0,
+      "dest_map": "MAP_MIRAGE_DUNES",
+      "dest_warp_id": "3"
+    },
+    {
+      "x": 32,
+      "y": 5,
+      "elevation": 0,
+      "dest_map": "MAP_MIRAGE_DUNES",
+      "dest_warp_id": "4"
+    },
+    {
+      "x": 20,
+      "y": 5,
+      "elevation": 0,
+      "dest_map": "MAP_MIRAGE_DUNES",
+      "dest_warp_id": "5"
+    }
+  ],
+  "coord_events": [],
+  "bg_events": [
+    {
+      "type": "sign",
+      "x": 19,
+      "y": 9,
+      "elevation": 0,
+      "player_facing_dir": "BG_EVENT_PLAYER_FACING_NORTH",
+      "script": "MirageOasis_SunkenCourt_EventScript_Altar"
+    },
+    {
+      "type": "sign",
+      "x": 20,
+      "y": 9,
+      "elevation": 0,
+      "player_facing_dir": "BG_EVENT_PLAYER_FACING_NORTH",
+      "script": "MirageOasis_SunkenCourt_EventScript_Altar"
+    },
+    {
+      "type": "hidden_item",
+      "x": 29,
+      "y": 21,
+      "elevation": 3,
+      "item": "ITEM_RARE_BONE",
+      "flag": "FLAG_HIDDEN_ITEM_MIRAGE_RARE_BONE"
+    },
+    {
+      "type": "hidden_item",
+      "x": 17,
+      "y": 21,
+      "elevation": 3,
+      "item": "ITEM_STARDUST",
+      "flag": "FLAG_HIDDEN_ITEM_MIRAGE_STARDUST"
+    }
+  ]
+}

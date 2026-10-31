@@ -182,12 +182,16 @@
     "WonderwildPark",
     "PrismCaverns",
     "PrismCaverns_Depths",
+    "MirageDunes",
+    "MirageOasis",
     "MetroSlateport",
     "MetroMauville",
     "SnowdriftVillage",
     "SnowdriftVillage_Lodge",
     "SnowdriftVillage_WestCabin",
-    "SnowdriftVillage_EastCabin"
+    "SnowdriftVillage_EastCabin",
+    "MirageOasis_Inn",
+    "MirageOasis_SunkenCourt"
   ],
   "gMapGroup_IndoorLittleroot": [
     "LittlerootTown_BrendansHouse_1F",

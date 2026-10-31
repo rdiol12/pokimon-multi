@@ -9735,6 +9735,36 @@
       "secondary_tileset": "gTileset_Crystal",
       "border_filepath": "data/layouts/PrismCaverns_Depths/border.bin",
       "blockdata_filepath": "data/layouts/PrismCaverns_Depths/map.bin"
+    },
+    {
+      "id": "LAYOUT_MIRAGE_DUNES",
+      "name": "MirageDunes_Layout",
+      "width": 56,
+      "height": 52,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Oasis",
+      "border_filepath": "data/layouts/MirageDunes/border.bin",
+      "blockdata_filepath": "data/layouts/MirageDunes/map.bin"
+    },
+    {
+      "id": "LAYOUT_MIRAGE_OASIS",
+      "name": "MirageOasis_Layout",
+      "width": 48,
+      "height": 40,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Oasis",
+      "border_filepath": "data/layouts/MirageOasis/border.bin",
+      "blockdata_filepath": "data/layouts/MirageOasis/map.bin"
+    },
+    {
+      "id": "LAYOUT_MIRAGE_OASIS_SUNKEN_COURT",
+      "name": "MirageOasis_SunkenCourt_Layout",
+      "width": 40,
+      "height": 28,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Oasis",
+      "border_filepath": "data/layouts/MirageOasis_SunkenCourt/border.bin",
+      "blockdata_filepath": "data/layouts/MirageOasis_SunkenCourt/map.bin"
     }
   ]
 }

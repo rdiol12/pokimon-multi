@@ -250,6 +250,29 @@ const u16 gTilesetPalettes_Crystal[][16] =
     INCGFX_U16("data/tilesets/secondary/crystal/palettes/15.pal", ".gbapal"),
 };
 
+// Mirage Oasis (tools/areas/oasis_art.py): Route 111's desert tiles plus new art.
+const u32 gTilesetTiles_Oasis[] = INCGFX_U32("data/tilesets/secondary/oasis/tiles.png", ".4bpp.fastSmol", "-num_tiles 512 -Wnum_tiles");
+
+const u16 gTilesetPalettes_Oasis[][16] =
+{
+    INCGFX_U16("data/tilesets/secondary/oasis/palettes/00.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/oasis/palettes/01.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/oasis/palettes/02.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/oasis/palettes/03.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/oasis/palettes/04.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/oasis/palettes/05.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/oasis/palettes/06.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/oasis/palettes/07.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/oasis/palettes/08.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/oasis/palettes/09.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/oasis/palettes/10.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/oasis/palettes/11.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/oasis/palettes/12.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/oasis/palettes/13.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/oasis/palettes/14.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/oasis/palettes/15.pal", ".gbapal"),
+};
+
 // Whisperstem Valley (tools/areas/bamboo_art.py): Rustboro's tiles plus new art.
 const u32 gTilesetTiles_Bamboo[] = INCGFX_U32("data/tilesets/secondary/bamboo/tiles.png", ".4bpp.fastSmol", "-num_tiles 512 -Wnum_tiles");
 
