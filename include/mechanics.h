@@ -69,6 +69,11 @@ u32 Mechanics_BoostCatchOdds(u32 odds);
 u32 Mechanics_BoostPrizeMoney(u32 money);
 void Mechanics_OnTrainerBattleEnd(void);
 void Mechanics_UpdateSkills(void);
+
+// Starter signature moves (src/mechanics_signature.c).
+bool32 Mechanics_CanLearnSignatureMove(u16 species, u16 move);
+bool32 Mechanics_IsCatchBlocked(void);
+bool32 Mechanics_IsStatueHere(u8 line);
 void Mechanics_EndStylePractice(void);
 
 #endif // GUARD_MECHANICS_H

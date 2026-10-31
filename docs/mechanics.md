@@ -171,6 +171,28 @@ Skills are off in link battles. Hooks: `ItemUseCB_BattleScript`
 (party_menu.c), the catch odds and `Cmd_getmoneyreward`
 (battle_script_commands.c), `World_OnTrainerBattleEnd` (world.c).
 
+## Starter signature moves
+
+![Birch's aide, the three statues, the guardian battle, and Grovyle learning Canopy Edge](images/mechanics-signature-moves.png)
+
+Each Hoenn starter line has a move of its own (`src/mechanics_signature.c`,
+appended after the Gen 9 moves in include/constants/moves.h):
+
+| Line | Move | Data |
+| --- | --- | --- |
+| Treecko | Canopy Edge | Grass, physical, 90, 100%, high crit, 20% lowers Def |
+| Torchic | Blaze Rush | Fire, physical, 85, 100%, raises the user's Speed |
+| Mudkip | Mire Crash | Water, physical, 90, 100%, 30% lowers Speed |
+
+The quest: with three badges, Birch's aide in the lab tells the player about
+an old statue of their starter's final form: Petalburg Woods (Treecko),
+the Fiery Path (Torchic) or Route 117's pond (Mudkip). The statue shows up
+while the first starter in the party is of that line. Talking to it starts
+a battle with its guardian, the final form at the starter's level + 3 (at
+least 30), which can't be caught. Beat it and the aide teaches the move
+(the usual move tutor menu; only that line can learn it, through a hook in
+`CanTeachMove`, party_menu.c).
+
 ## Screenshots
 
 ```sh
@@ -181,6 +203,7 @@ python3 tools/mechanics_shots/run.py tools/mechanics_shots/colors.lua out/
 python3 tools/mechanics_shots/run.py tools/mechanics_shots/personality.lua out/ 100000
 python3 tools/mechanics_shots/run.py tools/mechanics_shots/styles.lua out/ 200000
 python3 tools/mechanics_shots/run.py tools/mechanics_shots/skills.lua out/ 60000
+python3 tools/mechanics_shots/run.py tools/mechanics_shots/signature.lua out/ 150000
 ```
 
 The runner is `tools/world_shots/run.py` plus `Driver.fastText()` and

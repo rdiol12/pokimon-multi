@@ -11,6 +11,10 @@
 #define LOCALID_MECH_CUP_HOST 192 // the tournament host in the Verdanturf Battle Tent
 #define LOCALID_MECH_STYLE_MASTER 193 // the battle style master in the Fallarbor Battle Tent
 #define LOCALID_MECH_SKILL_TEACHER 194 // the trainer skills teacher in the Rustboro Pokémon School
+#define LOCALID_MECH_LAB_AIDE 195 // Birch's aide, who starts the signature move quest
+#define LOCALID_MECH_STATUE_TREECKO 196 // the starters' old statues: Petalburg Woods,
+#define LOCALID_MECH_STATUE_TORCHIC 197 // the Fiery Path
+#define LOCALID_MECH_STATUE_MUDKIP  198 // and Route 117
 
 // Battle rule sets (Mechanics_SetBattleRules). The Slateport Battle Tent's
 // referee offers them against Battle Frontier trainers; online PvP can use
@@ -64,6 +68,12 @@
 #define SKILL_SECOND_WIND 4 // the party gets back 20% HP after each trainer battle won
 #define SKILL_COUNT       4
 
+// The Hoenn starters' lines (src/mechanics_signature.c).
+#define STARTER_LINE_NONE    0
+#define STARTER_LINE_TREECKO 1
+#define STARTER_LINE_TORCHIC 2
+#define STARTER_LINE_MUDKIP  3
+
 // Messages printed with STRINGID_MECH_MESSAGE; the id goes in
 // gBattleTextBuff3[0] so it reaches both games in a link battle.
 #define MECH_MSG_STYLE_AGILE  0
@@ -76,5 +86,8 @@
 #define FLAG_MECH_MET_CUP_HOST FLAG_UNUSED_0x884
 #define FLAG_MECH_BATTLE_STYLES FLAG_UNUSED_0x885 // learned from the style master
 #define FLAG_MECH_MET_SKILL_TEACHER FLAG_UNUSED_0x886
+#define FLAG_MECH_SIG_STARTED  FLAG_UNUSED_0x887 // the aide told the player about the statue
+#define FLAG_MECH_SIG_BEATEN   FLAG_UNUSED_0x8E5 // the statue's guardian was beaten
+#define FLAG_MECH_SIG_TAUGHT   FLAG_UNUSED_0x8E6 // the signature move was taught
 
 #endif // GUARD_CONSTANTS_MECHANICS_H
