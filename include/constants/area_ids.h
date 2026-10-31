@@ -4,7 +4,7 @@
 // Flags, vars and trainers of each new area. AREA_TRAINER_* index the area
 // trainer table; TRAINER_* are the ids scripts battle.
 
-#define AREA_TRAINERS_COUNT 52
+#define AREA_TRAINERS_COUNT 60
 
 /* begin ElderwoodForest */
 #define FLAG_ELDERWOOD_BOUNSWEET_HOME         AREA_FLAG(0)
@@ -184,5 +184,29 @@
 #define AREA_TRAINER_HOLLOW_ELVIRA            51
 #define TRAINER_HOLLOW_ELVIRA                 AREA_TRAINER(AREA_TRAINER_HOLLOW_ELVIRA)
 /* end Hollowmere */
+
+/* begin MireboughMarsh */
+#define FLAG_MIRE_STEW_DONE                   AREA_FLAG(168)
+#define FLAG_MIRE_WITCH_TALKED                AREA_FLAG(169)
+#define FLAG_MIRE_STUNFISK_DONE               AREA_FLAG(170)
+#define FLAG_ITEM_MIRE_TINY_MUSHROOM          AREA_FLAG(171)
+#define FLAG_ITEM_MIRE_BIG_ROOT               AREA_FLAG(172)
+#define FLAG_ITEM_MIRE_BLACK_SLUDGE           AREA_FLAG(173)
+#define FLAG_ITEM_MIRE_TM_SLUDGE_BOMB         AREA_FLAG(174)
+#define FLAG_ITEM_MIRE_DAMP_ROCK              AREA_FLAG(175)
+#define FLAG_ITEM_MIRE_ULTRA_BALL             AREA_FLAG(176)
+#define FLAG_ITEM_MIRE_ELIXIR                 AREA_FLAG(177)
+#define FLAG_HIDDEN_ITEM_MIRE_BIG_MUSHROOM    AREA_FLAG(178)
+#define FLAG_HIDDEN_ITEM_MIRE_PEARL           AREA_FLAG(179)
+#define FLAG_HIDDEN_ITEM_MIRE_SHOAL_SALT      AREA_FLAG(180)
+#define AREA_TRAINER_MIRE_FINN                56
+#define TRAINER_MIRE_FINN                     AREA_TRAINER(AREA_TRAINER_MIRE_FINN)
+#define AREA_TRAINER_MIRE_MARSHA              57
+#define TRAINER_MIRE_MARSHA                   AREA_TRAINER(AREA_TRAINER_MIRE_MARSHA)
+#define AREA_TRAINER_MIRE_OTTO                58
+#define TRAINER_MIRE_OTTO                     AREA_TRAINER(AREA_TRAINER_MIRE_OTTO)
+#define AREA_TRAINER_MIRE_IVY                 59
+#define TRAINER_MIRE_IVY                      AREA_TRAINER(AREA_TRAINER_MIRE_IVY)
+/* end MireboughMarsh */
 
 #endif // GUARD_CONSTANTS_AREA_IDS_H

@@ -9495,6 +9495,16 @@
       "secondary_tileset": "gTileset_Petalburg",
       "border_filepath": "data/layouts/Hollowmere/border.bin",
       "blockdata_filepath": "data/layouts/Hollowmere/map.bin"
+    },
+    {
+      "id": "LAYOUT_MIREBOUGH_MARSH",
+      "name": "MireboughMarsh_Layout",
+      "width": 56,
+      "height": 48,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Fortree",
+      "border_filepath": "data/layouts/MireboughMarsh/border.bin",
+      "blockdata_filepath": "data/layouts/MireboughMarsh/map.bin"
     }
   ]
 }

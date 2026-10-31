@@ -158,7 +158,7 @@ class Area:
         self.warps.append({'x': x, 'y': y, 'elevation': elevation, 'dest_map': dest_map, 'dest_warp_id': str(dest_warp)})
         return len(self.warps) - 1
 
-    def coord(self, x, y, script, var='0', var_value='0', elevation=3):
+    def coord(self, x, y, script, var='VAR_TEMP_0', var_value='0', elevation=3):
         self.coords.append({'type': 'trigger', 'x': x, 'y': y, 'elevation': elevation, 'var': var,
                             'var_value': var_value, 'script': script})
 

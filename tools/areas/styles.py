@@ -21,6 +21,16 @@ def jungle():
     return _cache['jungle']
 
 
+def marsh():
+    """Route 119, Route 120 and Fortree without the shallow bridge water: ponds stay one clean colour."""
+    if 'marsh' not in _cache:
+        _cache['marsh'] = Style('gTileset_General', 'gTileset_Fortree',
+                                ['LAYOUT_ROUTE119', 'LAYOUT_ROUTE120', 'LAYOUT_FORTREE_CITY'],
+                                wall_classes={'T': TREES})
+        _cache['marsh'].exclude = {0x277, 0x0A1, 0x124, 0x29F, 0x071, 0x12C, 0x189, 0x0B1, 0x297, 0x28F, 0x218, 0x210, 0x120, 0x0B8, 0x291, 0x274, 0x0CA, 0x276, 0x28A, 0x27C, 0x0D8, 0x287}
+    return _cache['marsh']
+
+
 def woods():
     """Route 104, Route 116 and Petalburg Woods: round broadleaf trees."""
     if 'woods' not in _cache:

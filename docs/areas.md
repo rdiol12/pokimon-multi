@@ -138,6 +138,24 @@ the Mind Badge (`gettimeofday`).
 - The manor reuses the Lilycove Museum layouts with new events. Map ids:
   MAP_HOLLOWMERE, _INN, _HOUSE, _MANOR_1F, _MANOR_2F.
 
+## Mirebough Marsh
+
+A rainy swamp of ponds and reeds west of Fortree City, crossed by wooden
+boardwalks. A guide in Fortree City takes you there once you have the
+Feather Badge.
+
+- Quest: the Bog Witch lives in a clearing you can only reach over the
+  north boardwalk. Her stew needs a Tiny Mushroom, a Big Root and some
+  Black Sludge, all lying around the marsh. Hand them over and she gives
+  you a Goomy egg.
+- A Stunfisk hides in the mud by the south reeds and attacks when you step
+  on it (Lv38).
+- Fisherman Finn, Aroma Lady Marsha, Bug Maniac Otto and Ranger Ivy; a
+  Wooper, a Goomy and a Croagunk to talk to; TM Sludge Bomb, Damp Rock,
+  Ultra Ball and hidden items. Wild Wooper, Croagunk, Goomy, Lotad,
+  Shroomish, Yanma, Skorupi, Stunfisk and their evolutions Lv34–39;
+  Barboach, Whiscash and Poliwag on a rod. Map id: MAP_MIREBOUGH_MARSH.
+
 ## How the maps are made
 
 - `tools/areas/tiles.py` renders any tileset or layout to PNG.
@@ -151,7 +169,9 @@ the Mind Badge (`gettimeofday`).
   from real maps, 3x3 edge sets like ponds, events) and registers maps,
   layouts, scripts, region map sections, encounters and trainers.
 - Screenshots: `python3 tools/areas/shots/run.py tools/areas/shots/<area>.lua OUT`
-  (needs a built ROM and libmgba-dev). `Driver.flag(name, on)` sets any flag.
+  (needs a built ROM and libmgba-dev). `Driver.flag(name, on)` sets any flag,
+  `Driver.where()` gives the player's position and `Driver.season(s)`
+  forces a season.
 
 ## Area flags and trainers
 
