@@ -322,7 +322,8 @@ Client → server:
 
 ```
 HELLO <name> <trainer id>
-POS <map group> <map num> <x> <y> <facing> <elevation> <gfx>
+POS <map group> <map num> <x> <y> <facing> <elevation> <gfx>   (players see only those on the same map
+                                    and in the same room: a guild hall has one room per guild)
 REQ <battle|trade|deal|coop|double|multi> <target id> (answered with PENDING, then START or DECLINED;
                                     multi: the target's team, and both teams' partners come too)
 ACCEPT <session id>

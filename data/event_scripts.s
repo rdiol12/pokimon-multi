@@ -378,6 +378,7 @@ gStdScripts_End::
 	.include "data/maps/AdventureRanch/scripts.inc"
 	.include "data/maps/AdventureDungeon/scripts.inc"
 	.include "data/maps/StarfallIsle_Hotel/scripts.inc"
+	.include "data/maps/OnlineGuildHall/scripts.inc"
 	.include "data/maps/AmberwoodHollow/scripts.inc"
 	.include "data/scripts/areas/gullwing.inc"
 	.include "data/maps/GullwingPoint_PirateHold/scripts.inc"

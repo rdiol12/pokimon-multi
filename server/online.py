@@ -107,7 +107,9 @@ class Online:
             if not hasattr(ctx.player, "online_seen"):
                 ctx.player.online_seen = self._note_id
             out = fn(ctx, args, data) or answer()
-            return out + self.pending_notes(ctx)
+            # Notices go with the text rows, before any binary part.
+            head, nul, tail = out.partition(b"\0")
+            return head + self.pending_notes(ctx) + nul + tail
         return handler
 
     # --- time ----------------------------------------------------------
@@ -169,6 +171,7 @@ def install(server, ext_obj):
     import online_duo
     import online_fishing
     import online_goals
+    import online_guilds
     import online_mentors
     import online_pageant
     import online_pquests
@@ -181,7 +184,8 @@ def install(server, ext_obj):
     online_betting.install(server)
     online_doubles.install(server)
     online_teams.install(server)
+    online_guilds.install(server)
     return Online(server, ext_obj, [online_goals, online_sightings, online_web, online_fishing, online_coopfish,
                                        online_shops, online_pageant, online_duo,
                                        online_mentors, online_pquests,
-                                       online_betting, online_doubles, online_teams])
+                                       online_betting, online_doubles, online_teams, online_guilds])

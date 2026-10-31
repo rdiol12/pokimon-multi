@@ -13,6 +13,7 @@ import online_doubles  # noqa: E402
 import online_duo  # noqa: E402
 import online_fishing  # noqa: E402
 import online_goals  # noqa: E402
+import online_guilds  # noqa: E402
 import online_mentors  # noqa: E402
 import online_pageant  # noqa: E402
 import online_pquests  # noqa: E402
@@ -37,10 +38,11 @@ class OnlineTest(unittest.IsolatedAsyncioTestCase):
                                     [online_goals, online_sightings, online_web, online_fishing, online_coopfish, online_shops,
                                      online_pageant, online_duo, online_mentors,
                                      online_pquests, online_betting,
-                                     online_doubles, online_teams], clock=lambda: self.now)
+                                     online_doubles, online_teams, online_guilds], clock=lambda: self.now)
         online_betting.install(self.server)
         online_doubles.install(self.server)
         online_teams.install(self.server)
+        online_guilds.install(self.server)
         self.srv = await asyncio.start_server(self.server.handle, "127.0.0.1", 0)
         self.port = self.srv.sockets[0].getsockname()[1]
         self.clients = []
@@ -563,6 +565,123 @@ class TeamsTest(OnlineTest):
         for x in (a, b, c):
             await self.recv_until(x, f"DECLINED {sid}")
         self.assertIsNone(self.server.players[self.pid("Cat")].session)
+
+
+
+def team_record(levels):
+    """A team record (struct SecretBase) with Pokémon of these levels."""
+    out = bytearray(online_guilds.RECORD_SIZE)
+    out[2:9] = b"\xbb\xff\xff\xff\xff\xff\xff"
+    for i, level in enumerate(levels):
+        out[online_guilds.SPECIES + 2 * i:online_guilds.SPECIES + 2 * i + 2] = (SPECIES["MUDKIP"] + i).to_bytes(2, "little")
+        out[online_guilds.LEVELS + i] = level
+    return bytes(out)
+
+
+class GuildsTest(OnlineTest):
+    async def guild(self, c, tag, join=False):
+        word = f"GUILD JOIN {tag}" if join else f"GUILD CREATE {tag} Team {tag}"
+        self.assertEqual((await self.ask(c, word))[0], 0)
+
+    async def test_hall_is_one_room_per_guild(self):
+        a, b, c = [await self.connect(n, i) for i, n in enumerate(("Ann", "Ben", "Cat"), 1)]
+        status, out = await self.ask(a, "GHALL VIEW")
+        self.assertEqual(rows(out)[0][1], str(online_guilds.NO_GUILD))
+        await self.guild(a, "RED")
+        await self.guild(b, "RED", join=True)
+        await self.guild(c, "BLUE")
+        status, out = await self.ask(a, "GHALL VIEW")
+        self.assertEqual(rows(out)[0][1:], [str(online_guilds.LEADER), "RED", "Team RED"])
+        self.assertIn("2 of 2 members", rows(out)[0][0])
+        hall = " ".join(map(str, online_guilds.HALL))
+        for x in (a, b, c):
+            await x.send(f"POS {hall} 6 12 1 0 0")
+        # Ann sees Ben (same guild), never Cat.
+        seen = []
+        while True:
+            try:
+                seen.append(await asyncio.wait_for(a.recv(), 0.3))
+            except asyncio.TimeoutError:
+                break
+        names = " ".join(seen)
+        self.assertIn("Ben", names)
+        self.assertNotIn("Cat", names)
+
+    async def test_chest(self):
+        a, b = await self.connect("Ann", 1), await self.connect("Ben", 2)
+        await self.guild(a, "RED")
+        await self.guild(b, "RED", join=True)
+        potion = ITEMS["POTION"]
+        status, out = await self.ask(a, f"GHALL PUT {potion} 5")
+        self.assertEqual(rows(out)[1], ["-ITEM", str(potion), "5"])
+        status, out = await self.ask(b, "GHALL CHEST")
+        self.assertEqual(rows(out)[1], ["5 Potions", str(potion), str(potion), "5"])
+        status, out = await self.ask(b, f"GHALL TAKE {potion}")
+        self.assertEqual(rows(out)[1], ["+ITEM", str(potion), "5"])
+        status, out = await self.ask(a, f"GHALL TAKE {potion}")
+        self.assertEqual(status, 1)  # gone
+
+    async def test_pvp_win_scores_and_prizes_next_week(self):
+        a, b = await self.connect("Ann", 1), await self.connect("Ben", 2)
+        await self.guild(a, "RED")
+        await self.guild(b, "BLUE")
+        await a.send(f"REQ battle {next(p.id for p in self.server.players.values() if p.name == 'Ben')}")
+        sid = (await self.recv_until(b, "INVITE ")).split()[1]
+        await b.send(f"ACCEPT {sid}")
+        await self.recv_until(a, f"START {sid}")
+        await a.send(f"RESULT {sid} win")
+        await b.send(f"RESULT {sid} loss")
+        await self.ask(a, "OSTAT")
+        status, out = await self.ask(a, "WAR BOARD")
+        self.assertEqual(rows(out)[3], ["*1", "(RED) Team RED", str(online_guilds.WAR_WIN)])
+        self.assertEqual(rows(out)[0][1], "0")
+        self.now += online.WEEK
+        status, out = await self.ask(a, "WAR BOARD")
+        self.assertEqual(rows(out)[0][1], "1")  # a prize is waiting
+        status, out = await self.ask(a, "WAR CLAIM")
+        self.assertIn(["+ITEM", str(ITEMS["RARE_CANDY"]), "3"], rows(out))
+        self.assertEqual((await self.ask(a, "WAR CLAIM"))[0], 1)
+        # Ben's guild placed second.
+        status, out = await self.ask(b, "WAR CLAIM")
+        self.assertEqual(status, 1)  # BLUE never scored: no place
+
+    async def recv_until(self, c, prefix):
+        while not (line := await c.recv()).startswith(prefix):
+            pass
+        return line
+
+    async def test_raid(self):
+        a, b, c = [await self.connect(n, i) for i, n in enumerate(("Ann", "Ben", "Cat"), 1)]
+        await self.guild(a, "RED")
+        await self.guild(b, "BLUE")
+        await self.guild(c, "BLUE", join=True)
+        self.assertEqual((await self.ask(a, "RAID LIST"))[0], 1)  # nobody defends
+        await self.ask(b, "RAID DEFEND", team_record([20, 35, 10]))
+        status, out = await self.ask(c, "RAID DEFEND", team_record([40]))
+        self.assertIn("Defenders: 2", out.decode())
+        status, out = await self.ask(a, "RAID LIST")
+        self.assertEqual(rows(out)[1], ["(BLUE) Team BLUE", "BLUE"])
+        status, out = await self.ask(a, "RAID GET BLUE")
+        self.assertEqual(status, 0)
+        text_part, team = out.split(b"\0", 1)
+        self.assertEqual(len(team), online_guilds.RECORD_SIZE)
+        # Each defender's best: Cat's Lv. 40, then Ben's Lv. 35.
+        self.assertEqual(list(team[online_guilds.LEVELS:online_guilds.LEVELS + 3]), [40, 35, 0])
+        self.assertEqual(team[2:6], bytes([0xBC, 0xC6, 0xCF, 0xBF]))  # "BLUE"
+        status, out = await self.ask(a, "RAID RESULT 1")
+        self.assertIn("fell", out.decode())
+        status, out = await self.ask(a, "WAR BOARD")
+        self.assertEqual(rows(out)[3][2], str(online_guilds.WAR_RAID))
+        # The defenders hear of it.
+        status, out = await self.ask(b, "WAR BOARD")
+        self.assertTrue(any(r[0] == "N" and "raided" in r[1] for r in rows(out)))
+        # Three raids a day.
+        for _ in range(2):
+            await self.ask(a, "RAID GET BLUE")
+            await self.ask(a, "RAID RESULT 0")
+        self.assertEqual((await self.ask(a, "RAID GET BLUE"))[0], 1)
+        status, out = await self.ask(b, "WAR BOARD")
+        self.assertIn(["*2", "(BLUE) Team BLUE", str(2 * online_guilds.WAR_DEFENDED)], rows(out))
 
 
 if __name__ == "__main__":

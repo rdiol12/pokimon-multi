@@ -244,6 +244,38 @@ server announces the winners. Building it turned up that every Pokémon
 Center switched the game to wireless mode (the Union Room check), which broke
 any online link started indoors; that check is off now.
 
+## Guild halls, clan wars and base raids
+
+![HUB > GUILD HALL takes TEST1 to the Aces' hall; the members board, the guild chest, the clan war board and last week's prize, a raid on the Star Squad's base and the war points it scored; TEST2 puts items in the chest and guards the base](images/online-guilds.png)
+
+These build on the plaza's guilds (Online Plaza > GUILDS, `server/guilds.py`).
+
+- **Guild hall.** HUB > GUILD HALL takes a member to their guild's hall
+  (`MAP_ONLINE_GUILD_HALL`, map group `gMapGroup_Online`); its door leads
+  back to where they were (a dynamic warp). Every guild has its own hall: on
+  that map the server puts each player in a room named after their guild
+  (`room_of` in `server/netplay_server.py`), and players only see others in
+  the same room. The clerk shows the members (who's online, the leader, this
+  week's war points) and keeps the guild chest: any member can put items in
+  (up to 20 kinds, 99 each) and take a stack out.
+- **Clan war.** Every week guilds score war points: 3 for a member who beats
+  a member of another guild in a PvP battle or ranked double (2 each in a
+  2v2), 5 for a won raid, 2 to the defending guild when a raid fails. The war
+  officer shows the week's board; the three best guilds win prizes for every
+  member (3/2/1 Rare Candies and $10000/$5000/$2500), collected from the
+  officer the week after.
+- **Base raids.** At the raid captain, GUARD OUR BASE uploads the player's
+  team. A guild base's team is the best Pokémon of each defender, strongest
+  first, up to six, with the guild's tag as the trainer's name. RAID A BASE
+  lists the other guilds' bases; the raid is a battle like a secret base
+  owner's (`NetplayExt_PrepStoredBattle`), and the result goes back as
+  `RAID RESULT`. Three raids a day.
+
+Server: `server/online_guilds.py` (tables `online_guild_chest`,
+`online_guild_war`, `online_guild_war_claims`, `online_guild_defenders`,
+`online_guild_raids`). Game: `data/scripts/online/guilds.inc`,
+`data/maps/OnlineGuildHall/`, `src/online_guilds.c`.
+
 ## How it talks to the server
 
 These features use the Online Plaza's request channel (`NpxRpc_*` in
@@ -268,7 +300,8 @@ lines; a line starting with `*` is the player's own (red), and
 
 In the background the game reports what happens (`OEV CATCH species shiny
 mapGroup mapNum fished`, `OEV SIGHT ...`, `OEV FISH species size`) and asks for the live features' status (`OSTAT`)
-every ten seconds; both answers bring any notices.
+every ten seconds; both answers bring any notices. An answer can end with
+binary data after a NUL (`Npx_Binary`), like a raid's team.
 
 On the server, `server/online.py` adds these words to the plaza's request
 handlers. Each feature is a module `server/online_*.py` with `COMMANDS`,
