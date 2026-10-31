@@ -37549,7 +37549,7 @@
               {
                 "min_level": 40,
                 "max_level": 45,
-                "species": "SPECIES_WINGULL"
+                "species": "SPECIES_WINGULL_STARFALL"
               },
               {
                 "min_level": 40,
@@ -37557,9 +37557,9 @@
                 "species": "SPECIES_MANTYKE"
               },
               {
-                "min_level": 40,
-                "max_level": 45,
-                "species": "SPECIES_WAILMER"
+                "min_level": 42,
+                "max_level": 47,
+                "species": "SPECIES_PELIPPER_STARFALL"
               },
               {
                 "min_level": 45,
@@ -37594,7 +37594,7 @@
               {
                 "min_level": 30,
                 "max_level": 40,
-                "species": "SPECIES_LUVDISC"
+                "species": "SPECIES_LUVDISC_STARFALL"
               },
               {
                 "min_level": 30,
@@ -37653,7 +37653,7 @@
               {
                 "min_level": 44,
                 "max_level": 46,
-                "species": "SPECIES_TEDDIURSA"
+                "species": "SPECIES_TEDDIURSA_AMBERWOOD"
               },
               {
                 "min_level": 45,
@@ -37671,9 +37671,9 @@
                 "species": "SPECIES_SEWADDLE"
               },
               {
-                "min_level": 45,
-                "max_level": 47,
-                "species": "SPECIES_NICKIT"
+                "min_level": 46,
+                "max_level": 48,
+                "species": "SPECIES_URSARING_AMBERWOOD"
               },
               {
                 "min_level": 45,

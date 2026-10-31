@@ -24,6 +24,7 @@ struct AdventureShowcase
     u8 ranchHoursAgo;              // the last ranch visit, hours ago
     u8 dungeonFloor;               // the dungeon floor the next dive shows
     u8 dungeonLadderX, dungeonLadderY; // out: where that floor's ladder is
+    u16 wildSpecies;               // every wild Pokémon is this one, 0 = as usual
 };
 
 EWRAM_DATA struct AdventureShowcase gAdventureShowcase = {0};
@@ -61,6 +62,20 @@ void Adventure_Update(void)
         RunShowcase();
     TrainerLevel_Update();
     DailyQuest_Update();
+}
+
+// A pressed facing (x, y), map coordinates with MAP_OFFSET.
+bool32 Adventure_TryInteract(s16 x, s16 y)
+{
+    return Dungeon_TryInteract(x, y);
+}
+
+// A wild Pokémon is about to be made.
+enum Species Adventure_ModifyWildSpecies(enum Species species)
+{
+    if (gAdventureShowcase.wildSpecies != SPECIES_NONE)
+        return gAdventureShowcase.wildSpecies;
+    return Dungeon_ModifyWildSpecies(species);
 }
 
 // Called when the player caught a wild Pokémon.

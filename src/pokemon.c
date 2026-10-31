@@ -490,6 +490,7 @@ const struct NatureInfo gNaturesInfo[NUM_NATURES] =
 #include "data/pokemon/form_change_table_pointers.h"
 #include "data/pokemon/wild_encounter_ow_behavior.h"
 #include "data/object_events/object_event_pic_tables_followers.h"
+#include "data/pokemon/adventure_forms.h"
 
 #include "data/pokemon/species_info.h"
 

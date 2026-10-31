@@ -189,6 +189,42 @@ floor as the game dug it out (`Driver.dumpMap` in the screenshot runner):
 
 ![Three floors as the game dug them out: B5F, B12F and B20F](images/adventure-dungeon-floors.png)
 
+## Regional forms
+
+![Regional forms in battle and their summaries: Starfall Wingull, Pelipper and Luvdisc, Amberwood Teddiursa and Ursaring](images/adventure-regional-forms.png)
+
+Starfall Isle and Amberwood Hollow have their own forms of five Pokémon,
+wild only there (`src/data/wild_encounters.json`):
+
+| Form | Types | Abilities | Where |
+|---|---|---|---|
+| Starfall Wingull | Psychic/Flying | Keen Eye, Synchronize, Magic Guard (hidden) | Starfall Isle, surfing (60%) |
+| Starfall Pelipper | Psychic/Flying | Keen Eye, Synchronize, Psychic Surge (hidden) | Starfall Isle, surfing (5%); Starfall Wingull at level 25 |
+| Starfall Luvdisc | Water/Fairy | Swift Swim, Pixilate, Hydration (hidden) | Starfall Isle, Good Rod |
+| Amberwood Teddiursa | Normal/Grass | Pickup, Harvest, Honey Gather (hidden) | Amberwood Hollow, grass (10%) |
+| Amberwood Ursaring | Grass/Ground | Guts, Harvest, Grassy Surge (hidden) | Amberwood Hollow, grass (5%); Amberwood Teddiursa at level 30 |
+
+Each has its own stats (about the same total as the usual form), level-up
+moves (Starfall: Confusion, Psybeam, Cosmic Power, Psychic, Future Sight;
+Luvdisc: Fairy Wind, Draining Kiss, Moonlight, Moonblast; Amberwood:
+Leafage, Razor Leaf, Seed Bomb, Horn Leech, Wood Hammer, and Bulldoze when
+Ursaring evolves), Pokédex category and text, and held items (Stardust,
+Star Piece, Tiny and Big Mushrooms). They keep the usual form's TMs and
+Egg moves, and their Eggs hatch into the same form. The species are
+`SPECIES_WINGULL_STARFALL` ... `SPECIES_URSARING_AMBERWOOD`, the first
+custom species (1573–1577); their data is in
+`src/data/pokemon/species_info/adventure_forms.h` and
+`src/data/pokemon/adventure_forms.h`.
+
+![Each form next to the usual one: front, shiny, back, party icon and following sprite](images/adventure-regional-forms-sprites.png)
+
+The sprites are the official Emerald-style ones of each species, repainted
+by `tools/adventure/gen_regional_forms.py`: new palettes (Starfall's
+night-blue, lavender and gold; Amberwood's autumn red and gold) with
+shinies to match, stars painted onto the Starfall forms, and a maple leaf
+on the Amberwood forms' heads; the party icons and following sprites are
+recoloured to match.
+
 ## Screenshots
 
 ```sh
@@ -198,10 +234,11 @@ python3 tools/adventure_shots/run.py tools/adventure_shots/crafting.lua out/craf
 python3 tools/adventure_shots/run.py tools/adventure_shots/ranch.lua out/ranch 20000
 python3 tools/adventure_shots/run.py tools/adventure_shots/dungeon.lua out/dungeon 9000
 python3 tools/adventure_shots/run.py tools/adventure_shots/dungeon_online.lua out/dungeon_online 6000 2
+python3 tools/adventure_shots/run.py tools/adventure_shots/regional_forms.lua out/regional_forms 30000
 ```
 
 `run.py` is `tools/world_shots/run.py` (headless libmgba, `Driver.scene`,
 two players with a server when the last argument is 2) plus
 `Driver.adventure{xp = ..., outfit = ..., items = {...}, ranch = {...},
-dungeonFloor = ...}`, which sets up a scene through
+dungeonFloor = ..., wild = "SPECIES"}`, which sets up a scene through
 `gAdventureShowcase` (`src/adventure.c`).
