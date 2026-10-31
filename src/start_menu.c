@@ -1,4 +1,5 @@
 #include "global.h"
+#include "trainer_look.h"
 #include "config/save.h"
 #include "battle_pike.h"
 #include "battle_pyramid.h"
@@ -671,7 +672,6 @@ static bool8 HandleStartMenuInput(void)
         if (gMenuCallback != StartMenuSaveCallback
             && gMenuCallback != StartMenuExitCallback
             && gMenuCallback != StartMenuDebugCallback
-            && gMenuCallback != StartMenuStyleCallback
             && gMenuCallback != StartMenuOnlineCallback
             && gMenuCallback != StartMenuSafariZoneRetireCallback
             && gMenuCallback != StartMenuBattlePyramidRetireCallback)
@@ -831,12 +831,18 @@ static bool8 StartMenuSafariZoneRetireCallback(void)
     return TRUE;
 }
 
+// The Look screen (src/trainer_look.c): body, colours and accessories.
 static bool8 StartMenuStyleCallback(void)
 {
-    RemoveExtraStartMenuWindows();
-    HideStartMenuDebug(); // Keeps the player frozen while the Style menu is open
-    ShowPlayerStyleMenu();
-    return TRUE;
+    if (!gPaletteFade.active)
+    {
+        PlayRainStoppingSoundEffect();
+        RemoveExtraStartMenuWindows();
+        CleanupOverworldWindowsAndTilemaps();
+        TrainerLook_OpenScreen(CB2_ReturnToFieldWithOpenMenu, FALSE);
+        return TRUE;
+    }
+    return FALSE;
 }
 
 static bool8 StartMenuOnlineCallback(void)

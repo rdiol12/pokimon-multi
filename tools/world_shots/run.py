@@ -25,7 +25,7 @@ here = os.path.dirname(os.path.abspath(__file__))
 root = os.path.abspath(os.path.join(here, "..", ".."))
 e2e = os.path.join(root, "tools", "netplay_bridge", "e2e")
 
-SYMBOLS = ["gNetplayMailbox", "gMain", "gParties", "gPartiesCount", "CB2_Overworld", "BattleMainCB2",
+SYMBOLS = ["gNetplayMailbox", "gMain", "gParties", "gPartiesCount", "CB2_Overworld", "BattleMainCB2", "sLockFieldControls",
            "gLink", "gLinkStatus", "gReceivedRemoteLinkPlayers", "gLinkCallback", "gReadyToCloseLink",
            "gBattleMons", "gSaveBlock1Ptr", "gSaveBlock2Ptr", "gWorldShowcase", "gObjectEvents",
            "gSpecialVar_Result", "gWorldMailbox", "gWorldTimingMeter"]
@@ -155,6 +155,14 @@ def main():
         prev = m.group(2)
         if m.group(2) in SYMBOLS:
             syms[m.group(2)] = int(m.group(1), 16)
+    # Static symbols (driver_lib.lua reads sLockFieldControls) aren't in the map file.
+    missing = [s for s in SYMBOLS if s not in syms]
+    if missing:
+        nm = subprocess.check_output(["arm-none-eabi-nm", os.path.join(root, "pokeemerald.elf")], text=True)
+        for line in nm.splitlines():
+            parts = line.split()
+            if len(parts) == 3 and parts[2] in missing:
+                syms[parts[2]] = int(parts[0], 16)
     with open(os.path.join(out, "symbols.lua"), "w") as f:
         f.write("return {\n" + "".join(f"    {k} = 0x{v:08X},\n" for k, v in syms.items()) + "}\n")
 

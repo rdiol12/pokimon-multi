@@ -1,4 +1,5 @@
 #include "global.h"
+#include "trainer_look.h"
 #include "scanline_effect.h"
 #include "palette.h"
 #include "task.h"
@@ -1906,11 +1907,16 @@ static void CreateTrainerCardTrainerPic(void)
     }
     else
     {
-        CreateTrainerCardTrainerPicSprite(FacilityClassToPicIndex(sTrainerPicFacilityClass[sData->cardType][sData->trainerCard.gender]),
+        u16 pic = FacilityClassToPicIndex(sTrainerPicFacilityClass[sData->cardType][sData->trainerCard.gender]);
+
+        CreateTrainerCardTrainerPicSprite(pic,
                     TRUE,
                     sTrainerPicOffset[sData->isHoenn][sData->trainerCard.gender][0],
                     sTrainerPicOffset[sData->isHoenn][sData->trainerCard.gender][1],
                     8,
                     WIN_TRAINER_PIC);
+        // Our own card shows our trainer look (src/trainer_look.c).
+        if (!sData->isLink)
+            TrainerLook_RecolorTrainerPic(BG_PLTT_ID(8), pic, TrainerLook_Get());
     }
 }
