@@ -117,6 +117,10 @@ const struct GuideEntry gGuideEntries[] =
          MAPSEC_MAUVILLE_CITY, MAP_SUNSCAR_DESERT, 4, FLAG_SUNSCAR_RIDDLE_3),
     AREA("SKYROPE CANYON", "A hiker in FALLARBOR TOWN leads you to the\nrope bridges.",
          MAPSEC_FALLARBOR_TOWN, MAP_SKYROPE_CANYON, 5, FLAG_SKYROPE_BRIDGE_FIXED),
+#ifdef FLAG_VERDANT_TEMPLE_REACHED
+    AREA("VERDANT RIVER", "A canoe guide on ROUTE 119 paddles you up\nthe jungle river. Bring SURF.",
+         MAPSEC_ROUTE_119, MAP_VERDANT_RIVER, 5, FLAG_VERDANT_TEMPLE_REACHED),
+#endif
 #ifdef FLAG_PRISM_SEAL_OPEN
     AREA("PRISM CAVERNS", "A geologist inside METEOR FALLS, by the\nROUTE 114 side, knows the crystal caves.",
          MAPSEC_METEOR_FALLS, MAP_PRISM_CAVERNS, 5, FLAG_PRISM_SEAL_OPEN),
