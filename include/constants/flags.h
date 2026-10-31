@@ -67,13 +67,13 @@
 #define FLAG_UNUSED_0x02D    0x2D // Unused Flag
 #define FLAG_UNUSED_0x02E    0x2E // Unused Flag
 #define FLAG_UNUSED_0x02F    0x2F // Unused Flag
-#define FLAG_UNUSED_0x030    0x30 // Unused Flag
-#define FLAG_UNUSED_0x031    0x31 // Unused Flag
-#define FLAG_UNUSED_0x032    0x32 // Unused Flag
-#define FLAG_UNUSED_0x033    0x33 // Unused Flag
-#define FLAG_UNUSED_0x034    0x34 // Unused Flag
-#define FLAG_UNUSED_0x035    0x35 // Unused Flag
-#define FLAG_UNUSED_0x036    0x36 // Unused Flag
+#define FLAG_HIDE_OLDALE_NIGHT_STORYTELLER   0x30 // World: day/night
+#define FLAG_HIDE_FALLARBOR_NIGHT_STARGAZER  0x31 // World: day/night
+#define FLAG_HIDE_LILYCOVE_NIGHT_MARKET      0x32 // World: day/night
+#define FLAG_RECEIVED_NIGHT_SPELL_TAG        0x33 // World: day/night
+#define FLAG_RECEIVED_STARGAZER_MOON_STONE   0x34 // World: day/night
+#define FLAG_WORLD_RIDING                    0x35 // World: mounts
+#define FLAG_WORLD_HOUSE_OPEN                0x36 // World: visitors see your furniture
 #define FLAG_UNUSED_0x037    0x37 // Unused Flag
 #define FLAG_UNUSED_0x038    0x38 // Unused Flag
 #define FLAG_UNUSED_0x039    0x39 // Unused Flag

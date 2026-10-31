@@ -1,4 +1,5 @@
 #include "global.h"
+#include "world.h"
 #include "main.h"
 #include "event_object_movement.h"
 #include "fieldmap.h"
@@ -318,6 +319,17 @@ static bool32 Fishing_WaitForA(struct Task *task)
     };
 
     AlignFishingAnimationFrames();
+    if (WORLD_FISHING_REEL_METER)
+    {
+        // World: stop the reel meter's needle in the green to hook it.
+        s32 hits;
+        if (task->tFrameCounter++ == 0)
+            TimingMeter_Start(1, MAX_ZONE_TILES_FOR_ROD(task->tFishingRod), 2 + task->tFishingRod);
+        hits = TimingMeter_GetResult();
+        if (hits >= 0 && task->tFrameCounter > 1)
+            task->tStep = hits ? FISHING_CHECK_MORE_DOTS : FISHING_GOT_AWAY;
+        return FALSE;
+    }
     task->tFrameCounter++;
     if (task->tFrameCounter >= reelTimeouts[task->tFishingRod])
         task->tStep = FISHING_GOT_AWAY;

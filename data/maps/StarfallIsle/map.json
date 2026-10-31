@@ -194,6 +194,13 @@
       "elevation": 3,
       "dest_map": "MAP_STARFALL_ISLE_EXPLORERS_HOUSE",
       "dest_warp_id": "0"
+    },
+    {
+      "x": 39,
+      "y": 32,
+      "elevation": 3,
+      "dest_map": "MAP_STARFALL_ISLE_PLAYER_HOUSE",
+      "dest_warp_id": "0"
     }
   ],
   "coord_events": [],
