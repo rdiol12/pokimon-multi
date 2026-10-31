@@ -2,6 +2,7 @@
 #include "adventure.h"
 #include "battle.h"
 #include "script.h"
+#include "daily_quest.h"
 #include "trainer_level.h"
 
 // Entry points for the fourth-batch game features (docs/adventure.md),
@@ -36,17 +37,22 @@ void Adventure_Update(void)
     if (gAdventureShowcase.pending && !ArePlayerFieldControlsLocked())
         RunShowcase();
     TrainerLevel_Update();
+    DailyQuest_Update();
 }
 
 // Called when the player caught a wild Pokémon.
-void Adventure_OnCatch(void)
+void Adventure_OnCatch(u16 species)
 {
     TrainerLevel_OnCatch();
+    DailyQuest_OnCatch(species);
 }
 
 // Back from a trainer battle.
 void Adventure_OnTrainerBattleEnd(void)
 {
     if (gBattleOutcome == B_OUTCOME_WON)
+    {
         TrainerLevel_OnTrainerWin();
+        DailyQuest_OnTrainerWin();
+    }
 }

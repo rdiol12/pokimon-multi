@@ -58,10 +58,38 @@ other players see it online with no change to the netplay protocol.
 `tools/adventure/gen_outfits.py` writes the palettes and graphics
 (`src/data/object_events/outfit_graphics_info*.h`).
 
+## Daily quests
+
+![Daily quests: the Petalburg request, the quest list, the notice, the reward, and the Slateport and Fortree requests](images/adventure-daily-quests.png)
+
+Three people next to the Pokémon Centers ask for a favour each day
+(`src/daily_quest.c`, `data/scripts/adventure/daily_quests.inc`):
+
+| Where | Requests |
+| --- | --- |
+| Petalburg (23,17) | catch 3, beat 3 Trainers, walk 1,000 steps, show a Lv. 20+ Normal type, catch a Bug type, battle a player online, hatch an Egg |
+| Slateport (17,20) | fish up 3, catch 2 Water types, show a Lv. 30+ Water type, trade online, catch an Electric type, beat 5 Trainers, walk 2,000 steps |
+| Fortree (3,7) | pick 10 Berries, catch 2 Flying types, catch 2 Grass types, show a Lv. 35+ Flying type, catch 5, show a Lv. 30+ Grass type, battle a player online twice |
+
+Each person offers one request a day, picked from their list by the
+clock's day. Every request pays an item that fits it (a Dive Ball for
+fishing, a Miracle Seed for Grass types...), ¥800–3,000, and 40 trainer
+XP when online. A request stays open until it's done; the next one comes
+the day after it was turned in.
+
+Progress counts from when the request was taken: catches and Trainers
+are counted as they happen, the rest from the game's own counters (steps,
+hatched Eggs, battles and trades with other players) and the world
+records (Berries picked, fish landed). "Show" requests are checked when
+talking to the person. A notice shows when a request is ready to turn in,
+and R > ADVENTURE > DAILY QUESTS lists the open ones with their progress
+and reward. Saved in `dailyQuests` (one slot per person).
+
 ## Screenshots
 
 ```sh
 python3 tools/adventure_shots/run.py tools/adventure_shots/trainer_level.lua out/trainer_level 30000 2
+python3 tools/adventure_shots/run.py tools/adventure_shots/daily_quests.lua out/daily_quests 40000
 ```
 
 `run.py` is `tools/world_shots/run.py` (headless libmgba, `Driver.scene`,

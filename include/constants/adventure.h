@@ -8,6 +8,7 @@
 // R > ADVENTURE submenu (data/scripts/adventure/menu.inc).
 #define ADVENTURE_MENU_TRAINER_LEVEL 0
 #define ADVENTURE_MENU_OUTFITS       1
+#define ADVENTURE_MENU_DAILY_QUESTS  2
 #define ADVENTURE_MENU_CLOSE         15
 
 // Trainer levels (src/trainer_level.c).
@@ -30,5 +31,17 @@
 #define PERK_PRIZE_MONEY2 3 // +25% prize money instead
 #define PERK_SHINY        4 // one more shiny roll for wild Pokémon
 #define PERK_COUNT        5
+
+// Daily quest givers (VAR_0x8004 for DailyQuest_Talk).
+#define DAILY_QUEST_PETALBURG 0
+#define DAILY_QUEST_SLATEPORT 1
+#define DAILY_QUEST_FORTREE   2
+#define DAILY_QUEST_GIVERS    3
+
+// DailyQuest_Talk results.
+#define DAILY_QUEST_TALK_OFFER     0
+#define DAILY_QUEST_TALK_PROGRESS  1
+#define DAILY_QUEST_TALK_COMPLETE  2
+#define DAILY_QUEST_TALK_COME_BACK 3
 
 #endif // GUARD_CONSTANTS_ADVENTURE_H

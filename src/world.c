@@ -151,7 +151,7 @@ void World_OnWildBattleEnd(void)
     {
         Achievements_OnCatch(gBattleResults.caughtMonSpecies, gBattleResults.shinyWildMon);
         WorldOnline_OnCatch();
-        Adventure_OnCatch();
+        Adventure_OnCatch(gBattleResults.caughtMonSpecies);
     }
     ShinyChain_OnWildBattleEnd();
     Records_OnWildBattleEnd();
