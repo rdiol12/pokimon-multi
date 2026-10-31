@@ -182,9 +182,9 @@ struct PartyMenuInternal
     MainCallback exitCallback;
     u32 chooseHalf:1;
     u32 lastSelectedSlot:3;  // Used to return to same slot when going left/right bewtween columns
-    u32 spriteIdConfirmPokeball:7;
-    u32 spriteIdCancelPokeball:7;
-    u32 messageId:14;
+    u32 spriteIdConfirmPokeball:8;
+    u32 spriteIdCancelPokeball:8;
+    u32 messageId:12;
     u8 windowId[3];
     u8 actions[8];
     u8 numActions;

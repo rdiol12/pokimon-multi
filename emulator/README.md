@@ -84,7 +84,7 @@ In the game:
 
 - `InitPkxObj` (src/sprite.c) turns extended sprites on at boot when the version is at
   least 2. Without it everything behaves like before (64 sprites, 16 palettes).
-- `MAX_SPRITES` is 128. Sprites go into the normal OAM first (up to `gOamLimit`, 64) and
+- `MAX_SPRITES` is 240 (sprite ids are u8 and `SPRITE_NONE` is 0xFF). Sprites go into the normal OAM first (up to `gOamLimit`, 64) and
   overflow into entries 128..511.
 - Sprite palette slots 16..63 are handed out only once the normal 16 are full.
   `OBJ_PLTT_ID(slot)` works for every slot: the palette buffers are 0x300 colors longer
