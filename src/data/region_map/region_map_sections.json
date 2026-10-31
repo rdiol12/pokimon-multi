@@ -1658,6 +1658,10 @@
     {
       "id": "MAPSEC_FROSTVEIN_CAVE",
       "name": "FROSTVEIN CAVE"
+    },
+    {
+      "id": "MAPSEC_SUNSCAR_DESERT",
+      "name": "SUNSCAR DESERT"
     }
   ]
 }

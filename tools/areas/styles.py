@@ -83,3 +83,22 @@ def ice():
         st.exclude = {0x28F, 0x37F, 0x38B, 0x386, 0x363, 0x377}  # cracks, ladders, the exit, strays
         _cache['ice'] = st
     return _cache['ice']
+
+
+def desert():
+    """Route 111's desert: sand, rock mesas and boulders."""
+    if 'desert' not in _cache:
+        st = Style('gTileset_General', 'gTileset_Mauville', ['LAYOUT_ROUTE111'], wall_classes={'T': TREES}, colors=True)
+        _cache['desert'] = st
+    return _cache['desert']
+
+
+def ruins():
+    """The Desert Ruins and the Sealed Chamber: sandstone halls."""
+    if 'ruins' not in _cache:
+        st = Style('gTileset_General', 'gTileset_Cave', ['LAYOUT_DESERT_RUINS', 'LAYOUT_SEALED_CHAMBER_OUTER_ROOM'])
+        st.min_count = 1
+        st.exclude = {0x229, 0x22A, 0x22B, 0x22C, 0x232, 0x233, 0x234, 0x235, 0x260, 0x261, 0x207,
+                      0x208, 0x209, 0x20A, 0x218, 0x21A, 0x180, 0x189, 0x190, 0x181, 0x156, 0x147, 0x192}
+        _cache['ruins'] = st
+    return _cache['ruins']

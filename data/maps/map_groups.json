@@ -144,7 +144,10 @@
     "CinderCaverns_Heart",
     "SkyropeCanyon",
     "FrostveinCave_1F",
-    "FrostveinCave_B1F"
+    "FrostveinCave_B1F",
+    "SunscarDesert",
+    "SunscarRuins_Hall",
+    "SunscarRuins_Vault"
   ],
   "gMapGroup_IndoorLittleroot": [
     "LittlerootTown_BrendansHouse_1F",
