@@ -1670,8 +1670,8 @@ static void DoCB1_Overworld(u16 newKeys, u16 heldKeys)
     FieldGetPlayerInput(&inputStruct, newKeys, heldKeys);
     CancelSignPostMessageBox(&inputStruct);
     // Netplay and the plaza both run every frame; either may start a script.
-    if ((Netplay_OverworldUpdate() | NetplayExt_OverworldUpdate()) || World_OverworldUpdate() || Life_OverworldUpdate())
-    if ((Netplay_OverworldUpdate() | NetplayExt_OverworldUpdate()) || World_OverworldUpdate() || Community_OverworldUpdate())
+    if ((Netplay_OverworldUpdate() | NetplayExt_OverworldUpdate()) || World_OverworldUpdate() || Life_OverworldUpdate()
+     || Community_OverworldUpdate())
     {
         LockPlayerFieldControls();
         HideMapNamePopUpWindow();
