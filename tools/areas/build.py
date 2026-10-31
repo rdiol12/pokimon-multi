@@ -341,6 +341,25 @@ def add_object(map_name, obj):
         f.write('\n')
 
 
+def add_warp(map_name, warp):
+    """Adds (once, matched by position) a warp event to an existing map and
+    returns its index: an arrival point for a new map's exit."""
+    p = f'{ROOT}/data/maps/{map_name}/map.json'
+    d = json.load(open(p))
+    warps = d['warp_events']
+    for i, w in enumerate(warps):
+        if (w['x'], w['y']) == (warp['x'], warp['y']):
+            warps[i] = warp
+            break
+    else:
+        warps.append(warp)
+        i = len(warps) - 1
+    with open(p, 'w') as f:
+        json.dump(d, f, indent=2, ensure_ascii=False)
+        f.write('\n')
+    return i
+
+
 def register_script_file(name, text):
     """data/scripts/areas/<name>.inc, included from event_scripts.s."""
     os.makedirs(f'{ROOT}/data/scripts/areas', exist_ok=True)

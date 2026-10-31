@@ -1694,6 +1694,10 @@
     {
       "id": "MAPSEC_COBBLEROCK",
       "name": "COBBLEROCK"
+    },
+    {
+      "id": "MAPSEC_VOLTSPIRE_PLANT",
+      "name": "VOLTSPIRE PLANT"
     }
   ]
 }
