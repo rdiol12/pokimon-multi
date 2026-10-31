@@ -9385,6 +9385,16 @@
       "secondary_tileset": "gTileset_Fortree",
       "border_filepath": "data/layouts/ElderwoodForest/border.bin",
       "blockdata_filepath": "data/layouts/ElderwoodForest/map.bin"
+    },
+    {
+      "id": "LAYOUT_EMBER_SPRINGS",
+      "name": "EmberSprings_Layout",
+      "width": 46,
+      "height": 40,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Lavaridge",
+      "border_filepath": "data/layouts/EmberSprings/border.bin",
+      "blockdata_filepath": "data/layouts/EmberSprings/map.bin"
     }
   ]
 }

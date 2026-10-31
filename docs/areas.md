@@ -21,13 +21,31 @@ City takes you there once you have Winona's badge.
   Pokémon Lv33–38 (Rowlet, Bounsweet, Tropius, Heracross, Pinsir,
   Yanmega…), fishing and surfing in the pond.
 
+## Ember Springs
+
+A hot-spring town in a volcanic valley above Lavaridge. A hiker in
+Lavaridge Town leads you up once you have Flannery's badge.
+
+- Pokémon Center, an inn (free rest) and a hermit who gives a Flame Orb.
+- The spring attendant offers a soak: it heals the party and raises every
+  Pokémon's friendship (`Area_SoakInHotSpring`, src/area_specials.c).
+- Quest: three Slugma are plugging the steam vents on the west, north and
+  east hills (wild battles). The Spring Keeper gives a Soothe Bell and TM
+  Overheat, and his son stops guarding the Old Spring, where a lady gives
+  a Charcadet Egg and offers an extra-strong soak.
+- Trainers: Kindler Blaze, Beauty Cindy, Hiker Rocco, Expert Saki.
+- Items on the vent hills, hidden items, Lv29–34 wild Fire types (Numel,
+  Litleo, Salandit, Rolycoly, Sizzlipede, Charcadet, Turtonator, Heatmor).
+
 ## How the maps are made
 
 - `tools/areas/tiles.py` renders any tileset or layout to PNG.
 - `tools/areas/synth.py` turns a terrain sketch (`T` trees, `.` ground,
   `"` tall grass, `~` water…) into metatiles by learning from Hoenn's own
   maps of the same tileset, so forest edges and canopies join up the way the
-  original maps do.
+  original maps do. Styles (`tools/areas/styles.py`) pick the real maps to
+  learn from; with `colors=True` open ground is split into `g` grass, `s`
+  sand and `r` bare rock by colour.
 - `tools/areas/build.py` has the `Area` builder (sketching, stamps copied
   from real maps, 3x3 edge sets like ponds, events) and registers maps,
   layouts, scripts, region map sections, encounters and trainers.

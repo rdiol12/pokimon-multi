@@ -17,10 +17,15 @@ GRASS = {0x02, 0x03}
 
 
 class Style:
-    def __init__(self, primary, secondary, corpus, classes=None, wall_classes=None):
+    def __init__(self, primary, secondary, corpus, classes=None, wall_classes=None, colors=False):
         """corpus: layout ids to learn from (same tileset pair).
         classes: {char: set of metatile ids} for extra floor classes.
-        wall_classes: {char: set of metatile ids} for extra wall classes."""
+        wall_classes: {char: set of metatile ids} for extra wall classes.
+        colors: split open ground by colour into 'g' grass, 's' sand and
+        'r' bare rock ('.' is everything else)."""
+        self.colors = colors
+        self.min_count = 15
+        self.exclude = set()
         self.primary, self.secondary = primary, secondary
         self.pair = Pair(primary, secondary)
         self.classes = classes or {}
@@ -48,9 +53,21 @@ class Style:
         if beh in WATER:
             return '~'
         if coll:
+            if self.colors:
+                r, g, b = self.pair.metatile(m).reshape(-1, 3).mean(0)
+                if g > r + 20:
+                    return 'T'
             return '#'
         if beh in GRASS:
             return '"'
+        if self.colors:
+            r, g, b = self.pair.metatile(m).reshape(-1, 3).mean(0)
+            if g > r + 20:
+                return 'g'
+            if r > 200 and g > 175 and b < 150:
+                return 's'
+            if r > g + 30:
+                return 'r'
         return '.'
 
     def keys(self, pat, left, up, upright):
@@ -83,9 +100,15 @@ class Style:
         for i in (1, 2, 3, 4, 6, 7):
             cands = self.models[i].get(keys[i][1:])
             if cands:
+                cands = {m: n for m, n in cands.items() if m not in self.exclude}
+            if cands:
                 break
         if not cands:
             return None
+        common = {m: n for m, n in cands.items()
+                  if sum(self.elev[m].values()) >= self.min_count and m not in self.exclude}
+        if common:
+            cands = common
         def score(m):
             sc = math.log(1 + cands[m])
             for table, prev, wgt in ((self.H, left, 3), (self.V, up, 3), (self.D, upleft, 1)):

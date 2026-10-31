@@ -4,7 +4,7 @@
 // Flags, vars and trainers of each new area. AREA_TRAINER_* index the area
 // trainer table; TRAINER_* are the ids scripts battle.
 
-#define AREA_TRAINERS_COUNT 3
+#define AREA_TRAINERS_COUNT 12
 
 /* begin ElderwoodForest */
 #define FLAG_ELDERWOOD_BOUNSWEET_HOME         AREA_FLAG(0)
@@ -29,5 +29,30 @@
 #define AREA_TRAINER_ELDERWOOD_FERN           2
 #define TRAINER_ELDERWOOD_FERN                AREA_TRAINER(AREA_TRAINER_ELDERWOOD_FERN)
 /* end ElderwoodForest */
+
+/* begin EmberSprings */
+#define FLAG_EMBER_SLUGMA_WEST                AREA_FLAG(24)
+#define FLAG_EMBER_SLUGMA_NORTH               AREA_FLAG(25)
+#define FLAG_EMBER_SLUGMA_EAST                AREA_FLAG(26)
+#define FLAG_EMBER_QUEST_DONE                 AREA_FLAG(27)
+#define FLAG_EMBER_EGG_GIVEN                  AREA_FLAG(28)
+#define FLAG_ITEM_EMBER_FIRE_STONE            AREA_FLAG(29)
+#define FLAG_ITEM_EMBER_HEAT_ROCK             AREA_FLAG(30)
+#define FLAG_ITEM_EMBER_MAX_REVIVE            AREA_FLAG(31)
+#define FLAG_ITEM_EMBER_LAVA_COOKIE           AREA_FLAG(32)
+#define FLAG_HIDDEN_ITEM_EMBER_CHARCOAL       AREA_FLAG(33)
+#define FLAG_HIDDEN_ITEM_EMBER_PP_UP          AREA_FLAG(34)
+#define FLAG_HIDDEN_ITEM_EMBER_STAR_PIECE     AREA_FLAG(35)
+#define FLAG_EMBER_HERMIT_GIFT                AREA_FLAG(36)
+#define FLAG_HIDE_EMBER_SPRING_GUARD          AREA_FLAG(37)
+#define AREA_TRAINER_EMBER_BLAZE              8
+#define TRAINER_EMBER_BLAZE                   AREA_TRAINER(AREA_TRAINER_EMBER_BLAZE)
+#define AREA_TRAINER_EMBER_CINDY              9
+#define TRAINER_EMBER_CINDY                   AREA_TRAINER(AREA_TRAINER_EMBER_CINDY)
+#define AREA_TRAINER_EMBER_ROCCO              10
+#define TRAINER_EMBER_ROCCO                   AREA_TRAINER(AREA_TRAINER_EMBER_ROCCO)
+#define AREA_TRAINER_EMBER_SAKI               11
+#define TRAINER_EMBER_SAKI                    AREA_TRAINER(AREA_TRAINER_EMBER_SAKI)
+/* end EmberSprings */
 
 #endif // GUARD_CONSTANTS_AREA_IDS_H

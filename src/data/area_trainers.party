@@ -53,3 +53,74 @@ Level: 37
 Breloom
 Level: 37
 /* end ElderwoodForest */
+
+/* begin EmberSprings */
+=== AREA_TRAINER_EMBER_BLAZE ===
+Name: BLAZE
+Class: Kindler
+Pic: Kindler
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Basic Trainer
+
+Magmar
+Level: 31
+
+Torkoal
+Level: 32
+
+=== AREA_TRAINER_EMBER_CINDY ===
+Name: CINDY
+Class: Beauty
+Pic: Beauty
+Gender: Female
+Music: Female
+Double Battle: No
+AI: Basic Trainer
+
+Ponyta
+Level: 31
+
+Vulpix
+Level: 31
+
+Fletchinder
+Level: 32
+
+=== AREA_TRAINER_EMBER_ROCCO ===
+Name: ROCCO
+Class: Hiker
+Pic: Hiker
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Basic Trainer
+
+Rolycoly
+Level: 30
+
+Carkol
+Level: 32
+
+Camerupt
+Level: 33
+
+=== AREA_TRAINER_EMBER_SAKI ===
+Name: SAKI
+Class: Expert
+Pic: Expert F
+Gender: Female
+Music: Intense
+Double Battle: No
+AI: Basic Trainer
+
+Salandit
+Level: 32
+
+Litleo
+Level: 32
+
+Turtonator
+Level: 34
+/* end EmberSprings */
