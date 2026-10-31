@@ -32,4 +32,11 @@ const struct OnlineRequest gOnlineRequests[ONL_REQ_COUNT] =
     [ONL_REQ_PAGEANT_VOTE]  = {"PAGEANT VOTE", 2},
     [ONL_REQ_PAGEANT_BOARD] = {"PAGEANT BOARD"},
     [ONL_REQ_PAGEANT_CLAIM] = {"PAGEANT CLAIM"},
+    [ONL_REQ_DUO_VIEW]  = {"DUO VIEW"},
+    [ONL_REQ_DUO_WHO]   = {"DUO WHO"},
+    [ONL_REQ_DUO_ASK]   = {"DUO ASK", .flags = ONL_ARG_CHOSEN},
+    [ONL_REQ_DUO_YES]   = {"DUO YES"},
+    [ONL_REQ_DUO_NO]    = {"DUO NO"},
+    [ONL_REQ_DUO_CLAIM] = {"DUO CLAIM"},
+    [ONL_REQ_DUO_LEAVE] = {"DUO LEAVE"},
 };

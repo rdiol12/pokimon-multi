@@ -154,7 +154,7 @@ static s32 AsciiToNum(const char *s)
 }
 
 // Server text in the game's charset: "~" is a new line, "^" a new page,
-// "#" is "é", "$" the money sign.
+// "#" is "é", "$" the money sign, ">" itself.
 u8 *Online_CopyText(u8 *dest, const char *src, u32 maxChars)
 {
     char one[2] = {0, 0};
@@ -169,6 +169,8 @@ u8 *Online_CopyText(u8 *dest, const char *src, u32 maxChars)
             *dest++ = CHAR_e_ACUTE;
         else if (*src == '$')
             *dest++ = CHAR_CURRENCY;
+        else if (*src == '>')
+            *dest++ = CHAR_GREATER_THAN;
         else
         {
             one[0] = *src;

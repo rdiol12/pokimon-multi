@@ -129,6 +129,20 @@ Every week there's a pageant with a theme after the contest categories
 - **STANDINGS** shows the week's board. When a week is over, its top three
   win 3, 2 or 1 Rare Candies and ¥15,000, ¥8,000 or ¥4,000, collected here.
 
+## Duo quests
+
+![TEST1 asks TEST2 to team up, both see the quest, one catch each finishes it, both collect the reward and the next quest starts](images/online-duo.png)
+
+Two players team up and work on quests together (`server/online_duo.py`,
+`data/scripts/online/duo.inc`). In HUB → DUO QUESTS a player without a
+partner picks someone online; the other gets a notice and answers in the
+same place. The pair's catches count together: catch 10 Pokémon, land 5
+with a rod, catch 6 different species, catch in 4 different places,
+catch 20, then round again with bigger targets. Both players hear when
+they're halfway and one away. When a quest is done both collect its reward
+(Ultra, Dive, Timer or Nest Balls, or Rare Candies, and money) and the next
+one starts. The board shows each partner's share; SPLIT UP ends the pair.
+
 ## How it talks to the server
 
 These features use the Online Plaza's request channel (`NpxRpc_*` in
@@ -141,7 +155,7 @@ handles every answer the same way:
 
 | Rows of the answer | What the game does |
 | --- | --- |
-| row 0: `message\|code\|var1\|var2\|var3` | message to `gStringVar4` (`~` new line, `^` new page, `#` é), code to `VAR_0x800B`, vars to `gStringVar1`–`3`; `$` is the money sign |
+| row 0: `message\|code\|var1\|var2\|var3` | message to `gStringVar4` (`~` new line, `^` new page, `#` é), code to `VAR_0x800B`, vars to `gStringVar1`–`3`; `$` is the money sign, `>` itself |
 | `+ITEM\|id\|n`, `-ITEM\|id\|n`, `+MONEY\|n`, `-MONEY\|n`, `+MON\|species\|level\|shiny` | applied right away |
 | `N\|text` | a notice, shown once the player is free |
 | `S\|key\|...` | the status of a live feature (`Online_Status`) |

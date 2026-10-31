@@ -41,7 +41,14 @@
 #define ONL_REQ_PAGEANT_VOTE  24 // VAR_0x8005: index, VAR_0x8006: entry
 #define ONL_REQ_PAGEANT_BOARD 25
 #define ONL_REQ_PAGEANT_CLAIM 26
-#define ONL_REQ_COUNT       27
+#define ONL_REQ_DUO_VIEW    27
+#define ONL_REQ_DUO_WHO     28
+#define ONL_REQ_DUO_ASK     29 // the player picked from DUO_WHO
+#define ONL_REQ_DUO_YES     30
+#define ONL_REQ_DUO_NO      31
+#define ONL_REQ_DUO_CLAIM   32
+#define ONL_REQ_DUO_LEAVE   33
+#define ONL_REQ_COUNT       34
 
 // The hub's rows (VAR_RESULT of its menu).
 #define ONLINE_HUB_GOALS    0
@@ -50,6 +57,7 @@
 #define ONLINE_HUB_COFISH   3
 #define ONLINE_HUB_SHOPS    4
 #define ONLINE_HUB_PAGEANT  5
+#define ONLINE_HUB_DUO      6
 #define ONLINE_HUB_CLOSE    127
 
 // VAR_0x800B of the co-op fishing requests.
@@ -57,5 +65,12 @@
 #define COFISH_CAUGHT   1
 #define COFISH_GOT_AWAY 2
 #define COFISH_DECLINED 3
+
+// VAR_0x800B of DUO_VIEW.
+#define DUO_NONE    0
+#define DUO_INVITED 1 // someone asked the player; gStringVar1 is who
+#define DUO_ASKED   2 // the player asked someone
+#define DUO_ACTIVE  3
+#define DUO_REWARD  4 // active, and a reward is waiting
 
 #endif // GUARD_CONSTANTS_ONLINE_H

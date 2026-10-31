@@ -63,6 +63,24 @@ function Driver.waitNotice(name, timeout)
     end)
 end
 
+-- Screenshots and closes every notice that comes within `frames`
+-- (name-1, name-2...). Returns how many came.
+function Driver.notices(name, frames)
+    local n = 0
+    for _ = 1, frames // 10 do
+        if D.fieldLocked() then
+            n = n + 1
+            D.wait(110)
+            D.shot(name .. "-" .. n)
+            D.waitFor("the notice to close", 600, function() return not D.fieldLocked() end, function(i)
+                if i % 30 == 0 then D.press(K.A, 0) end
+            end)
+        end
+        D.wait(10)
+    end
+    return n
+end
+
 -- Starts a battle with a roaming Pokémon (gOnlineShowcase in src/online.c).
 function Driver.roamer(species, level)
     Driver.wildBattle(species, level, false, 1)

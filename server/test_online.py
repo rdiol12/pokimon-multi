@@ -8,6 +8,7 @@ import ext  # noqa: E402
 import netplay_server as ns  # noqa: E402
 import online  # noqa: E402
 import online_coopfish  # noqa: E402
+import online_duo  # noqa: E402
 import online_fishing  # noqa: E402
 import online_goals  # noqa: E402
 import online_pageant  # noqa: E402
@@ -29,7 +30,7 @@ class OnlineTest(unittest.IsolatedAsyncioTestCase):
         self.server = ns.Server(self.league)
         self.online = online.Online(self.server, ext.install(self.server),
                                     [online_goals, online_sightings, online_web, online_fishing, online_coopfish, online_shops,
-                                     online_pageant], clock=lambda: self.now)
+                                     online_pageant, online_duo], clock=lambda: self.now)
         self.srv = await asyncio.start_server(self.server.handle, "127.0.0.1", 0)
         self.port = self.srv.sockets[0].getsockname()[1]
         self.clients = []
@@ -294,6 +295,53 @@ class PageantTest(OnlineTest):
         self.assertEqual((await self.ask(b, "PAGEANT CLAIM"))[0], 1)
         status, out = await self.ask(a, "PAGEANT CLAIM")
         self.assertEqual(rows(out)[1], ["+ITEM", str(ITEMS["RARE_CANDY"]), "2"])
+
+
+class DuoTest(OnlineTest):
+    async def test_team_up_and_finish_quests(self):
+        a = await self.connect("Ann", 1)
+        b = await self.connect("Ben", 2)
+        await self.ask(c := await self.connect("Cy", 3), "OSTAT")
+        self.assertEqual(rows((await self.ask(a, "DUO VIEW"))[1])[0][1], "0")
+        status, out = await self.ask(a, "DUO WHO")
+        ben = next(r for r in rows(out)[1:] if r[0] == "Ben")
+        await self.ask(a, f"DUO ASK {ben[1]}")
+        self.assertEqual(rows((await self.ask(a, "DUO VIEW"))[1])[0][1], "2")
+        status, out = await self.ask(b, "DUO VIEW")
+        self.assertEqual(rows(out)[0][1:3], ["1", "Ann"])
+        self.assertIn("N", [r[0] for r in rows(out)])  # the invitation notice
+        await self.ask(b, "DUO YES")
+        # Ben is busy now: Cy can't ask him.
+        self.assertNotIn("Ben", [r[0] for r in rows((await self.ask(c, "DUO WHO"))[1])[1:]])
+        kind, n, *_ = online_duo.quest(0)
+        self.assertEqual(kind, "catch")
+        for i in range(n):
+            await self.ask(a if i % 2 else b, f"OEV CATCH {i + 1} 0 0 9 0")
+        status, out = await self.ask(a, "DUO VIEW")
+        self.assertEqual(rows(out)[0][1], "4")  # a reward waiting
+        self.assertEqual(rows(out)[0][3], "1")
+        self.assertEqual(rows(out)[3][:2], ["%", "0"])  # the next quest
+        status, out = await self.ask(b, "DUO CLAIM")
+        self.assertEqual(rows(out)[1], ["+ITEM", str(ITEMS["ULTRA_BALL"]), "5"])
+        self.assertEqual((await self.ask(b, "DUO CLAIM"))[0], 1)
+        # Quest 2 is fishing: catches don't count, fished ones do.
+        await self.ask(a, "OEV CATCH 5 0 0 9 1")
+        await self.ask(a, f"OEV FISH 5 400")
+        status, out = await self.ask(b, "DUO VIEW")
+        self.assertEqual(rows(out)[3][4], f"1/{online_duo.quest(1)[1]}")
+        await self.ask(b, "DUO LEAVE")
+        self.assertEqual(rows((await self.ask(a, "DUO VIEW"))[1])[0][1], "0")
+
+    async def test_species_quest_counts_each_once(self):
+        db = self.league.db
+        a = await self.connect("Ann", 1)
+        b = await self.connect("Ben", 2)
+        db.execute("INSERT INTO online_duos (a_name, a_tid, b_name, b_tid, round) VALUES ('Ann', 1, 'Ben', 2, 2)")
+        for sp in (7, 7, 8):
+            await self.ask(a, f"OEV CATCH {sp} 0 0 9 0")
+        await self.ask(b, "OEV CATCH 7 0 0 9 0")
+        status, out = await self.ask(a, "DUO VIEW")
+        self.assertEqual(rows(out)[3][4], "2/6")
 
 
 if __name__ == "__main__":
