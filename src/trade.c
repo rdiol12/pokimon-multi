@@ -40,6 +40,7 @@
 #include "text_window.h"
 #include "trainer_card.h"
 #include "trade.h"
+#include "rovers.h"
 #include "union_room.h"
 #include "util.h"
 #include "window.h"
@@ -3336,6 +3337,15 @@ static void BufferTradeSceneStrings(void)
         GetMonData(&gParties[B_TRAINER_OPPONENT_A][gSelectedTradeMonPositions[TRADE_PARTNER] % PARTY_SIZE], MON_DATA_NICKNAME, name);
         StringCopy_Nickname(gStringVar3, name);
         GetMonData(&gParties[B_TRAINER_PLAYER][gSelectedTradeMonPositions[TRADE_PLAYER]], MON_DATA_NICKNAME, name);
+        StringCopy_Nickname(gStringVar2, name);
+    }
+    else if (Rovers_IsTrading())
+    {
+        // A roaming trainer's Pokémon (src/rovers.c), not from the table.
+        StringCopy(gStringVar1, Rovers_TradeName());
+        GetMonData(&gParties[B_TRAINER_OPPONENT_A][0], MON_DATA_NICKNAME, name);
+        StringCopy_Nickname(gStringVar3, name);
+        GetMonData(&gParties[B_TRAINER_PLAYER][gSpecialVar_0x8004], MON_DATA_NICKNAME, name);
         StringCopy_Nickname(gStringVar2, name);
     }
     else

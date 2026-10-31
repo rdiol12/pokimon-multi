@@ -8,6 +8,7 @@ Rovers_EventScript_Talk::
 	goto_if_eq VAR_RESULT, 2, Rovers_EventScript_Busy
 	faceplayer
 	msgbox Rovers_Text_Hello, MSGBOX_DEFAULT
+	callnative Rovers_BufferTalkStats
 	msgbox gStringVar4, MSGBOX_DEFAULT
 	msgbox Rovers_Text_AskBattle, MSGBOX_YESNO
 	goto_if_eq VAR_RESULT, NO, Rovers_EventScript_Bye
@@ -19,6 +20,42 @@ Rovers_EventScript_Talk::
 	end
 
 Rovers_EventScript_Bye:
+	callnative Rovers_TradeOffer
+	goto_if_eq VAR_RESULT, FALSE, Rovers_EventScript_ByeNow
+	msgbox Rovers_Text_TradeAsk, MSGBOX_YESNO
+	goto_if_eq VAR_RESULT, NO, Rovers_EventScript_ByeNow
+	msgbox Rovers_Text_TradePick, MSGBOX_DEFAULT
+	special ChoosePartyMon
+	waitstate
+	goto_if_ge VAR_0x8004, PARTY_SIZE, Rovers_EventScript_ByeNow
+	callnative Rovers_TradeCheck
+	goto_if_eq VAR_RESULT, 1, Rovers_EventScript_TradeEgg
+	goto_if_eq VAR_RESULT, 2, Rovers_EventScript_TradeWrongType
+	goto_if_eq VAR_RESULT, 3, Rovers_EventScript_TradeLastMon
+	callnative Rovers_PrepareTrade
+	special DoInGameTradeScene
+	waitstate
+	callnative Rovers_AfterTrade
+	msgbox Rovers_Text_TradeThanks, MSGBOX_DEFAULT
+	release
+	end
+
+Rovers_EventScript_TradeEgg:
+	msgbox Rovers_Text_TradeEgg, MSGBOX_DEFAULT
+	release
+	end
+
+Rovers_EventScript_TradeWrongType:
+	msgbox Rovers_Text_TradeWrongType, MSGBOX_DEFAULT
+	release
+	end
+
+Rovers_EventScript_TradeLastMon:
+	msgbox Rovers_Text_TradeLastMon, MSGBOX_DEFAULT
+	release
+	end
+
+Rovers_EventScript_ByeNow:
 	msgbox Rovers_Text_Bye, MSGBOX_DEFAULT
 	release
 	end
@@ -114,6 +151,30 @@ Rovers_Text_After:
 Rovers_Text_Bye:
 	.string "Maybe next time.\n"
 	.string "I've got Pokémon to catch!$"
+
+Rovers_Text_TradeAsk:
+	.string "Want to trade, then?\n"
+	.string "I'd give my {STR_VAR_2} for a\p"
+	.string "{STR_VAR_3}-type Pokémon.$"
+
+Rovers_Text_TradePick:
+	.string "Which one will you trade?$"
+
+Rovers_Text_TradeEgg:
+	.string "An Egg? I'd rather have\n"
+	.string "a Pokémon I can battle with.$"
+
+Rovers_Text_TradeWrongType:
+	.string "{STR_VAR_2}? I'm only after\n"
+	.string "{STR_VAR_3}-type Pokémon.$"
+
+Rovers_Text_TradeLastMon:
+	.string "Then you'd have nobody left\n"
+	.string "to battle with!$"
+
+Rovers_Text_TradeThanks:
+	.string "Thanks! Take good care of it.\n"
+	.string "I'll train mine hard!$"
 
 Rovers_Text_Busy:
 	.string "Shh! There's a wild Pokémon!$"

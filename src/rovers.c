@@ -82,6 +82,8 @@ enum
     EV_CAUGHT,
     EV_EVOLVED,
     EV_LEVEL,
+    EV_HEALED,
+    EV_TRADED,
 };
 
 enum
@@ -127,7 +129,13 @@ struct RoverWire
     u16 wins;
     u16 losses;
     struct RoverMon mons[PARTY_SIZE];
-}; // 104 bytes
+    // From server/rovers_life.py bag_wire(): battle medicine, balls, the
+    // ranch and money.
+    u8 potions, superPotions, fullHeals, revives;
+    u8 balls;
+    u8 ranch;
+    u16 money;
+}; // 112 bytes
 
 struct RoverActor
 {
@@ -184,6 +192,9 @@ struct RoverState
     // A board read in progress.
     bool8 boardWaiting;
     bool8 boardOk;
+    // A trade with the player.
+    bool8 trading;
+    u8 tradeSlot;
     // Watching.
     bool8 watching;
     u8 duelResult;     // a watched duel's result, 1 + left won, for the map
@@ -640,6 +651,10 @@ static void MakeOfflineRover(struct RoverActor *a, u32 id, u32 level, u32 teamSi
     a->w.wins = 3 + (id * 7) % 40;
     a->w.losses = 1 + (id * 5) % 25;
     a->w.count = 1;
+    a->w.potions = 1 + a->w.badges / 2;
+    a->w.superPotions = a->w.badges / 3;
+    a->w.balls = 3 + id % 6;
+    a->w.money = 1000 + 500 * a->w.badges + (id * 37) % 900;
     NewMon(&a->w.mons[0], c->starter, level, c->favType);
     for (i = 1; i < teamSize; i++)
     {
@@ -1982,8 +1997,6 @@ const u8 *Rovers_GetTalkScript(struct ObjectEvent *obj)
 void Rovers_BufferTalk(void)
 {
     struct RoverActor *a = &sRovers.actors[sRovers.talk];
-    u8 *s = gStringVar4;
-    u32 i;
 
     StringCopy(gStringVar1, Cast(a)->name);
     StringCopy(gStringVar2, gTrainerClasses[Look(a)->trainerClass].name);
@@ -2005,11 +2018,32 @@ void Rovers_BufferTalk(void)
         return;
     }
     ConvertIntToDecimalStringN(gStringVar3, a->w.badges, STR_CONV_MODE_LEFT_ALIGN, 1);
+    gSpecialVar_Result = 0;
+}
+
+// After the hello (which the message box expands into gStringVar4): the
+// rover's record, money, bag and team.
+void Rovers_BufferTalkStats(void)
+{
+    struct RoverActor *a = &sRovers.actors[sRovers.talk];
+    u8 *s = gStringVar4;
+    u32 i;
+
     s = StringCopy(s, COMPOUND_STRING("Wins: "));
     s = ConvertIntToDecimalStringN(s, a->w.wins, STR_CONV_MODE_LEFT_ALIGN, 5);
     s = StringCopy(s, COMPOUND_STRING("  Losses: "));
     s = ConvertIntToDecimalStringN(s, a->w.losses, STR_CONV_MODE_LEFT_ALIGN, 5);
-    s = StringCopy(s, COMPOUND_STRING("\nMy team: "));
+    s = StringCopy(s, COMPOUND_STRING("\nMoney: "));
+    s = ConvertIntToDecimalStringN(s, a->w.money, STR_CONV_MODE_LEFT_ALIGN, 5);
+    s = StringCopy(s, COMPOUND_STRING("  Balls: "));
+    s = ConvertIntToDecimalStringN(s, a->w.balls, STR_CONV_MODE_LEFT_ALIGN, 3);
+    if (a->w.ranch != 0)
+    {
+        s = StringCopy(s, COMPOUND_STRING("\pI keep "));
+        s = ConvertIntToDecimalStringN(s, a->w.ranch, STR_CONV_MODE_LEFT_ALIGN, 1);
+        s = StringCopy(s, COMPOUND_STRING(" more Pokémon\nat my ranch."));
+    }
+    s = StringCopy(s, COMPOUND_STRING("\pMy team: "));
     for (i = 0; i < a->w.count; i++)
     {
         if (i == 2 || i == 4)
@@ -2054,6 +2088,19 @@ static void BuildTrainer(const struct RoverActor *a)
     sRoverTrainer.encounterMusic = look->music;
     sRoverTrainer.gender = look->female ? TRAINER_GENDER_FEMALE : TRAINER_GENDER_MALE;
     sRoverTrainer.trainerPic = look->pic;
+    // Its crafted and bought medicine, best first.
+    {
+        static const u16 sMedicine[] = {ITEM_REVIVE, ITEM_SUPER_POTION, ITEM_FULL_HEAL, ITEM_POTION};
+        const u8 counts[] = {a->w.revives, a->w.superPotions, a->w.fullHeals, a->w.potions};
+        u32 k, n = 0;
+        memset(sRoverTrainer.items, 0, sizeof(sRoverTrainer.items));
+        for (k = 0; k < ARRAY_COUNT(sMedicine) && n < MAX_TRAINER_ITEMS; k++)
+        {
+            u32 c;
+            for (c = 0; c < counts[k] && n < MAX_TRAINER_ITEMS; c++)
+                sRoverTrainer.items[n++] = sMedicine[k];
+        }
+    }
     StringCopyN(sRoverTrainer.trainerName, Cast(a)->name, TRAINER_NAME_LENGTH);
     sRoverTrainer.trainerName[TRAINER_NAME_LENGTH] = EOS;
 }
@@ -2083,6 +2130,123 @@ static void ReadInjuries(struct Pokemon *party, struct RoverActor *a)
         m->lostParts = GetMonData(&party[i], MON_DATA_LOST_PARTS);
         m->injuryFlags = GetMonData(&party[i], MON_DATA_INJURY_FLAGS) & INJURY_FLAG_SCAR;
     }
+}
+
+// Trading -----------------------------------------------------------------------------------
+
+// What the rover talked to would give away: its weakest Pokémon that isn't
+// its lead. VAR_RESULT FALSE if it has nothing to spare. STR_VAR_1 is the
+// rover, STR_VAR_2 the Pokémon, STR_VAR_3 the type it wants.
+void Rovers_TradeOffer(void)
+{
+    struct RoverActor *a = &sRovers.actors[sRovers.talk];
+    u32 i, lead = LeadSlot(&a->w), slot = PARTY_SIZE;
+
+    for (i = 0; i < a->w.count; i++)
+    {
+        if (i != lead && (slot == PARTY_SIZE || a->w.mons[i].level < a->w.mons[slot].level))
+            slot = i;
+    }
+    StringCopy(gStringVar1, Cast(a)->name);
+    StringCopy(gStringVar3, gTypesInfo[Cast(a)->favType].name);
+    if (slot == PARTY_SIZE)
+    {
+        gSpecialVar_Result = FALSE;
+        return;
+    }
+    sRovers.tradeSlot = slot;
+    StringCopy(gStringVar2, GetSpeciesName(a->w.mons[slot].species));
+    gSpecialVar_Result = TRUE;
+}
+
+// After ChoosePartyMon (VAR_0x8004): 0 it's a deal, 1 an Egg, 2 not the
+// type the rover wants, 3 the player's last Pokémon that can battle.
+void Rovers_TradeCheck(void)
+{
+    struct RoverActor *a = &sRovers.actors[sRovers.talk];
+    struct Pokemon *mon = &gParties[B_TRAINER_PLAYER][gSpecialVar_0x8004];
+    u16 species = GetMonData(mon, MON_DATA_SPECIES);
+    u32 type = Cast(a)->favType, i, able = 0;
+
+    for (i = 0; i < PARTY_SIZE; i++)
+    {
+        struct Pokemon *m = &gParties[B_TRAINER_PLAYER][i];
+        if (i != gSpecialVar_0x8004 && GetMonData(m, MON_DATA_SPECIES) != SPECIES_NONE
+         && !GetMonData(m, MON_DATA_IS_EGG) && GetMonData(m, MON_DATA_HP) != 0)
+            able++;
+    }
+    StringCopy(gStringVar2, GetSpeciesName(species));
+    if (GetMonData(mon, MON_DATA_IS_EGG))
+        gSpecialVar_Result = 1;
+    else if (GetSpeciesType(species, 0) != type && GetSpeciesType(species, 1) != type)
+        gSpecialVar_Result = 2;
+    else if (able == 0)
+        gSpecialVar_Result = 3;
+    else
+        gSpecialVar_Result = 0;
+}
+
+// Puts the rover's Pokémon where the in-game trade scene looks for it.
+void Rovers_PrepareTrade(void)
+{
+    struct RoverActor *a = &sRovers.actors[sRovers.talk];
+    const struct RoverMon *m = &a->w.mons[sRovers.tradeSlot];
+    struct Pokemon *mon = &gParties[B_TRAINER_OPPONENT_A][0];
+    metloc_u8_t met = METLOC_IN_GAME_TRADE;
+    u8 gender = Look(a)->female ? FEMALE : MALE;
+    u32 i;
+
+    CreateMon(mon, m->species, m->level, Random32(), OTID_STRUCT_PRESET(ROVER_OT_ID_BASE + a->w.id));
+    for (i = 0; i < MAX_MON_MOVES; i++)
+    {
+        u16 move = m->moves[i] < MOVES_COUNT ? m->moves[i] : MOVE_NONE;
+        u8 pp = move != MOVE_NONE ? GetMovePP(move) : 0;
+        SetMonData(mon, MON_DATA_MOVE1 + i, &move);
+        SetMonData(mon, MON_DATA_PP1 + i, &pp);
+    }
+    SetMonData(mon, MON_DATA_OT_NAME, Cast(a)->name);
+    SetMonData(mon, MON_DATA_OT_GENDER, &gender);
+    SetMonData(mon, MON_DATA_MET_LOCATION, &met);
+    if (m->injuryPart || m->lostParts || m->injuryFlags)
+        Injury_Set(mon, m->injuryPart, m->injuryDamage * INJURY_DAMAGE_UNIT, m->lostParts, m->injuryFlags & INJURY_FLAG_SCAR);
+    CalculateMonStats(mon);
+    gSpecialVar_0x8005 = 0;
+    sRovers.trading = TRUE;
+}
+
+// The trade scene uses these instead of its own table's names.
+bool32 Rovers_IsTrading(void)
+{
+    return sRovers.trading;
+}
+
+const u8 *Rovers_TradeName(void)
+{
+    return Cast(&sRovers.actors[sRovers.talk])->name;
+}
+
+// Back on the map: the player's Pokémon joins the rover's team.
+void Rovers_AfterTrade(void)
+{
+    struct RoverActor *a = &sRovers.actors[sRovers.talk];
+    struct RoverMon *m = &a->w.mons[sRovers.tradeSlot];
+    struct Pokemon *mon = &gParties[B_TRAINER_OPPONENT_A][0];
+    u32 i;
+
+    sRovers.trading = FALSE;
+    if (GetMonData(mon, MON_DATA_SPECIES) == SPECIES_NONE)
+        return;
+    memset(m, 0, sizeof(*m));
+    m->species = GetMonData(mon, MON_DATA_SPECIES);
+    m->level = GetMonData(mon, MON_DATA_LEVEL);
+    m->movesLevel = m->level;
+    for (i = 0; i < MAX_MON_MOVES; i++)
+        m->moves[i] = GetMonData(mon, MON_DATA_MOVE1 + i);
+    m->injuryPart = GetMonData(mon, MON_DATA_INJURY_PART);
+    m->injuryDamage = GetMonData(mon, MON_DATA_INJURY_DAMAGE);
+    m->lostParts = GetMonData(mon, MON_DATA_LOST_PARTS);
+    m->injuryFlags = GetMonData(mon, MON_DATA_INJURY_FLAGS) & INJURY_FLAG_SCAR;
+    Sync(sRovers.talk, EV_TRADED, m->species);
 }
 
 // The player battles a rover (from the talk script, waitstate).

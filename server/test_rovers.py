@@ -88,6 +88,16 @@ class RoverTest(unittest.IsolatedAsyncioTestCase):
         self.assertGreater(sum(r.wins for r in rs), 0)
         for r in rs:
             rovers.check_team(r.team)
+        # Their own lives: bags, crafting, the ranch, quests and jobs.
+        self.assertGreater(sum(len(r.life["bag"]) for r in rs), 150)
+        self.assertGreater(sum(len(r.life["ranch"]) for r in rs), 0)
+        news = " ".join(row[0] for row in self.league.db.execute(
+            "SELECT line FROM rover_news")) + " " + " ".join(str(r.life["quest"]) for r in rs)
+        crafted = [r for r in rs if any(i in r.life["bag"] for i, _, _ in rovers.life.RECIPES)]
+        self.assertTrue(crafted)
+        self.assertTrue(any(r.life["money"] != rovers.life.START_MONEY for r in rs))
+        self.assertTrue(any(r.life["quest"] or r.life["job"] for r in rs) or "quest" in news)
+        self.assertEqual(len(rs[0].wire()), rovers.ROVER_SIZE)
 
     async def test_majors(self):
         a = await self.connect("Ash", 1)

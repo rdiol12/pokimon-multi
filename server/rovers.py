@@ -34,6 +34,7 @@ import struct
 import time
 
 from ext import Refused, text
+import rovers_life as life
 
 try:  # the Haven Reserve (server/community_reserve.py), if this server has it
     import community_reserve
@@ -56,7 +57,7 @@ def title(mk):
     return WORLD[mk].get("title", WORLD[mk]["name"])
 
 MON_SIZE = 16
-ROVER_SIZE = 8 + 6 * MON_SIZE
+ROVER_SIZE = 8 + 6 * MON_SIZE + 8  # + rovers_life.bag_wire()
 MAX_TEAM = 6
 MAX_HERE = 4          # the game shows at most this many on one map
 STEP = 600            # seconds of rover life per simulation step
@@ -94,6 +95,9 @@ def setup(db):
         )
         """
     )
+    cols = {row[1] for row in db.execute("PRAGMA table_info(rovers)")}
+    if "life" not in cols:  # money, bag, ranch, quest and job (rovers_life.py)
+        db.execute("ALTER TABLE rovers ADD COLUMN life TEXT NOT NULL DEFAULT ''")
     db.execute(
         """
         CREATE TABLE IF NOT EXISTS rover_news (
@@ -150,12 +154,13 @@ def check_team(team):
 class Rover:
     """One row of the rovers table, loaded."""
 
-    FIELDS = ("id", "map", "team", "badges", "wins", "losses", "hurt", "egg", "egg_steps", "tick")
+    FIELDS = ("id", "map", "team", "badges", "wins", "losses", "hurt", "egg", "egg_steps", "tick", "life")
 
     def __init__(self, row):
         for k, v in zip(self.FIELDS, row):
             setattr(self, k, v)
         self.team = unpack_team(self.team)
+        self.life = life.load(self.life)
 
     @property
     def cast(self):
@@ -184,15 +189,15 @@ class Rover:
     def save(self, db):
         db.execute(
             "UPDATE rovers SET map = ?, team = ?, badges = ?, wins = ?, losses = ?, hurt = ?, egg = ?,"
-            " egg_steps = ?, tick = ? WHERE id = ?",
+            " egg_steps = ?, tick = ?, life = ? WHERE id = ?",
             (self.map, pack_team(self.team), self.badges, self.wins, self.losses, self.hurt, self.egg,
-             self.egg_steps, self.tick, self.id))
+             self.egg_steps, self.tick, life.dump(self.life), self.id))
 
     def wire(self):
         head = struct.pack("<BBBBHH", self.id, len(self.team), self.badges, min(self.hurt, 255),
                            min(self.wins, 0xFFFF), min(self.losses, 0xFFFF))
         team = pack_team(self.team) + bytes(MON_SIZE * (MAX_TEAM - len(self.team)))
-        return head + team
+        return head + team + life.bag_wire(self.life)
 
 
 def news(db, line):
@@ -285,14 +290,25 @@ def fight(db, a, b, winner_a):
     l.hurt += 1
     if rng.random() < 0.3:
         add_injury(rng.choice(l.team), 10, 30)
-    db.execute("INSERT OR IGNORE INTO players (name, tid) VALUES (?, ?)", w.key)
-    db.execute("INSERT OR IGNORE INTO players (name, tid) VALUES (?, ?)", l.key)
+    # The loser pays the winner, like a trainer battle.
+    prize = min(l.life["money"], 40 * w.lead_level())
+    l.life["money"] -= prize
+    w.life["money"] += prize
+    q = life.quest_progress(w.life, "battle")
+    if q:
+        news(db, f"{w.name} finished a daily quest from {q['town']}!")
     return w, l
 
 
 class Sim:
     def __init__(self, db, league, server=None):
         self.db, self.league, self.server = db, league, server
+
+    def keep(self, r, m):
+        """A Pokémon the rover can't carry goes to its ranch, or to the
+        Haven Reserve if the ranch is full."""
+        if not life.send_to_ranch(r.life, m):
+            self.release(r, m)
 
     def release(self, r, m):
         """A Pokémon a rover lets go goes to the Haven Reserve."""
@@ -336,8 +352,10 @@ class Sim:
                     r.team.append(baby)
                 elif r.cast["style"] == "BREEDER":
                     weakest = min(range(len(r.team)), key=lambda i: r.team[i]["level"])
-                    self.release(r, r.team[weakest])
+                    self.keep(r, r.team[weakest])
                     r.team[weakest] = baby
+                else:
+                    self.keep(r, baby)
                 news(self.db, f"{r.name}'s egg hatched into {species_name(r.egg)}!")
                 r.egg = 0
         # Gyms.
@@ -348,6 +366,7 @@ class Sim:
             if r.lead_level() >= ace - 2 and r.hurt < 2:
                 if rng.random() < 0.6:
                     r.badges += 1
+                    r.life["money"] += 100 * ace
                     news(self.db, f"{r.name} won badge {r.badges} in {title(r.map)}!")
                 else:
                     r.hurt += 1
@@ -360,6 +379,9 @@ class Sim:
             won = rng.random() < sa / max(sa + sb, 1)
             fight(self.db, r, o, won)
             o.save(self.db)
+            return
+        # Money, the bag, quests and jobs.
+        if self.town_errands(r, here):
             return
         # Day Care.
         if here["daycare"] and not r.egg and len(r.team) >= 2:
@@ -388,23 +410,38 @@ class Sim:
         style = r.cast["style"]
         cap = r.cap()
         lead = max(r.team, key=lambda m: m["level"])
+        gained = 0
         for m in r.team:
             chance = (0.9 if style == "TRAINER" else 0.6) if m is lead else 0.3
             if m["level"] < cap and rng.random() < chance:
                 m["level"] += 1
+                gained += 1
+        if gained:
+            self.quest_done(r, life.quest_progress(r.life, "train", gained))
+        # Catching goes much better with a ball in the bag.
         catch = 0.3 if style == "COLLECTOR" else 0.15
+        if life.ball_count(r.life) == 0:
+            catch /= 3
         if rng.random() < catch:
             sid, lo, hi = rng.choice(here["wild"])
             level = rng.randint(lo, hi)
+            ball = life.use_ball(r.life, rng)
+            with_ball = f" with a {life.item_name(ball)}" if ball else ""
             if len(r.team) < MAX_TEAM:
                 r.team.append(new_mon(sid, level))
-                news(self.db, f"{r.name} caught a {species_name(sid)} on {title(r.map)}.")
-            elif style == "COLLECTOR":
+                news(self.db, f"{r.name} caught a {species_name(sid)}{with_ball} on {title(r.map)}.")
+            else:
                 weakest = min(range(len(r.team)), key=lambda i: r.team[i]["level"])
-                if r.team[weakest]["level"] < level + 5:
-                    self.release(r, r.team[weakest])
+                if style == "COLLECTOR" and r.team[weakest]["level"] < level + 5:
+                    self.keep(r, r.team[weakest])
                     r.team[weakest] = new_mon(sid, level)
-                    news(self.db, f"{r.name} caught a {species_name(sid)} and sent one home.")
+                else:
+                    self.keep(r, new_mon(sid, level))
+                news(self.db, f"{r.name} caught a {species_name(sid)}{with_ball} and sent one to the ranch.")
+            self.quest_done(r, life.quest_progress(r.life, "catch"))
+        # Gathering and crafting.
+        if rng.random() < 0.5:
+            life.gather(r.life, here["kind"], rng)
         # Quest board jobs.
         major = self.db.execute("SELECT id, species, level FROM majors WHERE map = ? AND cleared_by IS NULL",
                                 (r.map,)).fetchone()
@@ -412,6 +449,50 @@ class Sim:
             self.db.execute("UPDATE majors SET cleared_by = ?, cleared_tid = ?, cleared_at = ? WHERE id = ?",
                             (r.name, TID_BASE + r.id, now(), major[0]))
             news(self.db, f"{r.name} beat the rampaging {species_name(major[1])} on {title(r.map)}!")
+
+    def quest_done(self, r, q):
+        if q:
+            news(self.db, f"{r.name} finished a daily quest from {q['town']}!")
+
+    def town_errands(self, r, here):
+        """Things done every step wherever the rover is: the ranch's finds,
+        crafting, a job coming back; and in towns, shopping, taking a
+        daily quest or sending a Pokémon on a job. True if that took the
+        rover's whole step."""
+        life.ranch_finds(r.life, r.cast["type"], rng)
+        made = life.craft(r.life)
+        if made and rng.random() < 0.08:
+            news(self.db, f"{r.name} crafted a {life.item_name(made[0])}.")
+        job = r.life["job"]
+        if job:
+            job["steps"] -= 1
+            if job["steps"] <= 0:
+                mon = job["mon"]
+                mon["level"] = min(100, mon["level"] + rng.randint(2, 4))
+                pay = rng.randint(5, 15) * 100
+                r.life["money"] += pay
+                r.life["job"] = None
+                if len(r.team) < MAX_TEAM:
+                    r.team.append(mon)
+                else:
+                    self.keep(r, mon)
+                news(self.db, f"{r.name}'s {species_name(mon['species'])} came back from a job with {pay} money.")
+        if here["center"]:
+            life.shop(r.life)
+        town = life.QUEST_TOWNS.get(here["name"])
+        if town and not r.life["quest"] and rng.random() < 0.5:
+            q = life.take_quest(r.life, town, rng)
+            news(self.db, f"{r.name} took a daily quest in {town}: {life.quest_text(q)}.")
+            return True
+        if (here["name"] == life.JOB_TOWN and not r.life["job"] and len(r.team) >= 3
+                and rng.random() < 0.3):
+            lead = max(range(len(r.team)), key=lambda i: r.team[i]["level"])
+            pick = min((i for i in range(len(r.team)) if i != lead), key=lambda i: r.team[i]["level"])
+            mon = r.team.pop(pick)
+            r.life["job"] = {"mon": mon, "steps": rng.randint(4, 8)}
+            news(self.db, f"{r.name} sent {species_name(mon['species'])} out on a job in Mauville.")
+            return True
+        return False
 
     def run(self):
         """Brings every rover up to now."""
@@ -493,7 +574,8 @@ def cmd_here(ctx, args, data):
 def cmd_sync(ctx, args, data):
     """ROVER SYNC <id> <event> <arg> + one Rover: the team after what the
     player saw happen. Events: 0 nothing, 1 caught <species>, 2 evolved
-    into <species>, 3 grew to level <arg>, 4 healed."""
+    into <species>, 3 grew to level <arg>, 4 healed, 5 traded with the
+    player for <species>."""
     rid, event, arg = int(args[1]), int(args[2]), int(args[3])
     if len(data) != ROVER_SIZE:
         raise ValueError("bad rover")
@@ -508,6 +590,8 @@ def cmd_sync(ctx, args, data):
         news(ctx.db, f"{r.name} caught a {species_name(arg)} on {where}.")
     elif event == 2:
         news(ctx.db, f"{r.name}'s Pokémon evolved into {species_name(arg)}!")
+    elif event == 5:
+        news(ctx.db, f"{r.name} traded with {ctx.key[0]} for a {species_name(arg)}.")
     r.save(ctx.db)
     return b""
 
