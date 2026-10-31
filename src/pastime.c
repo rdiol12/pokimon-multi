@@ -26,6 +26,7 @@ EWRAM_DATA u8 gPastimeText[PASTIME_TEXT_SIZE] = {0};
 static const struct PastimeSpotList sSpotLists[] =
 {
     {gLostFoundSpots, LOST_FOUND_COUNT * 2},
+    {gMuseumSpots, MUSEUM_SPOT_COUNT},
 };
 
 #define MAX_SHOWN (LOCALID_PASTIME_LAST - LOCALID_PASTIME_FIRST + 1)
@@ -83,7 +84,8 @@ static bool32 UpdateSpot(const struct PastimeSpot *spot, u8 localId, void *data)
     if (shown && !wanted)
         RemoveObjectEventByLocalIdAndMap(localId, gSaveBlock1Ptr->location.mapNum, gSaveBlock1Ptr->location.mapGroup);
     else if (!shown && wanted)
-        SpawnSpecialObjectEventParameterized(spot->graphicsId, spot->movementType, localId, x, y, MapGridGetElevationAt(x, y));
+        SpawnSpecialObjectEventParameterized(spot->getGraphicsId != NULL ? spot->getGraphicsId(spot->arg) : spot->graphicsId,
+                                             spot->movementType, localId, x, y, MapGridGetElevationAt(x, y));
     return FALSE;
 }
 

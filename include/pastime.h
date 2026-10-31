@@ -27,4 +27,15 @@ void LostFound_Return(void);
 void LostFound_PickUp(void);
 void LostFound_ShowList(void);
 
+// Museum donations (pastime_museum.c).
+bool32 Museum_IsStatueShown(u32 arg);
+u16 Museum_GetStatueGraphicsId(u32 arg);
+void Museum_FindFossil(void);
+void Museum_DonateFossil(void);
+void Museum_ShowRare(void);
+void Museum_DonatePhotos(void);
+void Museum_CheckReward(void);
+void Museum_DescribeStatue(void);
+void Museum_ShowList(void);
+
 #endif // GUARD_PASTIME_H

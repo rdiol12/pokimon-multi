@@ -13,6 +13,12 @@ struct PastimeSaveData
     u8 lostReturned; // and given back
     u8 lostHeard;    // the owner was met
     u8 filler;
+    // Museum donations.
+    u16 museumFossils;                  // a bit per fossil (sFossils)
+    u16 museumPhotos;                   // photos donated
+    u16 museumRare[MUSEUM_RARE_SLOTS];  // rare Pokémon shown, by species
+    u8 museumRewards;                   // milestone rewards given
+    u8 museumFiller[3];
 };
 
 #endif // GUARD_PASTIME_SAVE_H

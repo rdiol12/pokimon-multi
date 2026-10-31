@@ -46,3 +46,26 @@ for a reward. A thing found before meeting its owner says whose it is.
 
 **R > PASTIMES > LOST & FOUND** lists the owners met and the things found,
 with where each was lost. Screenshots: `tools/pastime_shots/lost_found.lua`.
+
+## Museum donations
+
+![Museum donations](images/pastime-museum.png)
+
+The Lilycove Museum opens a natural history wing. Its curator (by the
+stairs on 1F) takes three kinds of donations:
+
+- **Fossils**: any of the 15 fossil items (Root, Claw, Helix, Dome, Old
+  Amber, Skull, Armor, Cover, Plume, Jaw, Sail and the four Galar
+  fossilized parts). The fossil leaves the bag.
+- **Rare Pokémon**: show a legendary, mythical, Ultra Beast, Paradox,
+  shiny or pseudo-legendary (Dragonite, Tyranitar, Salamence, Metagross,
+  ...). It stays in the party; the museum records up to 12.
+- **Photos** taken with R > PHOTO; the photo wall grows at 5, 15 and 30.
+
+The first four fossils and first three rare Pokémon stand in the hall as
+life-size models (overworld Pokémon sprites), each with a plaque. Every
+fossil, rare Pokémon and photo wall section is an exhibit point; at 1, 3,
+5, 8, 12, 16 and 22 points the curator gives a Nugget, Rare Candy, PP Max,
+Big Nugget, Comet Shard, Ability Patch and finally a Master Ball.
+**R > PASTIMES > MUSEUM** lists the exhibits. Screenshots:
+`tools/pastime_shots/museum.lua`.

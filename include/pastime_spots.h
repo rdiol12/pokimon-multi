@@ -14,6 +14,7 @@ struct PastimeSpot
     u8 arg;
     const u8 *script;
     bool32 (*isShown)(u32 arg);
+    u16 (*getGraphicsId)(u32 arg); // NULL = graphicsId
 };
 
 struct PastimeSpotList
@@ -23,5 +24,6 @@ struct PastimeSpotList
 };
 
 extern const struct PastimeSpot gLostFoundSpots[]; // an owner and an item each
+extern const struct PastimeSpot gMuseumSpots[];
 
 #endif // GUARD_PASTIME_SPOTS_H
