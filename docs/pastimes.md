@@ -501,3 +501,20 @@ Fossils can go to the Lilycove Museum's curator. The archaeologist rewards
 3, 10, 20 and 35 finds (Rare Bone, Old Amber, Comet Shard, Ability Patch).
 **R > PASTIMES > DIG SITES** shows which sites are ready today and the
 finds and fossils so far. Screenshots: `tools/pastime_shots/dig.lua`.
+
+## Alpha taming
+
+![Alpha taming](images/pastime-alpha.png)
+
+Five alphas, Pokémon drawn half again as big as the rest of their kind,
+stand on routes around Hoenn: Loudred (Lv. 30, Route 116), Zangoose (36,
+Route 114), Skarmory (38, Route 113), Tropius (42, Route 119) and Absol
+(45, Route 120). Each can be met once a day. Talking to one, the player can
+try to calm it on the timing meter: three stops, all of them good, and the
+alpha joins the party (or the PC) with three perfect IVs. Miss one and it
+attacks: a wild battle against the same alpha, which can still be caught.
+Either way it's gone until the next day. **R > PASTIMES > ALPHAS** lists
+the alphas, where they roam, which are tamed and gone today, and the tamed
+and battled counts. The bigger sprite uses an affine matrix of its own; it
+only faces down, since a sideways flip would land on the matrix number.
+Screenshots: `tools/pastime_shots/alpha.lua`.

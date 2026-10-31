@@ -31,6 +31,7 @@
 #define PASTIME_MENU_NEW_GAME_PLUS 21
 #define PASTIME_MENU_FESTIVALS  22
 #define PASTIME_MENU_DIG        23
+#define PASTIME_MENU_ALPHAS     24
 #define PASTIME_MENU_CLOSE      31
 
 // NPCs and objects the activities place on maps from code (src/pastime.c)
@@ -261,5 +262,12 @@
 #define DIG_FINDS              3  // things buried at a site
 #define DIG_RESULT_DUG_TODAY   0  // VAR_RESULT of Dig_Start
 #define DIG_RESULT_DIG         1
+
+// Alpha taming (src/pastime_alpha.c).
+#define ALPHA_COUNT            5
+#define ALPHA_CALM_ROUNDS      3 // meter stops; all of them to tame it
+#define ALPHA_ZONE_TILES       2
+#define ALPHA_SPEED            3
+#define ALPHA_PERFECT_IVS      3
 
 #endif // GUARD_CONSTANTS_PASTIME_H

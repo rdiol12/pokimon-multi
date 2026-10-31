@@ -150,6 +150,12 @@ struct PastimeSaveData
     u16 digFossils;
     u8 digRewards;         // the archaeologist's rewards given
     u8 digFiller[3];
+    // Alpha taming (src/pastime_alpha.c)
+    u16 alphaDay;        // day + 1 of alphaDoneToday
+    u8 alphaDoneToday;   // a bit per alpha met today
+    u8 alphaTamedMask;   // a bit per alpha ever tamed
+    u16 alphaTamed;
+    u16 alphaBattled;
 };
 
 #endif // GUARD_PASTIME_SAVE_H

@@ -216,4 +216,11 @@ void Dig_GetNextReward(void);
 void Dig_TalkToArchaeologist(void);
 void Dig_ShowList(void);
 
+// Alpha taming (pastime_alpha.c).
+void Alpha_GetInfo(void);
+void Alpha_Calm(void);
+void Alpha_Tame(void);
+void Alpha_PrepareBattle(void);
+void Alpha_ShowList(void);
+
 #endif // GUARD_PASTIME_H
