@@ -28,7 +28,7 @@ e2e = os.path.join(root, "tools", "netplay_bridge", "e2e")
 SYMBOLS = ["gNetplayMailbox", "gMain", "gParties", "gPartiesCount", "CB2_Overworld", "BattleMainCB2",
            "gLink", "gLinkStatus", "gReceivedRemoteLinkPlayers", "gLinkCallback", "gReadyToCloseLink",
            "gBattleMons", "gSaveBlock1Ptr", "gSaveBlock2Ptr", "gWorldShowcase", "gObjectEvents",
-           "gSpecialVar_Result", "gWorldMailbox", "gWorldTimingMeter"]
+           "gSpecialVar_Result", "gWorldMailbox", "gWorldTimingMeter", "sLockFieldControls"]
 
 HELPERS = """
 function Driver.read8(addr) return E.read8(addr) end
@@ -155,6 +155,16 @@ def main():
         prev = m.group(2)
         if m.group(2) in SYMBOLS:
             syms[m.group(2)] = int(m.group(1), 16)
+    missing = set(SYMBOLS) - set(syms)
+    if missing:
+        # File-local (static) symbols, like sLockFieldControls, which
+        # Driver.boot waits on, aren't in the map; the ELF has them.
+        nm = subprocess.run(["arm-none-eabi-nm", os.path.join(root, "pokeemerald.elf")],
+                            capture_output=True, text=True).stdout
+        for line in nm.splitlines():
+            parts = line.split()
+            if len(parts) == 3 and parts[2] in missing:
+                syms[parts[2]] = int(parts[0], 16)
     with open(os.path.join(out, "symbols.lua"), "w") as f:
         f.write("return {\n" + "".join(f"    {k} = 0x{v:08X},\n" for k, v in syms.items()) + "}\n")
 

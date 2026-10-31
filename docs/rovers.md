@@ -73,6 +73,16 @@ rover wins prize money; gym badges pay too. The game is sent its battle
 medicine (used in battles against it), ball count, ranch size and money,
 which it mentions when you talk to it.
 
+At the Day Care a rover breeds like a player does (`docs/breed_fusion.md`):
+two of its Pokémon of different kinds make a **fusion** egg (the mother's
+shape, the father's colors, a name from both, Wingull + Pikachu =
+Wingchu), otherwise an ordinary egg. Breeders go there often. A fusion
+keeps its father's species in the rover's team data (`fusion`, 2 bytes per
+Pokémon on the wire), and the game sets `MON_DATA_FUSION_PARTNER` on it
+wherever it battles, trades or is sold, so its colors, types, stats and
+name come out as on a player's fusion. Teams saved before fusions still
+load.
+
 With the day/night code on the server (`server/world.py` `time_of_day`,
 optional), most rovers rest after dark (healing if they're at a Pokémon
 Center) and fewer are pulled onto the player's map; every fifth one is a

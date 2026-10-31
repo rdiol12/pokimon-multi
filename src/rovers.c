@@ -1,4 +1,5 @@
 #include "global.h"
+#include "breed_fusion.h"
 #include "battle.h"
 #include "battle_setup.h"
 #include "data.h"
@@ -121,7 +122,8 @@ struct RoverMon
     u8 injuryDamage; // 2% units
     u8 lostParts;
     u8 injuryFlags;
-}; // 16 bytes
+    u16 fusion;      // a fusion's father species (docs/breed_fusion.md), or 0
+}; // 18 bytes
 
 struct RoverWire
 {
@@ -141,7 +143,7 @@ struct RoverWire
     // What it thinks of this player (server/rovers.py bond_wire()).
     u8 bond;       // ROVER_BOND_*
     u8 friendship;
-}; // 114 bytes
+}; // 126 bytes
 
 #define ROVER_BOND_RIVAL  (1 << 0) // the player beat it; it wants a rematch
 #define ROVER_BOND_FRIEND (1 << 1)
@@ -1266,7 +1268,18 @@ static void RunShowcase(void)
                          (i != 0 && gRoverShowcase.levelB) ? gRoverShowcase.levelB : (gRoverShowcase.level ? gRoverShowcase.level : 20),
                          gRoverShowcase.teamSize ? gRoverShowcase.teamSize : 3);
     if (count != 0)
-        sRovers.actors[0].w.bond = gRoverShowcase.bond;
+    {
+        struct RoverActor *a = &sRovers.actors[0];
+        a->w.bond = gRoverShowcase.bond;
+        if (gRoverShowcase.leadSpecies != SPECIES_NONE && gRoverShowcase.leadSpecies < NUM_SPECIES)
+        {
+            a->w.mons[0].species = gRoverShowcase.leadSpecies;
+            a->w.mons[0].fusion = gRoverShowcase.leadFusion;
+            a->w.mons[0].movesLevel = 0;
+            memset(a->w.mons[0].moves, 0, sizeof(a->w.mons[0].moves));
+            NormalizeTeam(a);
+        }
+    }
     sRovers.spawned = TRUE;
     sRovers.nearPlayer = TRUE;
     if (gRoverShowcase.talk != 0)
@@ -2214,6 +2227,17 @@ void Rovers_BufferTalk(void)
     gSpecialVar_Result = 0;
 }
 
+// A team member's name: a fusion's is made from both.
+static const u8 *MonName(const struct RoverMon *m)
+{
+    if (m->fusion != SPECIES_NONE && m->fusion < NUM_SPECIES && BreedFusion_CanFuse(m->species, m->fusion))
+    {
+        BreedFusion_BufferName(gStringVar3, m->species, m->fusion);
+        return gStringVar3;
+    }
+    return GetSpeciesName(m->species);
+}
+
 // After the hello (which the message box expands into gStringVar4): the
 // rover's record, money, bag and team.
 void Rovers_BufferTalkStats(void)
@@ -2243,7 +2267,7 @@ void Rovers_BufferTalkStats(void)
             s = StringCopy(s, COMPOUND_STRING("\p"));
         else if (i != 0)
             s = StringCopy(s, COMPOUND_STRING(", "));
-        s = StringCopy(s, GetSpeciesName(a->w.mons[i].species));
+        s = StringCopy(s, MonName(&a->w.mons[i]));
         s = StringCopy(s, COMPOUND_STRING(" Lv"));
         s = ConvertIntToDecimalStringN(s, a->w.mons[i].level, STR_CONV_MODE_LEFT_ALIGN, 3);
     }
@@ -2303,17 +2327,34 @@ static void BuildTrainer(const struct RoverActor *a)
     BuildTrainerInto(a, &sRoverTrainer, sRoverParty, PARTY_SIZE);
 }
 
+// A fusion bred at the Day Care: its father's species, so its colors,
+// types, stats and name come out (src/breed_fusion.c).
+static void SetFusion(struct Pokemon *mon, const struct RoverMon *m)
+{
+    u32 partner = m->fusion;
+    if (partner == SPECIES_NONE || partner >= NUM_SPECIES || !BreedFusion_CanFuse(m->species, partner))
+        return;
+    SetMonData(mon, MON_DATA_FUSION_PARTNER, &partner);
+    BreedFusion_SetHatchedName(mon);
+    CalculateMonStats(mon);
+}
+
+// Injuries and fusions, which the trainer party data can't carry.
 static void ApplyInjuries(struct Pokemon *party, const struct RoverActor *a)
 {
     u32 i;
     for (i = 0; i < a->w.count; i++)
     {
         const struct RoverMon *m = &a->w.mons[i];
+        if (GetMonData(&party[i], MON_DATA_SPECIES) != m->species)
+            continue;
+        SetFusion(&party[i], m);
         if (m->injuryPart || m->lostParts || m->injuryFlags)
             Injury_Set(&party[i], m->injuryPart, m->injuryDamage * INJURY_DAMAGE_UNIT, m->lostParts,
                        m->injuryFlags & INJURY_FLAG_SCAR);
     }
 }
+
 
 static void ReadInjuries(struct Pokemon *party, struct RoverActor *a)
 {
@@ -2405,6 +2446,9 @@ void Rovers_StartTag(void)
     CreateNPCTrainerPartyFromTrainer(gParties[B_TRAINER_OPPONENT_A], &sTagTrainers[1]);
     CreateNPCTrainerPartyFromTrainer(gParties[B_TRAINER_OPPONENT_B], &sTagTrainers[2]);
     CreateNPCTrainerPartyFromTrainer(gParties[B_TRAINER_PARTNER], &sTagTrainers[0]);
+    ApplyInjuries(gParties[B_TRAINER_OPPONENT_A], side[1]);
+    ApplyInjuries(gParties[B_TRAINER_OPPONENT_B], side[2]);
+    ApplyInjuries(gParties[B_TRAINER_PARTNER], side[0]);
     BattleSetup_StartRoverWatch(CB2_EndRoverTag);
 }
 
@@ -2558,6 +2602,7 @@ static void MakeRoverMon(struct Pokemon *mon, u32 roverId, const struct RoverMon
     if (m->injuryPart || m->lostParts || m->injuryFlags)
         Injury_Set(mon, m->injuryPart, m->injuryDamage * INJURY_DAMAGE_UNIT, m->lostParts, m->injuryFlags & INJURY_FLAG_SCAR);
     CalculateMonStats(mon);
+    SetFusion(mon, m);
 }
 
 void Rovers_PrepareTrade(void)

@@ -46,6 +46,10 @@ try:  # the Haven Reserve (server/community_reserve.py), if this server has it
     import community_reserve
 except ImportError:
     community_reserve = None
+try:  # fusion breeding (server/community_fusion.py), if this server has it
+    import community_fusion
+except ImportError:
+    community_fusion = None
 
 HERE_DIR = os.path.dirname(os.path.abspath(__file__))
 with open(os.path.join(HERE_DIR, "data", "rovers_cast.json")) as f:
@@ -89,7 +93,8 @@ def title(mk):
     """A map's name as players read it: "Route 101"."""
     return WORLD[mk].get("title", WORLD[mk]["name"])
 
-MON_SIZE = 16
+MON_SIZE = 18
+OLD_MON_SIZE = 16     # before fusions: teams saved like that still load
 ROVER_SIZE = 8 + 6 * MON_SIZE + 8 + 2  # + rovers_life.bag_wire() + bond_wire()
 FRIEND_AT = 5         # friendship from here on: gifts
 GIFT_EVERY = 86400    # at most one gift a day
@@ -166,20 +171,23 @@ def setup(db):
 
 # Teams ----------------------------------------------------------------------
 
-def new_mon(species, level):
+def new_mon(species, level, fusion=0):
+    """fusion: the father's species of a fusion (docs/breed_fusion.md), or 0."""
     return {"species": species, "level": level, "moves_level": 0, "moves": [0, 0, 0, 0],
-            "part": 0, "damage": 0, "lost": 0, "flags": 0}
+            "part": 0, "damage": 0, "lost": 0, "flags": 0, "fusion": fusion}
 
 
 def pack_mon(m):
-    return struct.pack("<HBB4HBBBB", m["species"], m["level"], m["moves_level"], *m["moves"],
-                       m["part"], m["damage"], m["lost"], m["flags"])
+    return struct.pack("<HBB4HBBBBH", m["species"], m["level"], m["moves_level"], *m["moves"],
+                       m["part"], m["damage"], m["lost"], m["flags"], m.get("fusion", 0))
 
 
 def unpack_mon(b):
-    species, level, ml, m1, m2, m3, m4, part, damage, lost, flags = struct.unpack("<HBB4HBBBB", b)
+    if len(b) == OLD_MON_SIZE:
+        b = b + bytes(2)
+    species, level, ml, m1, m2, m3, m4, part, damage, lost, flags, fusion = struct.unpack("<HBB4HBBBBH", b)
     return {"species": species, "level": level, "moves_level": ml, "moves": [m1, m2, m3, m4],
-            "part": part, "damage": damage, "lost": lost, "flags": flags}
+            "part": part, "damage": damage, "lost": lost, "flags": flags, "fusion": fusion}
 
 
 def pack_team(team):
@@ -187,7 +195,26 @@ def pack_team(team):
 
 
 def unpack_team(blob):
-    return [unpack_mon(blob[i:i + MON_SIZE]) for i in range(0, len(blob), MON_SIZE)]
+    size = MON_SIZE if len(blob) % MON_SIZE == 0 else OLD_MON_SIZE
+    return [unpack_mon(blob[i:i + size]) for i in range(0, len(blob), size)]
+
+
+def mon_name(m):
+    """A Pokémon's name for the news: a fusion's is made from both."""
+    if m.get("fusion") and community_fusion is not None:
+        return community_fusion.fusion_name(species_name(m["species"]), species_name(m["fusion"]))
+    return species_name(m["species"])
+
+
+def can_fuse(a, b):
+    """Two of a rover's Pokémon would breed into a fusion (src/breed_fusion.c
+    BreedFusion_CanFuse): different families, both able to breed, no Ditto."""
+    if community_fusion is None or BASE.get(a, a) == BASE.get(b, b):
+        return False
+    try:
+        return community_fusion.can_fuse_with(a) and community_fusion.can_fuse_with(b)
+    except (OSError, ValueError):
+        return False
 
 
 def check_team(team):
@@ -427,7 +454,7 @@ class Sim:
         if r.egg:
             r.egg_steps -= 1
             if r.egg_steps <= 0:
-                baby = new_mon(r.egg, 1)
+                baby = new_mon(r.egg, 1, r.life.pop("egg_fusion", 0))
                 if len(r.team) < MAX_TEAM:
                     r.team.append(baby)
                 elif r.cast["style"] == "BREEDER":
@@ -436,7 +463,7 @@ class Sim:
                     r.team[weakest] = baby
                 else:
                     self.keep(r, baby)
-                news(self.db, f"{r.name}'s egg hatched into {species_name(r.egg)}!")
+                news(self.db, f"{r.name}'s egg hatched into {mon_name(baby)}!")
                 r.egg = 0
         # After dark most rovers rest where they are (healing if there's a
         # Pokémon Center); night owls carry on.
@@ -471,8 +498,20 @@ class Sim:
         if here["daycare"] and not r.egg and len(r.team) >= 2:
             chance = 0.5 if r.cast["style"] == "BREEDER" else 0.08
             if rng.random() < chance:
+                # Two of different kinds make a fusion egg: the mother's shape,
+                # the father's colors (docs/breed_fusion.md).
+                pairs = [(a, b) for a in r.team for b in r.team
+                         if a is not b and can_fuse(a["species"], b["species"])]
+                if pairs and rng.random() < 0.7:
+                    mother, father = rng.choice(pairs)
+                    r.egg, r.egg_steps = BASE.get(mother["species"], mother["species"]), 6
+                    r.life["egg_fusion"] = father["species"]
+                    news(self.db, f"{r.name} got a fusion egg at the Day Care: "
+                                  f"{species_name(mother['species'])} + {species_name(father['species'])}!")
+                    return
                 parent = rng.choice(r.team)["species"]
                 r.egg, r.egg_steps = BASE.get(parent, parent), 6
+                r.life.pop("egg_fusion", None)
                 news(self.db, f"{r.name} got an egg at the Day Care.")
                 return
         # Moving on.

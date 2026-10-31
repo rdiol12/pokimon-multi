@@ -60,7 +60,7 @@ class RoverTest(unittest.IsolatedAsyncioTestCase):
         # The player saw it catch a Wurmple.
         mon = rovers.pack_mon({**rovers.new_mon(265, 3), "moves": [33, 81, 0, 0], "moves_level": 3})
         w[1] = 2
-        w[8 + 16:8 + 32] = mon
+        w[8 + rovers.MON_SIZE:8 + 2 * rovers.MON_SIZE] = mon
         self.assertEqual(await self.ask(a, f"ROVER SYNC {w[0]} 1 265", bytes(w)), (0, b""))
         r = rovers.load(self.league.db, w[0])
         self.assertEqual([m["species"] for m in r.team][1], 265)
@@ -159,6 +159,42 @@ class RoverTest(unittest.IsolatedAsyncioTestCase):
         b = await self.connect("Misty", 2)
         here, _ = parse_here((await self.ask(b, f"ROVER HERE {G} {N} 4"))[1])
         self.assertTrue(all(w[-2] == 0 for w in here))
+
+    def test_fusion_eggs_and_old_teams(self):
+        # Teams saved before fusions (16 bytes a Pokémon) still load.
+        old = b"".join(rovers.pack_mon(rovers.new_mon(s, 10))[:16] for s in (25, 278))
+        self.assertEqual([m["species"] for m in rovers.unpack_team(old)], [25, 278])
+        self.assertEqual(rovers.unpack_team(old)[1]["fusion"], 0)
+        # A Day Care visit with two kinds makes a fusion egg, which hatches into one.
+        self.assertTrue(rovers.can_fuse(278, 25))
+        self.assertFalse(rovers.can_fuse(25, 26))   # same family
+        self.assertFalse(rovers.can_fuse(25, 132))  # Ditto
+        rovers.ensure_rovers(self.league.db)
+        breeder = next(i for i, c in enumerate(rovers.CAST) if c["style"] == "BREEDER")
+        r = rovers.load(self.league.db, breeder)
+        r.team = [rovers.new_mon(278, 20), rovers.new_mon(25, 20)]
+        daycare = next(k for k, v in rovers.WORLD.items() if v["daycare"])
+        r.map, r.egg = daycare, 0
+        sim = rovers.Sim(self.league.db, self.league)
+        rovers.rng.random = lambda: 0.0
+        old_world, rovers.world = rovers.world, None
+        try:
+            for _ in range(10):
+                if r.egg:
+                    break
+                sim.step(r, [r], 12 * 3600)
+        finally:
+            del rovers.rng.random
+            rovers.world = old_world
+        self.assertIn(r.egg, (278, 172))  # the mother's shape: Wingull or Pichu
+        father = r.life["egg_fusion"]
+        self.assertIn(father, (25, 278))
+        r.egg_steps = 1
+        r.team = r.team[:2]
+        sim.step(r, [r], None)
+        baby = r.team[-1]
+        self.assertEqual((baby["level"], baby["fusion"]), (1, father))
+        self.assertEqual(rovers.unpack_mon(rovers.pack_mon(baby))["fusion"], father)
 
     async def test_rift_divers(self):
         a = await self.connect("Ash", 1)

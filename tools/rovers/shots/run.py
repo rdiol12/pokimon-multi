@@ -45,6 +45,14 @@ end
 -- Puts rovers on the current map (src/rovers.c RunShowcase).
 -- scene: 1 wander, 2 duel, 3 vs the map's trainer, 4 wild, 5 charger,
 -- 6 rampaging Pokémon, 7 catch.
+-- The next Driver.rovers' first rover leads with a fusion (or 0, 0).
+function Driver.roverLead(species, fusion)
+    local s = Driver.SYM.gRoverShowcase
+    local a, b = SPECIES_ID[species] or 0, SPECIES_ID[fusion] or 0
+    E.write8(s + 14, a & 0xFF); E.write8(s + 15, a >> 8)
+    E.write8(s + 16, b & 0xFF); E.write8(s + 17, b >> 8)
+end
+
 function Driver.rovers(scene, ids, level, teamSize, offline, talk, levelB, bond)
     local s = Driver.SYM.gRoverShowcase
     E.write8(s + 1, scene)
