@@ -10,6 +10,7 @@ import online  # noqa: E402
 import online_coopfish  # noqa: E402
 import online_fishing  # noqa: E402
 import online_goals  # noqa: E402
+import online_shops  # noqa: E402
 import online_sightings  # noqa: E402
 import online_web  # noqa: E402
 from online_ids import ITEMS, MAPS, SPECIES  # noqa: E402
@@ -26,7 +27,7 @@ class OnlineTest(unittest.IsolatedAsyncioTestCase):
         self.league = ns.League(":memory:")
         self.server = ns.Server(self.league)
         self.online = online.Online(self.server, ext.install(self.server),
-                                    [online_goals, online_sightings, online_web, online_fishing, online_coopfish], clock=lambda: self.now)
+                                    [online_goals, online_sightings, online_web, online_fishing, online_coopfish, online_shops], clock=lambda: self.now)
         self.srv = await asyncio.start_server(self.server.handle, "127.0.0.1", 0)
         self.port = self.srv.sockets[0].getsockname()[1]
         self.clients = []
@@ -167,6 +168,12 @@ class FishingTest(OnlineTest):
         self.assertEqual(self.league.db.execute("SELECT COUNT(*) FROM online_fish_scores").fetchone()[0], 2)
 
 
+class SpeciesNamesTest(unittest.TestCase):
+    def test_every_named_species_exists(self):
+        for name in online_fishing.RARES + online_coopfish.GIANTS:
+            self.assertIn(name, SPECIES)
+
+
 class CoFishTest(OnlineTest):
     async def test_two_players_land_a_giant(self):
         a = await self.connect("Ann", 1)
@@ -201,6 +208,53 @@ class CoFishTest(OnlineTest):
         status, out = await self.ask(a, "COFISH RESULT")
         self.assertEqual(rows(out)[0][1], "2")
         self.assertEqual(len(rows(out)), 1)
+
+
+class ShopTest(OnlineTest):
+    async def test_stock_buy_and_collect(self):
+        a = await self.connect("Ann", 1)
+        b = await self.connect("Ben", 2)
+        potion = ITEMS["POTION"]
+        status, out = await self.ask(b, "SHOP LIST")
+        self.assertEqual(status, 1)
+        status, out = await self.ask(a, f"SHOP PRICES {potion} 5 300")
+        self.assertEqual([r[1] for r in rows(out)[1:]], ["150", "300", "450", "600"])
+        status, out = await self.ask(a, f"SHOP STOCK {potion} 5 450")
+        self.assertEqual(rows(out)[1], ["-ITEM", str(potion), "5"])
+        await self.ask(a, f"SHOP STOCK {potion} 2 450")  # same price: same shelf
+        status, out = await self.ask(b, "SHOP LIST")
+        self.assertEqual(rows(out)[1][0], "Ann'S SHOP")
+        shop = rows(out)[1][1]
+        status, out = await self.ask(b, f"SHOP OPEN {shop}")
+        self.assertEqual(rows(out)[3], ["POTION", "7", "$450"])
+        status, out = await self.ask(b, "SHOP ITEMS")
+        shelf = rows(out)[1][1]
+        # Not enough money, then 3 of them.
+        self.assertEqual((await self.ask(b, f"SHOP BUY {potion} 3 {shelf} 1000"))[0], 1)
+        status, out = await self.ask(b, f"SHOP BUY {potion} 3 {shelf} 5000")
+        self.assertEqual(rows(out)[1:3], [["-MONEY", "1350"], ["+ITEM", str(potion), "3"]])
+        # Asking for more than is left buys what's left.
+        status, out = await self.ask(b, f"SHOP BUY {potion} 99 {shelf} 5000")
+        self.assertEqual(rows(out)[2], ["+ITEM", str(potion), "4"])
+        self.assertEqual((await self.ask(b, "SHOP LIST"))[0], 1)
+        # Ann hears of the sales and collects.
+        status, out = await self.ask(a, "SHOP MINE")
+        self.assertEqual(rows(out)[0][1], "3150")
+        self.assertIn("N", [r[0] for r in rows(out)])
+        status, out = await self.ask(a, "SHOP COLLECT")
+        self.assertEqual(rows(out)[1], ["+MONEY", "3150"])
+        self.assertEqual((await self.ask(a, "SHOP COLLECT"))[0], 1)
+
+    async def test_shelves_and_take_back(self):
+        a = await self.connect("Ann", 1)
+        for i, item in enumerate(["POTION", "ANTIDOTE", "POKE_BALL", "GREAT_BALL", "REPEL", "ESCAPE_ROPE"]):
+            await self.ask(a, f"SHOP STOCK {ITEMS[item]} 1 100")
+        status, out = await self.ask(a, f"SHOP STOCK {ITEMS['ETHER']} 1 100")
+        self.assertEqual(status, 1)
+        status, out = await self.ask(a, "SHOP MINE")
+        self.assertEqual(rows(out)[3][0], "POK# BALL x1 $100")
+        status, out = await self.ask(a, f"SHOP TAKE {rows(out)[1][1]}")
+        self.assertEqual(rows(out)[1], ["+ITEM", str(ITEMS["POTION"]), "1"])
 
 
 if __name__ == "__main__":
