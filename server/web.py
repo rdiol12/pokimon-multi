@@ -56,7 +56,7 @@ code {{ background: #eee; padding: 0 .2rem; }}
 <tr><th>#</th><th>Trainer</th><th class=n>Rating</th><th class=n>W</th><th class=n>L</th><th class=n>D</th></tr>
 {rows}
 </table>
-<p><a href="/gallery">Photo gallery</a></p>
+<p><a href="/gallery">Photo gallery</a> &middot; <a href="/map">Live map</a> &middot; <a href="/shinies">Shiny gallery</a></p>
 <h2>Play</h2>
 <ol>
 <li>Open the game in mGBA 0.10 or newer.</li>
@@ -129,6 +129,11 @@ class Web:
             ) or "<tr><td colspan=6>No battles yet.</td></tr>"
             page = PAGE.format(online=self.online(), rows=rows, address=html.escape(f"{host}:{self.game_port}"))
             return 200, "text/html; charset=utf-8", page
+        # Pages other modules add (server/online_web.py): fn(path) -> answer or None.
+        for extra in getattr(self.server, "web_routes", []):
+            found = extra(path)
+            if found:
+                return found
         return 404, "text/plain", "not found\n"
 
     async def handle(self, reader, writer):

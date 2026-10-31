@@ -82,6 +82,7 @@ enum
 {
     SHOWCASE_NONE,
     SHOWCASE_ROAMER, // a roaming species/level battle starts
+    SHOWCASE_WILD,   // a wild species/level (shiny if set) battle starts
 };
 
 struct OnlineShowcase
@@ -89,6 +90,8 @@ struct OnlineShowcase
     u8 kind;
     u8 level;
     u16 species;
+    u8 shiny;
+    u8 filler[3];
 };
 
 EWRAM_DATA struct OnlineShowcase gOnlineShowcase = {0};
@@ -697,11 +700,20 @@ static bool32 RunShowcase(void)
     switch (kind)
     {
     case SHOWCASE_ROAMER:
+    case SHOWCASE_WILD:
         ZeroEnemyPartyMons();
         CreateMonWithIVs(&gEnemyParty[0], gOnlineShowcase.species, gOnlineShowcase.level,
             GetMonPersonality(gOnlineShowcase.species, MON_GENDER_RANDOM, NATURE_RANDOM, RANDOM_UNOWN_LETTER),
             OTID_STRUCT_PLAYER_ID, USE_RANDOM_IVS);
-        BattleSetup_StartRoamerBattle();
+        if (gOnlineShowcase.shiny)
+        {
+            bool32 shiny = TRUE;
+            SetMonData(&gEnemyParty[0], MON_DATA_IS_SHINY, &shiny);
+        }
+        if (kind == SHOWCASE_ROAMER)
+            BattleSetup_StartRoamerBattle();
+        else
+            BattleSetup_StartWildBattle();
         return TRUE;
     }
     return FALSE;

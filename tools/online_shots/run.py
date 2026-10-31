@@ -9,7 +9,8 @@ Like tools/world_shots/run.py (whose driver helpers it reuses), plus:
 - seed.py, if given, has `seed(port, out)`, run once the server is up and
   before the games start: it can play other players with raw protocol lines
   (see `Fake` below) to fill boards. `seed` may return a function, which is
-  then run in a thread alongside the games (`after(port, out)`).
+  then run in a thread alongside the games (`after(port, out)`). The server
+  also serves its web pages, on port `Fake.http`.
 """
 import importlib.util
 import os
@@ -69,12 +70,18 @@ def main():
     state = {}
 
     def popen(cmd, *a, **kw):
-        proc = real_popen(cmd, *a, **kw)
         if "netplay_server.py" in " ".join(map(str, cmd)):
             state["port"] = int(cmd[cmd.index("--port") + 1])
-        return proc
+            with socket.socket() as s:
+                s.bind(("127.0.0.1", 0))
+                state["http"] = s.getsockname()[1]
+            cmd = [*cmd, "--http-port", str(state["http"])]
+            Fake.http = state["http"]
+        return real_popen(cmd, *a, **kw)
 
     def call(cmd, *a, **kw):
+        if not str(cmd[0]).endswith("harness"):
+            return real_call(cmd, *a, **kw)
         kw["cwd"] = os.path.join(root, "tools", "netplay_bridge")
         shutil.copy(os.path.join(here, "lib.lua"), os.path.join(os.path.abspath(out), "lib.lua"))
         thread = None

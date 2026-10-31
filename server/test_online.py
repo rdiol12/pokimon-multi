@@ -9,6 +9,7 @@ import netplay_server as ns  # noqa: E402
 import online  # noqa: E402
 import online_goals  # noqa: E402
 import online_sightings  # noqa: E402
+import online_web  # noqa: E402
 from online_ids import ITEMS, MAPS, SPECIES  # noqa: E402
 from test_netplay_server import Client  # noqa: E402
 
@@ -23,7 +24,7 @@ class OnlineTest(unittest.IsolatedAsyncioTestCase):
         self.league = ns.League(":memory:")
         self.server = ns.Server(self.league)
         self.online = online.Online(self.server, ext.install(self.server),
-                                    [online_goals, online_sightings], clock=lambda: self.now)
+                                    [online_goals, online_sightings, online_web], clock=lambda: self.now)
         self.srv = await asyncio.start_server(self.server.handle, "127.0.0.1", 0)
         self.port = self.srv.sockets[0].getsockname()[1]
         self.clients = []
@@ -103,6 +104,30 @@ class SightingTest(OnlineTest):
         self.assertNotIn("N", [r[0] for r in rows(out)])  # announced recently
         status, out = await self.ask(b, "SIGHT BOARD")
         self.assertEqual(rows(out)[3], ["LATIOS", "ROUTE 117", "Ann", "now"])
+
+
+class WebTest(OnlineTest):
+    async def test_live_map_and_shiny_gallery(self):
+        online_web.install(self.server)
+        a = await self.connect("Ann", 1)
+        b = await self.connect("Ben", 2)
+        await self.ask(b, "OSTAT")
+        g, n = MAPS["OLDALE_TOWN"]
+        await a.send(f"POS {g} {n} 5 5 1 3 0")
+        absol = SPECIES["ABSOL"]
+        r120 = MAPS["ROUTE120"]
+        await self.ask(a, f"OEV CATCH {absol} 1 {r120[0]} {r120[1]} 0")
+        await self.ask(a, f"OEV CATCH {absol} 0 {r120[0]} {r120[1]} 0")
+        status, out = await self.ask(b, "OSTAT")
+        self.assertIn(["N", "Ann caught a shiny ABSOL!"], rows(out))
+        route = self.server.web_routes[0]
+        data = __import__("json").loads(route("/map.json")[2])
+        self.assertEqual([p["label"] for p in data["players"]], ["Ann"])
+        self.assertIn("ABSOL", route("/shinies")[2])
+        self.assertEqual(route("/shinies")[2].count('class="mon"'), 1)
+        png = route(f"/sprite/{absol}.png")[2]
+        self.assertTrue(png.startswith(b"\x89PNG") and b"tRNS" in png)
+        self.assertIsNone(route("/sprite/999999.png"))
 
 
 if __name__ == "__main__":

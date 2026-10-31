@@ -148,5 +148,7 @@ class Online:
 def install(server, ext_obj):
     import online_goals
     import online_sightings
+    import online_web
 
-    return Online(server, ext_obj, [online_goals, online_sightings])
+    online_web.install(server)
+    return Online(server, ext_obj, [online_goals, online_sightings, online_web])

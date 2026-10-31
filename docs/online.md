@@ -32,6 +32,28 @@ every ten minutes per player and species, and HUB → LEGEND SIGHTINGS shows
 where each one was last seen, by whom and how long ago
 (`server/online_sightings.py`).
 
+## Website: live map and shiny gallery
+
+![The live map with two players and two legends](images/online-live-map.png)
+![The shiny gallery](images/online-shiny-gallery.png)
+![TEST1 catches a shiny Absol and TEST2 gets the notice](images/online-shiny-catch.png)
+
+The server's web page (`--http-port`) links two new pages
+(`server/online_web.py`):
+
+- **/map**: the game's own Hoenn region map with every player online on
+  it (red), and the legends seen in the last day (purple). It refreshes
+  every five seconds from `/map.json`.
+- **/shinies**: every shiny Pokémon caught online, newest first, with who
+  caught it, where and when. Each catch also tells everyone else online.
+  The pictures are the game's own sprites (`/sprite/<species>.png`): the
+  front picture with its shiny palette swapped in.
+
+`tools/online/gen_ids.py` draws `server/static/hoenn.png` from the region
+map's tiles and finds each species' picture and shiny palette. The Docker
+image now copies `graphics/pokemon`, `server/static` and every bridge
+script (the Online Plaza's `netplay_ext.lua` was missing from it).
+
 ## How it talks to the server
 
 These features use the Online Plaza's request channel (`NpxRpc_*` in
@@ -71,6 +93,8 @@ shared maps.
 ## Tests and screenshots
 
 - `python3 -m unittest server/test_online.py`
+- `website.lua` with `website_seed.py` also screenshots the web pages with
+  Playwright (`tools/online_shots/web_shot.js`) while both games are online.
 - `python3 tools/online_shots/run.py tools/online_shots/goals.lua OUT 60000 2 tools/online_shots/goals_seed.py`
   runs two games against a fresh server; the seed plays other players first.
   `run.py` is `tools/world_shots/run.py` plus the seed and the bridge

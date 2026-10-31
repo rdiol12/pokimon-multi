@@ -55,10 +55,30 @@ end
 
 -- Starts a battle with a roaming Pokémon (gOnlineShowcase in src/online.c).
 function Driver.roamer(species, level)
+    Driver.wildBattle(species, level, false, 1)
+end
+
+-- Starts a wild battle with species at level, shiny if asked.
+function Driver.wildBattle(species, level, shiny, kind)
     local s = D.SYM.gOnlineShowcase
     local id = SPECIES_ID[species]
     D.write8(s + 1, level)
     D.write8(s + 2, id & 0xFF)
     D.write8(s + 3, id >> 8)
-    D.write8(s, 1)
+    D.write8(s + 4, shiny and 1 or 0)
+    D.write8(s, kind or 2)
+end
+
+-- Throws the last used Ball until the battle is over (Master Ball: once).
+function Driver.catchThis()
+    D.waitFor("the battle", 1200, D.inBattle)
+    D.wait(400)
+    for _ = 1, 4 do
+        if not D.inBattle() then break end
+        D.press(K.R, 30)
+        D.press(K.A, 600)
+    end
+    D.waitFor("the overworld", 3000, D.inOverworld, function(i)
+        if i % 30 == 0 then D.press(K.B, 0) end
+    end)
 end

@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Writes server/online_ids.py: item, species and map numbers from the game's
 headers, so the server (which ships without the game's source) can name
-rewards and read reports. Run it after adding items, species or maps."""
+rewards and read reports, and server/static/hoenn.png, the region map for
+the website. Run it after adding items, species or maps. Needs Pillow."""
 import json
 import os
 import re
@@ -38,6 +39,42 @@ def map_sections():
     return sections, grid
 
 
+def sprites(species_ids):
+    """Species -> [front picture png, shiny palette], for the website's
+    shiny gallery."""
+    incbin = {}
+    text = open(os.path.join(root, "src", "data", "graphics", "pokemon.h")).read()
+    for m in re.finditer(r"const u\d+ (\w+)\[\] = INCGFX_U\d+\(\"([^\"]+)\"", text):
+        incbin.setdefault(m.group(1), m.group(2))  # the first is the DS-style one
+    out = {}
+    folder = os.path.join(root, "src", "data", "pokemon", "species_info")
+    for name in sorted(os.listdir(folder)):
+        text = open(os.path.join(folder, name)).read()
+        for block in re.split(r"\n    \[SPECIES_", text)[1:]:
+            species = block.split("]", 1)[0]
+            pic = re.search(r"\.frontPic = (\w+)", block)
+            pal = re.search(r"\.shinyPalette = (\w+)", block)
+            if species in species_ids and pic and pal and pic.group(1) in incbin and pal.group(1) in incbin:
+                out[species_ids[species]] = [incbin[pic.group(1)], incbin[pal.group(1)]]
+    return out
+
+
+def region_map():
+    """The game's Hoenn region map as a PNG, for the website's live map."""
+    from PIL import Image
+
+    folder = os.path.join(root, "graphics", "pokenav", "region_map")
+    tiles = Image.open(os.path.join(folder, "map.png"))
+    tilemap = open(os.path.join(folder, "map.bin"), "rb").read()
+    out = Image.new("P", (512, 512))
+    out.putpalette(tiles.getpalette())
+    for i, t in enumerate(tilemap):
+        tx, ty = t % 16, t // 16
+        out.paste(tiles.crop((tx * 8, ty * 8, tx * 8 + 8, ty * 8 + 8)), ((i % 64) * 8, (i // 64) * 8))
+    os.makedirs(os.path.join(root, "server", "static"), exist_ok=True)
+    out.crop((0, 0, 256, 176)).save(os.path.join(root, "server", "static", "hoenn.png"))
+
+
 def main():
     items = enum("include/constants/items.h", "ITEM_")
     species = enum("include/constants/species.h", "SPECIES_")
@@ -48,9 +85,12 @@ def main():
     out.append("MAPS = " + json.dumps(maps(), sort_keys=True))
     out.append("MAP_SECTIONS = " + json.dumps(sections, sort_keys=True))
     out.append("SECTION_GRID = " + json.dumps(grid, sort_keys=True))
+    out.append("SPRITES = " + json.dumps(sprites(species), sort_keys=True))
     out.append("SPECIES_NAMES = {v: k for k, v in SPECIES.items()}")
+    out.append("SPRITES = {int(k): v for k, v in SPRITES.items()}")
     out.append("MAP_NAMES = {tuple(v): k for k, v in MAPS.items()}")
     open(os.path.join(root, "server", "online_ids.py"), "w").write("\n".join(out) + "\n")
+    region_map()
 
 
 if __name__ == "__main__":
