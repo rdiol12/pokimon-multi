@@ -1,6 +1,7 @@
 #include "global.h"
 #include "berry.h"
 #include "event_data.h"
+#include "field_ability.h"
 #include "event_object_movement.h"
 #include "event_scripts.h"
 #include "field_control_avatar.h"
@@ -2717,7 +2718,8 @@ static u32 GetBerryTreeAge(u8 id, u8 stage)
 
 static u8 GetBerryCountByBerryTreeId(u8 id)
 {
-    return gSaveBlock1Ptr->berryTrees[id].berryYield;
+    // Harvest / Grass-type lead (src/field_ability.c)
+    return min(255, gSaveBlock1Ptr->berryTrees[id].berryYield + FieldAbility_ExtraBerries());
 }
 
 static u16 GetStageDurationByBerryType(u8 berry)
@@ -2800,7 +2802,7 @@ void ObjectEventInteractionGetBerryCountString(void)
     if (berry > 0)
     {
         count = 1;
-        CopyItemNameHandlePlural(gSpecialVar_0x8006, gStringVar3, count);
+        CopyItemNameHandlePlural(BerryTypeToItemId(berry), gStringVar3, count);
         gSpecialVar_Result = TRUE;
     }
     else

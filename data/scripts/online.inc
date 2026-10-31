@@ -32,6 +32,11 @@ Online_EventScript_Hub::
 	dynmultipush Online_Text_HubMentors, ONLINE_HUB_MENTORS
 	dynmultipush Online_Text_HubPQuests, ONLINE_HUB_PQUESTS
 	dynmultipush Online_Text_HubBetting, ONLINE_HUB_BETTING
+	dynmultipush Online_Text_HubDoubles, ONLINE_HUB_DOUBLES
+	dynmultipush Online_Text_HubTeams, ONLINE_HUB_TEAMS
+	dynmultipush Online_Text_HubGuild, ONLINE_HUB_GUILD
+	dynmultipush Online_Text_HubRacing, ONLINE_HUB_RACING
+	dynmultipush Online_Text_HubHide, ONLINE_HUB_HIDE
 	dynmultipush Online_Text_HubClose, ONLINE_HUB_CLOSE
 	dynmultistack 0, 0, FALSE, 6, FALSE, 0, DYN_MULTICHOICE_CB_NONE
 	switch VAR_RESULT
@@ -45,6 +50,11 @@ Online_EventScript_Hub::
 	case ONLINE_HUB_MENTORS, Online_EventScript_Mentors
 	case ONLINE_HUB_PQUESTS, Online_EventScript_PQuests
 	case ONLINE_HUB_BETTING, Online_EventScript_Betting
+	case ONLINE_HUB_DOUBLES, Online_EventScript_Doubles
+	case ONLINE_HUB_TEAMS, Online_EventScript_Teams
+	case ONLINE_HUB_GUILD, Online_EventScript_GuildHall
+	case ONLINE_HUB_RACING, Online_EventScript_Racing
+	case ONLINE_HUB_HIDE, Online_EventScript_Hide
 	releaseall
 	end
 
@@ -106,6 +116,21 @@ Online_Text_HubPQuests:
 Online_Text_HubBetting:
 	.string "BETTING$"
 
+Online_Text_HubDoubles:
+	.string "DOUBLES LADDER$"
+
+Online_Text_HubTeams:
+	.string "TEAM LADDER$"
+
+Online_Text_HubGuild:
+	.string "GUILD HALL$"
+
+Online_Text_HubRacing:
+	.string "MOUNT RACING$"
+
+Online_Text_HubHide:
+	.string "HIDE AND SEEK$"
+
 Online_Text_HubClose:
 	.string "CLOSE$"
 
@@ -119,3 +144,16 @@ Online_Text_HubClose:
 	.include "data/scripts/online/mentors.inc"
 	.include "data/scripts/online/pquests.inc"
 	.include "data/scripts/online/betting.inc"
+	.include "data/scripts/online/teams.inc"
+	.include "data/scripts/online/guilds.inc"
+	.include "data/scripts/online/racing.inc"
+	.include "data/scripts/online/hide.inc"
+
+@ Ranked doubles: the ladder (the battles start from talking to a player).
+Online_EventScript_Doubles::
+	call Online_EventScript_Connecting
+	onl_request_or_fail ONL_REQ_DOUBLES_BOARD
+	msgbox gStringVar4, MSGBOX_DEFAULT
+	closemessage
+	onl_board
+	goto Online_EventScript_End

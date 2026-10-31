@@ -101,7 +101,7 @@ you there once you have the Mind Badge.
 ## Sunscar Desert and Ruins
 
 A sand basin among rock mesas, with ruins at its north end. A guide in
-Mauville City leads you there once you have Winona's badge.
+Mauville City leads you there once you have Flannery's badge (4 badges).
 
 - The Hall of Riddles: three Unown statues each whisper a riddle, and four
   glyph tablets (sun, moon, wave, flame) stand in the hall. Read a tablet
@@ -109,14 +109,424 @@ Mauville City leads you there once you have Winona's badge.
   only in order: the sun, then the moon, then the wave. The flame is a
   decoy. When all three glow the ruins shake and the sealed door opens
   (`setmetatile`, reapplied on load).
-- The vault: Spiritomb (Lv40), the Odd Keystone, a Relic Gold, a Dusk Ball,
+- The vault: Spiritomb (Lv34), the Odd Keystone, a Relic Gold, a Dusk Ball,
   a hidden Relic Copper, and wild Unown.
 - In the desert: an archaeologist with hints, a digger who gives a Relic
   Gold once the vault is open, a basking Sandile, a Trapinch pit, Ruin
   Maniac Dexter, Camper Milo, Expert Sable. TM Sandstorm, Soft Sand, a
-  Hyper Potion and three hidden items. Wild Pokémon Lv34–38 (Sandile,
+  Hyper Potion and three hidden items. Wild Pokémon Lv29–33, trainers Lv30–34, vault Unown Lv26–32 (Sandile,
   Trapinch, Cacnea, Hippopotas, Baltoy, Silicobra, Gible, Sigilyph…).
 - Map ids: MAP_SUNSCAR_DESERT, MAP_SUNSCAR_RUINS_HALL, MAP_SUNSCAR_RUINS_VAULT.
+
+## Hollowmere and Hollowmere Manor
+
+An abandoned town in the fog that only appears at night. An old ferryman
+in Lilycove City rows you there, but only at night and only once you have
+the Mind Badge (`gettimeofday`).
+
+- Quest: the caretaker's four little ghosts have wandered off: a Gastly
+  and a Duskull in town, a Shuppet in a house and a Misdreavus in the
+  manor. Talk to each to send it home. With all four home she gives a
+  Spell Tag and the Manor Key, and the butler steps aside from the stairs.
+- Hollowmere Manor is dark (it needs Flash to see far). Portraits whose
+  eyes follow you, Gentleman Mortimer, and upstairs the master's doll
+  collection, Hex Maniac Elvira, a Reaper Cloth and a Mimikyu (Lv40).
+- An inn where a ghostly keeper lets you rest, a Drifloon that wants to
+  hold your hand, Hex Maniac Vesper and Psychic Luna, TM Shadow Ball, Dusk
+  Stone, Rare Candy, Max Elixir and hidden items. Wild ghosts Lv37–42,
+  Frillish and Jellicent in the pond.
+- The manor reuses the Lilycove Museum layouts with new events. Map ids:
+  MAP_HOLLOWMERE, _INN, _HOUSE, _MANOR_1F, _MANOR_2F.
+
+## Mirebough Marsh
+
+A rainy swamp of ponds and reeds west of Fortree City, crossed by wooden
+boardwalks. A guide in Fortree City takes you there once you have the
+Feather Badge.
+
+- Quest: the Bog Witch lives in a clearing you can only reach over the
+  north boardwalk. Her stew needs a Tiny Mushroom, a Big Root and some
+  Black Sludge, all lying around the marsh. Hand them over and she gives
+  you a Goomy egg.
+- A Stunfisk hides in the mud by the south reeds and attacks when you step
+  on it (Lv38).
+- Fisherman Finn, Aroma Lady Marsha, Bug Maniac Otto and Ranger Ivy; a
+  Wooper, a Goomy and a Croagunk to talk to; TM Sludge Bomb, Damp Rock,
+  Ultra Ball and hidden items. Wild Wooper, Croagunk, Goomy, Lotad,
+  Shroomish, Yanma, Skorupi, Stunfisk and their evolutions Lv34–39;
+  Barboach, Whiscash and Poliwag on a rod. Map id: MAP_MIREBOUGH_MARSH.
+
+## Sunfair Carnival
+
+A fairground by the sea. A sailor in Slateport City takes you there by boat
+at any time.
+
+- New art drawn for it in Emerald's style (`tools/areas/carnival_art.py`):
+  a Ferris wheel, big top tents, striped market stalls, an entrance arch
+  you walk under, lamp posts and balloon carts. They live in a new
+  secondary tileset, `gTileset_Carnival`, which is Petalburg's tiles plus
+  the new ones (palettes 7 and 11), so the town style can still lay out the
+  ground.
+- Quest: the Ringmaster's Spinda spun itself dizzy and wobbled off. Find
+  it by the bowling ground and he gives you a Mime Jr. egg.
+- Stalls: a drinks stall and a sweets stall (Lava Cookie, Rage Candy Bar,
+  Casteliacone…) are shops; the ring toss costs ¥500 a throw and sometimes
+  wins a Rare Candy, Heart Scale or Lemonade. A fortune teller, a balloon
+  seller, a Mr. Mime, and trainers Kindler Blaze, Twins Kit & Kat (double),
+  Ninja Boy Shade (hiding behind the big top) and Guitarist Riff.
+- Games: the hosts for the Ferris wheel (29,12), bowling (9,13), mini golf
+  (39,26) and soccer (12,26) call `Carnival_EventScript_FerrisWheel`,
+  `_Bowling`, `_Golf` and `_Soccer` in `data/scripts/areas/carnival_games.inc`.
+  For now they say "coming soon"; the minigames branch fills them in.
+  Open ground left for the games: bowling lanes x 40–54, y 4–11; soccer
+  pitch x 4–21, y 27–36; golf green x 38–54, y 27–37. Map id:
+  MAP_SUNFAIR_CARNIVAL.
+
+## Coralline Reef, the shipwreck and Abyssia
+
+Two sea-floor maps south of Pacifidlog Town. A diver in Pacifidlog takes
+you down once you have the Mind Badge, and back up again from the reef.
+
+- Coralline Reef: coral gardens between rock walls, seaweed with
+  Clamperl, Chinchou, Luvdisc, Corsola and Relicanth, a giant clam with a
+  Big Pearl, and a shipwreck. Swim in through the hole in its hull to find
+  the captain's log, a Nugget, a Rare Candy and a Dhelmise (Lv44). Three
+  swimmers, Deep Sea Scale and Tooth, TM Water Pulse, Max Revive.
+- Abyssia, the sunken city, north of the reef: glass domes, columns and a
+  sealed temple. Marina the researcher explains the carving: "When the four
+  lights shine, the temple wakes." Turn the cranks on the four lamp
+  pillars and the temple opens; a Relicanth (Lv48) rests at its altar.
+  Marina gives a Deep Sea Scale and Tooth, and an Alomomola heals your
+  team. Swimmer Triton, Mystic Water, Prism Scale.
+- New art (`tools/areas/abyss_art.py`): coral, a giant clam, domes,
+  columns, lamp pillars (dark and lit), the temple (shut and open), the
+  wreck, an anchor and a glowing exit ring, in `gTileset_Abyss`: the
+  underwater tiles kept in place (their seaweed animates) plus the new
+  tiles in the slots nothing used, palette 12. `tools/areas/art.py` holds
+  the drawing and packing code shared with the carnival.
+- Map ids: MAP_CORALLINE_REEF, _REEF_WRECK (the Abandoned Ship's flooded
+  hold), MAP_ABYSSIA, _TEMPLE.
+
+## Gullwing Point and the pirate ship
+
+A rocky cape with a lighthouse and a pirate ship at anchor. A boatman in
+Dewford Town takes you there with no badge needed, so it is an early-game
+area (trainers Lv14–22, wild Pokémon Lv13–18).
+
+- The lighthouse puzzle: the keeper says the beam has gone dark. Four
+  mirrors on the cape are turned the wrong way; talk to each to turn it.
+  When all four are right the beam crosses the cape (`setmetatile`,
+  reapplied on load) and lights the way to the ship, and a gangplank drops
+  at the shore.
+- The pirate ship: deckhands Peg and Finn, a Murkrow, barrels and cannons,
+  and Captain Barnacle at the helm. Beat him and his guard lets you down the
+  hatch into the hold: a Big Nugget, a King's Rock and a Pearl String.
+- Around the cape: a fisherman, a Pelipper, a wandering Wingull, hidden
+  items and trainers along the cliffs.
+- Map ids: MAP_GULLWING_POINT, MAP_GULLWING_POINT_PIRATE_SHIP,
+  MAP_GULLWING_POINT_PIRATE_HOLD. Flags FLAG_GULL_MIRROR_1–4,
+  FLAG_GULL_BEAM_SOLVED, FLAG_GULL_CAPTAIN_BEATEN.
+
+## Whisperstem Valley
+
+A bamboo valley reached from Petalburg City: a guide on the west path
+takes you there, no badge needed (trainers Lv10–13, wild Pokémon Lv9–12).
+Its own tileset, gTileset_Bamboo, is Rustboro's plus new art drawn by
+tools/areas/bamboo_art.py: bamboo groves built from top, middle and bottom
+pieces so they tile at any size, a teahouse, stone lanterns, a shrine gate
+and stepping stones.
+
+- The tea master's Pancham: three Pancham have run off into the bamboo and
+  hide where the paths end (in the west maze, and across the pond on the
+  north bank). Each one you find runs home to the teahouse. Bring all three
+  back and the tea master gives you one of them (Pancham Lv12).
+- The secret grove: north of the pond's north bank, one stand of bamboo has
+  its stalks parted (`bamboo_*_parted`, walkable and drawn over you). An old
+  man in the teahouse glade hints at it. Inside: a Mienfoo training alone
+  (Lv14 static battle), TM Bulk Up and a hidden Rare Candy.
+- Also: a shrine gate and sign, a koi pond crossed only by Route 104's
+  plank bridge, Bug Catcher Jun, Picnicker Lila, Battle Girl Mei, Ninja Boy
+  Kaito, a Super Potion, Great Ball, Big Pearl, Ether, and hidden items.
+- Map ids: MAP_WHISPERSTEM_VALLEY, MAP_WHISPERSTEM_VALLEY_TEAHOUSE (the
+  Lavaridge herb shop's room). Done flag FLAG_BAMBOO_TEA_DONE.
+
+## Cobblerock and Cobblerock Mine
+
+A mining town in the hills, for after the first badge (trainers Lv13–16,
+wild Pokémon Lv11–16). A miner by Rustboro City's Pokémon Center takes you
+up once you have Roxanne's badge. The mountain is Route 116's, and the
+mine's art (rails with curves, carts, crates, ore piles, ore veins, timber
+supports, lamp posts) is drawn by tools/areas/mine_art.py. The town uses it
+through gTileset_Bamboo (palette 6), and the mine through its own tileset,
+gTileset_Mine (the cave tiles plus the art, palette 12), with the mine()
+style learned from Granite Cave.
+
+- The assayer's samples: three ore veins sparkle red and blue, one on 1F
+  and two on B1F. Chip a sample from each (they turn to plain rock, and
+  stay that way through `setmetatile` on load), then bring them to the
+  assay office. The assayer gives you a Rolycoly (Lv15) and has the foreman
+  move the boulder off the old shaft.
+- The old shaft: a Carbink (Lv18 static battle) among the crystals, a
+  Nugget and a hidden Star Piece.
+- Also: rails running from the mine into the ore yard, the foreman, an old
+  miner with hints, a supply merchant (Escape Rope, Repel, Hard Stone…),
+  the miners' rest where the cook heals your team, Hikers Grant and Doug,
+  Ruin Maniac Todd, Picnicker Rhoda, TM Dig, an Everstone and hidden items.
+- Map ids: MAP_COBBLEROCK, MAP_COBBLEROCK_MINE_1F, MAP_COBBLEROCK_MINE_B1F,
+  MAP_COBBLEROCK_MINE_OLD_SHAFT, MAP_COBBLEROCK_ASSAY_OFFICE,
+  MAP_COBBLEROCK_MINERS_REST. Done flag FLAG_COBBLE_ASSAY_DONE.
+
+## Voltspire Power Plant
+
+Mauville's power plant, for after the third badge (trainers Lv23–27, wild
+Pokémon Lv22–26). A plant worker on Mauville City's main road takes you
+there once you have Wattson's badge; the exit mat drops you back beside
+him (a warp added to MauvilleCity/map.json). The halls are learned from New
+Mauville (styles.plant()), and the new art (breaker panels in three colours,
+lever up or down; a TV, fridge, washing machine, fan and lawn mower; Tesla
+coils) is drawn by tools/areas/plant_art.py into gTileset_Plant.
+
+- The breakers: a Rotom tripped the main generator, and the barriers
+  between the four halls are stuck. Three breakers each move some of them
+  (New Mauville's barrier tiles, set by `setmetatile` on load and after
+  every flip): yellow swaps the two lobby doors; the coil hall's door to the
+  generator opens only with red on and blue off, the break room wing's only
+  with blue on and red off. Flip red in the east wing, then yellow in the
+  lobby, and walk round through the coil hall.
+- The generator: New Mauville's, shown switched off until you plug it back
+  in. The chief engineer then gives you TM Shock Wave.
+- The Rotom: it hides in one of the five break room appliances (picked at
+  random on entering) and hops to another each time you look in the wrong
+  one. Find it for a Lv25 battle.
+- Also: Guitarist Zapp, Pokémaniac Ohm, Expert Ampere, a Magnet,
+  Electirizer, Thunder Stone, Super Repel, Hyper Potion and hidden items.
+- Map id: MAP_VOLTSPIRE_PLANT. Done flag FLAG_VOLT_POWER_ON.
+
+## Nimbus Isles
+
+A town and islands above the clouds, for after the seventh badge (trainers
+Lv41–44, wild Pokémon Lv40–45). A balloon pilot at Fortree City's west
+edge flies you up once you have Winona's badge, and the pilot in Nimbus
+City flies you back. Nimbus City is a marble town on a cloud (a chime
+tower, a weather watcher's house, a Sky Mart, a fountain); its rainbow
+bridge leads to the Nimbus Isle, five grassy islands floating in open sky.
+The art (sky, a cloud edge set that joins up in any shape, wind streams,
+rainbows, the marble buildings, the chime tower, columns, a fountain, hot
+air balloons, the summit shrine) is drawn by tools/areas/sky_art.py into
+gTileset_Sky (Petalburg's tiles plus the art).
+
+- Getting around: rainbow bridges join the west island to the north and
+  south ones. Two wind streams (forced-walk tiles) carry you between the
+  west and east islands: east on the upper one, west on the lower one. A
+  third blows down from the summit.
+- The chimes: a storm blew the chime tower's three wind chimes onto the
+  north, south and east islands. Bring them back to the Chime Keeper: the
+  belfry rings (`setmetatile` on load), she gives you a Lv40 Castform, and
+  the wind up from the east island to the summit starts to blow.
+- The summit: Tornadus (Lv50) waits at the shrine.
+- Also: Bird Keeper Corvin, Dragon Tamer Draco, Cooltrainer Aurora,
+  Psychic Zephyr, a Sharp Beak, Wide Lens, Ultra Ball, PP Max, Comet Shard,
+  TM Steel Wing and hidden items.
+- Map ids: MAP_NIMBUS_CITY, MAP_NIMBUS_ISLE. Done flag FLAG_NIMBUS_CHIMES_DONE.
+
+## Mt. Frostcrown and Snowdrift Village
+
+A snowy mountain north of Lilycove, for after the sixth badge (trainers
+Lv38–42, wild Pokémon Lv36–40). A ranger beside Lilycove's Pokémon Center
+takes you up once you have Winona's badge; the ranger at the base camp
+takes you back. The trail climbs four shelves of rock and snowy pines to
+Snowdrift Village (a map connection, so you walk straight in): log cabins,
+a lodge where you can rest, and the top of the sled run. The rock is
+Routes 114 and 115's (styles.canyon()) with its palettes turned to snow;
+the sled run, cabins, lodge, snowmen, campfires, lanterns, sleds, the cairn
+and snowdrifts are drawn by tools/areas/frost_art.py into gTileset_Frost.
+General's trees and grass show their winter colours on these two map
+sections all year (IsSnowboundMap() in src/life_seasons.c).
+
+- The rescue: three climbers are stranded on the trail (in the tall grass
+  on the second shelf, behind a fallen rock on the first, under the pines).
+  Find them and they head down. The Mountain Rescue chief in the lodge then
+  gives you a Lv35 Frigibax, and the snowdrift on the summit path is dug
+  out (`setmetatile` on load).
+- The summit: Articuno (Lv45) roosts by the cairn. Meet it and the ice
+  sculptor in the east cabin gives you an Icy Rock.
+- The sled run: slide tiles (MB_SLIDE_*) with banked turns, from the
+  village across the map edge all the way down to the base camp.
+- Also: Hiker Bram, Expert Maren, Cooltrainers Roald and Elsa, the hermit
+  on his ledge, a Never-Melt Ice, TM Hail, Max Potion, Max Repel, Ultra
+  Ball, Ice Stone and hidden items.
+- Map ids: MAP_MT_FROSTCROWN, MAP_SNOWDRIFT_VILLAGE. Done flag FLAG_FROST_RESCUE_DONE.
+
+## Hoenn Metro
+
+An underground line under Mauville, Slateport and Verdanturf, for after the
+third badge (trainers Lv23–27, wild Pokémon Lv22–26 on the old line). A
+Metro attendant in each of the three cities (by the Pokémon Center in
+Mauville and Verdanturf, at Slateport's north gate) takes you down once you have Wattson's badge; each station's stairs bring
+you back up beside them. Talk to the train's doors to ride to either of
+the other stations (a dynamic multichoice). The halls are learned from New
+Mauville (styles.plant()); the track, the trains (silver, and an old
+rusted pair), the platform edge, turnstiles, ticket machines, benches,
+station boards, stamp stands, stairs, the shutter and the tunnel mouth are
+drawn by tools/areas/subway_art.py into gTileset_Subway.
+
+- The stamp rally: each station's platform has a stamp stand. With all
+  three stamps, the station master at Mauville Central opens the shutter
+  at the east end of the platform (`setmetatile` on load) to the old line.
+- The old line: a disused tunnel with a signal room, a depot office and a
+  store cupboard beside the track, a rusted train, and the forgotten Ghost
+  Station at the end, where a conductor punches your card and vanishes.
+  Its stamp completes the card, and the station master gives you a Lv25
+  Klink.
+- Also: Guitarist Strum (busking at Slateport), Ruin Maniac Digby,
+  Pokémaniac Gears, Hex Maniac Odette, TM Thunderbolt, Magnet, Metal Coat,
+  Spell Tag, Hyper Potion and hidden items.
+- Map ids: MAP_METRO_MAUVILLE, MAP_METRO_SLATEPORT, MAP_METRO_VERDANTURF,
+  MAP_METRO_OLD_LINE. Done flag FLAG_METRO_RALLY_DONE.
+
+## Wonderwild Park
+
+A theme park for after the second badge (trainers Lv17–20). A guide at
+Slateport's north gate takes you there by tram once you have Brawly's
+badge; the gatekeeper at the park's entrance takes you back. The ground is
+Petalburg's town style with General's plaza set for the avenues; the
+coaster, its car, station and decks, the teacup floor, hedges, the castle,
+a carousel, ticket booths, a star statue, flower beds and popcorn carts are
+drawn by tools/areas/park_art.py into gTileset_Park.
+
+- The mascots: Clefairy, Jigglypuff and Togepi ran off before the parade.
+  Clefairy is at the far end of the hedge maze (a fixed-seed maze, so it
+  never changes). Jigglypuff is on an island in the teacup ride, whose
+  plates spin you across the floor (MB_SPIN_*) until you land on a gold
+  plate: drop onto the far-left cup from the top row and it carries you
+  round to it. Togepi is on the coaster's photo deck, which only the ride
+  reaches (the track and deck sit at elevation 4); its steps take you back
+  down to the station. With all three home, the director gives you a Lv18
+  Tandemaus and the mascots parade outside the castle.
+- The Rapidash Racer: its host puts you on the track, and slide tiles with
+  banked curves carry you round the park's south-east corner.
+- Also: Youngster Timmy, Lass Poppy, School Kid Remy, Pokéfan Gloria, a
+  carousel, a Moon Stone, Lemonade, Great Ball, Super Potion and hidden
+  items.
+- Map id: MAP_WONDERWILD_PARK. Done flag FLAG_PARK_PARADE.
+
+## Prism Caverns
+
+A crystal cave for after the fifth badge (trainers Lv31–34). A geologist
+just inside Meteor Falls (by the Route 114 entrance) takes you there once
+you have Norman's badge; the arrow at the camp's south end leads back. The
+caverns are Victory Road and Granite Cave's cave style turned violet, with
+a darker rock ceiling so the halls read clearly. Crystal clusters and
+formations, shards, geodes, the resonance crystals, the teleport pads, the
+crystal seal, the heart crystal and the geologists' camp are drawn by
+tools/areas/crystal_art.py into gTileset_Crystal.
+
+- The resonance crystals: ruby, sapphire, emerald and topaz. Touch one and
+  it lights up, and every teleport pad of its colour wakes (a pad is plain
+  floor while it sleeps and an MB_AQUA_HIDEOUT_WARP pad once awake). The
+  ruby is at the end of the crystal garden; the red pad by the camp takes
+  you to the west gallery and the sapphire; the blue pads reach the north
+  hall and the ladder to the Depths. There, red and blue pads link six rock
+  islands: one dead end, one with the emerald, whose green pad reaches the
+  topaz. With all four lit the crystal seal shatters, and Diancie (Lv40)
+  waits by the heart crystal. A gold pad takes you back to the landing.
+- Dr. Mica, the team leader, follows your progress and gives you a Lv30
+  Glimmet once the seal breaks. The white pad behind the camp wakes then
+  too, and leads to a hidden geode grotto (TM Light Screen, Comet Shard,
+  PP Up and a hidden Big Pearl). A carving in the north hall hints at it.
+- Also: Hiker Garnet, Cooltrainer Quinn, Psychic Lucas, Ruin Maniac Oswin,
+  Cooltrainer Tessa and Hiker Bruno, a medic who heals your team, TM
+  Reflect, a Shiny Stone, Rare Candy, Max Revive, Full Restore and hidden
+  items.
+- Map ids: MAP_PRISM_CAVERNS, MAP_PRISM_CAVERNS_DEPTHS. Done flag
+  FLAG_PRISM_SEAL_OPEN.
+
+## Mirage Dunes and the Mirage Oasis
+
+A sea of dunes and a hidden oasis village for after the eighth badge
+(trainers Lv49–52). A caravan master on Route 111, south of the desert,
+takes you there once you have Juan's badge; the caravan's scout at the
+south end of the dunes takes you back. The ground is Route 111's desert
+style; gTileset_Oasis is the Mauville tiles Route 111 uses (the city's
+are cleared to make room, `pack(..., keep=...)`) plus palms, mirages,
+tents, market stalls, the well, the dry pond bed, quicksand pits, pillars,
+the altar and the oasis gate from tools/areas/oasis_art.py.
+
+- The mirages: three pools with palms shimmer in the dunes. Walk into one
+  and it melts away (coord events, then setmetatile), leaving a hidden
+  item where it stood. See through all three and the heat haze across the
+  north pass lifts, showing the gate to the real oasis.
+- The spring: the oasis is dry and its pond is cracked mud. The elder says
+  the Spring Stone was swallowed with the thieves' court, "where three
+  stones stand". The quicksand pit ringed by three stones (MB_MT_PYRE_HOLE)
+  drops you into the sunken court's altar room; the other two pits drop you
+  into side courts with items and a trainer. Each court has stairs back up.
+  Put the stone in the well and the spring flows, the pond fills (the
+  synthesised water is put back cell by cell), the elder gives a Lv45
+  Larvesta and Landorus (Lv55) comes to rest on the mesa.
+- Also: a bazaar (Ultra Balls, Max Potions, weather rocks), a berry stall,
+  a fortune teller with a hint, an inn tent that heals, Hiker Rashid,
+  Cooltrainer Zahra, Ruin Maniac Dunstan, Hex Maniac Nefera, Expert Omar,
+  TM Earthquake, a Big Nugget, PP Max and hidden items.
+- Map ids: MAP_MIRAGE_DUNES, MAP_MIRAGE_OASIS, MAP_MIRAGE_OASIS_INN,
+  MAP_MIRAGE_OASIS_SUNKEN_COURT. Done flag FLAG_MIRAGE_SPRING_DONE.
+
+## Verdant River
+
+A jungle river village for after the fifth badge (trainers Lv33–36). A
+canoe guide on the south end of Route 119 paddles you there once you have
+Norman's badge; the paddler at the landing takes you back. The ground is
+Route 119's jungle style; gTileset_Jungle is the Fortree tiles Routes 119
+and 120 and Fortree use (the rest are cleared, `pack(..., keep=...)`) plus
+rapids in four directions (current behaviours), sluice levers, stilt huts,
+dock planks, canoes, totems and the river temple from
+tools/areas/jungle_art.py.
+
+- The gorge: rapids fill the gorge between the village and the lake. Pull
+  the sluice lever on the lookout above the village and the gorge calms
+  (setmetatile to still water), so you can surf up to the lake.
+- The whirl: a ring of currents runs round the temple island and throws
+  you out to the west. The lever on the west beach turns the south side of
+  the ring north, so riding it carries you onto the island's dock and the
+  temple door. Inside: Keldeo (Lv40), TM Calm Mind and a Max Revive.
+- Reach the temple and the village elder gives you a Lv30 Froakie.
+- Also: a current east of the river mouth into a hidden lagoon (a Lotad
+  and Mystic Water), a healer's hut, Fisherman Reed, Bug Maniac Kobe, Bird
+  Keeper Liana, Swimmers Maya and Rowan, items and hidden items.
+- Map ids: MAP_VERDANT_RIVER, MAP_VERDANT_RIVER_TEMPLE,
+  MAP_VERDANT_RIVER_HUT. Done flag FLAG_VERDANT_TEMPLE_REACHED.
+- Warps to coordinates past 127 (Route 119 is 140 tall) used to wrap
+  round: `SetWarpDestination` now takes s16 x and y, like `struct WarpData`.
+
+## Ironmoor Prison
+
+The ruins of an island prison for after the fourth badge (trainers
+Lv28–31). A boatman on the Route 109 beach rows you out once you have
+Flannery's badge and rows you back from the landing. The island is Mt.
+Pyre's rocky style under an overcast sky; inside are hand-built stone halls
+(the `Halls` helper in tools/areas/prison.py: carve rooms, and walls go up
+above every open cell). gTileset_Prison is the Mt. Pyre tiles of the
+Facility set (the rest are cleared, `pack(..., keep=...)`) plus the
+prison wall and breach, the portcullis, watchtowers, searchlight beams,
+the generator, the cell block front, the pier and sea, cell bars and
+gates, bunks, chains, the spirits, the Odd Keystone, the sword rack and
+the warden's desk from tools/areas/prison_art.py.
+
+- The yard: the gate is rusted shut, so you get in through the breach by
+  the graveyard. The watchtowers' searchlights throw two beams across the
+  yard; step into one (coord events on VAR_TEMP_1) and the ghost guards send
+  you back to the breach. The generator in the corner cuts the lights, and
+  from inside you can knock the gate's bolt loose for a shortcut.
+- The cell block: the warden's desk holds the key to the iron gate up to
+  the cell hall, where a console opens every cell. Four spirits are bound
+  in the cells as ghost-fire; free all four and the Odd Keystone in
+  solitary cracks, and Spiritomb (Lv32) rises from it. The armoury's old
+  sword is a Honedge (Lv25 gift).
+- Also: Ruin Maniac Garrick, Ninja Boy Kaito, Hex Maniacs Morwen and
+  Selma, Psychic Vesper, TM Shadow Ball, Reaper Cloth, Dusk Stone, Spell
+  Tag and hidden items.
+- Map ids: MAP_IRONMOOR_ISLE, MAP_IRONMOOR_PRISON,
+  MAP_IRONMOOR_PRISON_SOLITARY. Done flag FLAG_IRONMOOR_SPIRITOMB_DONE.
 
 ## How the maps are made
 
@@ -131,7 +541,9 @@ Mauville City leads you there once you have Winona's badge.
   from real maps, 3x3 edge sets like ponds, events) and registers maps,
   layouts, scripts, region map sections, encounters and trainers.
 - Screenshots: `python3 tools/areas/shots/run.py tools/areas/shots/<area>.lua OUT`
-  (needs a built ROM and libmgba-dev). `Driver.flag(name, on)` sets any flag.
+  (needs a built ROM and libmgba-dev). `Driver.flag(name, on)` sets any flag,
+  `Driver.where()` gives the player's position and `Driver.season(s)`
+  forces a season.
 
 ## Area flags and trainers
 

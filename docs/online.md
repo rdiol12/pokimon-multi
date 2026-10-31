@@ -208,6 +208,136 @@ battle itself can be watched from ONLINE → WATCH as before.
 The module wraps the plaza server's `cmd_accept` and `finish_battle`, so it
 hears of every battle start and result without changing them.
 
+## Ranked doubles
+
+![TEST2 challenges TEST1 to a ranked double battle, TEST1 sent out Mudkip and Poochyena, the battle, everyone hears who won, the RANKED DOUBLES ladder](images/online-ranked-doubles.png)
+
+ONLINE → challenge a player → RANKED DOUBLE BATTLE starts a two-on-two
+link battle: each player uses the first two Pokémon of their party, as in a
+cable club double battle. It's a new plaza session kind, `double`
+(`NETPLAY_KIND_DOUBLE`, bridge `REQ double`), linked the same way as single
+battles; `Task_Linkup` now gives each game its battler id from the link
+order, which the double battle intro needs for the opponent's name.
+
+Results go to their own Elo ladder (`server/online_doubles.py`, table
+`online_doubles`), separate from the singles league; the server announces
+each winner, and HUB → DOUBLES LADDER shows the board. Spectator betting
+takes double battles too.
+
+## 2v2 team ladder
+
+![TEST2 picks 2v2 TEAM BATTLE, TEST1's partner TEST3 is asked to join from inside the Pokémon Center, the four-player battle, the win/loss screen, everyone hears who won, the 2V2 TEAM LADDER](images/online-team-ladder.png)
+
+Two players form a team in HUB → TEAM LADDER (FORM A TEAM picks someone
+online, who answers in the same place; SPLIT UP ends it). A team takes on
+another by talking to one of its members and picking 2V2 TEAM BATTLE: the
+other three are asked to join (a partner out of sight gets "Your team has a
+2v2 team battle!"), and once all have said yes, all four games link up for a
+multi battle, each player with the first three Pokémon of their party.
+
+The link is the plaza's network link grown to four players (see
+`docs/netplay.md`, Link over the network): session kind `multi`, link roles
+0 to 3, a FIFO per player, and the bridge holding back a player who runs too
+far ahead. Results go to the team's own Elo rating (`server/online_teams.py`,
+table `online_teams`); a team's members have to agree on the result, and the
+server announces the winners. Building it turned up that every Pokémon
+Center switched the game to wireless mode (the Union Room check), which broke
+any online link started indoors; that check is off now.
+
+## Guild halls, clan wars and base raids
+
+![HUB > GUILD HALL takes TEST1 to the Aces' hall; the members board, the guild chest, the clan war board and last week's prize, a raid on the Star Squad's base and the war points it scored; TEST2 puts items in the chest and guards the base](images/online-guilds.png)
+
+These build on the plaza's guilds (Online Plaza > GUILDS, `server/guilds.py`).
+
+- **Guild hall.** HUB > GUILD HALL takes a member to their guild's hall
+  (`MAP_ONLINE_GUILD_HALL`, map group `gMapGroup_Online`); its door leads
+  back to where they were (a dynamic warp). Every guild has its own hall: on
+  that map the server puts each player in a room named after their guild
+  (`room_of` in `server/netplay_server.py`), and players only see others in
+  the same room. The clerk shows the members (who's online, the leader, this
+  week's war points) and keeps the guild chest: any member can put items in
+  (up to 20 kinds, 99 each) and take a stack out.
+- **Clan war.** Every week guilds score war points: 3 for a member who beats
+  a member of another guild in a PvP battle or ranked double (2 each in a
+  2v2), 5 for a won raid, 2 to the defending guild when a raid fails. The war
+  officer shows the week's board; the three best guilds win prizes for every
+  member (3/2/1 Rare Candies and $10000/$5000/$2500), collected from the
+  officer the week after.
+- **Base raids.** At the raid captain, GUARD OUR BASE uploads the player's
+  team. A guild base's team is the best Pokémon of each defender, strongest
+  first, up to six, with the guild's tag as the trainer's name. RAID A BASE
+  lists the other guilds' bases; the raid is a battle like a secret base
+  owner's (`NetplayExt_PrepStoredBattle`), and the result goes back as
+  `RAID RESULT`. Three raids a day.
+
+Server: `server/online_guilds.py` (tables `online_guild_chest`,
+`online_guild_war`, `online_guild_war_claims`, `online_guild_defenders`,
+`online_guild_raids`). Game: `data/scripts/online/guilds.inc`,
+`data/maps/OnlineGuildHall/`, `src/online_guilds.c`.
+
+## Mount racing
+
+![The courses, joining a heat, the countdown at the start line on Route 102, racing (the timer and gates top right), the finish, TEST1 wins and TEST2 comes in 2nd, the record notice, the week's best times](images/online-racing.png)
+
+HUB > MOUNT RACING (with a Pokémon you can ride in the party) picks one of
+three courses: PETALBURG RUN (Route 102, east to west), SLATEPORT SPRINT
+(Route 110, south to north) and ASHEN DASH (Route 113, east to west).
+Everyone who joins a course within the same 20 seconds races it together,
+up to four, each from their own lane on the start line: the game warps them
+there, puts them on their mount and counts down. A small window shows the
+time and the gates passed; the last gate is the next town. Racers ride
+through other players and the other things the game's extra features put on
+the map (local ids 200 and up), wild Pokémon and trainers leave them alone
+(the engine's `WE_FLAG_NO_ENCOUNTER` and `OW_FLAG_NO_TRAINER_SEE`, flags
+`0x4C1` and `0x4C0`), and notices wait for the finish. At the finish the
+time goes to the server, and the player goes back to where they joined.
+
+The first racer across the line in a heat of two or more wins $1000 for
+each racer beaten; when everyone is in, all of them get the results. Each
+course has a board of the week's best times, and a new best is announced to
+everyone online. Giving up (MOUNT RACING again during a race) takes the
+player back.
+
+Server: `server/online_racing.py` (heats in memory, table
+`online_race_times`). Game: `src/online_racing.c` (courses, gates, the
+timer), `data/scripts/online/racing.inc`.
+
+## Hide and seek
+
+![TEST1 starts a game with Kirlia in the lead, counts with their eyes closed, seeks (WARM, then HOT), spots TEST2 blending in with Gastly one tile away and finds them; time's up, TEST3 stayed hidden and wins $1500, and the week's points board](images/online-hide.png)
+
+HUB > HIDE AND SEEK picks an arena (Petalburg Woods or Route 117). The
+first to pick one seeks; anyone who joins it in the next 20 seconds hides,
+up to five. The game warps everyone to the arena, counts the lobby down,
+and then the hiders have 30 seconds to hide while the seeker counts with
+their eyes closed. The seeker then has two minutes and finds a hider by
+talking to them. While seeking they only see hiders within 3 tiles: the
+server sends them the others as gone (`Server.can_see`). A hider who leaves
+the arena's map is out. Wild Pokémon, trainers and the story's scenes leave
+players alone during a game, as in a race, and notices wait for the end.
+
+The lead Pokémon helps, from its ability or else its type:
+
+| Lead | For a seeker | For a hider |
+| --- | --- | --- |
+| Keen Eye, Compound Eyes, Illuminate, Frisk | sharp eyes: sees hiders from 5 tiles | |
+| Forewarn, Anticipation, Telepathy, or a Psychic type | senses hiders: the timer shows HOT (closest within 5 tiles), WARM (12) or COLD | |
+| Sand Veil, Snow Cloak, Illusion, Infiltrator, or a Ghost type | | blends in: the seeker sees them from 2 tiles closer (at least 1) |
+
+The server's clock runs the game: the status tells the game how many seconds
+are left, so a clock that runs fast or slow keeps in step, and the game ends
+when the server says so (or 20 seconds after its own clock runs out, if the
+server is gone). The seeker wins $500 for each hider found and $1000 more
+for finding everyone; a hider nobody found wins $1500. Points go on the
+week's board: 2 for each find, 3 for staying hidden. Picking HIDE AND SEEK
+again during a game stops playing.
+
+Server: `server/online_hide.py` (games in memory, table
+`online_hide_points`). Game: `src/online_hide.c` (arenas, the timer, the
+talents), `data/scripts/online/hide.inc`; the racing and hide-and-seek
+timer window is `src/online_hud.c`.
+
 ## How it talks to the server
 
 These features use the Online Plaza's request channel (`NpxRpc_*` in
@@ -232,7 +362,8 @@ lines; a line starting with `*` is the player's own (red), and
 
 In the background the game reports what happens (`OEV CATCH species shiny
 mapGroup mapNum fished`, `OEV SIGHT ...`, `OEV FISH species size`) and asks for the live features' status (`OSTAT`)
-every ten seconds; both answers bring any notices.
+every ten seconds; both answers bring any notices. An answer can end with
+binary data after a NUL (`Npx_Binary`), like a raid's team.
 
 On the server, `server/online.py` adds these words to the plaza's request
 handlers. Each feature is a module `server/online_*.py` with `COMMANDS`,
@@ -241,7 +372,9 @@ and optionally `setup(db)`, `EVENTS` (reports it listens to) and
 numbers; `tools/online/gen_ids.py` writes it from the headers.
 
 Numbers this batch owns (agreed with the other feature threads): flags
-`0x4C0`–`0x4DF`, vars `0x40BB` and `0x40DB`, object local ids 241–248 on
+`0x4C0`–`0x4DF` (`0x4C0` and `0x4C1` are the no-trainers and
+no-encounters switches of races and hide and seek, which also skip the
+story's scenes), vars `0x40BB` and `0x40DB`, object local ids 241–248 on
 shared maps.
 
 ## Tests and screenshots
@@ -254,3 +387,6 @@ shared maps.
   `run.py` is `tools/world_shots/run.py` plus the seed and the bridge
   extensions; `tools/online_shots/lib.lua` has `Driver.openHub`,
   `Driver.catchWild` and `Driver.waitNotice`.
+- A seed's `ENV` reaches the games too: `NETPLAY_FPS` (as `hide_seed.py`
+  sets it, 60) makes the harness run at the game's real speed, for
+  scenarios timed by the server's clock.

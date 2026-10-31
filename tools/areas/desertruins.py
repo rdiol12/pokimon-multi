@@ -33,10 +33,10 @@ Double Battle: No
 AI: Basic Trainer
 
 Baltoy
-Level: 35
+Level: 30
 
 Sigilyph
-Level: 37
+Level: 32
 
 === AREA_TRAINER_SUNSCAR_MILO ===
 Name: MILO
@@ -48,10 +48,10 @@ Double Battle: No
 AI: Basic Trainer
 
 Krokorok
-Level: 36
+Level: 31
 
 Vibrava
-Level: 37
+Level: 32
 
 === AREA_TRAINER_SUNSCAR_SABLE ===
 Name: SABLE
@@ -63,13 +63,13 @@ Double Battle: No
 AI: Basic Trainer
 
 Cacturne
-Level: 37
+Level: 32
 
 Hippowdon
-Level: 38
+Level: 34
 
-Garchomp
-Level: 36
+Gabite
+Level: 31
 ''')
 
 
@@ -265,13 +265,13 @@ SunscarDesert_Text_SableDefeat:
 	.string "You passed.$"
 
 SunscarDesert_Text_SablePost:
-	.string "My GARCHOMP hatched here, on the\n"
+	.string "My GABITE hatched here, on the\n"
 	.string "hottest day of the year.$"
 ''')
 register_wild('MAP_SUNSCAR_DESERT', 'gSunscarDesert',
-              land=[('SANDILE', 34, 36), ('TRAPINCH', 34, 36), ('CACNEA', 34, 36), ('HIPPOPOTAS', 34, 36),
-                    ('BALTOY', 35, 37), ('SILICOBRA', 35, 37), ('SANDSHREW', 34, 36), ('MARACTUS', 35, 37),
-                    ('KROKOROK', 36, 38), ('VIBRAVA', 37, 38), ('GIBLE', 35, 36), ('SIGILYPH', 37, 38)])
+              land=[('SANDILE', 29, 31), ('TRAPINCH', 29, 31), ('CACNEA', 29, 31), ('HIPPOPOTAS', 29, 31),
+                    ('BALTOY', 30, 32), ('SILICOBRA', 30, 32), ('SANDSHREW', 29, 31), ('MARACTUS', 30, 32),
+                    ('KROKOROK', 31, 33), ('VIBRAVA', 32, 33), ('GIBLE', 30, 31), ('SIGILYPH', 32, 33)])
 
 # ---------------------------------------------------------------- the hall of riddles
 GLYPHS = {'SUN': (4, 5), 'MOON': (17, 5), 'WAVE': (4, 11), 'FLAME': (17, 11)}
@@ -463,7 +463,7 @@ SunscarRuins_Vault_EventScript_Spiritomb::
 	lock
 	faceplayer
 	msgbox SunscarRuins_Vault_Text_Spirits, MSGBOX_DEFAULT
-	setwildbattle SPECIES_SPIRITOMB, 40
+	setwildbattle SPECIES_SPIRITOMB, 34
 	playmoncry SPECIES_SPIRITOMB, CRY_MODE_ENCOUNTER
 	msgbox SunscarRuins_Vault_Text_Spiritomb, MSGBOX_DEFAULT
 	waitmoncry
@@ -503,9 +503,9 @@ SunscarRuins_Vault_Text_Stays:
 	.string "The voices are still whispering.$"
 ''')
 register_wild('MAP_SUNSCAR_RUINS_VAULT', 'gSunscarRuinsVault',
-              land=[('UNOWN', 30, 30), ('UNOWN', 32, 32), ('UNOWN', 34, 34), ('UNOWN', 36, 36), ('UNOWN', 30, 36),
-                    ('UNOWN', 30, 36), ('UNOWN', 30, 36), ('UNOWN', 30, 36), ('UNOWN', 30, 36), ('UNOWN', 30, 36),
-                    ('UNOWN', 30, 36), ('UNOWN', 30, 36)], land_rate=5)
+              land=[('UNOWN', 26, 26), ('UNOWN', 28, 28), ('UNOWN', 30, 30), ('UNOWN', 32, 32), ('UNOWN', 26, 32),
+                    ('UNOWN', 26, 32), ('UNOWN', 26, 32), ('UNOWN', 26, 32), ('UNOWN', 26, 32), ('UNOWN', 26, 32),
+                    ('UNOWN', 26, 32), ('UNOWN', 26, 32)], land_rate=5)
 print('ok Sunscar')
 
 # ---------------------------------------------------------------- the way in, from Mauville City
@@ -518,7 +518,7 @@ register_script_file('sunscar', r'''
 MauvilleCity_EventScript_SunscarGuide::
 	lock
 	faceplayer
-	goto_if_unset FLAG_BADGE06_GET, MauvilleCity_EventScript_SunscarGuideNoBadge
+	goto_if_unset FLAG_BADGE04_GET, MauvilleCity_EventScript_SunscarGuideNoBadge
 	msgbox MauvilleCity_Text_SunscarGuideAsk, MSGBOX_YESNO
 	goto_if_eq VAR_RESULT, NO, MauvilleCity_EventScript_SunscarGuideNo
 	msgbox MauvilleCity_Text_SunscarGuideGo, MSGBOX_DEFAULT
@@ -542,10 +542,10 @@ MauvilleCity_Text_SunscarGuideNoBadge:
 	.string "Deep in the desert there are ruins\n"
 	.string "full of UNOWN riddles.\p"
 	.string "It's a harsh trip. Come back with\n"
-	.string "WINONA's badge and I'll guide you.$"
+	.string "FLANNERY's badge and I'll guide you.$"
 
 MauvilleCity_Text_SunscarGuideAsk:
-	.string "WINONA's badge! You're ready for\n"
+	.string "FLANNERY's badge! You're ready for\n"
 	.string "the desert.\p"
 	.string "Shall I guide you to SUNSCAR\n"
 	.string "DESERT?$"

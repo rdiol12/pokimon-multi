@@ -6,7 +6,7 @@ Safari hunts and the photo gallery.
 mGBA side is tools/netplay_bridge/netplay_world.lua.
 
 Protocol (one line each, client -> server):
-    LOOK follower mount           what this player looks like (graphics ids)
+    LOOK follower mount [accessory]  what this player looks like (graphics ids; what the follower wears)
     HOUSE open hexdecor           their house: open to visitors, 16 bytes
     SCORE board key value extra   a new result for a leaderboard
     WBOARD board key              ask for a leaderboard
@@ -30,7 +30,7 @@ import time
 log = logging.getLogger("netplay.world")
 
 BOARDS = {0: "fish", 1: "berries", 2: "hardcore", 3: "hunt", 8: "dungeon", 9: "treasure",
-          10: "factory", 11: "arena", 12: "pyramid", 16: "quiz", 17: "cooking"}
+          10: "factory", 11: "arena", 12: "pyramid", 16: "quiz", 17: "cooking", 18: "bugs"}
 BOARD_ROWS = 10
 HUNT_SECONDS = 30 * 60
 MAX_PHOTO_BYTES = 256 * 1024
@@ -85,7 +85,7 @@ class WorldStore:
 
 class PlayerWorld:
     def __init__(self):
-        self.look = (0, 0)
+        self.look = (0, 0, 0)
         self.house = (0, "00" * 16)
         self.photo = bytearray()
 
@@ -102,10 +102,10 @@ def _check_hex(text, length=None):
     return text.lower()
 
 
-def cmd_look(self, player, follower, mount):
+def cmd_look(self, player, follower, mount, accessory="0"):
     w = _world(player)
-    w.look = (int(follower) & 0xFFFF, int(mount) & 0xFFFF)
-    self.broadcast_all(f"LOOK {player.id} {w.look[0]} {w.look[1]}", exclude=player)
+    w.look = (int(follower) & 0xFFFF, int(mount) & 0xFFFF, int(accessory) & 0xFF)
+    self.broadcast_all(f"LOOK {player.id} {' '.join(map(str, w.look))}", exclude=player)
 
 
 def cmd_house(self, player, is_open, decor):
@@ -177,7 +177,7 @@ def cmd_world(self, player):
     for p in self.players.values():
         if p is player or p.name is None or not hasattr(p, "world"):
             continue
-        player.send(f"LOOK {p.id} {p.world.look[0]} {p.world.look[1]}")
+        player.send(f"LOOK {p.id} {' '.join(map(str, p.world.look))}")
         player.send(f"HOUSE {p.id} {p.world.house[0]} {p.world.house[1]}")
     cmd_hunt(self, player)
 

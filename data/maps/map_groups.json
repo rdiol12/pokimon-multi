@@ -75,7 +75,8 @@
     "gMapGroup_IndoorTwoIslandRoute_Frlg",
     "gMapGroup_IndoorSixIslandRoute_Frlg",
     "gMapGroup_IndoorSevenIslandRoute_Frlg",
-    "gMapGroup_Adventure"
+    "gMapGroup_Adventure",
+    "gMapGroup_Online"
   ],
   "gMapGroup_TownsAndRoutes": [
     "PetalburgCity",
@@ -147,7 +148,56 @@
     "FrostveinCave_B1F",
     "SunscarDesert",
     "SunscarRuins_Hall",
-    "SunscarRuins_Vault"
+    "SunscarRuins_Vault",
+    "Hollowmere",
+    "Hollowmere_Inn",
+    "Hollowmere_House",
+    "Hollowmere_Manor_1F",
+    "Hollowmere_Manor_2F",
+    "MireboughMarsh",
+    "SunfairCarnival",
+    "CorallineReef",
+    "Abyssia",
+    "Abyssia_Temple",
+    "GullwingPoint",
+    "GullwingPoint_PirateShip",
+    "CorallineReef_Wreck",
+    "GullwingPoint_PirateHold",
+    "WhisperstemValley",
+    "WhisperstemValley_Teahouse",
+    "Cobblerock",
+    "CobblerockMine_1F",
+    "CobblerockMine_B1F",
+    "CobblerockMine_OldShaft",
+    "VoltspirePlant",
+    "NimbusCity",
+    "NimbusIsle",
+    "Cobblerock_AssayOffice",
+    "Cobblerock_MinersRest",
+    "NimbusCity_WeatherHouse",
+    "NimbusCity_Mart",
+    "MtFrostcrown",
+    "MetroVerdanturf",
+    "MetroOldLine",
+    "WonderwildPark",
+    "PrismCaverns",
+    "PrismCaverns_Depths",
+    "MirageDunes",
+    "MirageOasis",
+    "MetroSlateport",
+    "MetroMauville",
+    "SnowdriftVillage",
+    "SnowdriftVillage_Lodge",
+    "SnowdriftVillage_WestCabin",
+    "SnowdriftVillage_EastCabin",
+    "MirageOasis_Inn",
+    "MirageOasis_SunkenCourt",
+    "VerdantRiver",
+    "VerdantRiver_Temple",
+    "VerdantRiver_Hut",
+    "IronmoorIsle",
+    "IronmoorPrison",
+    "IronmoorPrison_Solitary"
   ],
   "gMapGroup_IndoorLittleroot": [
     "LittlerootTown_BrendansHouse_1F",
@@ -1193,5 +1243,8 @@
   "gMapGroup_Adventure": [
     "AdventureRanch",
     "AdventureDungeon"
+  ],
+  "gMapGroup_Online": [
+    "OnlineGuildHall"
   ]
 }

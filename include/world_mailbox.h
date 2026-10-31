@@ -26,7 +26,7 @@ struct WorldRemoteLook
     /*0x02*/ u16 followerGfx; // OBJ_EVENT_MON + species (+ shiny/female bits), 0 = none
     /*0x04*/ u16 mountGfx;    // 0 = on foot
     /*0x06*/ u8 houseOpen;
-    /*0x07*/ u8 filler;
+    /*0x07*/ u8 accessory;  // what the follower wears (src/pastime_fashion.c) + 1, 0 = none
     /*0x08*/ u8 decor[WORLD_HOUSE_SLOTS];
 }; // size 0x18
 
@@ -61,7 +61,9 @@ struct WorldMailbox
     /*0x033*/ u8 houseOpen;
     /*0x034*/ struct WorldRemoteLook remotes[NETPLAY_MAX_REMOTES];
     /*0x0F4*/ struct WorldBoardRow rows[WORLD_BOARD_ROWS];
-}; // size 0x194
+    /*0x194*/ u8 accessory;  // this player's follower's accessory + 1, sent with the look
+    /*0x195*/ u8 filler[3];
+}; // size 0x198
 
 extern struct WorldMailbox gWorldMailbox;
 

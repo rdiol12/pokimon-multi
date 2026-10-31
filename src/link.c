@@ -1865,7 +1865,7 @@ u32 LinkMain1(u8 *shouldAdvanceLinkState, u16 *sendCmd, u16 (*recvCmds)[CMD_LENG
                 // player is already known, so skip the hardware handshake.
                 Netplay_LinkReset();
                 gLink.localId = Netplay_GetLinkRole();
-                gLink.playerCount = 2;
+                gLink.playerCount = Netplay_GetLinkPlayerCount();
                 gLink.isMaster = gLink.localId == 0 ? LINK_MASTER : LINK_SLAVE;
             }
             else

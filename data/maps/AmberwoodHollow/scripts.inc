@@ -115,6 +115,7 @@ AmberwoodHollow_EventScript_Barrier::
 AmberwoodHollow_EventScript_Celebi::
 	lock
 	faceplayer
+	goto_if_unset FLAG_SYS_GAME_CLEAR, AmberwoodHollow_EventScript_CelebiShy
 	msgbox AmberwoodHollow_Text_CelebiAppears, MSGBOX_DEFAULT
 	closemessage
 	waitse
@@ -274,3 +275,15 @@ AmberwoodHollow_Text_ShrineSign:
 
 AmberwoodHollow_Text_Carving:
 	.string "Words are carved into the stone:\p“This hollow was drawn by hand,\nleaf by leaf, for RON.”$"
+
+@ Amberwood opens at eight badges; CELEBI only shows itself to the CHAMPION.
+AmberwoodHollow_EventScript_CelebiShy:
+	msgbox AmberwoodHollow_Text_CelebiShy, MSGBOX_DEFAULT
+	release
+	end
+
+AmberwoodHollow_Text_CelebiShy:
+	.string "CELEBI watches you from the shrine,\n"
+	.string "then darts away when you come close.\p"
+	.string "It seems shy… Perhaps it will stay\n"
+	.string "for the CHAMPION of HOENN.$"

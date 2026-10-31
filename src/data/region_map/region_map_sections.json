@@ -1662,6 +1662,78 @@
     {
       "id": "MAPSEC_SUNSCAR_DESERT",
       "name": "SUNSCAR DESERT"
+    },
+    {
+      "id": "MAPSEC_HOLLOWMERE",
+      "name": "HOLLOWMERE"
+    },
+    {
+      "id": "MAPSEC_MIREBOUGH_MARSH",
+      "name": "MIREBOUGH MARSH"
+    },
+    {
+      "id": "MAPSEC_SUNFAIR_CARNIVAL",
+      "name": "SUNFAIR CARNIVAL"
+    },
+    {
+      "id": "MAPSEC_CORALLINE_REEF",
+      "name": "CORALLINE REEF"
+    },
+    {
+      "id": "MAPSEC_ABYSSIA",
+      "name": "ABYSSIA"
+    },
+    {
+      "id": "MAPSEC_GULLWING_POINT",
+      "name": "GULLWING POINT"
+    },
+    {
+      "id": "MAPSEC_WHISPERSTEM_VALLEY",
+      "name": "WHISPERSTEM VALLEY"
+    },
+    {
+      "id": "MAPSEC_COBBLEROCK",
+      "name": "COBBLEROCK"
+    },
+    {
+      "id": "MAPSEC_VOLTSPIRE_PLANT",
+      "name": "VOLTSPIRE PLANT"
+    },
+    {
+      "id": "MAPSEC_NIMBUS_ISLES",
+      "name": "NIMBUS ISLES"
+    },
+    {
+      "id": "MAPSEC_MT_FROSTCROWN",
+      "name": "MT. FROSTCROWN"
+    },
+    {
+      "id": "MAPSEC_SNOWDRIFT_VILLAGE",
+      "name": "SNOWDRIFT VILLAGE"
+    },
+    {
+      "id": "MAPSEC_HOENN_METRO",
+      "name": "HOENN METRO"
+    },
+    {
+      "id": "MAPSEC_WONDERWILD_PARK",
+      "name": "WONDERWILD PARK"
+    },
+    {
+      "id": "MAPSEC_PRISM_CAVERNS",
+      "name": "PRISM CAVERNS"
+    },
+    {
+      "id": "MAPSEC_MIRAGE_OASIS",
+      "name": "MIRAGE OASIS"
+    },
+    {
+      "id": "MAPSEC_VERDANT_RIVER",
+      "name": "VERDANT RIVER"
+    },
+    {
+      "id": "MAPSEC_IRONMOOR_PRISON",
+      "name": "IRONMOOR PRISON"
     }
   ]
 }

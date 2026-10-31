@@ -6457,7 +6457,11 @@ BattleScript_BelchFails::
 
 @ src/mechanics_styles.c: Mechanics_GetBattleMessage(gBattleTextBuff3[0]).
 BattleScript_MechanicsMessage::
+	call BattleScript_MechanicsMessageRet
+	end
+
+BattleScript_MechanicsMessageRet::
 	flushtextbox
 	printstring STRINGID_MECH_MESSAGE
 	waitmessage B_WAIT_TIME_LONG
-	end
+	return

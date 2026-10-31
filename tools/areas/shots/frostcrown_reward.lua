@@ -1,0 +1,36 @@
+-- Mt. Frostcrown: all three climbers safe, the chief's reward, the summit
+-- path dug out and Articuno at the cairn.
+dofile(INSTANCE_DIR .. "/../driver_lib.lua")
+local D, K = Driver, Driver.KEY
+local V = MAPS.MAP_SNOWDRIFT_VILLAGE
+
+D.run(function()
+    D.boot()
+    D.wait(60)
+    D.season(1)
+    D.flag("FLAG_FROST_CLIMBER_1", true)
+    D.flag("FLAG_FROST_CLIMBER_2", true)
+    D.flag("FLAG_FROST_CLIMBER_3", true)
+    D.scene(12, MAPS.MAP_SNOWDRIFT_VILLAGE_LODGE, 6, 4, { give = "LUCARIO", level = 55, lead = true })
+    D.wait(200)
+    D.talk(K.UP, "01-chief-thanks", 3)
+    D.wait(150)
+    D.shot("02-got-frigibax")
+    for _ = 1, 4 do D.press(K.A, 50) end
+    D.wait(60)
+    D.shot("03-chief-digs")
+    D.press(K.A, 40)
+    D.press(K.B, 40)
+    D.scene(12, V, 26, 10)
+    D.wait(300)
+    D.shot("04-summit-path-open")
+    D.scene(12, V, 21, 4)
+    D.wait(300)
+    D.shot("05-summit")
+    D.talk(K.UP, "06-articuno", 1)
+    D.press(K.A, 60)
+    D.waitFor("the battle", 1500, D.inBattle, function(i) if i % 40 == 0 then D.press(K.A, 0) end end)
+    D.wait(300)
+    D.shot("07-articuno-battle")
+    D.result("ok")
+end)

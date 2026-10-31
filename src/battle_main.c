@@ -3568,6 +3568,10 @@ static void TryDoEventsBeforeFirstTurn(void)
             StopCryAndClearCrySongs();
             BattleScriptExecute(BattleScript_ArenaTurnBeginning);
         }
+        else if (Mechanics_TryOpeningCommentary())
+        {
+            BattleScriptExecute(BattleScript_MechanicsMessage);
+        }
 
         gBattleStruct->eventState.beforeFirstTurn = 0;
         break;
@@ -4635,6 +4639,7 @@ s32 GetWhichBattlerFaster(struct BattleCalcValues *calcValues, bool32 ignoreChos
 
 static void SetActionsAndBattlersTurnOrder(void)
 {
+    Mechanics_BeforeTurnOrder();
     s32 turnOrderId = 0;
     enum BattlerId battler, battler2;
 

@@ -61,7 +61,7 @@
 // See docs/netplay.md for the mailbox layout and the bridge/server protocol.
 
 #define REQUEST_QUEUE_SIZE 4
-#define PENDING_CMDS_SIZE  64
+#define LINK_FIFO_SIZE     128 // shared by the linked players: 64 cmds each for two, 32 for four
 
 #define RESPONSE_TIMEOUT  (60 * 60)
 #define START_TIMEOUT     (60 * 15)
@@ -96,11 +96,14 @@ struct NetplayInvite
     bool8 showing;
 };
 
+// Each linked player's cmds (ours as sent, the others' as received) wait in
+// their own FIFO until every player has one for the same transfer.
 struct NetplayLinkState
 {
-    u16 pending[PENDING_CMDS_SIZE][CMD_LENGTH]; // our sent cmds still waiting for the peer's matching cmd
-    u8 pendingHead;
-    u8 pendingCount;
+    u16 cmds[LINK_FIFO_SIZE][CMD_LENGTH];
+    u8 head[MAX_LINK_PLAYERS];
+    u8 count[MAX_LINK_PLAYERS];
+    u8 acked; // the master's handshake: bit per player that answered it
     bool8 handshakeSent;
 };
 
@@ -238,6 +241,12 @@ static void HandleEvent(const struct NetplayEvent *ev)
         if (ev->sessionId == sOutgoingSessionId)
         {
             sOutgoingSessionId = 0;
+            sResponse = RESPONSE_DECLINED;
+        }
+        // In a team battle, anyone else saying no calls it off.
+        if (sInvite.pending && ev->sessionId == sInvite.sessionId)
+        {
+            sInvite.pending = FALSE;
             sResponse = RESPONSE_DECLINED;
         }
         break;
@@ -477,6 +486,7 @@ void Netplay_EndSession(void)
         QueueRequest(NETPLAY_REQ_LEAVE, 0, sSession.id, 0);
     sSession = (struct NetplaySession){0};
     sLink = (struct NetplayLinkState){0};
+    gNetplayMailbox.rx.filler = 0;
 }
 
 void Netplay_OnBattleEnd(u8 battleOutcome)
@@ -485,7 +495,8 @@ void Netplay_OnBattleEnd(u8 battleOutcome)
 
     if (sSession.active && sSession.kind == NETPLAY_KIND_COOP)
         gSaveBlock2Ptr->frontier.lvlMode = sSavedFrontierLvlMode;
-    if (!sSession.active || sSession.kind != NETPLAY_KIND_BATTLE)
+    if (!sSession.active || (sSession.kind != NETPLAY_KIND_BATTLE && sSession.kind != NETPLAY_KIND_DOUBLE
+                          && sSession.kind != NETPLAY_KIND_MULTI))
         return;
     // Running from a link battle sets B_OUTCOME_LINK_BATTLE_RAN on top of won/lost.
     switch (battleOutcome & ~B_OUTCOME_LINK_BATTLE_RAN)
@@ -541,6 +552,12 @@ void Netplay_SendInvite(void)
     case NETPLAY_KIND_COOP:
         type = NETPLAY_REQ_COOP;
         break;
+    case NETPLAY_KIND_DOUBLE:
+        type = NETPLAY_REQ_DOUBLE;
+        break;
+    case NETPLAY_KIND_MULTI:
+        type = NETPLAY_REQ_MULTI;
+        break;
     default:
         type = NETPLAY_REQ_TRADE;
         break;
@@ -584,9 +601,11 @@ static void Task_WaitForResponse(u8 taskId)
 }
 
 // Shows who invited us. gStringVar1: their name. VAR_RESULT: NETPLAY_KIND_*.
+// VAR_0x8005: FALSE if they aren't here, so their name isn't known.
 void Netplay_BufferInvite(void)
 {
     BufferRemoteName(gStringVar1, sInvite.peerId);
+    gSpecialVar_0x8005 = (gStringVar1[0] != EOS);
     if (gStringVar1[0] == EOS)
         StringCopy(gStringVar1, COMPOUND_STRING("Someone"));
     gSpecialVar_Result = sInvite.pending ? sInvite.kind : NETPLAY_KIND_NONE;
@@ -625,7 +644,10 @@ static void Task_WaitForStart(u8 taskId)
 
     if (sResponse == RESPONSE_STARTED)
         gSpecialVar_Result = 1;
-    else if (sResponse == RESPONSE_DECLINED || ++tTimer > START_TIMEOUT)
+    // A team battle starts once all four have answered, which can take as
+    // long as the challenger waits.
+    else if (sResponse == RESPONSE_DECLINED
+          || ++tTimer > (sInvite.kind == NETPLAY_KIND_MULTI ? RESPONSE_TIMEOUT : START_TIMEOUT))
         gSpecialVar_Result = 0;
     else
         return;
@@ -654,7 +676,8 @@ void Netplay_StartActivity(void)
 
 static bool32 IsBattleKind(u8 kind)
 {
-    return kind == NETPLAY_KIND_BATTLE || kind == NETPLAY_KIND_COOP;
+    return kind == NETPLAY_KIND_BATTLE || kind == NETPLAY_KIND_COOP || kind == NETPLAY_KIND_DOUBLE
+        || kind == NETPLAY_KIND_MULTI;
 }
 
 // Co-op: the two players against two Battle Frontier trainers, in the
@@ -707,6 +730,23 @@ bool32 Netplay_IsCoopBattle(void)
     return sSession.active && sSession.kind == NETPLAY_KIND_COOP && gMain.inBattle;
 }
 
+// A 2v2 team battle: each player brings the first three Pokémon of their
+// party that aren't eggs, as if picked at the cable club.
+static void ReduceToMultiParty(void)
+{
+    u32 i, n = 0;
+
+    for (i = 0; i < MAX_FRONTIER_PARTY_SIZE; i++)
+        gSelectedOrderFromParty[i] = 0;
+    for (i = 0; i < PARTY_SIZE && n < MULTI_PARTY_SIZE; i++)
+    {
+        if (GetMonData(&gParties[B_TRAINER_PLAYER][i], MON_DATA_SPECIES) != SPECIES_NONE
+         && !GetMonData(&gParties[B_TRAINER_PLAYER][i], MON_DATA_IS_EGG))
+            gSelectedOrderFromParty[n++] = i + 1;
+    }
+    ReducePlayerPartyToSelectedMons();
+}
+
 static void LinkupFailed(u8 taskId)
 {
     CloseLink();
@@ -719,6 +759,7 @@ static void LinkupFailed(u8 taskId)
 static void Task_Linkup(u8 taskId)
 {
     s16 *data = gTasks[taskId].data;
+    u32 i;
 
     if (tState < 3 && (!sSession.active || HasLinkErrorOccurred() || ++tTimer > LINKUP_TIMEOUT))
     {
@@ -729,19 +770,31 @@ static void Task_Linkup(u8 taskId)
     switch (tState)
     {
     case 0:
-        gLinkType = IsBattleKind(sSession.kind) ? LINKTYPE_SINGLE_BATTLE : LINKTYPE_TRADE_SETUP;
+        if (sSession.kind == NETPLAY_KIND_DOUBLE)
+            gLinkType = LINKTYPE_DOUBLE_BATTLE;
+        else if (sSession.kind == NETPLAY_KIND_MULTI)
+            gLinkType = LINKTYPE_MULTI_BATTLE;
+        else
+            gLinkType = IsBattleKind(sSession.kind) ? LINKTYPE_SINGLE_BATTLE : LINKTYPE_TRADE_SETUP;
         gBattleTypeFlags = 0;
+        // Pokémon Centers turn on wireless mode; the network link is wired.
+        SetWirelessCommType0();
         OpenLinkTimed();
         ResetLinkPlayerCount();
         ResetLinkPlayers();
         tState++;
         break;
     case 1:
-        switch (GetLinkPlayerDataExchangeStatusTimed(2, 2))
+        switch (GetLinkPlayerDataExchangeStatusTimed(Netplay_GetLinkPlayerCount(), Netplay_GetLinkPlayerCount()))
         {
         case EXCHANGE_COMPLETE:
             gFieldLinkPlayerCount = GetLinkPlayerCount_2();
             gLocalLinkPlayerId = GetMultiplayerId();
+            // Battler ids follow the link order, as from cable club seats;
+            // the battle's own exchange sends the local one again.
+            SetLocalLinkPlayerId(gLocalLinkPlayerId);
+            for (i = 0; i < gFieldLinkPlayerCount; i++)
+                gLinkPlayers[i].id = i;
             SaveLinkPlayers(gFieldLinkPlayerCount);
             tState++;
             break;
@@ -760,10 +813,19 @@ static void Task_Linkup(u8 taskId)
         FadeScreen(FADE_TO_BLACK, 0);
         if (IsBattleKind(sSession.kind))
         {
-            gSpecialVar_0x8004 = sSession.kind == NETPLAY_KIND_COOP ? USING_BATTLE_TOWER : USING_SINGLE_BATTLE;
+            if (sSession.kind == NETPLAY_KIND_COOP)
+                gSpecialVar_0x8004 = USING_BATTLE_TOWER;
+            else if (sSession.kind == NETPLAY_KIND_DOUBLE)
+                gSpecialVar_0x8004 = USING_DOUBLE_BATTLE;
+            else if (sSession.kind == NETPLAY_KIND_MULTI)
+                gSpecialVar_0x8004 = USING_MULTI_BATTLE;
+            else
+                gSpecialVar_0x8004 = USING_SINGLE_BATTLE;
             gLinkType = LINKTYPE_BATTLE;
             HealPlayerParty();
             SavePlayerParty();
+            if (sSession.kind == NETPLAY_KIND_MULTI)
+                ReduceToMultiParty();
             LoadPlayerBag();
             ClearLinkCallback_2();
         }
@@ -791,6 +853,7 @@ static void Task_Linkup(u8 taskId)
     case 4:
         if (!gReceivedRemoteLinkPlayers)
         {
+            SetWirelessCommType0(); // the battle reopens the link
             PlayMapChosenOrBattleBGM(MUS_VS_TRAINER);
             CleanupOverworldWindowsAndTilemaps();
             if (sSession.kind == NETPLAY_KIND_COOP)
@@ -800,6 +863,10 @@ static void Task_Linkup(u8 taskId)
             else
             {
                 gBattleTypeFlags = BATTLE_TYPE_LINK | BATTLE_TYPE_TRAINER;
+                if (sSession.kind == NETPLAY_KIND_DOUBLE)
+                    gBattleTypeFlags |= BATTLE_TYPE_DOUBLE;
+                else if (sSession.kind == NETPLAY_KIND_MULTI)
+                    gBattleTypeFlags |= BATTLE_TYPE_DOUBLE | BATTLE_TYPE_MULTI;
                 TRAINER_BATTLE_PARAM.opponentA = TRAINER_LINK_OPPONENT;
             }
             sSession.inActivity = TRUE;
@@ -882,9 +949,15 @@ u8 Netplay_GetLinkRole(void)
     return sSession.role;
 }
 
+u8 Netplay_GetLinkPlayerCount(void)
+{
+    return sSession.kind == NETPLAY_KIND_MULTI ? 4 : 2;
+}
+
 void Netplay_LinkReset(void)
 {
     sLink = (struct NetplayLinkState){0};
+    gNetplayMailbox.rx.filler = 0;
 }
 
 static bool32 SendPacket(u8 kind, const u16 *cmd)
@@ -898,7 +971,7 @@ static bool32 SendPacket(u8 kind, const u16 *cmd)
         return FALSE;
     packet = &ring->packets[ring->head];
     packet->kind = kind;
-    packet->filler1 = 0;
+    packet->filler1 = sSession.role; // which player of the link sent it
     packet->filler2 = 0;
     for (i = 0; i < CMD_LENGTH; i++)
         packet->cmd[i] = cmd != NULL ? cmd[i] : 0;
@@ -921,26 +994,67 @@ static void PopPacket(void)
     ring->tail = (ring->tail + 1) % NETPLAY_RING_SIZE;
 }
 
+static u32 FifoWindow(void)
+{
+    return LINK_FIFO_SIZE / Netplay_GetLinkPlayerCount();
+}
+
+static bool32 FifoPush(u32 player, const u16 *cmd)
+{
+    u32 window = FifoWindow();
+    u32 i, index;
+
+    if (player >= Netplay_GetLinkPlayerCount() || sLink.count[player] >= window)
+        return FALSE;
+    index = player * window + (sLink.head[player] + sLink.count[player]) % window;
+    for (i = 0; i < CMD_LENGTH; i++)
+        sLink.cmds[index][i] = cmd != NULL ? cmd[i] : 0;
+    sLink.count[player]++;
+    return TRUE;
+}
+
+static u16 *FifoHead(u32 player)
+{
+    return sLink.cmds[player * FifoWindow() + sLink.head[player]];
+}
+
+static void FifoPop(u32 player)
+{
+    sLink.head[player] = (sLink.head[player] + 1) % FifoWindow();
+    sLink.count[player]--;
+}
+
 // Called from LinkMain1 while the link is in LINK_STATE_HANDSHAKE.
 // Packets from before the handshake belong to an earlier link and are dropped.
+// The master sends the handshake and waits for every other player's answer;
+// a player who answered may already be sending cmds, which are kept.
 bool32 Netplay_LinkHandshake(void)
 {
     struct NetplayPacket *packet;
     bool32 isMaster = (sSession.role == 0);
+    u8 everyone = (1 << Netplay_GetLinkPlayerCount()) - 1;
 
     if (isMaster && !sLink.handshakeSent)
+    {
         sLink.handshakeSent = SendPacket(NETPLAY_PACKET_HANDSHAKE, NULL);
+        sLink.acked = 1;
+    }
 
     while ((packet = PeekPacket()) != NULL)
     {
         u8 kind = packet->kind;
+        u8 from = packet->filler1;
 
-        if (isMaster && kind == NETPLAY_PACKET_HANDSHAKE_ACK)
+        if (isMaster && kind == NETPLAY_PACKET_HANDSHAKE_ACK && from < MAX_LINK_PLAYERS)
         {
-            PopPacket();
-            return TRUE;
+            sLink.acked |= 1 << from;
         }
-        if (!isMaster && kind == NETPLAY_PACKET_HANDSHAKE)
+        else if (isMaster && kind == NETPLAY_PACKET_DATA && from < MAX_LINK_PLAYERS && (sLink.acked & (1 << from)))
+        {
+            if (!FifoPush(from, packet->cmd))
+                return FALSE; // can't happen before we send anything
+        }
+        else if (!isMaster && kind == NETPLAY_PACKET_HANDSHAKE)
         {
             if (!SendPacket(NETPLAY_PACKET_HANDSHAKE_ACK, NULL))
                 return FALSE; // try again next frame
@@ -948,32 +1062,38 @@ bool32 Netplay_LinkHandshake(void)
             return TRUE;
         }
         PopPacket();
+        if (isMaster && sLink.handshakeSent && sLink.acked == everyone)
+            return TRUE;
     }
     return FALSE;
 }
 
-static void EnqueueRecvEntry(const u16 *localCmd, const u16 *remoteCmd)
+static void EnqueueRecvEntry(void)
 {
     struct RecvQueue *queue = &gLink.recvQueue;
-    u8 localId = sSession.role;
-    u8 remoteId = sSession.role ^ 1;
+    u32 players = Netplay_GetLinkPlayerCount();
     u16 nonzero = 0;
-    u32 i, index;
+    u32 i, j, index;
 
-    for (i = 0; i < CMD_LENGTH; i++)
-        nonzero |= localCmd[i] | remoteCmd[i];
-    if (nonzero == 0)
-        return;
-
-    index = queue->pos + queue->count;
-    if (index >= QUEUE_CAPACITY)
-        index -= QUEUE_CAPACITY;
-    for (i = 0; i < CMD_LENGTH; i++)
+    for (j = 0; j < players; j++)
     {
-        queue->data[localId][i][index] = localCmd[i];
-        queue->data[remoteId][i][index] = remoteCmd[i];
+        for (i = 0; i < CMD_LENGTH; i++)
+            nonzero |= FifoHead(j)[i];
     }
-    queue->count++;
+    if (nonzero != 0)
+    {
+        index = queue->pos + queue->count;
+        if (index >= QUEUE_CAPACITY)
+            index -= QUEUE_CAPACITY;
+        for (j = 0; j < players; j++)
+        {
+            for (i = 0; i < CMD_LENGTH; i++)
+                queue->data[j][i][index] = FifoHead(j)[i];
+        }
+        queue->count++;
+    }
+    for (j = 0; j < players; j++)
+        FifoPop(j);
 }
 
 // Called from LinkMain1 once per frame while the link is established.
@@ -981,20 +1101,18 @@ void Netplay_LinkTransfer(void)
 {
     struct SendQueue *sendQueue = &gLink.sendQueue;
     struct NetplayPacket *packet;
+    u32 players = Netplay_GetLinkPlayerCount();
     u16 cmd[CMD_LENGTH];
     u32 i;
 
     // Send: our next cmd (or nothing) for this frame.
-    if (sLink.pendingCount < PENDING_CMDS_SIZE)
+    if (sLink.count[sSession.role] < FifoWindow())
     {
         for (i = 0; i < CMD_LENGTH; i++)
             cmd[i] = sendQueue->count != 0 ? sendQueue->data[i][sendQueue->pos] : 0;
         if (SendPacket(NETPLAY_PACKET_DATA, cmd))
         {
-            u32 slot = (sLink.pendingHead + sLink.pendingCount) % PENDING_CMDS_SIZE;
-            for (i = 0; i < CMD_LENGTH; i++)
-                sLink.pending[slot][i] = cmd[i];
-            sLink.pendingCount++;
+            FifoPush(sSession.role, cmd);
             if (sendQueue->count != 0)
             {
                 sendQueue->count--;
@@ -1004,20 +1122,37 @@ void Netplay_LinkTransfer(void)
         }
     }
 
-    // Receive: pair the peer's packets with ours in order.
+    // Receive: each other player's packets go to their FIFO. A player far
+    // ahead of the others could fill the ring and hide their packets, so the
+    // bridge holds back the packets of anyone whose FIFO couldn't take a full
+    // ring more (gNetplayMailbox.rx.filler, a bit per player).
     while ((packet = PeekPacket()) != NULL)
     {
-        if (packet->kind != NETPLAY_PACKET_DATA)
+        if (packet->kind == NETPLAY_PACKET_DATA)
         {
-            PopPacket(); // a late handshake packet
-            continue;
+            u8 from = packet->filler1;
+
+            if (from != sSession.role && from < players && !FifoPush(from, packet->cmd))
+                break; // can't happen while the bridge holds packets back
         }
-        if (sLink.pendingCount == 0 || gLink.recvQueue.count >= QUEUE_CAPACITY)
-            break;
-        EnqueueRecvEntry(sLink.pending[sLink.pendingHead], packet->cmd);
-        PopPacket();
-        sLink.pendingHead = (sLink.pendingHead + 1) % PENDING_CMDS_SIZE;
-        sLink.pendingCount--;
+        PopPacket(); // or a late handshake packet
+    }
+    gNetplayMailbox.rx.filler = 0;
+    for (i = 0; i < players; i++)
+    {
+        if (i != sSession.role && sLink.count[i] + NETPLAY_RING_SIZE >= FifoWindow())
+            gNetplayMailbox.rx.filler |= 1 << i;
+    }
+
+    // Every player has a cmd for the next transfer: deliver them together.
+    while (gLink.recvQueue.count < QUEUE_CAPACITY)
+    {
+        for (i = 0; i < players; i++)
+        {
+            if (sLink.count[i] == 0)
+                return;
+        }
+        EnqueueRecvEntry();
     }
 }
 
@@ -3125,8 +3260,8 @@ static void ReportBattle(void)
     u8 text[NETPLAY_BATTLE_TEXT_LENGTH];
     u32 i;
 
-    if (!sSession.active || sSession.kind != NETPLAY_KIND_BATTLE || sSession.role != 0
-     || !gMain.inBattle || gBattleMons[0].species == SPECIES_NONE)
+    if (!sSession.active || (sSession.kind != NETPLAY_KIND_BATTLE && sSession.kind != NETPLAY_KIND_DOUBLE)
+     || sSession.role != 0 || !gMain.inBattle || gBattleMons[0].species == SPECIES_NONE)
         return;
 
     memset(sides, 0, sizeof(sides));

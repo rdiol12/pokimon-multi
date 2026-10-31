@@ -5,6 +5,7 @@
 #include "event_object_movement.h"
 #include "field_player_avatar.h"
 #include "main.h"
+#include "pastime.h"
 #include "pokemon.h"
 #include "script.h"
 #include "string_util.h"
@@ -164,6 +165,7 @@ static void PublishLook(void)
     gWorldMailbox.mountGfx = Mount_GetGfx();
     gWorldMailbox.followerGfx = (follower != NULL && !follower->invisible && gWorldMailbox.mountGfx == 0)
                               ? follower->graphicsId : 0;
+    gWorldMailbox.accessory = gWorldMailbox.followerGfx != 0 ? Fashion_WornNow() : 0;
     memcpy(gWorldMailbox.decor, gSaveBlock3Ptr->world.houseDecor, sizeof(gWorldMailbox.decor));
     gWorldMailbox.houseOpen = FlagGet(FLAG_WORLD_HOUSE_OPEN);
 }
@@ -257,6 +259,7 @@ static void SyncRemote(u32 slot)
     {
         RemoveFollower(slot);
         DropMount(slot);
+        Fashion_ShowRemote(slot, OBJECT_EVENTS_COUNT, 0);
         sFollow[slot].playerId = (avatarId != OBJECT_EVENTS_COUNT) ? remote->id : 0;
         return;
     }
@@ -278,9 +281,14 @@ static void SyncRemote(u32 slot)
     }
 
     if (look->followerGfx != 0 && look->mountGfx == 0)
+    {
         SyncFollower(slot, avatar, look->followerGfx);
+        Fashion_ShowRemote(slot, FindObject(LOCALID_REMOTE_FOLLOWER_START + slot), look->accessory);
+    }
     else
+    {
         RemoveFollower(slot);
+    }
 }
 
 // Called every overworld frame.
@@ -408,6 +416,11 @@ static void FormatBoardValue(u8 *dest, u8 board, u32 value, u32 extra)
         ConvertIntToDecimalStringN(gStringVar2, extra, STR_CONV_MODE_LEFT_ALIGN, 2);
         StringExpandPlaceholders(dest, COMPOUND_STRING("{STR_VAR_1} pts ({STR_VAR_2}/10)"));
         break;
+    case WORLD_BOARD_BUG_CONTEST: // extra: species
+        ConvertIntToDecimalStringN(gStringVar1, value, STR_CONV_MODE_LEFT_ALIGN, 3);
+        StringCopy(gStringVar2, GetSpeciesName(extra));
+        StringExpandPlaceholders(dest, COMPOUND_STRING("{STR_VAR_1} {STR_VAR_2}"));
+        break;
     case WORLD_BOARD_COOKING: // extra: contests won
         ConvertIntToDecimalStringN(gStringVar1, value, STR_CONV_MODE_LEFT_ALIGN, 3);
         ConvertIntToDecimalStringN(gStringVar2, extra, STR_CONV_MODE_LEFT_ALIGN, 4);
@@ -472,6 +485,7 @@ static const u8 *const sBoardTitles[] =
     [WORLD_BOARD_PYRAMID]  = COMPOUND_STRING("BATTLE PYRAMID"),
     [WORLD_BOARD_QUIZ]     = COMPOUND_STRING("QUIZ CHAMPS"),
     [WORLD_BOARD_COOKING]  = COMPOUND_STRING("COOK-OFF CHAMPS"),
+    [WORLD_BOARD_BUG_CONTEST] = COMPOUND_STRING("BUG CONTEST"),
 };
 
 static void Task_WaitBoard(u8 taskId)

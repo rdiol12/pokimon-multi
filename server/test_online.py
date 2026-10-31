@@ -1,5 +1,6 @@
 import asyncio
 import os
+import re
 import sys
 import unittest
 
@@ -9,14 +10,19 @@ import netplay_server as ns  # noqa: E402
 import online  # noqa: E402
 import online_betting  # noqa: E402
 import online_coopfish  # noqa: E402
+import online_doubles  # noqa: E402
 import online_duo  # noqa: E402
 import online_fishing  # noqa: E402
 import online_goals  # noqa: E402
+import online_guilds  # noqa: E402
+import online_hide  # noqa: E402
 import online_mentors  # noqa: E402
 import online_pageant  # noqa: E402
 import online_pquests  # noqa: E402
+import online_racing  # noqa: E402
 import online_shops  # noqa: E402
 import online_sightings  # noqa: E402
+import online_teams  # noqa: E402
 import online_web  # noqa: E402
 from online_ids import ITEMS, MAPS, SPECIES  # noqa: E402
 from test_netplay_server import Client  # noqa: E402
@@ -34,8 +40,14 @@ class OnlineTest(unittest.IsolatedAsyncioTestCase):
         self.online = online.Online(self.server, ext.install(self.server),
                                     [online_goals, online_sightings, online_web, online_fishing, online_coopfish, online_shops,
                                      online_pageant, online_duo, online_mentors,
-                                     online_pquests, online_betting], clock=lambda: self.now)
+                                     online_pquests, online_betting,
+                                     online_doubles, online_teams, online_guilds, online_racing, online_hide],
+                                    clock=lambda: self.now)
         online_betting.install(self.server)
+        online_doubles.install(self.server)
+        online_teams.install(self.server)
+        online_guilds.install(self.server)
+        online_hide.install(self.server)
         self.srv = await asyncio.start_server(self.server.handle, "127.0.0.1", 0)
         self.port = self.srv.sockets[0].getsockname()[1]
         self.clients = []
@@ -424,9 +436,9 @@ class PlayerQuestTest(OnlineTest):
 
 
 class BettingTest(OnlineTest):
-    async def battle(self, host, guest):
+    async def battle(self, host, guest, kind="battle"):
         guest_id = next(p.id for p in self.server.players.values() if p.name == guest.name)
-        await host.send(f"REQ battle {guest_id}")
+        await host.send(f"REQ {kind} {guest_id}")
         while not (line := await guest.recv()).startswith("INVITE "):
             pass
         sid = line.split()[1]
@@ -477,6 +489,365 @@ class BettingTest(OnlineTest):
         self.now += online_betting.BET_SECONDS + 1
         out = (await self.ask(c, "BET LIST 50"))[1]
         self.assertEqual(rows(out)[0][1], "0", out)
+
+
+class DoublesTest(BettingTest):
+    async def test_doubles_have_their_own_ladder(self):
+        a = await self.connect("Ann", 1)
+        b = await self.connect("Ben", 2)
+        a.name, b.name = "Ann", "Ben"
+        self.assertIn("RANKED DOUBLE", rows((await self.ask(a, "DOUBLES BOARD"))[1])[0][0])
+        sid = await self.battle(a, b, "double")
+        await a.send(f"RESULT {sid} loss")
+        await b.send(f"RESULT {sid} win")
+        await self.ask(b, "OSTAT")
+        status, out = await self.ask(a, "DOUBLES BOARD")
+        self.assertEqual(rows(out)[3], ["1", "Ben", "1016", "1-0-0"])
+        self.assertEqual(rows(out)[4], ["*2", "Ann", "984", "0-1-0"])
+        self.assertIn("N", [r[0] for r in rows(out)])
+        # The singles ladder didn't change.
+        self.assertEqual(self.league.db.execute("SELECT COUNT(*) FROM matches").fetchone()[0], 0)
+
+
+class TeamsTest(OnlineTest):
+    def pid(self, name):
+        return next(p.id for p in self.server.players.values() if p.name == name)
+
+    async def team_up(self, a, b, b_name):
+        status, out = await self.ask(a, "TEAM WHO")
+        self.assertIn(b_name, [r[0] for r in rows(out)[1:]])
+        await self.ask(a, f"TEAM ASK {self.pid(b_name)}")
+        status, out = await self.ask(b, "TEAM VIEW")
+        self.assertEqual(rows(out)[0][1], str(online_teams.INVITED))
+        status, out = await self.ask(b, "TEAM YES")
+        self.assertEqual(status, 0)
+
+    async def recv_until(self, c, prefix):
+        while not (line := await c.recv()).startswith(prefix):
+            pass
+        return line
+
+    async def test_team_battle(self):
+        a, b, c, d = [await self.connect(n, i) for i, n in enumerate(("Ann", "Ben", "Cat", "Dan"), 1)]
+        # Without a team, a team battle is declined.
+        await a.send(f"REQ multi {self.pid('Ben')}")
+        await self.recv_until(a, "DECLINED ")
+        await self.team_up(a, c, "Cat")
+        await self.team_up(b, d, "Dan")
+        status, out = await self.ask(a, "TEAM VIEW")
+        self.assertEqual(rows(out)[0][1], str(online_teams.TEAMED))
+        self.assertIn("Ann & Cat", rows(out)[0][0])
+
+        await a.send(f"REQ multi {self.pid('Ben')}")
+        invites = [await self.recv_until(x, "INVITE ") for x in (b, c, d)]
+        sid = invites[0].split()[1]
+        self.assertTrue(all(i.split()[1:3] == [sid, "multi"] for i in invites))
+        for x in (b, c, d):
+            await x.send(f"ACCEPT {sid}")
+        starts = [await self.recv_until(x, f"START {sid} ") for x in (a, b, c, d)]
+        self.assertEqual([s.split()[4] for s in starts], ["0", "1", "2", "3"])
+        self.assertEqual(starts[2].split()[3], str(self.pid("Ben")))  # the other side's leader
+
+        # Link packets go to the three others.
+        await c.send(f"LINK {sid} 01020304")
+        for x in (a, b, d):
+            self.assertEqual(await self.recv_until(x, "LINK "), f"LINK {sid} 01020304")
+
+        for x, outcome in ((a, "loss"), (c, "loss"), (b, "win"), (d, "win")):
+            await x.send(f"RESULT {sid} {outcome}")
+        await self.ask(d, "OSTAT")
+        status, out = await self.ask(b, "TEAM BOARD")
+        self.assertEqual(rows(out)[3], ["*1", "Ben & Dan", "1016", "1-0-0"])
+        self.assertEqual(rows(out)[4], ["2", "Ann & Cat", "984", "0-1-0"])
+
+    async def test_partner_leaving_ends_it_for_all(self):
+        a, b, c, d = [await self.connect(n, i) for i, n in enumerate(("Ann", "Ben", "Cat", "Dan"), 1)]
+        await self.team_up(a, c, "Cat")
+        await self.team_up(b, d, "Dan")
+        await a.send(f"REQ multi {self.pid('Ben')}")
+        sid = (await self.recv_until(d, "INVITE ")).split()[1]
+        await d.send(f"DECLINE {sid}")
+        for x in (a, b, c):
+            await self.recv_until(x, f"DECLINED {sid}")
+        self.assertIsNone(self.server.players[self.pid("Cat")].session)
+
+
+
+def team_record(levels):
+    """A team record (struct SecretBase) with Pokémon of these levels."""
+    out = bytearray(online_guilds.RECORD_SIZE)
+    out[2:9] = b"\xbb\xff\xff\xff\xff\xff\xff"
+    for i, level in enumerate(levels):
+        out[online_guilds.SPECIES + 2 * i:online_guilds.SPECIES + 2 * i + 2] = (SPECIES["MUDKIP"] + i).to_bytes(2, "little")
+        out[online_guilds.LEVELS + i] = level
+    return bytes(out)
+
+
+class GuildsTest(OnlineTest):
+    async def guild(self, c, tag, join=False):
+        word = f"GUILD JOIN {tag}" if join else f"GUILD CREATE {tag} Team {tag}"
+        self.assertEqual((await self.ask(c, word))[0], 0)
+
+    async def test_hall_is_one_room_per_guild(self):
+        a, b, c = [await self.connect(n, i) for i, n in enumerate(("Ann", "Ben", "Cat"), 1)]
+        status, out = await self.ask(a, "GHALL VIEW")
+        self.assertEqual(rows(out)[0][1], str(online_guilds.NO_GUILD))
+        await self.guild(a, "RED")
+        await self.guild(b, "RED", join=True)
+        await self.guild(c, "BLUE")
+        status, out = await self.ask(a, "GHALL VIEW")
+        self.assertEqual(rows(out)[0][1:], [str(online_guilds.LEADER), "RED", "Team RED"])
+        self.assertIn("2 of 2 members", rows(out)[0][0])
+        hall = " ".join(map(str, online_guilds.HALL))
+        for x in (a, b, c):
+            await x.send(f"POS {hall} 6 12 1 0 0")
+        # Ann sees Ben (same guild), never Cat.
+        seen = []
+        while True:
+            try:
+                seen.append(await asyncio.wait_for(a.recv(), 0.3))
+            except asyncio.TimeoutError:
+                break
+        names = " ".join(seen)
+        self.assertIn("Ben", names)
+        self.assertNotIn("Cat", names)
+
+    async def test_chest(self):
+        a, b = await self.connect("Ann", 1), await self.connect("Ben", 2)
+        await self.guild(a, "RED")
+        await self.guild(b, "RED", join=True)
+        potion = ITEMS["POTION"]
+        status, out = await self.ask(a, f"GHALL PUT {potion} 5")
+        self.assertEqual(rows(out)[1], ["-ITEM", str(potion), "5"])
+        status, out = await self.ask(b, "GHALL CHEST")
+        self.assertEqual(rows(out)[1], ["5 Potions", str(potion), str(potion), "5"])
+        status, out = await self.ask(b, f"GHALL TAKE {potion}")
+        self.assertEqual(rows(out)[1], ["+ITEM", str(potion), "5"])
+        status, out = await self.ask(a, f"GHALL TAKE {potion}")
+        self.assertEqual(status, 1)  # gone
+
+    async def test_pvp_win_scores_and_prizes_next_week(self):
+        a, b = await self.connect("Ann", 1), await self.connect("Ben", 2)
+        await self.guild(a, "RED")
+        await self.guild(b, "BLUE")
+        await a.send(f"REQ battle {next(p.id for p in self.server.players.values() if p.name == 'Ben')}")
+        sid = (await self.recv_until(b, "INVITE ")).split()[1]
+        await b.send(f"ACCEPT {sid}")
+        await self.recv_until(a, f"START {sid}")
+        await a.send(f"RESULT {sid} win")
+        await b.send(f"RESULT {sid} loss")
+        await self.ask(a, "OSTAT")
+        status, out = await self.ask(a, "WAR BOARD")
+        self.assertEqual(rows(out)[3], ["*1", "(RED) Team RED", str(online_guilds.WAR_WIN)])
+        self.assertEqual(rows(out)[0][1], "0")
+        self.now += online.WEEK
+        status, out = await self.ask(a, "WAR BOARD")
+        self.assertEqual(rows(out)[0][1], "1")  # a prize is waiting
+        status, out = await self.ask(a, "WAR CLAIM")
+        self.assertIn(["+ITEM", str(ITEMS["RARE_CANDY"]), "3"], rows(out))
+        self.assertEqual((await self.ask(a, "WAR CLAIM"))[0], 1)
+        # Ben's guild placed second.
+        status, out = await self.ask(b, "WAR CLAIM")
+        self.assertEqual(status, 1)  # BLUE never scored: no place
+
+    async def recv_until(self, c, prefix):
+        while not (line := await c.recv()).startswith(prefix):
+            pass
+        return line
+
+    async def test_raid(self):
+        a, b, c = [await self.connect(n, i) for i, n in enumerate(("Ann", "Ben", "Cat"), 1)]
+        await self.guild(a, "RED")
+        await self.guild(b, "BLUE")
+        await self.guild(c, "BLUE", join=True)
+        self.assertEqual((await self.ask(a, "RAID LIST"))[0], 1)  # nobody defends
+        await self.ask(b, "RAID DEFEND", team_record([20, 35, 10]))
+        status, out = await self.ask(c, "RAID DEFEND", team_record([40]))
+        self.assertIn("Defenders: 2", out.decode())
+        status, out = await self.ask(a, "RAID LIST")
+        self.assertEqual(rows(out)[1], ["(BLUE) Team BLUE", "BLUE"])
+        status, out = await self.ask(a, "RAID GET BLUE")
+        self.assertEqual(status, 0)
+        text_part, team = out.split(b"\0", 1)
+        self.assertEqual(len(team), online_guilds.RECORD_SIZE)
+        # Each defender's best: Cat's Lv. 40, then Ben's Lv. 35.
+        self.assertEqual(list(team[online_guilds.LEVELS:online_guilds.LEVELS + 3]), [40, 35, 0])
+        self.assertEqual(team[2:6], bytes([0xBC, 0xC6, 0xCF, 0xBF]))  # "BLUE"
+        status, out = await self.ask(a, "RAID RESULT 1")
+        self.assertIn("fell", out.decode())
+        status, out = await self.ask(a, "WAR BOARD")
+        self.assertEqual(rows(out)[3][2], str(online_guilds.WAR_RAID))
+        # The defenders hear of it.
+        status, out = await self.ask(b, "WAR BOARD")
+        self.assertTrue(any(r[0] == "N" and "raided" in r[1] for r in rows(out)))
+        # Three raids a day.
+        for _ in range(2):
+            await self.ask(a, "RAID GET BLUE")
+            await self.ask(a, "RAID RESULT 0")
+        self.assertEqual((await self.ask(a, "RAID GET BLUE"))[0], 1)
+        status, out = await self.ask(b, "WAR BOARD")
+        self.assertIn(["*2", "(BLUE) Team BLUE", str(2 * online_guilds.WAR_DEFENDED)], rows(out))
+
+
+
+class RacingTest(OnlineTest):
+    async def test_heat(self):
+        a, b, c = [await self.connect(n, i) for i, n in enumerate(("Ann", "Ben", "Cat"), 1)]
+        status, out = await self.ask(a, "RACE LIST")
+        self.assertEqual(rows(out)[1], ["PETALBURG RUN", "0"])
+        status, out = await self.ask(a, "RACE JOIN 0")
+        self.assertEqual(rows(out)[0][1:3], [str(int(online_racing.HEAT_WAIT)), "PETALBURG RUN"])
+        self.assertEqual(rows(out)[1], ["0"])  # lane
+        self.now += 5
+        status, out = await self.ask(b, "RACE LIST")
+        self.assertEqual(rows(out)[1][0], "PETALBURG RUN 1 waiting")
+        status, out = await self.ask(b, "RACE JOIN 0")
+        self.assertEqual(rows(out)[0][1], str(int(online_racing.HEAT_WAIT) - 5))
+        self.assertEqual(rows(out)[1], ["1"])
+        # Too close to the start: Cat gets a heat of her own.
+        self.now += online_racing.HEAT_WAIT - 6
+        status, out = await self.ask(c, "RACE JOIN 0")
+        self.assertEqual(rows(out)[1], ["0"])
+        self.now += 60
+        status, out = await self.ask(b, "RACE FINISH 0 2400")
+        self.assertIn(["+MONEY", str(online_racing.WIN_MONEY)], rows(out))
+        self.assertIn("0:40.00", rows(out)[0][0])
+        status, out = await self.ask(a, "RACE FINISH 0 2460")
+        self.assertIn("2nd", rows(out)[0][0])
+        self.assertNotIn("+MONEY", [r[0] for r in rows(out)])
+        notes = [r[1].replace("~", " ").replace("^", " ") for r in rows(out) if r[0] == "N"]
+        self.assertTrue(any("results: 1st Ben 0:40.00, 2nd Ann 0:41.00" in n for n in notes), notes)
+        # Alone in a heat: a time, no prize.
+        status, out = await self.ask(c, "RACE FINISH 0 3000")
+        self.assertEqual(rows(out)[0][0].split("^")[0].split("~")[0], "Your time: 0:50.00.")
+        status, out = await self.ask(a, "RACE BOARD 0")
+        self.assertEqual(rows(out)[3:6], [["1", "Ben", "0:40.00"], ["*2", "Ann", "0:41.00"], ["3", "Cat", "0:50.00"]])
+        # Finishing again, outside a race, doesn't count.
+        self.assertEqual((await self.ask(a, "RACE FINISH 0 1000"))[0], 1)
+
+    async def test_quit(self):
+        a, b = await self.connect("Ann", 1), await self.connect("Ben", 2)
+        await self.ask(a, "RACE JOIN 1")
+        await self.ask(b, "RACE JOIN 1")
+        await self.ask(a, "RACE QUIT")
+        self.now += 60
+        status, out = await self.ask(b, "RACE FINISH 1 4000")
+        self.assertIn(["+MONEY", str(online_racing.WIN_MONEY)], rows(out))
+        self.assertTrue(any(r[0] == "N" and "gave up" in r[1] for r in rows(out)))
+        self.assertEqual(self.server.race_heats, [])
+
+
+
+class HideTest(OnlineTest):
+    async def drain(self, c):
+        lines = []
+        while True:
+            try:
+                lines.append(await asyncio.wait_for(c.recv(), 0.2))
+            except asyncio.TimeoutError:
+                return lines
+
+    async def test_game(self):
+        a, b, c = [await self.connect(n, i) for i, n in enumerate(("Ann", "Ben", "Cat"), 1)]
+        woods = " ".join(map(str, MAPS["PETALBURG_WOODS"]))
+        for x, at in ((a, "24 10"), (b, "8 33"), (c, "10 33")):
+            await x.send(f"POS {woods} {at} 1 3 0")
+        status, out = await self.ask(a, "HIDE JOIN 0")
+        self.assertEqual(rows(out)[1][:5], [str(online_hide.SEEKER), "0", "0", "30", "120"])
+        status, out = await self.ask(b, "HIDE LIST")
+        self.assertEqual(rows(out)[1], ["PETALBURG WOODS: JOIN Ann", "0"])
+        status, out = await self.ask(b, "HIDE JOIN 0")
+        self.assertEqual(rows(out)[1][:3], [str(online_hide.HIDER), "0", "0"])
+        await self.ask(c, "HIDE JOIN 0")
+        self.now += online_hide.LOBBY
+        status, out = await self.ask(a, "HIDE GO")
+        self.assertEqual(rows(out)[0][1], "2")
+        # Hiding: Ann doesn't see Ben, far away, but Cat sees him.
+        await self.drain(a)
+        await self.drain(c)
+        await b.send(f"POS {woods} 9 33 1 3 0")
+        self.assertIn(f"GONE {self.pid('Ben')}", await self.drain(a))
+        self.assertTrue(any(l.startswith(f"PLAYER {self.pid('Ben')} ") for l in await self.drain(c)))
+        # Not yet seeking.
+        self.assertEqual((await self.ask(a, f"HIDE TAG {self.pid('Ben')}"))[0], 1)
+        self.now += online_hide.HIDE
+        # Ann walks up to Ben: she sees him again, and finds him.
+        await self.drain(a)
+        await a.send(f"POS {woods} 10 33 1 3 0")
+        self.assertTrue(any(l.startswith(f"PLAYER {self.pid('Ben')} ") for l in await self.drain(a)))
+        status, out = await self.ask(a, f"HIDE TAG {self.pid('Ben')}")
+        self.assertEqual(rows(out)[0][1], "1")
+        # Cat runs out of the woods: out.
+        await c.send(f"POS {' '.join(map(str, MAPS['ROUTE104']))} 5 5 1 3 0")
+        status, out = await self.ask(a, "OSTAT")
+        self.assertIn(["S", "HIDE", "0", "0", "1", str(self.server.hide_games[0].id), str(online_hide.SEEK), "0"],
+                      rows(out))
+        status, out = await self.ask(a, "HIDE END")
+        self.assertEqual(rows(out)[1], ["+MONEY", str(online_hide.FIND_MONEY)])
+        status, out = await self.ask(b, "HIDE END")
+        self.assertIn("found", rows(out)[0][0])
+        status, out = await self.ask(c, "HIDE END")
+        self.assertIn("out", rows(out)[0][0])
+        status, out = await self.ask(a, "HIDEBOARD")
+        self.assertEqual(rows(out)[3], ["*1", "Ann", str(online_hide.FIND_POINTS)])
+
+    async def test_hidden_till_the_end(self):
+        a, b = await self.connect("Ann", 1), await self.connect("Ben", 2)
+        await self.ask(a, "HIDE JOIN 1")
+        await self.ask(b, "HIDE JOIN 1")
+        self.now += online_hide.LOBBY + online_hide.HIDE + online_hide.SEEK
+        status, out = await self.ask(b, "HIDE END")
+        self.assertEqual(rows(out)[1], ["+MONEY", str(online_hide.HIDDEN_MONEY)])
+        status, out = await self.ask(a, "HIDE END")
+        self.assertEqual(rows(out)[0][0], "You found 0 of 1.")
+        self.assertEqual(self.server.hide_games[0].paid, {("Ann", 1), ("Ben", 2)})
+
+    async def test_talents(self):
+        a, b, c = [await self.connect(n, i) for i, n in enumerate(("Ann", "Ben", "Cat"), 1)]
+        woods = " ".join(map(str, MAPS["PETALBURG_WOODS"]))
+        for x, at in ((a, "10 20"), (b, "10 25"), (c, "13 20")):
+            await x.send(f"POS {woods} {at} 1 3 0")
+        # Ann's Kirlia senses hiders; Ben's Gastly helps him blend in.
+        status, out = await self.ask(a, f"HIDE JOIN 0 {online_hide.SENSE} 0 {SPECIES['KIRLIA']}")
+        self.assertIn("KIRLIA can sense", re.sub("[~^]", " ", rows(out)[0][0]))
+        status, out = await self.ask(b, f"HIDE JOIN 0 0 {online_hide.BLEND_IN} {SPECIES['GASTLY']}")
+        self.assertIn("GASTLY helps you blend in", re.sub("[~^]", " ", rows(out)[0][0]))
+        await self.ask(c, "HIDE JOIN 0")
+        self.now += online_hide.LOBBY + online_hide.HIDE
+        game = self.server.hide_games[0]
+        # Cat is 3 tiles away: seen. Ben, blending in, only from 1.
+        ann, ben, cat = (self.server.players[self.pid(n)] for n in ("Ann", "Ben", "Cat"))
+        self.assertTrue(self.server.can_see(ann, cat))
+        ben.pos = (10, 22, 1, 3, 0)
+        self.assertFalse(self.server.can_see(ann, ben))
+        ben.pos = (10, 21, 1, 3, 0)
+        self.assertTrue(self.server.can_see(ann, ben))
+        # Sharp eyes see 2 tiles farther.
+        game.seek_talent = online_hide.SHARP_EYES
+        ben.pos = (10, 23, 1, 3, 0)
+        self.assertTrue(self.server.can_see(ann, ben))
+        # Sensing: HOT with Cat 3 tiles away; COLD once she's found and Ben is far.
+        game.seek_talent = online_hide.SENSE
+        status, out = await self.ask(a, "OSTAT")
+        self.assertEqual(next(r for r in rows(out) if r[:2] == ["S", "HIDE"])[7], "3")
+        game.found[cat.key] = "found"
+        ben.pos = (10, 40, 1, 3, 0)
+        status, out = await self.ask(a, "OSTAT")
+        self.assertEqual(next(r for r in rows(out) if r[:2] == ["S", "HIDE"])[7], "1")
+        # Hiders don't sense.
+        status, out = await self.ask(b, "OSTAT")
+        self.assertEqual(next(r for r in rows(out) if r[:2] == ["S", "HIDE"])[7], "0")
+
+    async def test_nobody_came(self):
+        a = await self.connect("Ann", 1)
+        await self.ask(a, "HIDE JOIN 0")
+        self.now += online_hide.LOBBY
+        status, out = await self.ask(a, "HIDE GO")
+        self.assertEqual(rows(out)[0][1], "0")
+        self.assertEqual(self.server.hide_games, [])
+
+    def pid(self, name):
+        return next(p.id for p in self.server.players.values() if p.name == name)
 
 
 if __name__ == "__main__":

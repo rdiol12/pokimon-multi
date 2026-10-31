@@ -55,12 +55,24 @@ u8 Mechanics_GetStyleChoice(u32 battler);
 u32 Mechanics_GetStyleReturnBits(u32 battler);
 void Mechanics_SetBattlerStyle(u32 battler, u8 returnValue);
 void Mechanics_ClearBattlerStyle(u32 battler);
+void Mechanics_BeforeTurnOrder(void);
 u32 Mechanics_GetStylePowerModifier(u32 battler);
 s32 Mechanics_GetStyleOrder(u32 battler);
 u32 Mechanics_GetStyleExtraPP(u32 battler);
 bool32 Mechanics_TryAnnounceBattleStyle(u32 battler);
 const u8 *Mechanics_GetBattleMessage(u8 id);
 void Mechanics_SetupStylePractice(void);
+
+// The postgame storms (src/mechanics_storms.c).
+bool32 Mechanics_IsStormActive(u8 storm);
+void Mechanics_UpdateStorms(void);
+
+// Battle commentary (src/mechanics_commentary.c).
+void Mechanics_OnBattleString(u16 stringId, u32 battler);
+bool32 Mechanics_TryOpeningCommentary(void);
+bool32 Mechanics_TryTurnCommentary(void);
+const u8 *Mechanics_GetCommentary(u8 line);
+bool32 Mechanics_IsCupActive(void);
 
 // Trainer skills (src/mechanics_skills.c).
 bool32 Mechanics_HasSkill(u8 skill);
@@ -74,6 +86,10 @@ void Mechanics_UpdateSkills(void);
 bool32 Mechanics_CanLearnSignatureMove(u16 species, u16 move);
 bool32 Mechanics_IsCatchBlocked(void);
 bool32 Mechanics_IsStatueHere(u8 line);
+
+// Cave bosses (src/mechanics_bosses.c).
+bool32 Mechanics_IsBossHere(u8 boss);
+void Mechanics_OnBossMoveChosen(u32 battler);
 void Mechanics_EndStylePractice(void);
 
 #endif // GUARD_MECHANICS_H

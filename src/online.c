@@ -12,6 +12,7 @@
 #include "netplay.h"
 #include "netplay_ext.h"
 #include "online.h"
+#include "guide.h"
 #include "pokemon.h"
 #include "script.h"
 #include "script_pokemon_util.h"
@@ -372,7 +373,9 @@ static void BuildRequest(const struct OnlineRequest *req)
 static void Task_Request(u8 taskId)
 {
     s16 *data = gTasks[taskId].data;
-    const struct OnlineRequest *req = &gOnlineRequests[tReq];
+    // The guide's requests have a table of their own (src/guide_social.c).
+    const struct OnlineRequest *req = (u16)tReq >= ONL_REQ_GUIDE_FIRST ? &gGuideRequests[tReq - ONL_REQ_GUIDE_FIRST]
+                                                                       : &gOnlineRequests[tReq];
 
     switch (tState)
     {
@@ -790,6 +793,8 @@ void Online_PollStatusSoon(void)
 // Called every overworld frame. Returns TRUE if it started a script.
 bool32 Online_OverworldUpdate(void)
 {
+    if (Online_RaceUpdate() || Online_HideUpdate())
+        return TRUE;
     if (!IsOnline())
     {
         sOnline.background = FALSE;
@@ -803,6 +808,11 @@ bool32 Online_OverworldUpdate(void)
     // Only while no script runs: a script may be reading the last answer.
     else if (!ArePlayerFieldControlsLocked())
         SendBackground();
+
+    // Racers and hide-and-seek players aren't stopped for notices or
+    // invites; those wait for the end.
+    if (Online_RaceIsOn() || Online_HideIsOn())
+        return FALSE;
 
     if (gOnlineShowcase.kind != SHOWCASE_NONE && !ArePlayerFieldControlsLocked())
         return RunShowcase();

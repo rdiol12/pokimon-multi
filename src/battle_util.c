@@ -1276,6 +1276,7 @@ void PrepareStringBattle(enum StringID stringId, enum BattlerId battler)
     default:
         break;
     }
+    Mechanics_OnBattleString(stringId, battler);
 
     BtlController_EmitPrintString(battler, B_COMM_TO_CONTROLLER, stringId);
     MarkBattlerForControllerExec(battler);

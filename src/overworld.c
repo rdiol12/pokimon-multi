@@ -10,6 +10,7 @@
 #include "clock.h"
 #include "dexnav.h"
 #include "event_data.h"
+#include "field_ability.h"
 #include "event_object_movement.h"
 #include "event_scripts.h"
 #include "fake_rtc.h"
@@ -87,6 +88,7 @@
 #include "netplay.h"
 #include "netplay_ext.h"
 #include "world.h"
+#include "pastime.h"
 #include "life.h"
 #include "community.h"
 
@@ -635,7 +637,7 @@ static void ClearDiveAndHoleWarps(void)
     sFixedHoleWarp = sDummyWarpData;
 }
 
-static void SetWarpData(struct WarpData *warp, s8 mapGroup, s8 mapNum, s8 warpId, s8 x, s8 y)
+static void SetWarpData(struct WarpData *warp, s8 mapGroup, s8 mapNum, s8 warpId, s16 x, s16 y)
 {
     warp->mapGroup = mapGroup;
     warp->mapNum = mapNum;
@@ -714,7 +716,7 @@ void WarpIntoMap(void)
     SetPlayerCoordsFromWarp();
 }
 
-void SetWarpDestination(s8 mapGroup, s8 mapNum, s8 warpId, s8 x, s8 y)
+void SetWarpDestination(s8 mapGroup, s8 mapNum, s8 warpId, s16 x, s16 y)
 {
     SetWarpData(&sWarpDestination, mapGroup, mapNum, warpId, x, y);
 }
@@ -1113,9 +1115,9 @@ bool32 Overworld_IsBikingAllowed(void)
 // Flash level of 8 is fully black
 void SetDefaultFlashLevel(void)
 {
-    if (!gMapHeader.cave)
+    if (!gMapHeader.cave || FieldAbility_IsCaveLit())
         gSaveBlock1Ptr->flashLevel = 0;
-    else if (FlagGet(FLAG_SYS_USE_FLASH))
+    else if (FlagGet(FLAG_SYS_USE_FLASH) || FieldAbility_HasLantern())
         gSaveBlock1Ptr->flashLevel = 1;
     else
         gSaveBlock1Ptr->flashLevel = gMaxFlashLevel - 1;
@@ -1950,6 +1952,7 @@ void CB2_NewGame(void)
     StopMapMusic();
     ResetSafariZoneFlag_();
     NewGameInitData();
+    NewGamePlus_AfterInit();
     ResetInitialPlayerAvatarState();
     PlayTimeCounter_Start();
     ScriptContext_Init();

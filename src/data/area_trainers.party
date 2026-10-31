@@ -334,10 +334,10 @@ Double Battle: No
 AI: Basic Trainer
 
 Baltoy
-Level: 35
+Level: 30
 
 Sigilyph
-Level: 37
+Level: 32
 
 === AREA_TRAINER_SUNSCAR_MILO ===
 Name: MILO
@@ -349,10 +349,10 @@ Double Battle: No
 AI: Basic Trainer
 
 Krokorok
-Level: 36
+Level: 31
 
 Vibrava
-Level: 37
+Level: 32
 
 === AREA_TRAINER_SUNSCAR_SABLE ===
 Name: SABLE
@@ -364,11 +364,1174 @@ Double Battle: No
 AI: Basic Trainer
 
 Cacturne
-Level: 37
+Level: 32
 
 Hippowdon
+Level: 34
+
+Gabite
+Level: 31
+/* end Sunscar */
+
+/* begin Hollowmere */
+=== AREA_TRAINER_HOLLOW_VESPER ===
+Name: VESPER
+Class: Hex Maniac
+Pic: Hex Maniac
+Gender: Female
+Music: Suspicious
+Double Battle: No
+AI: Basic Trainer
+
+Haunter
+Level: 39
+
+Pumpkaboo
+Level: 39
+
+Lampent
+Level: 40
+
+=== AREA_TRAINER_HOLLOW_LUNA ===
+Name: LUNA
+Class: Psychic
+Pic: Psychic F
+Gender: Female
+Music: Intense
+Double Battle: No
+AI: Basic Trainer
+
+Mismagius
+Level: 40
+
+Musharna
+Level: 40
+
+=== AREA_TRAINER_HOLLOW_MORTIMER ===
+Name: MORTIMER
+Class: Gentleman
+Pic: Gentleman
+Gender: Male
+Music: Rich
+Double Battle: No
+AI: Basic Trainer
+
+Sinistea
+Level: 40
+
+Dusclops
+Level: 41
+
+=== AREA_TRAINER_HOLLOW_ELVIRA ===
+Name: ELVIRA
+Class: Hex Maniac
+Pic: Hex Maniac
+Gender: Female
+Music: Suspicious
+Double Battle: No
+AI: Basic Trainer
+
+Banette
+Level: 41
+
+Froslass
+Level: 41
+
+Gengar
+Level: 42
+/* end Hollowmere */
+
+/* begin MireboughMarsh */
+=== AREA_TRAINER_MIRE_FINN ===
+Name: FINN
+Class: Fisherman
+Pic: Fisherman
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Basic Trainer
+
+Whiscash
+Level: 37
+
+Quagsire
+Level: 37
+
+=== AREA_TRAINER_MIRE_MARSHA ===
+Name: MARSHA
+Class: Aroma Lady
+Pic: Aroma Lady
+Gender: Female
+Music: Girl
+Double Battle: No
+AI: Basic Trainer
+
+Lombre
+Level: 36
+
+Amoonguss
 Level: 38
 
-Garchomp
+=== AREA_TRAINER_MIRE_OTTO ===
+Name: OTTO
+Class: Bug Maniac
+Pic: Bug Maniac
+Gender: Male
+Music: Suspicious
+Double Battle: No
+AI: Basic Trainer
+
+Yanmega
+Level: 38
+
+Skorupi
 Level: 36
-/* end Sunscar */
+
+=== AREA_TRAINER_MIRE_IVY ===
+Name: IVY
+Class: Pkmn Ranger
+Pic: Pokemon Ranger F
+Gender: Female
+Music: Cool
+Double Battle: No
+AI: Basic Trainer
+
+Toxicroak
+Level: 39
+
+Sliggoo
+Level: 38
+/* end MireboughMarsh */
+
+/* begin SunfairCarnival */
+=== AREA_TRAINER_CARNIVAL_BLAZE ===
+Name: BLAZE
+Class: Kindler
+Pic: Kindler
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Basic Trainer
+
+Litleo
+Level: 24
+
+Slugma
+Level: 24
+
+Magby
+Level: 25
+
+=== AREA_TRAINER_CARNIVAL_KIT_AND_KAT ===
+Name: KIT & KAT
+Class: Twins
+Pic: Twins
+Gender: Female
+Music: Girl
+Double Battle: Yes
+AI: Basic Trainer
+
+Minun
+Level: 24
+
+Plusle
+Level: 24
+
+=== AREA_TRAINER_CARNIVAL_SHADE ===
+Name: SHADE
+Class: Ninja Boy
+Pic: Ninja Boy
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Basic Trainer
+
+Croagunk
+Level: 24
+
+Nincada
+Level: 23
+
+Zubat
+Level: 24
+
+=== AREA_TRAINER_CARNIVAL_RIFF ===
+Name: RIFF
+Class: Guitarist
+Pic: Guitarist
+Gender: Male
+Music: Intense
+Double Battle: No
+AI: Basic Trainer
+
+Toxel
+Level: 24
+
+Loudred
+Level: 25
+/* end SunfairCarnival */
+
+/* begin CorallineReef */
+=== AREA_TRAINER_REEF_NERISSA ===
+Name: NERISSA
+Class: Swimmer F
+Pic: Swimmer F
+Gender: Female
+Music: Swimmer
+Double Battle: No
+AI: Basic Trainer
+
+Lumineon
+Level: 42
+
+Corsola
+Level: 42
+
+=== AREA_TRAINER_REEF_DORIAN ===
+Name: DORIAN
+Class: Swimmer M
+Pic: Swimmer M
+Gender: Male
+Music: Swimmer
+Double Battle: No
+AI: Basic Trainer
+
+Seaking
+Level: 41
+
+Qwilfish
+Level: 41
+
+Sharpedo
+Level: 43
+
+=== AREA_TRAINER_REEF_PELAGIA ===
+Name: PELAGIA
+Class: Swimmer F
+Pic: Swimmer F
+Gender: Female
+Music: Swimmer
+Double Battle: No
+AI: Basic Trainer
+
+Mantine
+Level: 43
+
+Lanturn
+Level: 43
+
+=== AREA_TRAINER_ABYSS_TRITON ===
+Name: TRITON
+Class: Swimmer M
+Pic: Swimmer M
+Gender: Male
+Music: Swimmer
+Double Battle: No
+AI: Basic Trainer
+
+Gorebyss
+Level: 44
+
+Huntail
+Level: 44
+
+Kingdra
+Level: 45
+/* end CorallineReef */
+
+/* begin GullwingPoint */
+=== AREA_TRAINER_GULL_SKERRY ===
+Name: SKERRY
+Class: Sailor
+Pic: Sailor
+Gender: Male
+Music: Male
+Double Battle: No
+AI: Basic Trainer
+
+Mankey
+Level: 16
+
+Murkrow
+Level: 17
+
+=== AREA_TRAINER_GULL_BILGE ===
+Name: BILGE
+Class: Sailor
+Pic: Sailor
+Gender: Male
+Music: Male
+Double Battle: No
+AI: Basic Trainer
+
+Krabby
+Level: 16
+
+Corphish
+Level: 16
+
+Wingull
+Level: 16
+
+=== AREA_TRAINER_GULL_MAREE ===
+Name: MAREE
+Class: Tuber F
+Pic: Tuber F
+Gender: Female
+Music: Girl
+Double Battle: No
+AI: Basic Trainer
+
+Marill
+Level: 14
+
+Wingull
+Level: 14
+
+=== AREA_TRAINER_GULL_PEG ===
+Name: PEG
+Class: Sailor
+Pic: Sailor
+Gender: Male
+Music: Male
+Double Battle: No
+AI: Basic Trainer
+
+Mankey
+Level: 18
+
+Chatot
+Level: 18
+
+=== AREA_TRAINER_GULL_FINN ===
+Name: FINN
+Class: Sailor
+Pic: Sailor
+Gender: Male
+Music: Male
+Double Battle: No
+AI: Basic Trainer
+
+Carvanha
+Level: 18
+
+Krabby
+Level: 19
+
+=== AREA_TRAINER_GULL_CAPTAIN ===
+Name: BARNACLE
+Class: Expert
+Pic: Expert M
+Gender: Male
+Music: Intense
+Double Battle: No
+AI: Smart Trainer
+
+Corphish
+Level: 20
+
+Cramorant
+Level: 20
+
+Murkrow
+Level: 21
+
+Carvanha
+Level: 22
+/* end GullwingPoint */
+
+/* begin WhisperstemValley */
+=== AREA_TRAINER_BAMBOO_JUN ===
+Name: JUN
+Class: Bug Catcher
+Pic: Bug Catcher
+Gender: Male
+Music: Male
+Double Battle: No
+AI: Basic Trainer
+
+Nincada
+Level: 10
+
+Sewaddle
+Level: 11
+
+=== AREA_TRAINER_BAMBOO_LILA ===
+Name: LILA
+Class: Picnicker
+Pic: Picnicker
+Gender: Female
+Music: Girl
+Double Battle: No
+AI: Basic Trainer
+
+Bounsweet
+Level: 11
+
+Skiddo
+Level: 12
+
+=== AREA_TRAINER_BAMBOO_MEI ===
+Name: MEI
+Class: Battle Girl
+Pic: Battle Girl
+Gender: Female
+Music: Intense
+Double Battle: No
+AI: Basic Trainer
+
+Makuhita
+Level: 12
+
+Meditite
+Level: 12
+
+=== AREA_TRAINER_BAMBOO_KAITO ===
+Name: KAITO
+Class: Ninja Boy
+Pic: Ninja Boy
+Gender: Male
+Music: Suspicious
+Double Battle: No
+AI: Basic Trainer
+
+Shroomish
+Level: 12
+
+Nincada
+Level: 12
+
+Pancham
+Level: 13
+/* end WhisperstemValley */
+
+/* begin Cobblerock */
+=== AREA_TRAINER_COBBLE_GRANT ===
+Name: GRANT
+Class: Hiker
+Pic: Hiker
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Basic Trainer
+
+Geodude
+Level: 13
+
+Roggenrola
+Level: 14
+
+=== AREA_TRAINER_COBBLE_RHODA ===
+Name: RHODA
+Class: Picnicker
+Pic: Picnicker
+Gender: Female
+Music: Girl
+Double Battle: No
+AI: Basic Trainer
+
+Drilbur
+Level: 14
+
+Whismur
+Level: 13
+
+=== AREA_TRAINER_COBBLE_DOUG ===
+Name: DOUG
+Class: Hiker
+Pic: Hiker
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Basic Trainer
+
+Nosepass
+Level: 15
+
+Rolycoly
+Level: 15
+
+=== AREA_TRAINER_COBBLE_TODD ===
+Name: TODD
+Class: Ruin Maniac
+Pic: Ruin Maniac
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Basic Trainer
+
+Baltoy
+Level: 15
+
+Onix
+Level: 16
+/* end Cobblerock */
+
+/* begin VoltspirePlant */
+=== AREA_TRAINER_VOLT_ZAPP ===
+Name: ZAPP
+Class: Guitarist
+Pic: Guitarist
+Gender: Male
+Music: Intense
+Double Battle: No
+AI: Basic Trainer
+
+Electrike
+Level: 23
+
+Voltorb
+Level: 23
+
+Pikachu
+Level: 24
+
+=== AREA_TRAINER_VOLT_OHM ===
+Name: OHM
+Class: Pokemaniac
+Pic: Pokemaniac
+Gender: Male
+Music: Suspicious
+Double Battle: No
+AI: Basic Trainer
+
+Magnemite
+Level: 24
+
+Joltik
+Level: 24
+
+Tynamo
+Level: 25
+
+=== AREA_TRAINER_VOLT_AMPERE ===
+Name: AMPERE
+Class: Expert
+Pic: Expert M
+Gender: Male
+Music: Intense
+Double Battle: No
+AI: Smart Trainer
+
+Elekid
+Level: 25
+
+Blitzle
+Level: 25
+
+Magneton
+Level: 27
+/* end VoltspirePlant */
+
+/* begin NimbusCity */
+=== AREA_TRAINER_NIMBUS_CORVIN ===
+Name: CORVIN
+Class: Bird Keeper
+Pic: Bird Keeper
+Gender: Male
+Music: Cool
+Double Battle: No
+AI: Smart Trainer
+
+Swellow
+Level: 41
+
+Staraptor
+Level: 42
+
+Noctowl
+Level: 41
+
+=== AREA_TRAINER_NIMBUS_DRACO ===
+Name: DRACO
+Class: Dragon Tamer
+Pic: Dragon Tamer
+Gender: Male
+Music: Intense
+Double Battle: No
+AI: Smart Trainer
+
+Altaria
+Level: 43
+
+Flygon
+Level: 44
+
+=== AREA_TRAINER_NIMBUS_AURORA ===
+Name: AURORA
+Class: Cooltrainer
+Pic: Cooltrainer F
+Gender: Female
+Music: Cool
+Double Battle: No
+AI: Smart Trainer
+
+Togekiss
+Level: 43
+
+Drifblim
+Level: 42
+
+Chimecho
+Level: 43
+
+=== AREA_TRAINER_NIMBUS_ZEPHYR ===
+Name: ZEPHYR
+Class: Psychic
+Pic: Psychic M
+Gender: Male
+Music: Intense
+Double Battle: No
+AI: Smart Trainer
+
+Sigilyph
+Level: 43
+
+Xatu
+Level: 44
+/* end NimbusCity */
+
+/* begin MtFrostcrown */
+=== AREA_TRAINER_FROST_BRAM ===
+Name: BRAM
+Class: Hiker
+Pic: Hiker
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Smart Trainer
+
+Piloswine
+Level: 38
+
+Golem
+Level: 39
+
+=== AREA_TRAINER_FROST_MAREN ===
+Name: MAREN
+Class: Expert
+Pic: Expert F
+Gender: Female
+Music: Intense
+Double Battle: No
+AI: Smart Trainer
+
+Froslass
+Level: 39
+
+Glalie
+Level: 39
+
+Absol
+Level: 40
+
+=== AREA_TRAINER_FROST_ROALD ===
+Name: ROALD
+Class: Cooltrainer
+Pic: Cooltrainer M
+Gender: Male
+Music: Cool
+Double Battle: No
+AI: Smart Trainer
+
+Weavile
+Level: 40
+
+Abomasnow
+Level: 41
+
+=== AREA_TRAINER_FROST_ELSA ===
+Name: ELSA
+Class: Cooltrainer
+Pic: Cooltrainer F
+Gender: Female
+Music: Cool
+Double Battle: No
+AI: Smart Trainer
+
+Vanilluxe
+Level: 41
+
+Avalugg
+Level: 41
+
+Beartic
+Level: 42
+/* end MtFrostcrown */
+
+/* begin MetroMauville */
+=== AREA_TRAINER_METRO_STRUM ===
+Name: STRUM
+Class: Guitarist
+Pic: Guitarist
+Gender: Male
+Music: Intense
+Double Battle: No
+AI: Basic Trainer
+
+Toxel
+Level: 23
+
+Electrike
+Level: 24
+
+=== AREA_TRAINER_METRO_DIGBY ===
+Name: DIGBY
+Class: Ruin Maniac
+Pic: Ruin Maniac
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Basic Trainer
+
+Drilbur
+Level: 25
+
+Boldore
+Level: 25
+
+=== AREA_TRAINER_METRO_GEARS ===
+Name: GEARS
+Class: Pokemaniac
+Pic: Pokemaniac
+Gender: Male
+Music: Suspicious
+Double Battle: No
+AI: Basic Trainer
+
+Klink
+Level: 25
+
+Magneton
+Level: 26
+
+=== AREA_TRAINER_METRO_ODETTE ===
+Name: ODETTE
+Class: Hex Maniac
+Pic: Hex Maniac
+Gender: Female
+Music: Suspicious
+Double Battle: No
+AI: Basic Trainer
+
+Litwick
+Level: 25
+
+Haunter
+Level: 26
+
+Sinistea
+Level: 27
+/* end MetroMauville */
+
+/* begin WonderwildPark */
+=== AREA_TRAINER_PARK_TIMMY ===
+Name: TIMMY
+Class: Youngster
+Pic: Youngster
+Gender: Male
+Music: Male
+Double Battle: No
+AI: Basic Trainer
+
+Pawmi
+Level: 17
+
+Rockruff
+Level: 18
+
+=== AREA_TRAINER_PARK_POPPY ===
+Name: POPPY
+Class: Lass
+Pic: Lass
+Gender: Female
+Music: Female
+Double Battle: No
+AI: Basic Trainer
+
+Fidough
+Level: 18
+
+Swirlix
+Level: 18
+
+=== AREA_TRAINER_PARK_REMY ===
+Name: REMY
+Class: School Kid
+Pic: School Kid M
+Gender: Male
+Music: Male
+Double Battle: No
+AI: Basic Trainer
+
+Minccino
+Level: 18
+
+Pichu
+Level: 17
+
+Spinda
+Level: 19
+
+=== AREA_TRAINER_PARK_GLORIA ===
+Name: GLORIA
+Class: Pokefan
+Pic: Pokefan F
+Gender: Female
+Music: Twins
+Double Battle: No
+AI: Basic Trainer
+
+Snubbull
+Level: 19
+
+Azurill
+Level: 19
+
+Cleffa
+Level: 20
+/* end WonderwildPark */
+
+/* begin PrismCaverns */
+=== AREA_TRAINER_PRISM_GARNET ===
+Name: GARNET
+Class: Hiker
+Pic: Hiker
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Basic Trainer
+
+Boldore
+Level: 31
+
+Graveler
+Level: 32
+
+=== AREA_TRAINER_PRISM_QUINN ===
+Name: QUINN
+Class: Cooltrainer
+Pic: Cooltrainer F
+Gender: Female
+Music: Cool
+Double Battle: No
+AI: Basic Trainer
+
+Carbink
+Level: 31
+
+Mawile
+Level: 32
+
+=== AREA_TRAINER_PRISM_LUCAS ===
+Name: LUCAS
+Class: Psychic
+Pic: Psychic M
+Gender: Male
+Music: Intense
+Double Battle: No
+AI: Basic Trainer
+
+Chimecho
+Level: 32
+
+Bronzor
+Level: 32
+
+Lunatone
+Level: 33
+
+=== AREA_TRAINER_PRISM_OSWIN ===
+Name: OSWIN
+Class: Ruin Maniac
+Pic: Ruin Maniac
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Basic Trainer
+
+Sableye
+Level: 32
+
+Nosepass
+Level: 33
+
+=== AREA_TRAINER_PRISM_BRUNO ===
+Name: BRUNO
+Class: Hiker
+Pic: Hiker
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Basic Trainer
+
+Lairon
+Level: 33
+
+Boldore
+Level: 34
+
+=== AREA_TRAINER_PRISM_TESSA ===
+Name: TESSA
+Class: Cooltrainer
+Pic: Cooltrainer F
+Gender: Female
+Music: Cool
+Double Battle: No
+AI: Basic Trainer
+
+Sneasel
+Level: 33
+
+Bronzong
+Level: 34
+/* end PrismCaverns */
+
+/* begin Mirage */
+=== AREA_TRAINER_MIRAGE_RASHID ===
+Name: RASHID
+Class: Hiker
+Pic: Hiker
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Basic Trainer
+
+Hippowdon
+Level: 49
+
+Krookodile
+Level: 50
+
+=== AREA_TRAINER_MIRAGE_ZAHRA ===
+Name: ZAHRA
+Class: Cooltrainer
+Pic: Cooltrainer F
+Gender: Female
+Music: Cool
+Double Battle: No
+AI: Basic Trainer
+
+Cacturne
+Level: 49
+
+Flygon
+Level: 50
+
+Maractus
+Level: 49
+
+=== AREA_TRAINER_MIRAGE_DUNSTAN ===
+Name: DUNSTAN
+Class: Ruin Maniac
+Pic: Ruin Maniac
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Basic Trainer
+
+Sandaconda
+Level: 50
+
+Garchomp
+Level: 51
+
+=== AREA_TRAINER_MIRAGE_NEFERA ===
+Name: NEFERA
+Class: Hex Maniac
+Pic: Hex Maniac
+Gender: Female
+Music: Suspicious
+Double Battle: No
+AI: Basic Trainer
+
+Cofagrigus
+Level: 50
+
+Runerigus
+Level: 50
+
+Sigilyph
+Level: 51
+
+=== AREA_TRAINER_MIRAGE_OMAR ===
+Name: OMAR
+Class: Expert
+Pic: Expert M
+Gender: Male
+Music: Intense
+Double Battle: No
+AI: Basic Trainer
+
+Claydol
+Level: 51
+
+Golurk
+Level: 52
+/* end Mirage */
+
+/* begin Verdant */
+=== AREA_TRAINER_VERDANT_KOBE ===
+Name: KOBE
+Class: Bug Maniac
+Pic: Bug Maniac
+Gender: Male
+Music: Suspicious
+Double Battle: No
+AI: Basic Trainer
+
+Heracross
+Level: 33
+
+Vikavolt
+Level: 34
+
+=== AREA_TRAINER_VERDANT_MAYA ===
+Name: MAYA
+Class: Swimmer F
+Pic: Swimmer F
+Gender: Female
+Music: Swimmer
+Double Battle: No
+AI: Basic Trainer
+
+Lombre
+Level: 33
+
+Azumarill
+Level: 34
+
+=== AREA_TRAINER_VERDANT_REED ===
+Name: REED
+Class: Fisherman
+Pic: Fisherman
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Basic Trainer
+
+Basculin
+Level: 33
+
+Whiscash
+Level: 34
+
+Barraskewda
+Level: 34
+
+=== AREA_TRAINER_VERDANT_LIANA ===
+Name: LIANA
+Class: Bird Keeper
+Pic: Bird Keeper
+Gender: Female
+Music: Cool
+Double Battle: No
+AI: Basic Trainer
+
+Trumbeak
+Level: 34
+
+Tropius
+Level: 35
+
+=== AREA_TRAINER_VERDANT_ROWAN ===
+Name: ROWAN
+Class: Swimmer M
+Pic: Swimmer M
+Gender: Male
+Music: Swimmer
+Double Battle: No
+AI: Basic Trainer
+
+Golduck
+Level: 35
+
+Drednaw
+Level: 36
+/* end Verdant */
+
+/* begin Ironmoor */
+=== AREA_TRAINER_IRONMOOR_GARRICK ===
+Name: GARRICK
+Class: Ruin Maniac
+Pic: Ruin Maniac
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Basic Trainer
+
+Baltoy
+Level: 28
+
+Golett
+Level: 28
+
+Sandslash
+Level: 29
+
+=== AREA_TRAINER_IRONMOOR_KAITO ===
+Name: KAITO
+Class: Ninja Boy
+Pic: Ninja Boy
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Basic Trainer
+
+Sableye
+Level: 28
+
+Ninjask
+Level: 29
+
+=== AREA_TRAINER_IRONMOOR_MORWEN ===
+Name: MORWEN
+Class: Hex Maniac
+Pic: Hex Maniac
+Gender: Female
+Music: Suspicious
+Double Battle: No
+AI: Basic Trainer
+
+Shuppet
+Level: 29
+
+Haunter
+Level: 29
+
+Misdreavus
+Level: 30
+
+=== AREA_TRAINER_IRONMOOR_VESPER ===
+Name: VESPER
+Class: Psychic
+Pic: Psychic M
+Gender: Male
+Music: Intense
+Double Battle: No
+AI: Basic Trainer
+
+Kadabra
+Level: 29
+
+Kirlia
+Level: 30
+
+=== AREA_TRAINER_IRONMOOR_SELMA ===
+Name: SELMA
+Class: Hex Maniac
+Pic: Hex Maniac
+Gender: Female
+Music: Suspicious
+Double Battle: No
+AI: Basic Trainer
+
+Golett
+Level: 30
+
+Lampent
+Level: 31
+
+Banette
+Level: 31
+/* end Ironmoor */

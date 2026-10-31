@@ -1,4 +1,5 @@
 #include "global.h"
+#include "guide.h"
 #include "adventure.h"
 #include "pastime.h"
 #include "achievements.h"
@@ -17,6 +18,7 @@
 #include "constants/weather.h"
 #include "world.h"
 #include "online.h"
+#include "field_ability.h"
 
 extern const u8 World_EventScript_Menu[];
 
@@ -40,6 +42,7 @@ struct WorldShowcase
     u16 giveItem; // 20 of these go in the bag; a rod is also registered to SELECT
     u8 ripen;     // 1: the Route 102 Oran Berry tree is ready to pick
     u8 storm;     // 1: pick the hour the thunderstorm is over the map, 2: any rain
+    u8 surf;      // 1: giveSpecies knows Surf (arriving on water starts you surfing)
 };
 
 EWRAM_DATA struct WorldShowcase gWorldShowcase = {0};
@@ -75,6 +78,8 @@ static void RunShowcase(void)
             bool32 shiny = TRUE;
             SetMonData(&mon, MON_DATA_IS_SHINY, &shiny);
         }
+        if (gWorldShowcase.surf)
+            SetMonMoveSlot(&mon, MOVE_SURF, 0);
         if (gWorldShowcase.lead)
         {
             if (gPlayerPartyCount == PARTY_SIZE)
@@ -89,6 +94,7 @@ static void RunShowcase(void)
         }
         CalculatePlayerPartyCount();
         gWorldShowcase.giveSpecies = SPECIES_NONE;
+        gWorldShowcase.surf = FALSE;
     }
     if (gWorldShowcase.ripen)
     {
@@ -126,6 +132,9 @@ bool32 World_OverworldUpdate(void)
     Adventure_Update();
     Mechanics_Update();
     Pastime_Update();
+    FieldAbility_Update();
+    if (Guide_OverworldUpdate())
+        return TRUE;
     if (Online_OverworldUpdate())
         return TRUE;
     return Hardcore_Update();
@@ -134,7 +143,7 @@ bool32 World_OverworldUpdate(void)
 // A pressed facing (x, y), map coordinates with MAP_OFFSET.
 bool32 World_TryInteract(s16 x, s16 y)
 {
-    return Legends_TryInteract(x, y) || House_TryInteract(x, y) || Adventure_TryInteract(x, y) || Mechanics_TryInteract(x, y) || Pastime_TryInteract(x, y);
+    return Legends_TryInteract(x, y) || House_TryInteract(x, y) || Adventure_TryInteract(x, y) || Mechanics_TryInteract(x, y) || Pastime_TryInteract(x, y) || FieldAbility_TryInteract(x, y);
 }
 
 bool32 World_TryOpenMenu(void)
@@ -147,6 +156,7 @@ enum Species World_ModifyWildSpecies(enum Species species, u8 level)
 {
     species = RoamingWeather_ModifyWildSpecies(species, level);
     species = Adventure_ModifyWildSpecies(species);
+    species = Pastime_ModifyWildSpecies(species);
     ShinyChain_OnWildSpecies(species);
     return species;
 }
@@ -163,8 +173,10 @@ void World_OnWildBattleEnd(void)
         Online_OnCatch();
         Pastime_OnCatch();
     }
+    FieldAbility_OnWildBattleEnd();
     ShinyChain_OnWildBattleEnd();
     Records_OnWildBattleEnd();
+    Pastime_OnWildBattleEnd();
     Hardcore_OnBattleEnd(TRUE);
 }
 

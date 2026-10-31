@@ -56,6 +56,8 @@ enum NetplayRequestType
     NETPLAY_REQ_WATCH,       // arg: index in the live list
     NETPLAY_REQ_UNWATCH,
     NETPLAY_REQ_COOP,        // target: the player to team up with
+    NETPLAY_REQ_DOUBLE,      // target: the player to challenge to a ranked double battle
+    NETPLAY_REQ_MULTI,       // target: a player of the team to challenge to a 2v2 team battle
 };
 
 enum NetplayEventType
@@ -320,6 +322,7 @@ bool32 Netplay_TryTestBoot(u8 taskId);
 // Link transport used by link.c instead of the serial port while a session is active.
 bool32 Netplay_IsLinkActive(void);
 u8 Netplay_GetLinkRole(void);
+u8 Netplay_GetLinkPlayerCount(void);
 void Netplay_LinkReset(void);
 bool32 Netplay_LinkHandshake(void);
 void Netplay_LinkTransfer(void);

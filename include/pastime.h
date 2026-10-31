@@ -90,5 +90,163 @@ void Cook_CheckDish(void);
 void Cook_Play(void);
 void Cook_Judge(void);
 void Cook_ShowList(void);
+void Cafe_OnBattleStart(void);
+u16 Pastime_ModifyWildSpecies(u16 species);
+u16 BugContest_ModifyWildSpecies(u16 species);
+void BugContest_OnBattleStart(void);
+void BugContest_OnCatch(u16 species);
+void BugContest_Update(void);
+void BugContest_GetState(void);
+void BugContest_Start(void);
+void BugContest_Judge(void);
+void BugContest_ShowList(void);
+void Trading_PushMenu(void);
+void Trading_CheckBarter(void);
+void Trading_DoBarter(void);
+void Trading_GetSwap(void);
+void Trading_CheckSwapMon(void);
+void Trading_DoSwap(void);
+void Trading_ShowList(void);
+void Dojo_GetStatus(void);
+void Dojo_Train(void);
+void Dojo_PushMoveMenu(void);
+void Dojo_CheckMove(void);
+void Dojo_PayForMove(void);
+void Dojo_ShowList(void);
+bool32 Pastime_CanLearnTeachableMove(u16 species, u16 move);
+void Pastime_OnWildBattleEnd(void);
+void Ranger_OnCatch(u16 species);
+void Ranger_OnWildBattleEnd(void);
+void Ranger_GetState(void);
+void Ranger_StartMission(void);
+void Ranger_CompleteMission(void);
+void Ranger_RescueLostMon(void);
+void Ranger_IsLostMonWaiting(void);
+void Ranger_ShowList(void);
+void School_PushLessonMenu(void);
+void School_StartLesson(void);
+void School_NextQuestion(void);
+void School_PushAnswers(void);
+void School_Answer(void);
+void School_Finish(void);
+void School_ShowList(void);
+void Garden_GetShow(void);
+void Garden_CheckShow(void);
+void Garden_GiveStarterBerries(void);
+void Garden_ShowList(void);
+void Garden_Update(void);
+
+// Weather lab (pastime_weather.c).
+void Weather_Update(void);
+void Weather_GetState(void);
+void Weather_Join(void);
+void Weather_ShowForecast(void);
+void Weather_Report(void);
+void Weather_ShowList(void);
+
+// Star map and meteor showers (pastime_stars.c).
+void Star_Update(void);
+u16 Star_ModifyWildSpecies(u16 species);
+void Star_ShowChart(void);
+void Star_HideChart(void);
+void Star_Look(void);
+void Star_PickMeteorite(void);
+void Star_TalkToAstronomer(void);
+void Star_ShowList(void);
+
+// Carnival games (pastime_carnival.c).
+void Carnival_CloseCourt(void);
+void Bowl_Start(void);
+void Bowl_Prepare(void);
+void Bowl_Roll(void);
+void Bowl_Finish(void);
+void Golf_Start(void);
+void Golf_Prepare(void);
+void Golf_Swing(void);
+void Golf_Finish(void);
+void Soccer_Start(void);
+void Soccer_Prepare(void);
+void Soccer_Shoot(void);
+void Soccer_Keep(void);
+void Soccer_Finish(void);
+void Ferris_Ride(void);
+void Carnival_ShowList(void);
+
+// Pokémon orchestra (pastime_orchestra.c).
+void Orchestra_Play(void);
+void Orchestra_Finish(void);
+void Orchestra_ShowList(void);
+
+// Art studio (pastime_art.c).
+void Art_PushPaintingMenu(void);
+void Art_Paint(void);
+void Art_Judge(void);
+void Art_ShowList(void);
+
+// Detective cases (pastime_detective.c).
+void Detective_GetState(void);
+void Detective_OpenCase(void);
+void Detective_TalkToWitness(void);
+void Detective_PushSuspects(void);
+void Detective_Accuse(void);
+void Detective_ShowList(void);
+
+// Monthly reward track (pastime_track.c).
+void Track_Update(void);
+void Track_OnCatch(void);
+void Track_OnTrainerBattleEnd(void);
+void Track_ShowList(void);
+
+// New Game+ (pastime_new_game_plus.c).
+void NewGamePlus_GetState(void);
+void NewGamePlus_Start(void);
+void NewGamePlus_AfterInit(void);
+
+// Seasonal festivals (pastime_festival.c).
+void Festival_Update(void);
+void Festival_TalkToHost(void);
+void Festival_VisitStall(void);
+void Festival_ShowList(void);
+
+// Archaeology digs (pastime_dig.c).
+void Dig_CheckSite(void);
+void Dig_Start(void);
+void Dig_Finish(void);
+void Dig_GetNextReward(void);
+void Dig_TalkToArchaeologist(void);
+void Dig_ShowList(void);
+
+// Alpha taming (pastime_alpha.c).
+void Alpha_GetInfo(void);
+void Alpha_Calm(void);
+void Alpha_Tame(void);
+void Alpha_PrepareBattle(void);
+void Alpha_ShowList(void);
+
+// Lighthouse keeper (pastime_lighthouse.c).
+void Lighthouse_CheckShift(void);
+void Lighthouse_Play(void);
+void Lighthouse_Finish(void);
+void Lighthouse_ShowList(void);
+
+// Bottle treasure maps (pastime_bottle.c).
+void Bottle_Update(void);
+bool32 Bottle_TryInteract(s16 x, s16 y);
+void Bottle_Open(void);
+void Bottle_ShowMap(void);
+void Bottle_HideMap(void);
+void Bottle_Dig(void);
+void Bottle_ShowList(void);
+
+// Pokémon fashion (pastime_fashion.c).
+void Fashion_Update(void);
+u32 Fashion_WornNow(void);
+void Fashion_ShowRemote(u32 slot, u8 followerObjectId, u32 worn);
+void Fashion_PushBuyMenu(void);
+void Fashion_Buy(void);
+void Fashion_PushDressMenu(void);
+void Fashion_Dress(void);
+void Fashion_Judge(void);
+void Fashion_ShowList(void);
 
 #endif // GUARD_PASTIME_H

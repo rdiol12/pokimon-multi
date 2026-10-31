@@ -392,6 +392,11 @@ const u16 gObjectEventPal_Substitute[] = INCGFX_U16("graphics/object_events/pics
 const u16 gObjectEventPaletteEmotes[] = INCGFX_U16("graphics/misc/emotes.pal", ".gbapal");
 const u16 gObjectEventPaletteNeonLight[] = INCGFX_U16("graphics/object_events/palettes/neon_light.pal", ".gbapal");
 const u16 gObjectEventPal_Eclipse[] = INCGFX_U16("graphics/life/eclipse_ow.pal", ".gbapal");
+const u16 gObjectEventPal_FieldAbility[] = INCGFX_U16("graphics/field_ability/field_ability.pal", ".gbapal");
+const u32 gObjectEventPic_FieldIceBlock[] = INCGFX_U32("graphics/field_ability/ice_block.png", ".4bpp", "-mwidth 2 -mheight 2");
+const u32 gObjectEventPic_FieldGenerator[] = INCGFX_U32("graphics/field_ability/generator_off.png", ".4bpp", "-mwidth 2 -mheight 2");
+const u32 gObjectEventPic_FieldGeneratorOn[] = INCGFX_U32("graphics/field_ability/generator_on.png", ".4bpp", "-mwidth 2 -mheight 2");
+const u32 gObjectEventPic_FieldDigSpot[] = INCGFX_U32("graphics/field_ability/dig_spot.png", ".4bpp", "-mwidth 2 -mheight 2");
 
 #if OW_FOLLOWERS_POKEBALLS
 const u32 gObjectEventPic_MasterBall[] = INCGFX_U32("graphics/object_events/pics/misc/ball_master.png", ".4bpp", "-mwidth 2 -mheight 4");

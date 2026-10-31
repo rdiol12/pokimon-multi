@@ -1,0 +1,116 @@
+{
+ "num_tiles": 512,
+ "first_new_metatile": 760,
+ "objects": {
+  "breaker_yellow_off": [
+   [
+    760
+   ],
+   [
+    761
+   ]
+  ],
+  "breaker_yellow_on": [
+   [
+    762
+   ],
+   [
+    763
+   ]
+  ],
+  "breaker_blue_off": [
+   [
+    764
+   ],
+   [
+    765
+   ]
+  ],
+  "breaker_blue_on": [
+   [
+    766
+   ],
+   [
+    767
+   ]
+  ],
+  "breaker_red_off": [
+   [
+    768
+   ],
+   [
+    769
+   ]
+  ],
+  "breaker_red_on": [
+   [
+    770
+   ],
+   [
+    771
+   ]
+  ],
+  "tv": [
+   [
+    772
+   ],
+   [
+    773
+   ]
+  ],
+  "fridge": [
+   [
+    774
+   ],
+   [
+    775
+   ]
+  ],
+  "washer": [
+   [
+    776
+   ],
+   [
+    777
+   ]
+  ],
+  "fan": [
+   [
+    778
+   ],
+   [
+    779
+   ]
+  ],
+  "mower": [
+   [
+    780
+   ],
+   [
+    781
+   ]
+  ],
+  "coil": [
+   [
+    782
+   ],
+   [
+    783
+   ]
+  ]
+ },
+ "walkable": {
+  "breaker_yellow_off": [],
+  "breaker_yellow_on": [],
+  "breaker_blue_off": [],
+  "breaker_blue_on": [],
+  "breaker_red_off": [],
+  "breaker_red_on": [],
+  "tv": [],
+  "fridge": [],
+  "washer": [],
+  "fan": [],
+  "mower": [],
+  "coil": []
+ }
+}

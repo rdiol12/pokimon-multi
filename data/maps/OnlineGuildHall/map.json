@@ -1,0 +1,79 @@
+{
+  "id": "MAP_ONLINE_GUILD_HALL",
+  "name": "OnlineGuildHall",
+  "layout": "LAYOUT_LILYCOVE_CITY_POKEMON_TRAINER_FAN_CLUB",
+  "music": "MUS_RG_UNION_ROOM",
+  "region": "REGION_HOENN",
+  "region_map_section": "MAPSEC_DYNAMIC",
+  "requires_flash": false,
+  "weather": "WEATHER_NONE",
+  "map_type": "MAP_TYPE_INDOOR",
+  "allow_cycling": false,
+  "allow_escaping": false,
+  "allow_running": true,
+  "show_map_name": false,
+  "battle_scene": "MAP_BATTLE_SCENE_NORMAL",
+  "connections": null,
+  "object_events": [
+    {
+      "local_id": "LOCALID_GUILD_HALL_CLERK",
+      "graphics_id": "OBJ_EVENT_GFX_WOMAN_2",
+      "x": 11,
+      "y": 5,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_FACE_DOWN",
+      "movement_range_x": 0,
+      "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE",
+      "trainer_sight_or_berry_tree_id": "0",
+      "script": "OnlineGuildHall_EventScript_Clerk",
+      "flag": "0"
+    },
+    {
+      "local_id": "LOCALID_GUILD_HALL_WAR",
+      "graphics_id": "OBJ_EVENT_GFX_EXPERT_M",
+      "x": 1,
+      "y": 9,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_FACE_RIGHT",
+      "movement_range_x": 0,
+      "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE",
+      "trainer_sight_or_berry_tree_id": "0",
+      "script": "OnlineGuildHall_EventScript_WarOfficer",
+      "flag": "0"
+    },
+    {
+      "local_id": "LOCALID_GUILD_HALL_RAIDS",
+      "graphics_id": "OBJ_EVENT_GFX_BLACK_BELT",
+      "x": 10,
+      "y": 10,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_FACE_LEFT",
+      "movement_range_x": 0,
+      "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE",
+      "trainer_sight_or_berry_tree_id": "0",
+      "script": "OnlineGuildHall_EventScript_RaidCaptain",
+      "flag": "0"
+    }
+  ],
+  "warp_events": [
+    {
+      "x": 5,
+      "y": 13,
+      "elevation": 0,
+      "dest_map": "MAP_DYNAMIC",
+      "dest_warp_id": "WARP_ID_DYNAMIC"
+    },
+    {
+      "x": 6,
+      "y": 13,
+      "elevation": 0,
+      "dest_map": "MAP_DYNAMIC",
+      "dest_warp_id": "WARP_ID_DYNAMIC"
+    }
+  ],
+  "coord_events": [],
+  "bg_events": []
+}

@@ -9485,6 +9485,336 @@
       "secondary_tileset": "gTileset_Cave",
       "border_filepath": "data/layouts/SunscarRuins_Vault/border.bin",
       "blockdata_filepath": "data/layouts/SunscarRuins_Vault/map.bin"
+    },
+    {
+      "id": "LAYOUT_HOLLOWMERE",
+      "name": "Hollowmere_Layout",
+      "width": 44,
+      "height": 40,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Petalburg",
+      "border_filepath": "data/layouts/Hollowmere/border.bin",
+      "blockdata_filepath": "data/layouts/Hollowmere/map.bin"
+    },
+    {
+      "id": "LAYOUT_MIREBOUGH_MARSH",
+      "name": "MireboughMarsh_Layout",
+      "width": 56,
+      "height": 48,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Fortree",
+      "border_filepath": "data/layouts/MireboughMarsh/border.bin",
+      "blockdata_filepath": "data/layouts/MireboughMarsh/map.bin"
+    },
+    {
+      "id": "LAYOUT_SUNFAIR_CARNIVAL",
+      "name": "SunfairCarnival_Layout",
+      "width": 60,
+      "height": 48,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Carnival",
+      "border_filepath": "data/layouts/SunfairCarnival/border.bin",
+      "blockdata_filepath": "data/layouts/SunfairCarnival/map.bin"
+    },
+    {
+      "id": "LAYOUT_CORALLINE_REEF",
+      "name": "CorallineReef_Layout",
+      "width": 56,
+      "height": 44,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Abyss",
+      "border_filepath": "data/layouts/CorallineReef/border.bin",
+      "blockdata_filepath": "data/layouts/CorallineReef/map.bin"
+    },
+    {
+      "id": "LAYOUT_ABYSSIA",
+      "name": "Abyssia_Layout",
+      "width": 56,
+      "height": 44,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Abyss",
+      "border_filepath": "data/layouts/Abyssia/border.bin",
+      "blockdata_filepath": "data/layouts/Abyssia/map.bin"
+    },
+    {
+      "id": "LAYOUT_ABYSSIA_TEMPLE",
+      "name": "Abyssia_Temple_Layout",
+      "width": 20,
+      "height": 16,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Abyss",
+      "border_filepath": "data/layouts/Abyssia_Temple/border.bin",
+      "blockdata_filepath": "data/layouts/Abyssia_Temple/map.bin"
+    },
+    {
+      "id": "LAYOUT_GULLWING_POINT",
+      "name": "GullwingPoint_Layout",
+      "width": 56,
+      "height": 48,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Carnival",
+      "border_filepath": "data/layouts/GullwingPoint/border.bin",
+      "blockdata_filepath": "data/layouts/GullwingPoint/map.bin"
+    },
+    {
+      "id": "LAYOUT_GULLWING_POINT_PIRATE_SHIP",
+      "name": "GullwingPoint_PirateShip_Layout",
+      "width": 22,
+      "height": 14,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Carnival",
+      "border_filepath": "data/layouts/GullwingPoint_PirateShip/border.bin",
+      "blockdata_filepath": "data/layouts/GullwingPoint_PirateShip/map.bin"
+    },
+    {
+      "id": "LAYOUT_WHISPERSTEM_VALLEY",
+      "name": "WhisperstemValley_Layout",
+      "width": 56,
+      "height": 48,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Bamboo",
+      "border_filepath": "data/layouts/WhisperstemValley/border.bin",
+      "blockdata_filepath": "data/layouts/WhisperstemValley/map.bin"
+    },
+    {
+      "id": "LAYOUT_COBBLEROCK",
+      "name": "Cobblerock_Layout",
+      "width": 48,
+      "height": 40,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Bamboo",
+      "border_filepath": "data/layouts/Cobblerock/border.bin",
+      "blockdata_filepath": "data/layouts/Cobblerock/map.bin"
+    },
+    {
+      "id": "LAYOUT_COBBLEROCK_MINE_1F",
+      "name": "CobblerockMine_1F_Layout",
+      "width": 40,
+      "height": 30,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Mine",
+      "border_filepath": "data/layouts/CobblerockMine_1F/border.bin",
+      "blockdata_filepath": "data/layouts/CobblerockMine_1F/map.bin"
+    },
+    {
+      "id": "LAYOUT_COBBLEROCK_MINE_B1F",
+      "name": "CobblerockMine_B1F_Layout",
+      "width": 40,
+      "height": 30,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Mine",
+      "border_filepath": "data/layouts/CobblerockMine_B1F/border.bin",
+      "blockdata_filepath": "data/layouts/CobblerockMine_B1F/map.bin"
+    },
+    {
+      "id": "LAYOUT_COBBLEROCK_MINE_OLD_SHAFT",
+      "name": "CobblerockMine_OldShaft_Layout",
+      "width": 26,
+      "height": 20,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Mine",
+      "border_filepath": "data/layouts/CobblerockMine_OldShaft/border.bin",
+      "blockdata_filepath": "data/layouts/CobblerockMine_OldShaft/map.bin"
+    },
+    {
+      "id": "LAYOUT_VOLTSPIRE_PLANT",
+      "name": "VoltspirePlant_Layout",
+      "width": 44,
+      "height": 34,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Plant",
+      "border_filepath": "data/layouts/VoltspirePlant/border.bin",
+      "blockdata_filepath": "data/layouts/VoltspirePlant/map.bin"
+    },
+    {
+      "id": "LAYOUT_NIMBUS_CITY",
+      "name": "NimbusCity_Layout",
+      "width": 40,
+      "height": 32,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Sky",
+      "border_filepath": "data/layouts/NimbusCity/border.bin",
+      "blockdata_filepath": "data/layouts/NimbusCity/map.bin"
+    },
+    {
+      "id": "LAYOUT_NIMBUS_ISLE",
+      "name": "NimbusIsle_Layout",
+      "width": 52,
+      "height": 40,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Sky",
+      "border_filepath": "data/layouts/NimbusIsle/border.bin",
+      "blockdata_filepath": "data/layouts/NimbusIsle/map.bin"
+    },
+    {
+      "id": "LAYOUT_MT_FROSTCROWN",
+      "name": "MtFrostcrown_Layout",
+      "width": 48,
+      "height": 88,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Frost",
+      "border_filepath": "data/layouts/MtFrostcrown/border.bin",
+      "blockdata_filepath": "data/layouts/MtFrostcrown/map.bin"
+    },
+    {
+      "id": "LAYOUT_SNOWDRIFT_VILLAGE",
+      "name": "SnowdriftVillage_Layout",
+      "width": 48,
+      "height": 32,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Frost",
+      "border_filepath": "data/layouts/SnowdriftVillage/border.bin",
+      "blockdata_filepath": "data/layouts/SnowdriftVillage/map.bin"
+    },
+    {
+      "id": "LAYOUT_METRO_MAUVILLE",
+      "name": "MetroMauville_Layout",
+      "width": 36,
+      "height": 18,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Subway",
+      "border_filepath": "data/layouts/MetroMauville/border.bin",
+      "blockdata_filepath": "data/layouts/MetroMauville/map.bin"
+    },
+    {
+      "id": "LAYOUT_METRO_SLATEPORT",
+      "name": "MetroSlateport_Layout",
+      "width": 30,
+      "height": 18,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Subway",
+      "border_filepath": "data/layouts/MetroSlateport/border.bin",
+      "blockdata_filepath": "data/layouts/MetroSlateport/map.bin"
+    },
+    {
+      "id": "LAYOUT_METRO_VERDANTURF",
+      "name": "MetroVerdanturf_Layout",
+      "width": 30,
+      "height": 18,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Subway",
+      "border_filepath": "data/layouts/MetroVerdanturf/border.bin",
+      "blockdata_filepath": "data/layouts/MetroVerdanturf/map.bin"
+    },
+    {
+      "id": "LAYOUT_METRO_OLD_LINE",
+      "name": "MetroOldLine_Layout",
+      "width": 52,
+      "height": 16,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Subway",
+      "border_filepath": "data/layouts/MetroOldLine/border.bin",
+      "blockdata_filepath": "data/layouts/MetroOldLine/map.bin"
+    },
+    {
+      "id": "LAYOUT_WONDERWILD_PARK",
+      "name": "WonderwildPark_Layout",
+      "width": 56,
+      "height": 46,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Park",
+      "border_filepath": "data/layouts/WonderwildPark/border.bin",
+      "blockdata_filepath": "data/layouts/WonderwildPark/map.bin"
+    },
+    {
+      "id": "LAYOUT_PRISM_CAVERNS",
+      "name": "PrismCaverns_Layout",
+      "width": 56,
+      "height": 44,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Crystal",
+      "border_filepath": "data/layouts/PrismCaverns/border.bin",
+      "blockdata_filepath": "data/layouts/PrismCaverns/map.bin"
+    },
+    {
+      "id": "LAYOUT_PRISM_CAVERNS_DEPTHS",
+      "name": "PrismCaverns_Depths_Layout",
+      "width": 48,
+      "height": 40,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Crystal",
+      "border_filepath": "data/layouts/PrismCaverns_Depths/border.bin",
+      "blockdata_filepath": "data/layouts/PrismCaverns_Depths/map.bin"
+    },
+    {
+      "id": "LAYOUT_MIRAGE_DUNES",
+      "name": "MirageDunes_Layout",
+      "width": 56,
+      "height": 52,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Oasis",
+      "border_filepath": "data/layouts/MirageDunes/border.bin",
+      "blockdata_filepath": "data/layouts/MirageDunes/map.bin"
+    },
+    {
+      "id": "LAYOUT_MIRAGE_OASIS",
+      "name": "MirageOasis_Layout",
+      "width": 48,
+      "height": 40,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Oasis",
+      "border_filepath": "data/layouts/MirageOasis/border.bin",
+      "blockdata_filepath": "data/layouts/MirageOasis/map.bin"
+    },
+    {
+      "id": "LAYOUT_MIRAGE_OASIS_SUNKEN_COURT",
+      "name": "MirageOasis_SunkenCourt_Layout",
+      "width": 40,
+      "height": 28,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Oasis",
+      "border_filepath": "data/layouts/MirageOasis_SunkenCourt/border.bin",
+      "blockdata_filepath": "data/layouts/MirageOasis_SunkenCourt/map.bin"
+    },
+    {
+      "id": "LAYOUT_VERDANT_RIVER",
+      "name": "VerdantRiver_Layout",
+      "width": 56,
+      "height": 64,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Jungle",
+      "border_filepath": "data/layouts/VerdantRiver/border.bin",
+      "blockdata_filepath": "data/layouts/VerdantRiver/map.bin"
+    },
+    {
+      "id": "LAYOUT_VERDANT_RIVER_TEMPLE",
+      "name": "VerdantRiver_Temple_Layout",
+      "width": 22,
+      "height": 18,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Cave",
+      "border_filepath": "data/layouts/VerdantRiver_Temple/border.bin",
+      "blockdata_filepath": "data/layouts/VerdantRiver_Temple/map.bin"
+    },
+    {
+      "id": "LAYOUT_IRONMOOR_ISLE",
+      "name": "IronmoorIsle_Layout",
+      "width": 46,
+      "height": 50,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Prison",
+      "border_filepath": "data/layouts/IronmoorIsle/border.bin",
+      "blockdata_filepath": "data/layouts/IronmoorIsle/map.bin"
+    },
+    {
+      "id": "LAYOUT_IRONMOOR_PRISON",
+      "name": "IronmoorPrison_Layout",
+      "width": 30,
+      "height": 24,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Prison",
+      "border_filepath": "data/layouts/IronmoorPrison/border.bin",
+      "blockdata_filepath": "data/layouts/IronmoorPrison/map.bin"
+    },
+    {
+      "id": "LAYOUT_IRONMOOR_PRISON_SOLITARY",
+      "name": "IronmoorPrison_Solitary_Layout",
+      "width": 26,
+      "height": 15,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Prison",
+      "border_filepath": "data/layouts/IronmoorPrison_Solitary/border.bin",
+      "blockdata_filepath": "data/layouts/IronmoorPrison_Solitary/map.bin"
     }
   ]
 }

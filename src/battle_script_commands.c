@@ -15,6 +15,7 @@
 #include "battle_stat_change.h"
 #include "battle_move_resolution.h"
 #include "item.h"
+#include "injury.h"
 #include "item_menu.h"
 #include "util.h"
 #include "pokemon.h"
@@ -1273,6 +1274,7 @@ static void Cmd_critmessage(void)
 
             TryInitializeTrainerSlideEnemyLandsFirstCriticalHit(gBattlerTarget);
             TryInitializeTrainerSlidePlayerLandsFirstCriticalHit(gBattlerTarget);
+            Injury_OnCriticalHit(gBattlerTarget);
         }
         gBattlescriptCurrInstr = cmd->nextInstr;
     }
@@ -1911,6 +1913,7 @@ static void Cmd_tryfaintmon(void)
             }
 
             SetValuesOnFaint(battler);
+            Injury_OnBattlerFainted(battler);
             BattleScriptPush(cmd->nextInstr);
             gBattlescriptCurrInstr = BattleScript_FaintBattler;
         }
@@ -12085,6 +12088,8 @@ void BS_EndTurnEvents(void)
         BattleScriptCall(BattleScript_PalacePrintFlavorTextRet);
     else if (gBattleTypeFlags & BATTLE_TYPE_ARENA && gBattleStruct->eventState.arenaTurn == 0)
         BattleScriptCall(BattleScript_ArenaTurnBeginningRet);
+    else if (Mechanics_TryTurnCommentary())
+        BattleScriptCall(BattleScript_MechanicsMessageRet);
 }
 
 void BS_TryWakeBattlersUproar(void)

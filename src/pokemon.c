@@ -39,7 +39,9 @@
 #include "party_menu.h"
 #include "pokedex.h"
 #include "pokeblock.h"
+#include "pastime.h"
 #include "pokemon.h"
+#include "injury.h"
 #include "pokemon_animation.h"
 #include "pokemon_icon.h"
 #include "pokemon_summary_screen.h"
@@ -1423,6 +1425,7 @@ void CalculateMonStatsCont(struct Pokemon *mon, bool32 updateSpeedStat)
         n = ModifyStatByNature(nature, n, i);
         if (B_FRIENDSHIP_BOOST == TRUE)
             n = n + ((n * 10 * friendship) / (MAX_FRIENDSHIP * 100));
+        n = Injury_ModifyStat(&mon->box, i, n);
         SetMonData(mon, MON_DATA_MAX_HP + i, &n);
     }
 
@@ -2400,6 +2403,18 @@ u32 GetBoxMonData3(struct BoxPokemon *boxMon, s32 field, u8 *data)
         case MON_DATA_IS_SHADOW:
             retVal = GetSubstruct3(boxMon)->isShadow;
             break;
+        case MON_DATA_INJURY_DAMAGE:
+            retVal = GetSubstruct0(boxMon)->injuryDamage;
+            break;
+        case MON_DATA_INJURY_PART:
+            retVal = GetSubstruct1(boxMon)->injuredPart;
+            break;
+        case MON_DATA_LOST_PARTS:
+            retVal = GetSubstruct1(boxMon)->lostParts;
+            break;
+        case MON_DATA_INJURY_FLAGS:
+            retVal = GetSubstruct0(boxMon)->injuryFlags;
+            break;
         case MON_DATA_DYNAMAX_LEVEL:
             retVal = GetSubstruct3(boxMon)->dynamaxLevel;
             break;
@@ -2846,6 +2861,18 @@ void SetBoxMonData(struct BoxPokemon *boxMon, s32 field, const void *dataArg)
             break;
         case MON_DATA_IS_SHADOW:
             SET8(GetSubstruct3(boxMon)->isShadow);
+            break;
+        case MON_DATA_INJURY_DAMAGE:
+            SET8(GetSubstruct0(boxMon)->injuryDamage);
+            break;
+        case MON_DATA_INJURY_PART:
+            SET8(GetSubstruct1(boxMon)->injuredPart);
+            break;
+        case MON_DATA_LOST_PARTS:
+            SET8(GetSubstruct1(boxMon)->lostParts);
+            break;
+        case MON_DATA_INJURY_FLAGS:
+            SET8(GetSubstruct0(boxMon)->injuryFlags);
             break;
         case MON_DATA_DYNAMAX_LEVEL:
             SET8(GetSubstruct3(boxMon)->dynamaxLevel);
@@ -5036,6 +5063,8 @@ bool32 CanLearnTeachableMove(enum Species species, enum Move move)
     const u16 *teachableLearnset = GetSpeciesTeachableLearnset(species);
     if (species == SPECIES_EGG)
         return FALSE;
+    if (Pastime_CanLearnTeachableMove(species, move))
+        return TRUE;
     for (u32 i = 0; teachableLearnset[i] != MOVE_UNAVAILABLE; i++)
     {
         if (teachableLearnset[i] == move)

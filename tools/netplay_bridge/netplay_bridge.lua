@@ -61,6 +61,7 @@ local MARKET_ANSWERS = { ok = 1, gone = 2, full = 3, self = 4 }
 local NO_TIER = 0xFF
 local RING_SIZE = 16
 local PACKET_SIZE = 20
+local PACKET_DATA = 1 -- NETPLAY_PACKET_DATA
 local NAME_LENGTH = 8
 
 local STATE_OFFLINE, STATE_CONNECTING, STATE_ONLINE = 0, 1, 2
@@ -68,9 +69,9 @@ local STATE_OFFLINE, STATE_CONNECTING, STATE_ONLINE = 0, 1, 2
 local REQ_CHALLENGE, REQ_TRADE, REQ_ACCEPT, REQ_DECLINE, REQ_RESULT, REQ_LEAVE, REQ_DEAL, REQ_LADDER, REQ_EMOTE = 1, 2, 3, 4, 5, 6, 7, 8, 9
 local REQ_FRIENDS, REQ_FRIEND_ADD, REQ_FRIEND_DEL, REQ_SEASON, REQ_CLAIM = 10, 11, 12, 13, 14
 local REQ_MARKET, REQ_MARKET_SELL, REQ_MARKET_BUY, REQ_MARKET_CANCEL, REQ_MARKET_COLLECT = 15, 16, 17, 18, 19
-local REQ_LIVE, REQ_WATCH, REQ_UNWATCH, REQ_COOP = 20, 21, 22, 23
+local REQ_LIVE, REQ_WATCH, REQ_UNWATCH, REQ_COOP, REQ_DOUBLE, REQ_MULTI = 20, 21, 22, 23, 24, 25
 local EV_INVITE, EV_START, EV_DECLINED, EV_ENDED, EV_PENDING, EV_EMOTE = 1, 2, 3, 4, 5, 6
-local KIND_IDS = { battle = 1, trade = 2, deal = 3, coop = 4 }
+local KIND_IDS = { battle = 1, trade = 2, deal = 3, coop = 4, double = 5, multi = 6 }
 local RESULTS = { "win", "loss", "draw" }
 
 local SCAN_INTERVAL = 60
@@ -510,6 +511,10 @@ function Bridge:handleRequest()
         self.net.send("REQ deal " .. target)
     elseif type == REQ_COOP then
         self.net.send("REQ coop " .. target)
+    elseif type == REQ_DOUBLE then
+        self.net.send("REQ double " .. target)
+    elseif type == REQ_MULTI then
+        self.net.send("REQ multi " .. target)
     elseif type == REQ_ACCEPT then
         self.net.send("ACCEPT " .. sid)
     elseif type == REQ_DECLINE then
@@ -735,11 +740,20 @@ function Bridge:syncLink()
     self:w8(OFF_TX + 1, tail)
     -- server -> ROM
     head, tail = self:r8(OFF_RX), self:r8(OFF_RX + 1)
-    while #self.rxQueue > 0 and (head + 1) % RING_SIZE ~= tail do
-        local bytes = table.remove(self.rxQueue, 1)
-        local p = OFF_RX + 4 + head * PACKET_SIZE
-        for i = 0, PACKET_SIZE - 1 do self:w8(p + i, bytes:byte(i + 1) or 0) end
-        head = (head + 1) % RING_SIZE
+    -- The ROM asks to hold back the link cmds of players far ahead of the
+    -- others (a bit per sender in the ring's filler); the rest keep their order.
+    local held = self:r8(OFF_RX + 2)
+    local i = 1
+    while i <= #self.rxQueue and (head + 1) % RING_SIZE ~= tail do
+        local bytes = self.rxQueue[i]
+        if bytes:byte(1) == PACKET_DATA and (held >> bytes:byte(2)) & 1 == 1 then
+            i = i + 1
+        else
+            table.remove(self.rxQueue, i)
+            local p = OFF_RX + 4 + head * PACKET_SIZE
+            for j = 0, PACKET_SIZE - 1 do self:w8(p + j, bytes:byte(j + 1) or 0) end
+            head = (head + 1) % RING_SIZE
+        end
     end
     self:w8(OFF_RX, head)
 end

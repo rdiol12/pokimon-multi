@@ -41,6 +41,7 @@
 #include "window.h"
 #include "mystery_gift_menu.h"
 #include "netplay.h"
+#include "guide.h"
 
 /*
  * Main menu state machine
@@ -266,6 +267,7 @@ static const u8 gText_MainMenuNewGame[] = _("NEW GAME");
 static const u8 gText_MainMenuContinue[] = _("CONTINUE");
 static const u8 gText_MainMenuOption[] = _("OPTION");
 static const u8 gText_MainMenuJoinOnline[] = _("JOIN ONLINE");
+static const u8 gText_MainMenuInviteFriends[] = _("INVITE FRIENDS");
 static const u8 gText_MainMenuMysteryGift2[] = _("MYSTERY GIFT");
 static const u8 gText_MainMenuMysteryEvents[] = _("MYSTERY EVENTS");
 static const u8 gText_WirelessNotConnected[] = _("The Wireless Adapter is not\nconnected.");
@@ -545,6 +547,7 @@ enum
     ACTION_MYSTERY_EVENTS,
     ACTION_EREADER,
     ACTION_JOIN_ONLINE,
+    ACTION_INVITE_FRIENDS,
     ACTION_INVALID
 };
 
@@ -663,7 +666,7 @@ static void Task_MainMenuCheckSaveFile(u8 taskId)
         switch (gSaveFileStatus)
         {
         case SAVE_STATUS_OK:
-            tMenuType = HAS_MYSTERY_GIFT; // its slot is JOIN ONLINE
+            tMenuType = HAS_MYSTERY_EVENTS; // its slots are JOIN ONLINE and INVITE FRIENDS (src/guide.c)
             gTasks[taskId].func = Task_MainMenuCheckBattery;
             break;
         case SAVE_STATUS_CORRUPT:
@@ -859,8 +862,8 @@ static void Task_DisplayMainMenu(u8 taskId)
             FillWindowPixelBuffer(6, PIXEL_FILL(0xA));
             AddTextPrinterParameterized3(2, FONT_NORMAL, 0, 1, sTextColor_Headers, TEXT_SKIP_DRAW, gText_MainMenuContinue);
             AddTextPrinterParameterized3(3, FONT_NORMAL, 0, 1, sTextColor_Headers, TEXT_SKIP_DRAW, gText_MainMenuNewGame);
-            AddTextPrinterParameterized3(4, FONT_NORMAL, 0, 1, sTextColor_Headers, TEXT_SKIP_DRAW, gText_MainMenuMysteryGift2);
-            AddTextPrinterParameterized3(5, FONT_NORMAL, 0, 1, sTextColor_Headers, TEXT_SKIP_DRAW, gText_MainMenuMysteryEvents);
+            AddTextPrinterParameterized3(4, FONT_NORMAL, 0, 1, sTextColor_Headers, TEXT_SKIP_DRAW, gText_MainMenuJoinOnline);
+            AddTextPrinterParameterized3(5, FONT_NORMAL, 0, 1, sTextColor_Headers, TEXT_SKIP_DRAW, gText_MainMenuInviteFriends);
             AddTextPrinterParameterized3(6, FONT_NORMAL, 0, 1, sTextColor_Headers, TEXT_SKIP_DRAW, gText_MainMenuOption);
             MainMenu_FormatSavegameText();
             PutWindowTilemap(2);
@@ -969,6 +972,7 @@ static void Task_HandleMainMenuAPressed(u8 taskId)
         ClearStdWindowAndFrame(6, TRUE);
         ClearStdWindowAndFrame(7, TRUE);
         wirelessAdapterConnected = IsWirelessAdapterConnected();
+        (void)wirelessAdapterConnected;
         switch (gTasks[taskId].tMenuType)
         {
         case HAS_NO_SAVED_GAME:
@@ -1018,6 +1022,7 @@ static void Task_HandleMainMenuAPressed(u8 taskId)
             }
             break;
         case HAS_MYSTERY_EVENTS:
+            // Netplay: JOIN ONLINE and INVITE FRIENDS instead of MYSTERY GIFT and MYSTERY EVENTS.
             switch (gTasks[taskId].tCurrItem)
             {
             case 0:
@@ -1028,35 +1033,10 @@ static void Task_HandleMainMenuAPressed(u8 taskId)
                 action = ACTION_NEW_GAME;
                 break;
             case 2:
-                if (gTasks[taskId].tWirelessAdapterConnected)
-                {
-                    action = ACTION_MYSTERY_GIFT;
-                    if (!wirelessAdapterConnected)
-                    {
-                        action = ACTION_INVALID;
-                        gTasks[taskId].tMenuType = HAS_NO_SAVED_GAME;
-                    }
-                }
-                else if (wirelessAdapterConnected)
-                {
-                    action = ACTION_INVALID;
-                    gTasks[taskId].tMenuType = HAS_SAVED_GAME;
-                }
-                else
-                {
-                    action = ACTION_EREADER;
-                }
+                action = ACTION_JOIN_ONLINE;
                 break;
             case 3:
-                if (wirelessAdapterConnected)
-                {
-                    action = ACTION_INVALID;
-                    gTasks[taskId].tMenuType = HAS_MYSTERY_GIFT;
-                }
-                else
-                {
-                    action = ACTION_MYSTERY_EVENTS;
-                }
+                action = ACTION_INVITE_FRIENDS;
                 break;
             case 4:
                 action = ACTION_OPTION;
@@ -1091,6 +1071,9 @@ static void Task_HandleMainMenuAPressed(u8 taskId)
             gPlttBufferFaded[0] = RGB_BLACK;
             gTasks[taskId].func = Task_NewGameBirchSpeech_Init;
             break;
+        case ACTION_INVITE_FRIENDS:
+            Guide_JoinOnlineAndInvite();
+            // fallthrough
         case ACTION_JOIN_ONLINE:
             Netplay_JoinOnline();
             // fallthrough

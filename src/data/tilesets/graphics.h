@@ -66,6 +66,282 @@ const u16 gTilesetPalettes_Petalburg[][16] =
     INCGFX_U16("data/tilesets/secondary/petalburg/palettes/15.pal", ".gbapal"),
 };
 
+// The carnival (tools/areas/carnival_art.py): Petalburg's tiles plus new art.
+const u32 gTilesetTiles_Carnival[] = INCGFX_U32("data/tilesets/secondary/carnival/tiles.png", ".4bpp.fastSmol", "-num_tiles 496 -Wnum_tiles");
+
+const u16 gTilesetPalettes_Carnival[][16] =
+{
+    INCGFX_U16("data/tilesets/secondary/carnival/palettes/00.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/carnival/palettes/01.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/carnival/palettes/02.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/carnival/palettes/03.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/carnival/palettes/04.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/carnival/palettes/05.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/carnival/palettes/06.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/carnival/palettes/07.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/carnival/palettes/08.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/carnival/palettes/09.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/carnival/palettes/10.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/carnival/palettes/11.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/carnival/palettes/12.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/carnival/palettes/13.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/carnival/palettes/14.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/carnival/palettes/15.pal", ".gbapal"),
+};
+
+// The Nimbus Isles (tools/areas/sky_art.py): Petalburg's tiles plus new art.
+const u32 gTilesetTiles_Sky[] = INCGFX_U32("data/tilesets/secondary/sky/tiles.png", ".4bpp.fastSmol", "-num_tiles 352 -Wnum_tiles");
+
+const u16 gTilesetPalettes_Sky[][16] =
+{
+    INCGFX_U16("data/tilesets/secondary/sky/palettes/00.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/sky/palettes/01.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/sky/palettes/02.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/sky/palettes/03.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/sky/palettes/04.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/sky/palettes/05.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/sky/palettes/06.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/sky/palettes/07.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/sky/palettes/08.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/sky/palettes/09.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/sky/palettes/10.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/sky/palettes/11.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/sky/palettes/12.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/sky/palettes/13.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/sky/palettes/14.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/sky/palettes/15.pal", ".gbapal"),
+};
+
+// Wonderwild Park (tools/areas/park_art.py): Petalburg's tiles plus new art.
+const u32 gTilesetTiles_Park[] = INCGFX_U32("data/tilesets/secondary/park/tiles.png", ".4bpp.fastSmol", "-num_tiles 316 -Wnum_tiles");
+
+const u16 gTilesetPalettes_Park[][16] =
+{
+    INCGFX_U16("data/tilesets/secondary/park/palettes/00.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/park/palettes/01.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/park/palettes/02.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/park/palettes/03.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/park/palettes/04.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/park/palettes/05.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/park/palettes/06.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/park/palettes/07.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/park/palettes/08.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/park/palettes/09.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/park/palettes/10.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/park/palettes/11.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/park/palettes/12.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/park/palettes/13.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/park/palettes/14.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/park/palettes/15.pal", ".gbapal"),
+};
+
+// Mt. Frostcrown (tools/areas/frost_art.py): Fallarbor's tiles plus new art.
+const u32 gTilesetTiles_Frost[] = INCGFX_U32("data/tilesets/secondary/frost/tiles.png", ".4bpp.fastSmol", "-num_tiles 448 -Wnum_tiles");
+
+const u16 gTilesetPalettes_Frost[][16] =
+{
+    INCGFX_U16("data/tilesets/secondary/frost/palettes/00.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/frost/palettes/01.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/frost/palettes/02.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/frost/palettes/03.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/frost/palettes/04.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/frost/palettes/05.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/frost/palettes/06.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/frost/palettes/07.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/frost/palettes/08.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/frost/palettes/09.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/frost/palettes/10.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/frost/palettes/11.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/frost/palettes/12.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/frost/palettes/13.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/frost/palettes/14.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/frost/palettes/15.pal", ".gbapal"),
+};
+
+// Voltspire Power Plant (tools/areas/plant_art.py): New Mauville's tiles plus new art.
+const u32 gTilesetTiles_Plant[] = INCGFX_U32("data/tilesets/secondary/plant/tiles.png", ".4bpp.fastSmol", "-num_tiles 512 -Wnum_tiles");
+
+const u16 gTilesetPalettes_Plant[][16] =
+{
+    INCGFX_U16("data/tilesets/secondary/plant/palettes/00.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/plant/palettes/01.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/plant/palettes/02.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/plant/palettes/03.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/plant/palettes/04.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/plant/palettes/05.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/plant/palettes/06.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/plant/palettes/07.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/plant/palettes/08.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/plant/palettes/09.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/plant/palettes/10.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/plant/palettes/11.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/plant/palettes/12.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/plant/palettes/13.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/plant/palettes/14.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/plant/palettes/15.pal", ".gbapal"),
+};
+
+// The Hoenn Metro (tools/areas/subway_art.py): New Mauville's tiles plus new art.
+const u32 gTilesetTiles_Subway[] = INCGFX_U32("data/tilesets/secondary/subway/tiles.png", ".4bpp.fastSmol", "-num_tiles 512 -Wnum_tiles");
+
+const u16 gTilesetPalettes_Subway[][16] =
+{
+    INCGFX_U16("data/tilesets/secondary/subway/palettes/00.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/subway/palettes/01.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/subway/palettes/02.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/subway/palettes/03.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/subway/palettes/04.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/subway/palettes/05.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/subway/palettes/06.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/subway/palettes/07.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/subway/palettes/08.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/subway/palettes/09.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/subway/palettes/10.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/subway/palettes/11.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/subway/palettes/12.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/subway/palettes/13.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/subway/palettes/14.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/subway/palettes/15.pal", ".gbapal"),
+};
+
+// Cobblerock Mine (tools/areas/mine_art.py): the cave's tiles plus new art.
+const u32 gTilesetTiles_Mine[] = INCGFX_U32("data/tilesets/secondary/mine/tiles.png", ".4bpp.fastSmol", "-num_tiles 432 -Wnum_tiles");
+
+const u16 gTilesetPalettes_Mine[][16] =
+{
+    INCGFX_U16("data/tilesets/secondary/mine/palettes/00.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/mine/palettes/01.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/mine/palettes/02.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/mine/palettes/03.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/mine/palettes/04.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/mine/palettes/05.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/mine/palettes/06.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/mine/palettes/07.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/mine/palettes/08.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/mine/palettes/09.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/mine/palettes/10.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/mine/palettes/11.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/mine/palettes/12.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/mine/palettes/13.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/mine/palettes/14.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/mine/palettes/15.pal", ".gbapal"),
+};
+
+// Prism Caverns (tools/areas/crystal_art.py): the cave's tiles, violet, plus new art.
+const u32 gTilesetTiles_Crystal[] = INCGFX_U32("data/tilesets/secondary/crystal/tiles.png", ".4bpp.fastSmol", "-num_tiles 488 -Wnum_tiles");
+
+const u16 gTilesetPalettes_Crystal[][16] =
+{
+    INCGFX_U16("data/tilesets/secondary/crystal/palettes/00.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/crystal/palettes/01.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/crystal/palettes/02.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/crystal/palettes/03.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/crystal/palettes/04.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/crystal/palettes/05.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/crystal/palettes/06.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/crystal/palettes/07.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/crystal/palettes/08.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/crystal/palettes/09.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/crystal/palettes/10.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/crystal/palettes/11.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/crystal/palettes/12.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/crystal/palettes/13.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/crystal/palettes/14.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/crystal/palettes/15.pal", ".gbapal"),
+};
+
+// Mirage Oasis (tools/areas/oasis_art.py): Route 111's desert tiles plus new art.
+const u32 gTilesetTiles_Oasis[] = INCGFX_U32("data/tilesets/secondary/oasis/tiles.png", ".4bpp.fastSmol", "-num_tiles 512 -Wnum_tiles");
+
+const u16 gTilesetPalettes_Oasis[][16] =
+{
+    INCGFX_U16("data/tilesets/secondary/oasis/palettes/00.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/oasis/palettes/01.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/oasis/palettes/02.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/oasis/palettes/03.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/oasis/palettes/04.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/oasis/palettes/05.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/oasis/palettes/06.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/oasis/palettes/07.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/oasis/palettes/08.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/oasis/palettes/09.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/oasis/palettes/10.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/oasis/palettes/11.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/oasis/palettes/12.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/oasis/palettes/13.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/oasis/palettes/14.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/oasis/palettes/15.pal", ".gbapal"),
+};
+
+// Verdant River (tools/areas/jungle_art.py): Fortree's jungle tiles plus new art.
+const u32 gTilesetTiles_Jungle[] = INCGFX_U32("data/tilesets/secondary/jungle/tiles.png", ".4bpp.fastSmol", "-num_tiles 496 -Wnum_tiles");
+
+const u16 gTilesetPalettes_Jungle[][16] =
+{
+    INCGFX_U16("data/tilesets/secondary/jungle/palettes/00.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/jungle/palettes/01.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/jungle/palettes/02.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/jungle/palettes/03.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/jungle/palettes/04.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/jungle/palettes/05.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/jungle/palettes/06.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/jungle/palettes/07.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/jungle/palettes/08.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/jungle/palettes/09.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/jungle/palettes/10.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/jungle/palettes/11.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/jungle/palettes/12.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/jungle/palettes/13.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/jungle/palettes/14.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/jungle/palettes/15.pal", ".gbapal"),
+};
+
+// Ironmoor Prison (tools/areas/prison_art.py): the Mt. Pyre tiles plus new art.
+const u32 gTilesetTiles_Prison[] = INCGFX_U32("data/tilesets/secondary/prison/tiles.png", ".4bpp.fastSmol", "-num_tiles 512 -Wnum_tiles");
+
+const u16 gTilesetPalettes_Prison[][16] =
+{
+    INCGFX_U16("data/tilesets/secondary/prison/palettes/00.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/prison/palettes/01.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/prison/palettes/02.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/prison/palettes/03.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/prison/palettes/04.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/prison/palettes/05.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/prison/palettes/06.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/prison/palettes/07.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/prison/palettes/08.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/prison/palettes/09.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/prison/palettes/10.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/prison/palettes/11.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/prison/palettes/12.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/prison/palettes/13.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/prison/palettes/14.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/prison/palettes/15.pal", ".gbapal"),
+};
+
+// Whisperstem Valley (tools/areas/bamboo_art.py): Rustboro's tiles plus new art.
+const u32 gTilesetTiles_Bamboo[] = INCGFX_U32("data/tilesets/secondary/bamboo/tiles.png", ".4bpp.fastSmol", "-num_tiles 512 -Wnum_tiles");
+
+const u16 gTilesetPalettes_Bamboo[][16] =
+{
+    INCGFX_U16("data/tilesets/secondary/bamboo/palettes/00.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/bamboo/palettes/01.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/bamboo/palettes/02.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/bamboo/palettes/03.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/bamboo/palettes/04.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/bamboo/palettes/05.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/bamboo/palettes/06.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/bamboo/palettes/07.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/bamboo/palettes/08.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/bamboo/palettes/09.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/bamboo/palettes/10.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/bamboo/palettes/11.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/bamboo/palettes/12.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/bamboo/palettes/13.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/bamboo/palettes/14.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/bamboo/palettes/15.pal", ".gbapal"),
+};
+
 const u32 gTilesetTiles_Rustboro[] = INCGFX_U32("data/tilesets/secondary/rustboro/tiles.png", ".4bpp.fastSmol", "-num_tiles 498 -Wnum_tiles");
 
 const u16 gTilesetPalettes_Rustboro[][16] =
@@ -941,6 +1217,29 @@ const u16 gTilesetPalettes_Lab[][16] =
     INCGFX_U16("data/tilesets/secondary/lab/palettes/13.pal", ".gbapal"),
     INCGFX_U16("data/tilesets/secondary/lab/palettes/14.pal", ".gbapal"),
     INCGFX_U16("data/tilesets/secondary/lab/palettes/15.pal", ".gbapal"),
+};
+
+// The sea floor (tools/areas/abyss_art.py): the underwater tiles plus new art.
+const u32 gTilesetTiles_Abyss[] = INCGFX_U32("data/tilesets/secondary/abyss/tiles.png", ".4bpp.fastSmol", "-num_tiles 512 -Wnum_tiles");
+
+const u16 gTilesetPalettes_Abyss[][16] =
+{
+    INCGFX_U16("data/tilesets/secondary/abyss/palettes/00.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/abyss/palettes/01.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/abyss/palettes/02.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/abyss/palettes/03.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/abyss/palettes/04.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/abyss/palettes/05.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/abyss/palettes/06.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/abyss/palettes/07.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/abyss/palettes/08.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/abyss/palettes/09.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/abyss/palettes/10.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/abyss/palettes/11.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/abyss/palettes/12.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/abyss/palettes/13.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/abyss/palettes/14.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/abyss/palettes/15.pal", ".gbapal"),
 };
 
 const u32 gTilesetTiles_Underwater[] = INCGFX_U32("data/tilesets/secondary/underwater/tiles.png", ".4bpp.fastSmol", "-num_tiles 500 -Wnum_tiles");

@@ -1,4 +1,5 @@
 #include "global.h"
+#include "injury.h"
 #include "battle_setup.h"
 #include "bike.h"
 #include "coord_event_weather.h"
@@ -8,6 +9,7 @@
 #include "faraway_island.h"
 #include "follower_npc.h"
 #include "event_data.h"
+#include "field_ability.h"
 #include "event_object_movement.h"
 #include "event_scripts.h"
 #include "fieldmap.h"
@@ -25,6 +27,7 @@
 #include "link.h"
 #include "match_call.h"
 #include "metatile_behavior.h"
+#include "online.h"
 #include "overworld.h"
 #include "pokemon.h"
 #include "safari_zone.h"
@@ -727,7 +730,8 @@ static bool8 TryStartCoordEventScript(struct MapPosition *position)
 {
     const u8 *script = GetCoordEventScriptAtPosition(&gMapHeader, position->x - MAP_OFFSET, position->y - MAP_OFFSET, position->elevation);
 
-    if (script == NULL)
+    // Races and hide and seek don't stop for the story's scenes.
+    if (script == NULL || Online_QuietRulesOn())
         return FALSE;
 
     struct ScriptContext ctx;
@@ -788,6 +792,13 @@ static bool8 TryStartStepCountScript(u16 metatileBehavior)
             return TRUE;
         }
     #endif
+        if (Injury_TryStartNotify())
+        {
+            ScriptContext_SetupScript(Injury_EventScript_Notify);
+            return TRUE;
+        }
+        if (FieldAbility_OnStep())
+            return TRUE;
         if (ShouldEggHatch())
         {
             IncrementGameStat(GAME_STAT_HATCHED_EGGS);
@@ -868,6 +879,7 @@ static void UpdateFriendshipStepCounter(void)
             AdjustFriendship(mon, FRIENDSHIP_EVENT_WALKING);
             mon++;
         }
+        Injury_OnWalk128Steps();
     }
 }
 

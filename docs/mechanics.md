@@ -211,6 +211,63 @@ Pokémon the player picks:
 Then it evolves on the spot, as if traded (held items are used up the same
 way; Karrablast and Shelmet get the partner they need).
 
+## Cave bosses
+
+![Sableye Terastallizes into the Fairy type in Granite Cave; Lunatone Dynamaxes in Meteor Falls; each drops treasure](images/mechanics-cave-bosses.png)
+
+Five caves have a boss Pokémon standing in a hidden corner
+(`src/mechanics_bosses.c`). Each one uses a battle gimmick on its first
+turn, Terastallizing or Dynamaxing (a Dynamaxed boss stays that way for the
+whole battle, not just three turns), and its intro says which:
+
+| Cave | Boss | Level | Gimmick | Treasure |
+| --- | --- | --- | --- | --- |
+| Granite Cave 1F | Sableye | 22 | Tera Fairy | Dusk Stone |
+| Meteor Falls 1F | Lunatone | 33 | Dynamax | Moon Stone |
+| Shoal Cave (low tide) | Glalie | 42 | Tera Ghost | Spell Tag |
+| Seafloor Cavern | Sharpedo | 45 | Dynamax | Deep Sea Tooth |
+| Victory Road 1F | Flygon | 54 | Tera Fire | Ability Patch |
+
+Beat it and it flees, leaving the treasure; catch it and it joins the party
+(no treasure). Either way it's gone for good (FLAG_MECH_BOSS_*). Running
+away or losing leaves it there. The opponent's gimmick is chosen in
+`Mechanics_BeforeTurnOrder` (battle_main.c), which also picks the
+opponent's battle style. Bosses in the new Cinder Caverns and Frostvein
+Cave can be added to the table once those maps are merged.
+
+## Battle commentary
+
+![The announcer opens a RISING CUP battle, then calls a KO, a super effective hit and the player's Pokémon going down](images/mechanics-commentary.png)
+
+In online PvP (link) battles and tournaments, an announcer calls the
+action (`src/mechanics_commentary.c`). It opens the battle, then after each
+turn says one line about the biggest thing that happened: a side down to
+its last Pokémon, a KO, Dynamax or Terastal, a critical hit or a super
+effective hit. It notes those from the battle's own messages
+(`PrepareStringBattle`, battle_util.c) and speaks at the end of the turn
+(`BS_EndTurnEvents`, battle_script_commands.c). The line is
+STRINGID_MECH_MESSAGE with the Pokémon in gBattleTextBuff1, and the choice
+uses no random numbers, so both games of a link battle print the same
+thing.
+
+## Calming the storms (postgame)
+
+![The Weather Institute researcher, Groudon's echo in the Route 114 drought, Kyogre's echo in the Route 118 thunderstorm, and the reward](images/mechanics-storm-quest.png)
+
+After the Hall of Fame, a researcher on the Weather Institute's second
+floor says what's left of Groudon's and Kyogre's power is stirring up a
+drought on Route 114 and a thunderstorm on Route 118
+(`src/mechanics_storms.c`). While a storm lasts, its route's weather turns
+when the player arrives, and an echo of the legendary (level 70) waits
+there. Beat it (echoes can't be caught) and the sky clears for good; it
+leaves a Heat Rock or a Damp Rock. With both calmed, the researcher gives a
+Smooth Rock and an Icy Rock.
+
+The weather only changes the current weather, never the saved one: a map
+can't start in a drought (`Drought_InitAll` never finishes during a warp),
+so `Mechanics_UpdateStorms` turns it once the screen has faded in. Mt.
+Chimney isn't touched.
+
 ## Screenshots
 
 ```sh
@@ -223,6 +280,9 @@ python3 tools/mechanics_shots/run.py tools/mechanics_shots/styles.lua out/ 20000
 python3 tools/mechanics_shots/run.py tools/mechanics_shots/skills.lua out/ 60000
 python3 tools/mechanics_shots/run.py tools/mechanics_shots/signature.lua out/ 150000
 python3 tools/mechanics_shots/run.py tools/mechanics_shots/evolution.lua out/ 150000
+python3 tools/mechanics_shots/run.py tools/mechanics_shots/bosses.lua out/ 150000
+python3 tools/mechanics_shots/run.py tools/mechanics_shots/commentary.lua out/ 150000
+python3 tools/mechanics_shots/run.py tools/mechanics_shots/storms.lua out/ 250000
 ```
 
 The runner is `tools/world_shots/run.py` plus `Driver.fastText()` and

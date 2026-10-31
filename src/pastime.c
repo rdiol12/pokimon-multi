@@ -1,4 +1,5 @@
 #include "global.h"
+#include "battle.h"
 #include "event_data.h"
 #include "event_object_movement.h"
 #include "field_effect.h"
@@ -37,6 +38,22 @@ static const struct PastimeSpotList sSpotLists[] =
     {gHotelSpots, HOTEL_SPOT_COUNT},
     {gCafeSpots, 1},
     {gCookingSpots, 1},
+    {gBugContestSpots, 1},
+    {gTradingSpots, 1},
+    {gDojoSpots, 1},
+    {gRangerSpots, 1 + RANGER_LOST_COUNT},
+    {gSchoolSpots, 1},
+    {gGardenSpots, 1 + GARDEN_PLOTS},
+    {gWeatherSpots, 1},
+    {gStarSpots, 1 + STAR_CONSTELLATIONS + STAR_METEORITES},
+    {gOrchestraSpots, 1},
+    {gArtSpots, 1},
+    {gDetectiveSpots, 1 + DETECTIVE_CASES * DETECTIVE_CLUES},
+    {gFestivalSpots, 1 + FESTIVAL_STALLS},
+    {gDigSpots, 1 + DIG_SITES},
+    {gAlphaSpots, ALPHA_COUNT},
+    {gLighthouseSpots, 1},
+    {gFashionSpots, 1},
 };
 
 #define MAX_SHOWN (LOCALID_PASTIME_LAST - LOCALID_PASTIME_FIRST + 1)
@@ -94,8 +111,12 @@ static bool32 UpdateSpot(const struct PastimeSpot *spot, u8 localId, void *data)
     if (shown && !wanted)
         RemoveObjectEventByLocalIdAndMap(localId, gSaveBlock1Ptr->location.mapNum, gSaveBlock1Ptr->location.mapGroup);
     else if (!shown && wanted)
-        SpawnSpecialObjectEventParameterized(spot->getGraphicsId != NULL ? spot->getGraphicsId(spot->arg) : spot->graphicsId,
-                                             spot->movementType, localId, x, y, MapGridGetElevationAt(x, y));
+    {
+        u8 objectEventId = SpawnSpecialObjectEventParameterized(spot->getGraphicsId != NULL ? spot->getGraphicsId(spot->arg) : spot->graphicsId,
+                                                                spot->movementType, localId, x, y, MapGridGetElevationAt(x, y));
+        if (spot->onSpawn != NULL && objectEventId < OBJECT_EVENTS_COUNT)
+            spot->onSpawn(spot->arg, objectEventId);
+    }
     return FALSE;
 }
 
@@ -141,12 +162,20 @@ void Pastime_Update(void)
     sTimer = 0;
     UpdateSpots();
     Delivery_Update();
+    BugContest_Update();
+    Garden_Update();
+    Weather_Update();
+    Star_Update();
+    Track_Update();
+    Festival_Update();
+    Bottle_Update();
+    Fashion_Update();
 }
 
 // A pressed facing (x, y), map coordinates with MAP_OFFSET.
 bool32 Pastime_TryInteract(s16 x, s16 y)
 {
-    return FALSE;
+    return Bottle_TryInteract(x, y);
 }
 
 // A Pokémon picture box, like showmonpic but with its own window tiles,
@@ -184,12 +213,36 @@ void Pastime_HideMonPic(void)
     sPicShown = FALSE;
 }
 
+// Called as a battle is set up (CreateBattleStartTask in battle_setup.c).
+void Pastime_OnBattleStart(void)
+{
+    Cafe_OnBattleStart();
+    BugContest_OnBattleStart();
+}
+
 // Called when the player caught a wild Pokémon.
 void Pastime_OnCatch(void)
 {
+    BugContest_OnCatch(gBattleResults.caughtMonSpecies);
+    Ranger_OnCatch(gBattleResults.caughtMonSpecies);
+    Track_OnCatch();
+}
+
+// Back from a wild battle, before the field reloads.
+void Pastime_OnWildBattleEnd(void)
+{
+    Ranger_OnWildBattleEnd();
+}
+
+// World_ModifyWildSpecies: changes the species of a wild encounter.
+u16 Pastime_ModifyWildSpecies(u16 species)
+{
+    species = BugContest_ModifyWildSpecies(species);
+    return Star_ModifyWildSpecies(species);
 }
 
 // Back from a trainer battle.
 void Pastime_OnTrainerBattleEnd(void)
 {
+    Track_OnTrainerBattleEnd();
 }

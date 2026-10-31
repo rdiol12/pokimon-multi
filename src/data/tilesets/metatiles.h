@@ -12,6 +12,12 @@ const u16 gMetatileAttributes_General[] = INCBIN_U16("data/tilesets/primary/gene
 const u16 gMetatiles_Petalburg[] = INCBIN_U16("data/tilesets/secondary/petalburg/metatiles.bin");
 const u16 gMetatileAttributes_Petalburg[] = INCBIN_U16("data/tilesets/secondary/petalburg/metatile_attributes.bin");
 
+const u16 gMetatiles_Carnival[] = INCBIN_U16("data/tilesets/secondary/carnival/metatiles.bin");
+const u16 gMetatileAttributes_Carnival[] = INCBIN_U16("data/tilesets/secondary/carnival/metatile_attributes.bin");
+
+const u16 gMetatiles_Bamboo[] = INCBIN_U16("data/tilesets/secondary/bamboo/metatiles.bin");
+const u16 gMetatileAttributes_Bamboo[] = INCBIN_U16("data/tilesets/secondary/bamboo/metatile_attributes.bin");
+
 const u16 gMetatiles_Rustboro[] = INCBIN_U16("data/tilesets/secondary/rustboro/metatiles.bin");
 const u16 gMetatileAttributes_Rustboro[] = INCBIN_U16("data/tilesets/secondary/rustboro/metatile_attributes.bin");
 
@@ -116,6 +122,9 @@ const u16 gMetatileAttributes_BrendansMaysHouse[] = INCBIN_U16("data/tilesets/se
 
 const u16 gMetatiles_Lab[] = INCBIN_U16("data/tilesets/secondary/lab/metatiles.bin");
 const u16 gMetatileAttributes_Lab[] = INCBIN_U16("data/tilesets/secondary/lab/metatile_attributes.bin");
+
+const u16 gMetatiles_Abyss[] = INCBIN_U16("data/tilesets/secondary/abyss/metatiles.bin");
+const u16 gMetatileAttributes_Abyss[] = INCBIN_U16("data/tilesets/secondary/abyss/metatile_attributes.bin");
 
 const u16 gMetatiles_Underwater[] = INCBIN_U16("data/tilesets/secondary/underwater/metatiles.bin");
 const u16 gMetatileAttributes_Underwater[] = INCBIN_U16("data/tilesets/secondary/underwater/metatile_attributes.bin");
@@ -411,3 +420,30 @@ const u16 gMetatileAttributes_HallOfFame[] = INCBIN_U16("data/tilesets/secondary
 
 const u16 gMetatiles_Amberwood[] = INCBIN_U16("data/tilesets/secondary/amberwood/metatiles.bin");
 const u16 gMetatileAttributes_Amberwood[] = INCBIN_U16("data/tilesets/secondary/amberwood/metatile_attributes.bin");
+
+const u16 gMetatiles_Mine[] = INCBIN_U16("data/tilesets/secondary/mine/metatiles.bin");
+const u16 gMetatileAttributes_Mine[] = INCBIN_U16("data/tilesets/secondary/mine/metatile_attributes.bin");
+
+const u16 gMetatiles_Crystal[] = INCBIN_U16("data/tilesets/secondary/crystal/metatiles.bin");
+const u16 gMetatileAttributes_Crystal[] = INCBIN_U16("data/tilesets/secondary/crystal/metatile_attributes.bin");
+
+const u16 gMetatiles_Oasis[] = INCBIN_U16("data/tilesets/secondary/oasis/metatiles.bin");
+const u16 gMetatileAttributes_Oasis[] = INCBIN_U16("data/tilesets/secondary/oasis/metatile_attributes.bin");
+
+const u16 gMetatiles_Jungle[] = INCBIN_U16("data/tilesets/secondary/jungle/metatiles.bin");
+const u16 gMetatileAttributes_Jungle[] = INCBIN_U16("data/tilesets/secondary/jungle/metatile_attributes.bin");
+
+const u16 gMetatiles_Prison[] = INCBIN_U16("data/tilesets/secondary/prison/metatiles.bin");
+const u16 gMetatileAttributes_Prison[] = INCBIN_U16("data/tilesets/secondary/prison/metatile_attributes.bin");
+
+const u16 gMetatiles_Plant[] = INCBIN_U16("data/tilesets/secondary/plant/metatiles.bin");
+const u16 gMetatileAttributes_Plant[] = INCBIN_U16("data/tilesets/secondary/plant/metatile_attributes.bin");
+const u16 gMetatiles_Subway[] = INCBIN_U16("data/tilesets/secondary/subway/metatiles.bin");
+const u16 gMetatileAttributes_Subway[] = INCBIN_U16("data/tilesets/secondary/subway/metatile_attributes.bin");
+
+const u16 gMetatiles_Sky[] = INCBIN_U16("data/tilesets/secondary/sky/metatiles.bin");
+const u16 gMetatileAttributes_Sky[] = INCBIN_U16("data/tilesets/secondary/sky/metatile_attributes.bin");
+const u16 gMetatiles_Park[] = INCBIN_U16("data/tilesets/secondary/park/metatiles.bin");
+const u16 gMetatileAttributes_Park[] = INCBIN_U16("data/tilesets/secondary/park/metatile_attributes.bin");
+const u16 gMetatiles_Frost[] = INCBIN_U16("data/tilesets/secondary/frost/metatiles.bin");
+const u16 gMetatileAttributes_Frost[] = INCBIN_U16("data/tilesets/secondary/frost/metatile_attributes.bin");

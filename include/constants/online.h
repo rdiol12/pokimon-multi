@@ -70,7 +70,38 @@
 #define ONL_REQ_BET_PLACE   53 // VAR_0x8005: coins; the side picked from BET_SHOW
 #define ONL_REQ_BET_COLLECT 54
 #define ONL_REQ_BET_BOARD   55
-#define ONL_REQ_COUNT       56
+#define ONL_REQ_DOUBLES_BOARD 56
+#define ONL_REQ_TEAM_VIEW   57
+#define ONL_REQ_TEAM_WHO    58
+#define ONL_REQ_TEAM_ASK    59 // the player picked from TEAM_WHO
+#define ONL_REQ_TEAM_YES    60
+#define ONL_REQ_TEAM_NO     61
+#define ONL_REQ_TEAM_LEAVE  62
+#define ONL_REQ_TEAM_BOARD  63
+#define ONL_REQ_GHALL_VIEW    64
+#define ONL_REQ_GHALL_MEMBERS 65
+#define ONL_REQ_GHALL_CHEST   66
+#define ONL_REQ_GHALL_PUT     67 // VAR_0x8005 item, VAR_0x8006 count
+#define ONL_REQ_GHALL_TAKE    68 // the item picked from GHALL_CHEST
+#define ONL_REQ_WAR_BOARD     69
+#define ONL_REQ_WAR_CLAIM     70
+#define ONL_REQ_RAID_DEFEND   71
+#define ONL_REQ_RAID_LIST     72
+#define ONL_REQ_RAID_GET      73 // the base picked from RAID_LIST
+#define ONL_REQ_RAID_RESULT   74 // VAR_0x8005: TRUE if the raid won
+#define ONL_REQ_RACE_LIST     75
+#define ONL_REQ_RACE_JOIN     76 // the course picked from RACE_LIST
+#define ONL_REQ_RACE_BOARD    77 // the course picked from RACE_LIST
+#define ONL_REQ_RACE_FINISH   78 // VAR_0x8005 course, VAR_0x8006 time in frames
+#define ONL_REQ_RACE_QUIT     79
+#define ONL_REQ_HIDE_LIST     80
+#define ONL_REQ_HIDE_JOIN     81 // the arena picked from HIDE_LIST
+#define ONL_REQ_HIDE_GO       82
+#define ONL_REQ_HIDE_TAG      83 // VAR_0x8007: the player talked to
+#define ONL_REQ_HIDE_END      84
+#define ONL_REQ_HIDE_QUIT     85
+#define ONL_REQ_HIDE_BOARD    86
+#define ONL_REQ_COUNT         87
 
 // The hub's rows (VAR_RESULT of its menu).
 #define ONLINE_HUB_GOALS    0
@@ -83,6 +114,11 @@
 #define ONLINE_HUB_MENTORS  7
 #define ONLINE_HUB_PQUESTS  8
 #define ONLINE_HUB_BETTING  9
+#define ONLINE_HUB_DOUBLES  10
+#define ONLINE_HUB_TEAMS    11
+#define ONLINE_HUB_GUILD    12
+#define ONLINE_HUB_RACING   13
+#define ONLINE_HUB_HIDE     14
 #define ONLINE_HUB_CLOSE    127
 
 // VAR_0x800B of the co-op fishing requests.
@@ -103,5 +139,21 @@
 #define MENTOR_APPRENTICE 1 // has a mentor (gStringVar1)
 #define MENTOR_ON_LIST    2 // a mentor newer trainers can pick
 #define MENTOR_OFF_LIST   3 // enough badges, not on the list
+
+// VAR_0x800B of TEAM_VIEW.
+#define TEAM_NONE    0
+#define TEAM_INVITED 1 // someone asked the player; gStringVar1 is who
+#define TEAM_ASKED   2 // the player asked someone
+#define TEAM_TEAMED  3 // on a team with gStringVar1
+
+// VAR_0x800B of GHALL_VIEW. gStringVar1: the guild's tag, gStringVar2: its name.
+#define GUILD_NONE   0
+#define GUILD_MEMBER 1
+#define GUILD_LEADER 2
+
+// Mount racing (src/online_racing.c).
+#define RACE_COURSES 3
+#define RACE_LANES   4 // racers in a heat
+#define RACE_GATES   4 // the last is the finish
 
 #endif // GUARD_CONSTANTS_ONLINE_H

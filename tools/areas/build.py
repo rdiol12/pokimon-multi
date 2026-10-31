@@ -158,7 +158,7 @@ class Area:
         self.warps.append({'x': x, 'y': y, 'elevation': elevation, 'dest_map': dest_map, 'dest_warp_id': str(dest_warp)})
         return len(self.warps) - 1
 
-    def coord(self, x, y, script, var='0', var_value='0', elevation=3):
+    def coord(self, x, y, script, var='VAR_TEMP_0', var_value='0', elevation=3):
         self.coords.append({'type': 'trigger', 'x': x, 'y': y, 'elevation': elevation, 'var': var,
                             'var_value': var_value, 'script': script})
 
@@ -341,6 +341,25 @@ def add_object(map_name, obj):
         f.write('\n')
 
 
+def add_warp(map_name, warp):
+    """Adds (once, matched by position) a warp event to an existing map and
+    returns its index: an arrival point for a new map's exit."""
+    p = f'{ROOT}/data/maps/{map_name}/map.json'
+    d = json.load(open(p))
+    warps = d['warp_events']
+    for i, w in enumerate(warps):
+        if (w['x'], w['y']) == (warp['x'], warp['y']):
+            warps[i] = warp
+            break
+    else:
+        warps.append(warp)
+        i = len(warps) - 1
+    with open(p, 'w') as f:
+        json.dump(d, f, indent=2, ensure_ascii=False)
+        f.write('\n')
+    return i
+
+
 def register_script_file(name, text):
     """data/scripts/areas/<name>.inc, included from event_scripts.s."""
     os.makedirs(f'{ROOT}/data/scripts/areas', exist_ok=True)
@@ -362,12 +381,13 @@ def npc(gfx, x, y, script, move='MOVEMENT_TYPE_FACE_DOWN', local_id=None, flag='
 
 
 def interior(name, map_id, layout, doors, outside_map, outside_warp, objects, scripts, mapsec, group,
-             music='MUS_NONE', bgs=(), extra_warps=()):
+             music='MUS_NONE', bgs=(), extra_warps=(), requires_flash=False, map_type='MAP_TYPE_INDOOR',
+             weather='WEATHER_NONE'):
     """A room using an existing layout. doors: (x, y) cells of its exit."""
     warps = [{'x': x, 'y': y, 'elevation': 0, 'dest_map': outside_map, 'dest_warp_id': str(outside_warp)} for x, y in doors]
     warps += list(extra_warps)
     m = {'id': map_id, 'name': name, 'layout': layout, 'music': music, 'region': 'REGION_HOENN',
-         'region_map_section': mapsec, 'requires_flash': False, 'weather': 'WEATHER_NONE', 'map_type': 'MAP_TYPE_INDOOR',
+         'region_map_section': mapsec, 'requires_flash': requires_flash, 'weather': weather, 'map_type': map_type,
          'allow_cycling': False, 'allow_escaping': False, 'allow_running': False, 'show_map_name': False,
          'battle_scene': 'MAP_BATTLE_SCENE_NORMAL', 'connections': None, 'object_events': objects,
          'warp_events': warps, 'coord_events': [], 'bg_events': list(bgs)}

@@ -425,6 +425,7 @@ static inline bool32 IsMoveSheerForceBoosted(enum Move move)
         case MOVE_ANCIENT_POWER:
         case MOVE_ASTONISH:
         case MOVE_BITE:
+        case MOVE_BLAZE_RUSH:
         case MOVE_BLIZZARD:
         case MOVE_BODY_SLAM:
         case MOVE_BOUNCE:
@@ -434,6 +435,7 @@ static inline bool32 IsMoveSheerForceBoosted(enum Move move)
         case MOVE_BUG_BUZZ:
         case MOVE_BULLDOZE:
         case MOVE_BURNING_JEALOUSY:
+        case MOVE_CANOPY_EDGE:
         case MOVE_CHARGE_BEAM:
         case MOVE_CHILLING_WATER:
         case MOVE_CONFUSION:
@@ -473,6 +475,7 @@ static inline bool32 IsMoveSheerForceBoosted(enum Move move)
         case MOVE_LIQUIDATION:
         case MOVE_LOW_SWEEP:
         case MOVE_METAL_CLAW:
+        case MOVE_MIRE_CRASH:
         case MOVE_MUD_BOMB:
         case MOVE_MUDDY_WATER:
         case MOVE_MUD_SHOT:

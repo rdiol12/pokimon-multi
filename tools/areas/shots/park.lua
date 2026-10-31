@@ -1,0 +1,80 @@
+-- Wonderwild Park: the guide in Slateport (badge check), the park, the
+-- director's request, the hedge maze, solving the teacups, riding the
+-- coaster to the photo deck, and each mascot found.
+dofile(INSTANCE_DIR .. "/../driver_lib.lua")
+local D, K = Driver, Driver.KEY
+local P = MAPS.MAP_WONDERWILD_PARK
+
+local function close(n)
+    for _ = 1, n do D.press(K.A, 30) end
+    D.press(K.B, 30)
+end
+
+local function view(x, y, name)
+    D.scene(12, P, x, y)
+    D.wait(300)
+    D.shot(name)
+end
+
+D.run(function()
+    D.boot()
+    D.wait(60)
+    D.season(1)
+    D.scene(12, MAPS.MAP_SLATEPORT_CITY, 17, 4, { give = "MARILL", level = 25, lead = true })
+    D.wait(240)
+    D.talk(K.UP, "01-guide-needs-badges", 2)
+    close(2)
+    D.wait(60)
+    D.flag("FLAG_BADGE02_GET", true)
+    D.talk(K.UP, "02-guide", 3)
+    for _ = 1, 6 do D.press(K.A, 60) end
+    D.wait(400)
+    D.waitFor("the overworld", 1200, D.inOverworld)
+    D.wait(300)
+    D.shot("03-park-gates")
+    view(28, 26, "04-star-plaza")
+    D.scene(12, P, 28, 9)
+    D.wait(300)
+    D.talk(K.UP, "05-director", 5)
+    close(3)
+    view(12, 21, "06-hedge-maze")
+    D.scene(12, P, 7, 14)
+    D.wait(300)
+    D.shot("07-maze-middle")
+    D.talk(K.UP, "08-clefairy", 2)
+    for _ = 1, 3 do D.press(K.A, 80) end
+    D.wait(100)
+    D.shot("09-clefairy-found")
+    close(1)
+    view(42, 22, "10-teacups")
+    D.scene(12, P, 35, 5)
+    D.wait(300)
+    D.hold(K.DOWN, 16)
+    D.wait(20)
+    D.shot("11-spinning")
+    D.wait(300)
+    D.shot("12-landed-by-jigglypuff")
+    D.talk(K.RIGHT, "13-jigglypuff", 2)
+    for _ = 1, 3 do D.press(K.A, 80) end
+    close(1)
+    D.scene(12, P, 35, 33)
+    D.wait(300)
+    D.talk(K.UP, "14-coaster-host", 2)
+    D.press(K.A, 60)
+    D.press(K.A, 60)
+    D.press(K.A, 60)
+    D.wait(200)
+    D.waitFor("the overworld", 1200, D.inOverworld)
+    D.wait(60)
+    D.shot("15-coaster-ride")
+    D.wait(80)
+    D.shot("16-coaster-ride-2")
+    D.wait(500)
+    D.shot("17-photo-deck")
+    D.hold(K.DOWN, 16)
+    D.wait(30)
+    D.talk(K.RIGHT, "18-togepi", 2)
+    for _ = 1, 3 do D.press(K.A, 80) end
+    close(1)
+    D.result("ok")
+end)

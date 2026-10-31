@@ -15,7 +15,6 @@
 // it; beat the guardian and the aide teaches the starter its signature
 // move. Only that line can learn it (party_menu.c, CanTeachMove).
 
-#define GUARDIAN_OT_ID 0x4D454348 // marks the guardian, which can't be caught
 
 struct StarterLine
 {
@@ -62,7 +61,7 @@ bool32 Mechanics_CanLearnSignatureMove(u16 species, u16 move)
 
 bool32 Mechanics_IsCatchBlocked(void)
 {
-    return GetMonData(&gParties[B_TRAINER_OPPONENT_A][0], MON_DATA_OT_ID) == GUARDIAN_OT_ID;
+    return GetMonData(&gParties[B_TRAINER_OPPONENT_A][0], MON_DATA_OT_ID) == MECH_GUARDIAN_OT_ID;
 }
 
 // The first party Pokémon of a starter line, or NULL.
@@ -119,7 +118,8 @@ void Mechanics_SetupGuardian(void)
     level = min(max(GetMonData(mon, MON_DATA_LEVEL) + 3, 30), MAX_LEVEL);
     ZeroEnemyPartyMons();
     CreateMonWithIVs(&gParties[B_TRAINER_OPPONENT_A][0], line->species[2], level, Random32(),
-                     OTID_STRUCT_PRESET(GUARDIAN_OT_ID), 20);
+                     OTID_STRUCT_PRESET(MECH_GUARDIAN_OT_ID), 20);
+    GiveMonInitialMoveset(&gParties[B_TRAINER_OPPONENT_A][0]);
     Mechanics_PrepareOpponentMon(&gParties[B_TRAINER_OPPONENT_A][0]);
 }
 
