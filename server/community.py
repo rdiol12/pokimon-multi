@@ -40,6 +40,7 @@ FEATURES = (
     "community_contest",
     "community_chat",
     "community_legal",
+    "community_fusion",
 )
 
 OK, OFFLINE = 0, 1

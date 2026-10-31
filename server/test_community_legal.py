@@ -13,7 +13,7 @@ MOVE_SPORE = 147  # Treecko can't learn it in any game
 
 
 def make_mon(species=SPECIES_TREECKO, moves=(MOVE_POUND, MOVE_LEER), level=5, exp=None, evs=(0,) * 6,
-             item=0, met_level=5, personality=0x12345678, ot_id=0x0BADF00D, edit=None):
+             item=0, met_level=5, personality=0x12345678, ot_id=0x0BADF00D, edit=None, fusion=0):
     """A struct Pokemon (party, 100 bytes) the way the game stores it."""
     growth = legal.data()["growth"][species]
     if exp is None:
@@ -23,6 +23,9 @@ def make_mon(species=SPECIES_TREECKO, moves=(MOVE_POUND, MOVE_LEER), level=5, ex
     struct.pack_into("<4H", subs[1], 0, *(list(moves) + [0] * 4)[:4])
     subs[2][0:6] = bytes(evs)
     struct.pack_into("<H", subs[3], 2, met_level)
+    # Fusion partner bits (src/breed_fusion.c).
+    struct.pack_into("<H", subs[0], 10, ((fusion >> 7) & 3) << 14)
+    struct.pack_into("<I", subs[3], 8, ((fusion & 0x7F) << 20) | (((fusion >> 9) & 1) << 28))
     secure = bytearray(48)
     for t in range(4):
         i = legal.SUBSTRUCT_OFFSETS[t][personality % 24]
@@ -35,7 +38,7 @@ def make_mon(species=SPECIES_TREECKO, moves=(MOVE_POUND, MOVE_LEER), level=5, ex
     raw = bytearray(100)
     struct.pack_into("<II", raw, 0, personality, ot_id)
     raw[8:18] = bytes([0xCE, 0xCC, 0xBF, 0xBF, 0xBD, 0xC5, 0xC9]) + b"\xff" * 3  # TREECKO
-    raw[19] = 2  # hasSpecies
+    raw[19] = 2 | (((fusion >> 10) & 1) << 7)  # hasSpecies, fusion partner's top bit
     struct.pack_into("<H", raw, 28, checksum)
     struct.pack_into("<12I", raw, 32, *[w ^ key for w in words])
     raw[84] = level

@@ -1,4 +1,5 @@
 #include "global.h"
+#include "breed_fusion.h"
 #include "battle.h"
 #include "mechanics.h"
 #include "battle_hold_effects.h"
@@ -3250,6 +3251,7 @@ static void Cmd_switchindataupdate(void)
 
     gBattleMons[battler].types[0] = GetSpeciesType(gBattleMons[battler].species, 0);
     gBattleMons[battler].types[1] = GetSpeciesType(gBattleMons[battler].species, 1);
+    BreedFusion_SetBattlerTypes(&GetBattlerMon(battler)->box, gBattleMons[battler].species, gBattleMons[battler].types);
     gBattleMons[battler].types[2] = TYPE_MYSTERY;
     gBattleMons[battler].ability = GetAbilityBySpecies(gBattleMons[battler].species, gBattleMons[battler].abilityNum);
     #if TESTING
