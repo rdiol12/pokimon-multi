@@ -11,6 +11,7 @@ Pastime_EventScript_Menu::
 	dynmultipush Pastime_Text_MenuCooking, PASTIME_MENU_COOKING
 	dynmultipush Pastime_Text_MenuBugContest, PASTIME_MENU_BUG_CONTEST
 	dynmultipush Pastime_Text_MenuTrading, PASTIME_MENU_TRADING
+	dynmultipush Pastime_Text_MenuDojo, PASTIME_MENU_DOJO
 	dynmultipush Pastime_Text_MenuClose, PASTIME_MENU_CLOSE
 	dynmultistack 0, 0, FALSE, 6, FALSE, PASTIME_MENU_LOST_FOUND, DYN_MULTICHOICE_CB_NONE
 	switch VAR_RESULT
@@ -24,6 +25,7 @@ Pastime_EventScript_Menu::
 	case PASTIME_MENU_COOKING, Pastime_EventScript_Cooking
 	case PASTIME_MENU_BUG_CONTEST, Pastime_EventScript_BugContest
 	case PASTIME_MENU_TRADING, Pastime_EventScript_Trading
+	case PASTIME_MENU_DOJO, Pastime_EventScript_Dojo
 Pastime_EventScript_MenuDone::
 	releaseall
 	end
@@ -111,6 +113,11 @@ Pastime_EventScript_Trading:
 	releaseall
 	end
 
+Pastime_EventScript_Dojo:
+	callnative Dojo_ShowList, waitstate=1
+	releaseall
+	end
+
 Pastime_Text_MenuLostFound:
 	.string "LOST & FOUND$"
 Pastime_Text_MenuMuseum:
@@ -141,5 +148,7 @@ Pastime_Text_BugChamps:
 	.string "BUG CONTEST BOARD$"
 Pastime_Text_MenuTrading:
 	.string "TRADING POST$"
+Pastime_Text_MenuDojo:
+	.string "BATTLE DOJO$"
 Pastime_Text_MenuClose:
 	.string "CLOSE$"

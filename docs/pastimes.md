@@ -235,3 +235,24 @@ Flying type for DRATINI "NOODLE" with a Dragon Fang, and six more). The
 traded Pokémon has OT TRADER and goes in the same party slot; the Pokédex
 marks it caught. **R > PASTIMES > TRADING POST** lists today's offers (grey
 once done) and the trades made. Screenshots: `tools/pastime_shots/trading.lua`.
+
+## Battle dojo
+
+![Battle dojo](images/pastime-dojo.png)
+
+The DOJO MASTER stands outside Dewford Gym. **TRAIN**: three sessions a
+day, each five timing meter drills; every good drill earns 2 Dojo Points
+(DP). Points earned in total raise your belt: WHITE, YELLOW (20), GREEN
+(60), BLUE (120), BLACK (200), and the meter gets faster with it.
+
+**LEARN A MOVE**: 16 moves the Pokémon Center relearner doesn't teach, from
+6 to 16 DP, the stronger ones locked behind belts: Fire/Ice/Thunder Punch
+and Seed Bomb (WHITE); Zen Headbutt, Aqua Tail, Knock Off (YELLOW); Iron
+Head, Drain Punch, Hyper Voice (GREEN); Earth Power, Heat Wave, Gunk Shot
+(BLUE); Stealth Rock, Superpower, Body Press (BLACK). Any Pokémon of the
+move's type can learn it here, as well as any that has it on its tutor
+list: `Pastime_CanLearnTeachableMove` is checked first in
+`CanLearnTeachableMove` (`src/pokemon.c`), and only while the master is
+teaching that move. It uses the usual tutor box and "forget a move" screens.
+**R > PASTIMES > BATTLE DOJO** shows the belt, points, sessions left, moves
+learned and the move list with prices. Screenshots: `tools/pastime_shots/dojo.lua`.

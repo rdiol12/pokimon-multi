@@ -107,5 +107,12 @@ void Trading_GetSwap(void);
 void Trading_CheckSwapMon(void);
 void Trading_DoSwap(void);
 void Trading_ShowList(void);
+void Dojo_GetStatus(void);
+void Dojo_Train(void);
+void Dojo_PushMoveMenu(void);
+void Dojo_CheckMove(void);
+void Dojo_PayForMove(void);
+void Dojo_ShowList(void);
+bool32 Pastime_CanLearnTeachableMove(u16 species, u16 move);
 
 #endif // GUARD_PASTIME_H

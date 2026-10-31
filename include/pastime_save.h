@@ -70,6 +70,13 @@ struct PastimeSaveData
     u8 tradeFiller;
     u16 tradeBarters;
     u16 tradeSwaps;
+    // Battle dojo (src/pastime_dojo.c)
+    u16 dojoDay;      // day + 1 of dojoSessions
+    u8 dojoSessions;
+    u8 dojoFiller;
+    u16 dojoPoints;
+    u16 dojoEarned;
+    u16 dojoTaught;
 };
 
 #endif // GUARD_PASTIME_SAVE_H

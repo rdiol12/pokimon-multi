@@ -17,6 +17,7 @@
 #define PASTIME_MENU_COOKING    7
 #define PASTIME_MENU_BUG_CONTEST 8
 #define PASTIME_MENU_TRADING    9
+#define PASTIME_MENU_DOJO       10
 #define PASTIME_MENU_CLOSE      31
 
 // NPCs and objects the activities place on maps from code (src/pastime.c)
@@ -110,5 +111,17 @@
 #define TRADING_DONE        1
 #define TRADING_MISSING     2
 #define TRADING_EGG         3
+
+// Battle dojo in Dewford (src/pastime_dojo.c).
+#define DOJO_SESSIONS     3  // training sessions a day
+#define DOJO_DRILLS       5  // timing meter rounds a session
+#define DOJO_BELT_COUNT   5
+#define DOJO_MOVE_COUNT   16
+#define DOJO_MENU_TRAIN   0
+#define DOJO_MENU_LEARN   1
+#define DOJO_MENU_CANCEL  31
+#define DOJO_OK           0  // VAR_RESULT of Dojo_CheckMove
+#define DOJO_NO_BELT      1
+#define DOJO_NO_POINTS    2
 
 #endif // GUARD_CONSTANTS_PASTIME_H
