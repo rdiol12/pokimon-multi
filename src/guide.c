@@ -119,6 +119,10 @@ const struct GuideEntry gGuideEntries[] =
     AREA("NIMBUS ISLES", "A balloon pilot at the west edge of FORTREE\nflies you up to the sky islands.",
          MAPSEC_FORTREE_CITY, MAP_NIMBUS_CITY, 7, FLAG_NIMBUS_CHIMES_DONE),
 #endif
+#ifdef FLAG_FROST_RESCUE_DONE
+    AREA("MT. FROSTCROWN", "A ranger by LILYCOVE's POKéMON CENTER takes\nyou up the mountain to SNOWDRIFT VILLAGE.",
+         MAPSEC_LILYCOVE_CITY, MAP_MT_FROSTCROWN, 6, FLAG_FROST_RESCUE_DONE),
+#endif
     ACTIVITY("CAFE AND COOK-OFF", "The chef of CAFE SOLEIL and the COOK-OFF\njudge stand on the LILYCOVE waterfront.",
              MAPSEC_LILYCOVE_CITY, 0, 0, 0),
     ACTIVITY("MUSEUM DONATIONS", "The curator in the LILYCOVE MUSEUM takes\nfossils and rare finds.",
