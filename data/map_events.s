@@ -15,6 +15,7 @@
 #include "constants/species.h"
 #include "constants/apricorn_tree.h"
 #include "constants/life.h"
+#include "constants/community.h"
 	.include "asm/macros.inc"
 	.include "constants/constants.inc"
 

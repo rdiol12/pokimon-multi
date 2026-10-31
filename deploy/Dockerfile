@@ -6,6 +6,7 @@ FROM python:3.12-slim
 WORKDIR /app
 COPY server/*.py server/
 COPY server/static server/static/
+COPY server/data/ server/data/
 COPY tools/netplay_bridge/*.lua tools/netplay_bridge/extensions.txt tools/netplay_bridge/
 # The shiny gallery draws the game's own Pokémon pictures (server/online_web.py).
 COPY graphics/pokemon graphics/pokemon/

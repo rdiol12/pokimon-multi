@@ -1,0 +1,30 @@
+-- The postgame rival: May at Ever Grande City, then at Fortree City with one more Pokémon.
+dofile(INSTANCE_DIR .. "/../driver_lib.lua")
+local D, K = Driver, Driver.KEY
+D.run(function()
+    D.boot()
+    D.showcase({ gameClear = true, badges = 8, level = 95, party = { "SWAMPERT", "GARDEVOIR", "MANECTRIC", "SKARMORY" } })
+    for slot = 0, 3 do D.setMove(slot, 304) end -- Hyper Voice hits both foes
+    -- The rival at Ever Grande City.
+    D.scene(13, MAPS.MAP_EVER_GRANDE_CITY, 29, 51)
+    D.shot("rival-spot")
+    D.talk(K.UP, "rival-hello", 4)
+    D.wait(30)
+    D.shot("rival-team")
+    D.press(K.A, 30)
+    D.winBattle("rival-battle")
+    D.wait(30)
+    D.pages("rival-next", 2)
+    D.wait(120)
+    D.shot("rival-gone")
+    D.scene(13, MAPS.MAP_FORTREE_CITY, 7, 8)
+    D.wait(400) -- the achievement popups
+    D.shot("rival-fortree")
+    D.talk(K.UP, "rival-again")
+    D.wait(30)
+    D.shot("rival-team2")
+    D.press(K.A, 30)
+    D.winBattle("rival-battle2")
+    D.wait(30)
+    D.pages("rival-next2", 2)
+end)
