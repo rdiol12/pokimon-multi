@@ -68,7 +68,7 @@ def main():
     server = subprocess.Popen(
         [sys.executable, os.path.join(ROOT, "server", "netplay_server.py"),
          "--host", "127.0.0.1", "--port", str(port), "--db", db],
-        stdout=open(os.path.join(out, "server.log"), "w"), stderr=subprocess.STDOUT)
+        stdout=open(os.path.join(out, "server.log"), "w"), stderr=subprocess.STDOUT, env=run_e2e.server_env())
     try:
         time.sleep(0.7)
         print("seed:", seed_server(port))
