@@ -26,6 +26,24 @@ function toast(text, ms = 2200) {
     setTimeout(() => el.remove(), ms);
 }
 
+// A yes/no question in the app's own dialog: iOS WebViews answer the
+// browser's confirm() with "no" without showing it.
+function ask(question) {
+    const dialog = $('#ask');
+    $('#ask-text').textContent = question;
+    return new Promise((resolve) => {
+        const answer = (e) => {
+            const value = e.target.closest('[data-answer]')?.dataset.answer;
+            if (!value) return;
+            dialog.removeEventListener('click', answer);
+            dialog.close();
+            resolve(value === 'yes');
+        };
+        dialog.addEventListener('click', answer);
+        dialog.showModal();
+    });
+}
+
 const readFile = (file) => file.arrayBuffer().then((b) => new Uint8Array(b));
 
 async function bundledPatch() {
@@ -163,7 +181,7 @@ function exportSave() {
 async function importSave(file) {
     const bytes = await readFile(file);
     if (bytes.length < 0x8000) return toast('That is not a GBA save file');
-    if (!confirm('Replace your current save with this file? The game restarts.')) return;
+    if (!(await ask('Replace your current save with this file? The game restarts.'))) return;
     await storage.set('sram', bytes);
     location.reload();
 }
@@ -249,14 +267,15 @@ async function startGame(game) {
         const action = e.target.closest('[data-action]')?.dataset.action;
         if (action === 'close') menu.close();
         if (action === 'export') exportSave();
-        if (action === 'reset' && confirm('Restart the game? Unsaved progress is lost.')) {
+        if (action === 'reset' && await ask('Restart the game? Unsaved progress is lost.')) {
             emu.reset();
             menu.close();
         }
-        if (action === 'change-rom' && confirm('Pick a different ROM? Your save stays.')) {
+        if (action === 'change-rom' && await ask('Pick a different ROM? Your save stays.')) {
             await storage.remove('game');
             await storage.remove('gameCrc');
             await storage.remove('rom');
+            await storage.remove('patch');
             location.reload();
         }
     });
