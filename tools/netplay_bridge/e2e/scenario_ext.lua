@@ -477,7 +477,8 @@ D.run(function()
             if step % 2 == 1 then
                 D.press(K.B, 0)
             else
-                D.write8(D.SYM.gActionSelectionCursor, 3) -- B_ACTION_RUN
+                -- Our battler id depends on who hosts the link, so set all four.
+                for b = 0, 3 do D.write8(D.SYM.gActionSelectionCursor + b, 3) end -- B_ACTION_RUN
                 D.press(K.A, 0)
             end
         else
