@@ -1123,3 +1123,71 @@ Level: 26
 Sinistea
 Level: 27
 /* end MetroMauville */
+
+/* begin WonderwildPark */
+=== AREA_TRAINER_PARK_TIMMY ===
+Name: TIMMY
+Class: Youngster
+Pic: Youngster
+Gender: Male
+Music: Male
+Double Battle: No
+AI: Basic Trainer
+
+Pawmi
+Level: 17
+
+Rockruff
+Level: 18
+
+=== AREA_TRAINER_PARK_POPPY ===
+Name: POPPY
+Class: Lass
+Pic: Lass
+Gender: Female
+Music: Female
+Double Battle: No
+AI: Basic Trainer
+
+Fidough
+Level: 18
+
+Swirlix
+Level: 18
+
+=== AREA_TRAINER_PARK_REMY ===
+Name: REMY
+Class: School Kid
+Pic: School Kid M
+Gender: Male
+Music: Male
+Double Battle: No
+AI: Basic Trainer
+
+Minccino
+Level: 18
+
+Pichu
+Level: 17
+
+Spinda
+Level: 19
+
+=== AREA_TRAINER_PARK_GLORIA ===
+Name: GLORIA
+Class: Pokefan
+Pic: Pokefan F
+Gender: Female
+Music: Twins
+Double Battle: No
+AI: Basic Trainer
+
+Snubbull
+Level: 19
+
+Azurill
+Level: 19
+
+Cleffa
+Level: 20
+/* end WonderwildPark */

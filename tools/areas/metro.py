@@ -120,7 +120,7 @@ TRAIN_X = 9
 
 STATIONS = {   # name: (map, width, board, stamp no, city map, city attendant cell)
     'Mauville': ('MetroMauville', 36, 'board_green', 1, 'MauvilleCity', (25, 6)),
-    'Slateport': ('MetroSlateport', 30, 'board_blue', 2, 'SlateportCity', (21, 20)),
+    'Slateport': ('MetroSlateport', 30, 'board_blue', 2, 'SlateportCity', (19, 3)),
     'Verdanturf': ('MetroVerdanturf', 30, 'board_orange', 3, 'VerdanturfTown', (17, 5)),
 }
 CITY_IDS = {'MauvilleCity': 'MAP_MAUVILLE_CITY', 'SlateportCity': 'MAP_SLATEPORT_CITY',

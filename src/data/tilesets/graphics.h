@@ -112,6 +112,29 @@ const u16 gTilesetPalettes_Sky[][16] =
     INCGFX_U16("data/tilesets/secondary/sky/palettes/15.pal", ".gbapal"),
 };
 
+// Wonderwild Park (tools/areas/park_art.py): Petalburg's tiles plus new art.
+const u32 gTilesetTiles_Park[] = INCGFX_U32("data/tilesets/secondary/park/tiles.png", ".4bpp.fastSmol", "-num_tiles 316 -Wnum_tiles");
+
+const u16 gTilesetPalettes_Park[][16] =
+{
+    INCGFX_U16("data/tilesets/secondary/park/palettes/00.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/park/palettes/01.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/park/palettes/02.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/park/palettes/03.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/park/palettes/04.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/park/palettes/05.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/park/palettes/06.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/park/palettes/07.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/park/palettes/08.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/park/palettes/09.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/park/palettes/10.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/park/palettes/11.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/park/palettes/12.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/park/palettes/13.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/park/palettes/14.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/park/palettes/15.pal", ".gbapal"),
+};
+
 // Mt. Frostcrown (tools/areas/frost_art.py): Fallarbor's tiles plus new art.
 const u32 gTilesetTiles_Frost[] = INCGFX_U32("data/tilesets/secondary/frost/tiles.png", ".4bpp.fastSmol", "-num_tiles 448 -Wnum_tiles");
 

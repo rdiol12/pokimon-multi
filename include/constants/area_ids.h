@@ -4,7 +4,7 @@
 // Flags, vars and trainers of each new area. AREA_TRAINER_* index the area
 // trainer table; TRAINER_* are the ids scripts battle.
 
-#define AREA_TRAINERS_COUNT 132
+#define AREA_TRAINERS_COUNT 140
 
 /* begin ElderwoodForest */
 #define FLAG_ELDERWOOD_BOUNSWEET_HOME         AREA_FLAG(0)
@@ -453,5 +453,29 @@
 #define AREA_TRAINER_METRO_ODETTE             131
 #define TRAINER_METRO_ODETTE                  AREA_TRAINER(AREA_TRAINER_METRO_ODETTE)
 /* end MetroMauville */
+
+/* begin WonderwildPark */
+#define FLAG_PARK_MASCOT_1                    AREA_FLAG(408)
+#define FLAG_PARK_MASCOT_2                    AREA_FLAG(409)
+#define FLAG_PARK_MASCOT_3                    AREA_FLAG(410)
+#define FLAG_PARK_PARADE                      AREA_FLAG(411)
+#define FLAG_HIDE_PARK_PARADE                 AREA_FLAG(412)
+#define FLAG_ITEM_PARK_LEMONADE               AREA_FLAG(413)
+#define FLAG_ITEM_PARK_SUPER_POTION           AREA_FLAG(414)
+#define FLAG_ITEM_PARK_GREAT_BALL             AREA_FLAG(415)
+#define FLAG_ITEM_PARK_TM_ATTRACT_X           AREA_FLAG(416)
+#define FLAG_ITEM_PARK_MOON_STONE             AREA_FLAG(417)
+#define FLAG_HIDDEN_ITEM_PARK_NUGGET          AREA_FLAG(418)
+#define FLAG_HIDDEN_ITEM_PARK_STAR_PIECE      AREA_FLAG(419)
+#define FLAG_HIDDEN_ITEM_PARK_RARE_CANDY      AREA_FLAG(420)
+#define AREA_TRAINER_PARK_TIMMY               136
+#define TRAINER_PARK_TIMMY                    AREA_TRAINER(AREA_TRAINER_PARK_TIMMY)
+#define AREA_TRAINER_PARK_POPPY               137
+#define TRAINER_PARK_POPPY                    AREA_TRAINER(AREA_TRAINER_PARK_POPPY)
+#define AREA_TRAINER_PARK_REMY                138
+#define TRAINER_PARK_REMY                     AREA_TRAINER(AREA_TRAINER_PARK_REMY)
+#define AREA_TRAINER_PARK_GLORIA              139
+#define TRAINER_PARK_GLORIA                   AREA_TRAINER(AREA_TRAINER_PARK_GLORIA)
+/* end WonderwildPark */
 
 #endif // GUARD_CONSTANTS_AREA_IDS_H

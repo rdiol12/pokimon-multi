@@ -1714,6 +1714,10 @@
     {
       "id": "MAPSEC_HOENN_METRO",
       "name": "HOENN METRO"
+    },
+    {
+      "id": "MAPSEC_WONDERWILD_PARK",
+      "name": "WONDERWILD PARK"
     }
   ]
 }

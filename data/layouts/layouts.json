@@ -9705,6 +9705,16 @@
       "secondary_tileset": "gTileset_Subway",
       "border_filepath": "data/layouts/MetroOldLine/border.bin",
       "blockdata_filepath": "data/layouts/MetroOldLine/map.bin"
+    },
+    {
+      "id": "LAYOUT_WONDERWILD_PARK",
+      "name": "WonderwildPark_Layout",
+      "width": 56,
+      "height": 46,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Park",
+      "border_filepath": "data/layouts/WonderwildPark/border.bin",
+      "blockdata_filepath": "data/layouts/WonderwildPark/map.bin"
     }
   ]
 }
