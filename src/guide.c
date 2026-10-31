@@ -51,6 +51,10 @@ const struct GuideEntry gGuideEntries[] =
              MAPSEC_PETALBURG_CITY, 0, 0, 0),
     ACTIVITY("LOST AND FOUND", "People in PETALBURG and other towns lost\nthings on the routes nearby.",
              MAPSEC_PETALBURG_CITY, 0, 0, 0),
+#ifdef FLAG_BAMBOO_TEA_DONE
+    AREA("WHISPERSTEM VALLEY", "A guide in PETALBURG CITY leads you into\nthe bamboo valley.",
+         MAPSEC_PETALBURG_CITY, MAP_WHISPERSTEM_VALLEY, 0, FLAG_BAMBOO_TEA_DONE),
+#endif
     ACTIVITY("PARCEL DELIVERIES", "HOENN EXPRESS desks stand outside the\nPOKéMON CENTERS, starting in OLDALE.",
              MAPSEC_OLDALE_TOWN, 0, 0, 0),
     ACTIVITY("CRAFTING", "The crafter outside DEVON CORP. in RUSTBORO\nturns Apricorns into items.",
@@ -63,9 +67,13 @@ const struct GuideEntry gGuideEntries[] =
              MAPSEC_RUSTURF_TUNNEL, 0, 0, 0),
     ACTIVITY("TREASURE HUNTS", "An old treasure hunter in DEWFORD hands out\na new treasure map every day.",
              MAPSEC_DEWFORD_TOWN, 0, 0, 0),
-#ifdef FLAG_CARNIVAL_SPINDA_FOUND
+#ifdef FLAG_GULL_CAPTAIN_BEATEN
+    AREA("GULLWING POINT", "A boatman in DEWFORD TOWN takes you to the\ncape with the lighthouse and pirate ship.",
+         MAPSEC_DEWFORD_TOWN, MAP_GULLWING_POINT, 0, FLAG_GULL_CAPTAIN_BEATEN),
+#endif
+#ifdef FLAG_CARNIVAL_EGG_DONE
     AREA("SUNFAIR CARNIVAL", "A sailor in SLATEPORT takes you to the\nfairground by the sea.",
-         MAPSEC_SLATEPORT_CITY, MAP_SUNFAIR_CARNIVAL, 0, FLAG_CARNIVAL_SPINDA_FOUND),
+         MAPSEC_SLATEPORT_CITY, MAP_SUNFAIR_CARNIVAL, 0, FLAG_CARNIVAL_EGG_DONE),
 #endif
     ACTIVITY("RULE BATTLES", "A referee in SLATEPORT's BATTLE TENT runs\nINVERSE battles and other rule sets.",
              MAPSEC_SLATEPORT_CITY, 0, 0, FLAG_MECH_MET_REFEREE),
@@ -109,6 +117,10 @@ const struct GuideEntry gGuideEntries[] =
              MAPSEC_ROUTE_119, 0, 0, 0),
     AREA("FROSTVEIN CAVE", "A sailor in MOSSDEEP CITY takes you to the\nice cave.",
          MAPSEC_MOSSDEEP_CITY, MAP_FROSTVEIN_CAVE_1F, 7, FLAG_FROSTVEIN_FRIGIBAX),
+#ifdef FLAG_ABYSS_TEMPLE_OPEN
+    AREA("CORALLINE REEF", "A diver in PACIFIDLOG TOWN takes you down\nto the reef, the wreck and sunken ABYSSIA.",
+         MAPSEC_PACIFIDLOG_TOWN, MAP_CORALLINE_REEF, 7, FLAG_ABYSS_TEMPLE_OPEN),
+#endif
 #ifdef FLAG_HOLLOW_MANOR_KEY
     AREA("HOLLOWMERE", "An old ferryman in LILYCOVE CITY rows you\nthere, but only at night.",
          MAPSEC_LILYCOVE_CITY, MAP_HOLLOWMERE, 7, FLAG_HOLLOW_MANOR_KEY),
