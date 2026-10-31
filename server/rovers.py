@@ -54,6 +54,7 @@ with gzip.open(os.path.join(HERE_DIR, "data", "rovers_world.json.gz"), "rt") as 
 WORLD = _WORLD["maps"]
 BASE = {int(k): v for k, v in _WORLD["base"].items()}
 NAMES = {int(k): v for k, v in _WORLD["names"].items()}
+ITEMS = _WORLD.get("items", {})  # item name -> ITEM_ id, for gifts
 BY_NAME = {v["name"]: k for k, v in WORLD.items()}
 
 
@@ -88,7 +89,9 @@ def title(mk):
     return WORLD[mk].get("title", WORLD[mk]["name"])
 
 MON_SIZE = 16
-ROVER_SIZE = 8 + 6 * MON_SIZE + 8  # + rovers_life.bag_wire()
+ROVER_SIZE = 8 + 6 * MON_SIZE + 8 + 2  # + rovers_life.bag_wire() + bond_wire()
+FRIEND_AT = 5         # friendship from here on: gifts
+GIFT_EVERY = 86400    # at most one gift a day
 MAX_TEAM = 6
 MAX_HERE = 4          # the game shows at most this many on one map
 STEP = 600            # seconds of rover life per simulation step
@@ -129,6 +132,18 @@ def setup(db):
     cols = {row[1] for row in db.execute("PRAGMA table_info(rovers)")}
     if "life" not in cols:  # money, bag, ranch, quest and job (rovers_life.py)
         db.execute("ALTER TABLE rovers ADD COLUMN life TEXT NOT NULL DEFAULT ''")
+    db.execute(
+        """
+        CREATE TABLE IF NOT EXISTS rover_bonds (
+            rover INTEGER NOT NULL, name TEXT NOT NULL, tid INTEGER NOT NULL,
+            rival INTEGER NOT NULL DEFAULT 0,       -- the player beat it; it wants a rematch
+            beaten INTEGER NOT NULL DEFAULT 0, lost INTEGER NOT NULL DEFAULT 0,
+            friendship INTEGER NOT NULL DEFAULT 0,  -- battles and trades together
+            last_gift REAL NOT NULL DEFAULT 0,
+            PRIMARY KEY (rover, name, tid)
+        )
+        """
+    )
     db.execute(
         """
         CREATE TABLE IF NOT EXISTS rover_news (
@@ -224,11 +239,41 @@ class Rover:
             (self.map, pack_team(self.team), self.badges, self.wins, self.losses, self.hurt, self.egg,
              self.egg_steps, self.tick, life.dump(self.life), self.id))
 
-    def wire(self):
+    def wire(self, bond=None):
         head = struct.pack("<BBBBHH", self.id, len(self.team), self.badges, min(self.hurt, 255),
                            min(self.wins, 0xFFFF), min(self.losses, 0xFFFF))
         team = pack_team(self.team) + bytes(MON_SIZE * (MAX_TEAM - len(self.team)))
-        return head + team + life.bag_wire(self.life)
+        return head + team + life.bag_wire(self.life) + bond_wire(bond)
+
+
+# Rivals and friends: what one rover thinks of one player. ---------------------
+
+def bond(db, rid, key):
+    row = db.execute("SELECT rival, beaten, lost, friendship, last_gift FROM rover_bonds"
+                     " WHERE rover = ? AND name = ? AND tid = ?", (rid, *key)).fetchone()
+    if row is None:
+        return {"rival": 0, "beaten": 0, "lost": 0, "friendship": 0, "last_gift": 0.0}
+    return dict(zip(("rival", "beaten", "lost", "friendship", "last_gift"), row))
+
+
+def save_bond(db, rid, key, b):
+    db.execute("INSERT OR REPLACE INTO rover_bonds (rover, name, tid, rival, beaten, lost, friendship, last_gift)"
+               " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+               (rid, *key, b["rival"], b["beaten"], b["lost"], b["friendship"], b["last_gift"]))
+
+
+def bond_wire(b):
+    """Flags (1 rival, 2 friend, 4 a gift is ready) and friendship."""
+    if not b:
+        return b"\0\0"
+    flags = (1 if b["rival"] else 0) | (2 if b["friendship"] >= FRIEND_AT else 0)
+    if b["friendship"] >= FRIEND_AT and now() - b["last_gift"] >= GIFT_EVERY:
+        flags |= 4
+    return bytes([flags, min(b["friendship"], 255)])
+
+
+def rivals(db):
+    return {row[0] for row in db.execute("SELECT DISTINCT rover FROM rover_bonds WHERE rival = 1")}
 
 
 def news(db, line):
@@ -334,6 +379,7 @@ def fight(db, a, b, winner_a):
 class Sim:
     def __init__(self, db, league, server=None):
         self.db, self.league, self.server = db, league, server
+        self.rivals = set()
 
     def keep(self, r, m):
         """A Pokémon the rover can't carry goes to its ranch, or to the
@@ -447,8 +493,11 @@ class Sim:
         cap = r.cap()
         lead = max(r.team, key=lambda m: m["level"])
         gained = 0
+        driven = r.id in self.rivals  # beaten by a player: training for the rematch
+        if driven:
+            cap += 4
         for m in r.team:
-            chance = (0.9 if style == "TRAINER" else 0.6) if m is lead else 0.3
+            chance = (0.9 if style == "TRAINER" or driven else 0.6) if m is lead else (0.5 if driven else 0.3)
             if m["level"] < cap and rng.random() < chance:
                 m["level"] += 1
                 gained += 1
@@ -534,6 +583,7 @@ class Sim:
     def run(self):
         """Brings every rover up to now."""
         ensure_rovers(self.db)
+        self.rivals = rivals(self.db)
         rovers = load_all(self.db)
         t = now()
         for r in rovers:
@@ -594,6 +644,15 @@ def cmd_here(ctx, args, data):
     rovers = Sim(ctx.db, ctx.league, ctx.server).run()
     here = [r for r in rovers if r.map == key]
     if key in WORLD and WORLD[key]["kind"] != "sea":
+        # A rival two maps away or closer comes looking for the player.
+        mine = {row[0] for row in ctx.db.execute(
+            "SELECT rover FROM rover_bonds WHERE rival = 1 AND name = ? AND tid = ?", ctx.key)}
+        close = set(WORLD[key]["links"]) | {k2 for k1 in WORLD[key]["links"] for k2 in WORLD.get(k1, {}).get("links", [])}
+        for r in rovers:
+            if r.id in mine and r.map in close and len(here) < most and rng.random() < 0.6:
+                r.map = key
+                r.save(ctx.db)
+                here.append(r)
         nearby = [r for r in rovers if r.map in WORLD[key]["links"]]
         rng.shuffle(nearby)
         pull = 0.15 if is_night(now()) else 0.45  # fewer on the road after dark
@@ -607,7 +666,7 @@ def cmd_here(ctx, args, data):
     major = ctx.db.execute("SELECT id, species, level FROM majors WHERE map = ? AND cleared_by IS NULL",
                            (key,)).fetchone() or (0, 0, 0)
     head = text([(len(here), *major)])
-    return head + b"\0" + b"".join(r.wire() for r in here)
+    return head + b"\0" + b"".join(r.wire(bond(ctx.db, r.id, ctx.key)) for r in here)
 
 
 def cmd_sync(ctx, args, data):
@@ -631,6 +690,9 @@ def cmd_sync(ctx, args, data):
         news(ctx.db, f"{r.name}'s Pokémon evolved into {species_name(arg)}!")
     elif event == 5:
         news(ctx.db, f"{r.name} traded with {ctx.key[0]} for a {species_name(arg)}.")
+        b = bond(ctx.db, r.id, ctx.key)
+        b["friendship"] += 3
+        save_bond(ctx.db, r.id, ctx.key, b)
     r.save(ctx.db)
     return b""
 
@@ -660,8 +722,41 @@ def cmd_beat(ctx, args, data):
     # Rovers stay off the PvP ladder (ron, 2026-10-31): their own record only.
     if who == 1:
         news(ctx.db, f"{ctx.key[0]} {'lost to' if won else 'beat'} {r.name}.")
+        # Beat it and it becomes your rival until it wins one back.
+        b = bond(ctx.db, r.id, ctx.key)
+        b["friendship"] += 1
+        if won:
+            b["lost"] += 1
+            if b["rival"]:
+                news(ctx.db, f"{r.name} finally beat {ctx.key[0]}!")
+            b["rival"] = 0
+        else:
+            b["beaten"] += 1
+            b["rival"] = 1
+        save_bond(ctx.db, r.id, ctx.key, b)
     r.save(ctx.db)
     return b""
+
+
+def cmd_gift(ctx, args, data):
+    """ROVER GIFT <id>: a friend's present, once a day: item id|count, or
+    0|0. It's the best thing it crafted, else something from its bag."""
+    r = load(ctx.db, int(args[1]))
+    b = bond(ctx.db, r.id, ctx.key)
+    if b["friendship"] < FRIEND_AT or now() - b["last_gift"] < GIFT_EVERY:
+        return text([(0, 0)])
+    crafted = [i for i, _, _ in life.RECIPES if r.life["bag"].get(i) and i in ITEMS]
+    pool = crafted or [i for i in r.life["bag"] if i in ITEMS]
+    item = pool[0] if pool else "POTION"
+    count = 1
+    if item in r.life["bag"]:
+        count = min(r.life["bag"][item], 3 if item in life.BALLS else 1)
+        life.take(r.life, item, count)
+    b["last_gift"] = now()
+    save_bond(ctx.db, r.id, ctx.key, b)
+    r.save(ctx.db)
+    news(ctx.db, f"{r.name} gave {ctx.key[0]} a present.")
+    return text([(ITEMS.get(item, ITEMS.get("POTION", 0)), count)])
 
 
 def cmd_leave(ctx, args, data):
@@ -738,7 +833,7 @@ def cmd_major_clear(ctx, args, data):
     return b""
 
 
-ROVER = {"HERE": cmd_here, "SYNC": cmd_sync, "FIGHT": cmd_fight, "BEAT": cmd_beat, "LEAVE": cmd_leave,
+ROVER = {"GIFT": cmd_gift, "HERE": cmd_here, "SYNC": cmd_sync, "FIGHT": cmd_fight, "BEAT": cmd_beat, "LEAVE": cmd_leave,
          "BOARD": cmd_board, "INFO": cmd_ask}
 MAJOR = {"LIST": cmd_majors, "CLEAR": cmd_major_clear}
 

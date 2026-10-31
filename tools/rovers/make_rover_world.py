@@ -144,7 +144,18 @@ def main():
             seen.add(cur)
             cur = pre[cur]
         base[sid] = cur
-    world = {"maps": world, "base": base, "names": names}
+    # Item ids for what rovers carry and give (server/rovers_life.py).
+    sys.path.insert(0, os.path.join(ROOT, "server"))
+    import rovers_life
+    wanted = set(rovers_life.APRICORNS + rovers_life.BERRIES + rovers_life.CAVE_FINDS + rovers_life.BALLS
+                 + rovers_life.BAG_WIRE + [r[0] for r in rovers_life.RECIPES]
+                 + [i for finds in rovers_life.TYPE_FINDS.values() for i in finds])
+    item_ids = enum_values("ITEM_", "items.h")
+    items = {name: item_ids["ITEM_" + name] for name in sorted(wanted) if "ITEM_" + name in item_ids}
+    missing = sorted(n for n in wanted if n not in items)
+    if missing:
+        sys.exit("unknown items: " + ", ".join(missing))
+    world = {"maps": world, "base": base, "names": names, "items": items}
     with gzip.open(OUT, "wt") as f:
         json.dump(world, f, separators=(",", ":"), sort_keys=True)
     maps_ = world["maps"]

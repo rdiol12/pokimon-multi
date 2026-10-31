@@ -97,6 +97,7 @@ enum
     REQ_BOARD,
     REQ_MAJORS,
     REQ_MAJOR_CLEAR,
+    REQ_GIFT,
 };
 
 enum
@@ -135,7 +136,14 @@ struct RoverWire
     u8 balls;
     u8 ranch;
     u16 money;
-}; // 112 bytes
+    // What it thinks of this player (server/rovers.py bond_wire()).
+    u8 bond;       // ROVER_BOND_*
+    u8 friendship;
+}; // 114 bytes
+
+#define ROVER_BOND_RIVAL  (1 << 0) // the player beat it; it wants a rematch
+#define ROVER_BOND_FRIEND (1 << 1)
+#define ROVER_BOND_GIFT   (1 << 2) // a present is waiting
 
 struct RoverActor
 {
@@ -155,6 +163,7 @@ struct RoverActor
     u8 missing;        // frames the object has been gone
     u8 leaveTimer;     // minutes-ish on this map
     bool8 duelLeft;    // TRUE: this side of the duel won
+    u8 rival;          // 0, 1 spotted the player, 2 challenged them (this map)
 };
 
 struct RoverRequest
@@ -195,6 +204,7 @@ struct RoverState
     // A trade with the player.
     bool8 trading;
     u8 tradeSlot;
+    u8 startRival;     // 1 + the actor walking up to challenge the player
     // Watching.
     bool8 watching;
     u8 duelResult;     // a watched duel's result, 1 + left won, for the map
@@ -217,6 +227,7 @@ EWRAM_DATA struct RoverShowcase gRoverShowcase = {0};
 extern const u8 Rovers_EventScript_Talk[];
 extern const u8 Rovers_EventScript_Charger[];
 extern const u8 Rovers_EventScript_Board[];
+extern const u8 Rovers_EventScript_Rival[];
 enum Direction GetDirectionToFace(s16 x1, s16 y1, s16 x2, s16 y2);
 
 static void Actor_Remove(u32 i);
@@ -1103,6 +1114,12 @@ static void UpdateRequests(void)
             else
                 sRovers.spawned = TRUE;
         }
+        else if (sRovers.waiting == REQ_GIFT)
+        {
+            gSpecialVar_0x8004 = ok ? AnswerNum(0, 0) : ITEM_NONE;
+            gSpecialVar_0x8005 = ok ? AnswerNum(0, 1) : 0;
+            ScriptContext_Enable();
+        }
         else if (sRovers.waiting == REQ_BOARD || sRovers.waiting == REQ_MAJORS)
         {
             if (!sRovers.boardWaiting)
@@ -1199,6 +1216,8 @@ static void RunShowcase(void)
         MakeOfflineRover(&sRovers.actors[i], gRoverShowcase.ids[i],
                          (i != 0 && gRoverShowcase.levelB) ? gRoverShowcase.levelB : (gRoverShowcase.level ? gRoverShowcase.level : 20),
                          gRoverShowcase.teamSize ? gRoverShowcase.teamSize : 3);
+    if (count != 0)
+        sRovers.actors[0].w.bond = gRoverShowcase.bond;
     sRovers.spawned = TRUE;
     sRovers.nearPlayer = TRUE;
     if (gRoverShowcase.talk != 0)
@@ -1274,12 +1293,59 @@ static void Actor_Remove(u32 i)
 
 static void StartWild(u32 i, bool32 forceCatch);
 
+// A rival the player beat walks up to them for a rematch.
+static bool32 UpdateRivalApproach(u32 i)
+{
+    struct RoverActor *a = &sRovers.actors[i];
+    struct ObjectEvent *t = TrainerObj(i);
+    struct ObjectEvent *player = &gObjectEvents[gPlayerAvatar.objectEventId];
+    s32 dx, dy;
+    u32 k;
+
+    if (!(a->w.bond & ROVER_BOND_RIVAL) || a->rival == 2 || sRovers.startRival != 0)
+        return FALSE;
+    dx = player->currentCoords.x - t->currentCoords.x;
+    dy = player->currentCoords.y - t->currentCoords.y;
+    if (abs(dx) + abs(dy) > 9)
+        return FALSE;
+    if (abs(dx) + abs(dy) == 1)
+    {
+        ObjectEventTurn(t, GetDirectionToFace(t->currentCoords.x, t->currentCoords.y,
+                                              player->currentCoords.x, player->currentCoords.y));
+        a->rival = 2;
+        sRovers.startRival = i + 1;
+        return TRUE;
+    }
+    if (a->rival == 0)
+    {
+        Do(t, MOVEMENT_ACTION_EMOTE_EXCLAMATION_MARK);
+        PlaySE(SE_PIN);
+        a->rival = 1;
+        return TRUE;
+    }
+    for (k = 0; k < 2; k++)
+    {
+        u32 dir;
+        if ((abs(dx) >= abs(dy)) == (k == 0) && dx != 0)
+            dir = dx > 0 ? DIR_EAST : DIR_WEST;
+        else if (dy != 0)
+            dir = dy > 0 ? DIR_SOUTH : DIR_NORTH;
+        else
+            continue;
+        if (TryWalk(i, dir))
+            return TRUE;
+    }
+    return FALSE;
+}
+
 static void UpdateWander(u32 i)
 {
     struct RoverActor *a = &sRovers.actors[i];
     struct ObjectEvent *t = TrainerObj(i);
 
     if (t == NULL || Busy(t))
+        return;
+    if (UpdateRivalApproach(i))
         return;
     if (a->timer != 0)
     {
@@ -2132,6 +2198,32 @@ static void ReadInjuries(struct Pokemon *party, struct RoverActor *a)
     }
 }
 
+// Friends' presents (waitstate): VAR_0x8004 the item, VAR_0x8005 how many,
+// ITEM_NONE if there's none today.
+void Rovers_GiftFetch(void)
+{
+    struct RoverActor *a = &sRovers.actors[sRovers.talk];
+
+    gSpecialVar_0x8004 = ITEM_NONE;
+    gSpecialVar_0x8005 = 0;
+    if (!(a->w.bond & ROVER_BOND_GIFT) || !Npx_IsOnline() || sRovers.waiting != REQ_NONE || !NpxRpc_Begin("ROVER"))
+    {
+        ScriptContext_Enable();
+        return;
+    }
+    NpxRpc_Word("GIFT");
+    NpxRpc_Num(a->w.id);
+    NpxRpc_Send();
+    sRovers.waiting = REQ_GIFT;
+    a->w.bond &= ~ROVER_BOND_GIFT;
+}
+
+// VAR_RESULT: TRUE if the rover talked to is the player's friend.
+void Rovers_IsFriend(void)
+{
+    gSpecialVar_Result = (sRovers.actors[sRovers.talk].w.bond & ROVER_BOND_FRIEND) != 0;
+}
+
 // Trading -----------------------------------------------------------------------------------
 
 // What the rover talked to would give away: its weakest Pokémon that isn't
@@ -2632,6 +2724,14 @@ bool32 Rovers_OverworldUpdate(void)
             UpdateLeaving(i);
             break;
         }
+    }
+    if (sRovers.startRival != 0)
+    {
+        sRovers.talk = sRovers.startRival - 1;
+        sRovers.startRival = 0;
+        StringCopy(gStringVar1, Cast(&sRovers.actors[sRovers.talk])->name);
+        ScriptContext_SetupScript(Rovers_EventScript_Rival);
+        return TRUE;
     }
     // The rampaging Pokémon, if this map has one.
     if (sRovers.majorId != 0 && !sRovers.majorSpawned && sRovers.chargerState == CHARGER_NONE)

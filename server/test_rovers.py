@@ -125,6 +125,36 @@ class RoverTest(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(owls)
         self.assertFalse(rovers.is_night(0))
 
+    async def test_rivals_and_friends(self):
+        a = await self.connect("Ash", 1)
+        await self.ask(a, f"ROVER HERE {G} {N} 4")
+        self.league.db.execute("UPDATE rovers SET map = '0.0'")
+        self.put(5, ROUTE101)
+        # Ash beats rover 5: a rival now.
+        self.assertEqual(await self.ask(a, "ROVER BEAT 5 0 1"), (0, b""))
+        here, _ = parse_here((await self.ask(a, f"ROVER HERE {G} {N} 4"))[1])
+        w = next(w for w in here if w[0] == 5)
+        self.assertEqual(w[-2] & 1, 1)
+        # Two trades make friends; a friend has a present once a day.
+        w = bytearray(w)
+        for _ in range(2):
+            self.assertEqual(await self.ask(a, f"ROVER SYNC 5 5 {w[8]}", bytes(w)), (0, b""))
+        here, _ = parse_here((await self.ask(a, f"ROVER HERE {G} {N} 4"))[1])
+        w = next(w for w in here if w[0] == 5)
+        self.assertEqual(w[-2] & 6, 6)
+        status, gift = await self.ask(a, "ROVER GIFT 5")
+        item, count = (int(x) for x in gift.decode().split("|"))
+        self.assertIn(item, rovers.ITEMS.values())
+        self.assertGreater(count, 0)
+        self.assertEqual((await self.ask(a, "ROVER GIFT 5"))[1], b"0|0")
+        # It wins one back: no longer a rival.
+        await self.ask(a, "ROVER BEAT 5 1 1")
+        self.assertEqual(rovers.bond(self.league.db, 5, ("Ash", 1))["rival"], 0)
+        # Somebody else sees no bond.
+        b = await self.connect("Misty", 2)
+        here, _ = parse_here((await self.ask(b, f"ROVER HERE {G} {N} 4"))[1])
+        self.assertTrue(all(w[-2] == 0 for w in here))
+
     async def test_majors(self):
         a = await self.connect("Ash", 1)
         status, answer = await self.ask(a, f"MAJOR LIST {G} {N}")

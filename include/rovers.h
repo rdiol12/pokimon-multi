@@ -37,6 +37,7 @@ struct RoverShowcase
     u8 offline;   // 1: don't ask the server
     u8 talk;      // actor + 1: talk to it after a moment
     u8 levelB;    // if not 0, the second and later rovers' level
+    u8 bond;      // ROVER_BOND_* for the first rover (rival, friend)
 };
 extern struct RoverShowcase gRoverShowcase;
 

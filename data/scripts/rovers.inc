@@ -7,7 +7,10 @@ Rovers_EventScript_Talk::
 	goto_if_eq VAR_RESULT, 1, Rovers_EventScript_Duel
 	goto_if_eq VAR_RESULT, 2, Rovers_EventScript_Busy
 	faceplayer
+	callnative Rovers_IsFriend
+	goto_if_eq VAR_RESULT, TRUE, Rovers_EventScript_FriendHello
 	msgbox Rovers_Text_Hello, MSGBOX_DEFAULT
+Rovers_EventScript_AfterHello:
 	callnative Rovers_BufferTalkStats
 	msgbox gStringVar4, MSGBOX_DEFAULT
 	msgbox Rovers_Text_AskBattle, MSGBOX_YESNO
@@ -37,6 +40,25 @@ Rovers_EventScript_Bye:
 	waitstate
 	callnative Rovers_AfterTrade
 	msgbox Rovers_Text_TradeThanks, MSGBOX_DEFAULT
+	release
+	end
+
+Rovers_EventScript_FriendHello:
+	msgbox Rovers_Text_FriendHello, MSGBOX_DEFAULT
+	callnative Rovers_GiftFetch, waitstate=1
+	goto_if_eq VAR_0x8004, ITEM_NONE, Rovers_EventScript_AfterHello
+	msgbox Rovers_Text_FriendGift, MSGBOX_DEFAULT
+	giveitem VAR_0x8004, VAR_0x8005
+	goto Rovers_EventScript_AfterHello
+
+@ A rival the player beat walks up for a rematch: no saying no.
+Rovers_EventScript_Rival::
+	lock
+	faceplayer
+	msgbox Rovers_Text_RivalChallenge, MSGBOX_DEFAULT
+	closemessage
+	callnative Rovers_StartChallenge, waitstate=1
+	msgbox Rovers_Text_RivalAfter, MSGBOX_DEFAULT
 	release
 	end
 
@@ -151,6 +173,23 @@ Rovers_Text_After:
 Rovers_Text_Bye:
 	.string "Maybe next time.\n"
 	.string "I've got Pokémon to catch!$"
+
+Rovers_Text_FriendHello:
+	.string "Hey, it's you! Good to see you\n"
+	.string "out here, friend!$"
+
+Rovers_Text_FriendGift:
+	.string "I made something for you.\n"
+	.string "Here, take it!$"
+
+Rovers_Text_RivalChallenge:
+	.string "{STR_VAR_1}: There you are!\p"
+	.string "I've been training ever since you\n"
+	.string "beat me. This time I'll win!$"
+
+Rovers_Text_RivalAfter:
+	.string "I'll keep training.\n"
+	.string "Next time it's my turn!$"
 
 Rovers_Text_TradeAsk:
 	.string "Want to trade, then?\n"

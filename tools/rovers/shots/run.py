@@ -36,7 +36,7 @@ end
 -- Puts rovers on the current map (src/rovers.c RunShowcase).
 -- scene: 1 wander, 2 duel, 3 vs the map's trainer, 4 wild, 5 charger,
 -- 6 rampaging Pokémon, 7 catch.
-function Driver.rovers(scene, ids, level, teamSize, offline, talk, levelB)
+function Driver.rovers(scene, ids, level, teamSize, offline, talk, levelB, bond)
     local s = Driver.SYM.gRoverShowcase
     E.write8(s + 1, scene)
     for i = 1, 4 do E.write8(s + 1 + i, ids[i] or 0) end
@@ -46,6 +46,7 @@ function Driver.rovers(scene, ids, level, teamSize, offline, talk, levelB)
     E.write8(s + 9, offline == false and 0 or 1)
     E.write8(s + 10, talk or 0)
     E.write8(s + 11, levelB or 0)
+    E.write8(s + 12, bond or 0) -- 1 rival, 2 friend
     E.write8(s, 1)
     Driver.wait(2)
 end
