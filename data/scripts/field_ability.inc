@@ -101,6 +101,17 @@ FieldAbility_EventScript_StrongArms::
 	releaseall
 	end
 
+@ Berry trees: says so when a Harvest / Grass-type lead adds berries.
+@ Keeps VAR_RESULT, which the berry tree script uses next.
+FieldAbility_EventScript_BerryHelp::
+	copyvar VAR_0x8009, VAR_RESULT
+	callnative FieldAbility_BerryHelper
+	goto_if_eq VAR_RESULT, FALSE, FieldAbility_EventScript_BerryHelpEnd
+	msgbox FieldAbility_Text_BerryHelp, MSGBOX_DEFAULT
+FieldAbility_EventScript_BerryHelpEnd:
+	copyvar VAR_RESULT, VAR_0x8009
+	return
+
 FieldAbility_EventScript_Cancel:
 	closemessage
 	releaseall
@@ -199,6 +210,10 @@ FieldAbility_Text_StrongAsk:
 FieldAbility_Text_StrongDone:
 	.string "{STR_VAR_1} braced itself. Boulders\n"
 	.string "can be moved now!$"
+
+FieldAbility_Text_BerryHelp:
+	.string "{STR_VAR_3} gave the tree a shake.\n"
+	.string "A few more BERRIES fell!$"
 
 FieldAbility_Text_Lantern:
 	.string "{STR_VAR_1}'s glow lights up\n"

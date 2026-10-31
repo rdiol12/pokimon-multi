@@ -31,6 +31,7 @@ void FieldAbility_ResetDaily(void);
 
 // Script natives.
 void FieldAbility_FindStrongMon(void);
+void FieldAbility_BerryHelper(void);
 void FieldAbility_FindHelper(void);
 void FieldAbility_Solve(void);
 

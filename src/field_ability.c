@@ -80,7 +80,7 @@ static const struct FieldSpot sFieldSpots[] =
     {MAP_ROUTE111, 33, 79, SPOT_DIG},
     {MAP_ROUTE109, 22, 3, SPOT_DIG},
     {MAP_ROUTE109, 29, 13, SPOT_DIG},
-    {MAP_METEOR_FALLS_1F_1R, 11, 10, SPOT_BOULDER, ITEM_RARE_CANDY},
+    {MAP_METEOR_FALLS_1F_1R, 10, 21, SPOT_BOULDER, ITEM_RARE_CANDY},
     {MAP_RUSTURF_TUNNEL, 28, 15, SPOT_BOULDER, ITEM_PROTEIN},
     {MAP_GRANITE_CAVE_1F, 7, 8, SPOT_BOULDER, ITEM_EVERSTONE},
 };
@@ -110,8 +110,43 @@ struct FieldAbilityState
 
 static EWRAM_DATA struct FieldAbilityState sState = {0};
 
-// Showcase hooks for the screenshot driver (tools/field_ability_shots/).
-EWRAM_DATA u8 gFieldAbilityShowcase = 0;
+// The screenshot driver (tools/field_ability_shots/) writes a request here.
+enum
+{
+    SHOWCASE_NONE,
+    SHOWCASE_ABILITY,   // the lead gets ability slot `slot`
+    SHOWCASE_HEALER,    // the last party member is poisoned; the next step cures it
+    SHOWCASE_FRISK,     // the next wild Pokémon holds a Nugget
+};
+
+struct FieldAbilityShowcase
+{
+    u8 action;
+    u8 slot;
+};
+
+EWRAM_DATA struct FieldAbilityShowcase gFieldAbilityShowcase = {0};
+
+static void RunShowcase(void)
+{
+    u32 value;
+
+    switch (gFieldAbilityShowcase.action)
+    {
+    case SHOWCASE_ABILITY:
+        value = gFieldAbilityShowcase.slot;
+        SetMonData(&gParties[B_TRAINER_PLAYER][0], MON_DATA_ABILITY_NUM, &value);
+        break;
+    case SHOWCASE_HEALER:
+        value = STATUS1_POISON;
+        SetMonData(&gParties[B_TRAINER_PLAYER][CalculatePlayerPartyCount() - 1], MON_DATA_STATUS, &value);
+        sState.steps = 63;
+        return; // stays set until the cure: no 50% roll
+    case SHOWCASE_FRISK:
+        return; // read at the battle start
+    }
+    gFieldAbilityShowcase.action = SHOWCASE_NONE;
+}
 
 static bool32 IsMap(u16 map)
 {
@@ -211,6 +246,14 @@ u32 FieldAbility_ExtraBerries(void)
     return 0;
 }
 
+// Berry trees: TRUE (and STR_VAR_3 the lead's name) if the lead adds berries.
+void FieldAbility_BerryHelper(void)
+{
+    gSpecialVar_Result = FieldAbility_ExtraBerries() != 0;
+    if (gSpecialVar_Result)
+        GetMonNickname(GetLead(), gStringVar3);
+}
+
 // Healer / Natural Cure: every 64 steps, a 50% chance to cure the first
 // party member with a status problem.
 bool32 FieldAbility_OnStep(void)
@@ -218,10 +261,12 @@ bool32 FieldAbility_OnStep(void)
     struct Pokemon *lead;
     u32 i;
 
-    if (++sState.steps < 64 && !gFieldAbilityShowcase)
+    bool32 forced = gFieldAbilityShowcase.action == SHOWCASE_HEALER;
+
+    if (++sState.steps < 64)
         return FALSE;
     sState.steps = 0;
-    if (!LeadQualifies(TYPE_NONE, sHealerAbilities) || (Random() % 2 && !gFieldAbilityShowcase))
+    if (!LeadQualifies(TYPE_NONE, sHealerAbilities) || (Random() % 2 && !forced))
         return FALSE;
     lead = GetLead();
     for (i = 0; i < PARTY_SIZE; i++)
@@ -235,7 +280,8 @@ bool32 FieldAbility_OnStep(void)
         GetMonNickname(lead, gStringVar1);
         StringCopy(gStringVar2, gAbilitiesInfo[GetMonAbility(lead)].name);
         GetMonNickname(mon, gStringVar3);
-        gFieldAbilityShowcase = 0;
+        if (forced)
+            gFieldAbilityShowcase.action = SHOWCASE_NONE;
         ScriptContext_SetupScript(FieldAbility_EventScript_Healer);
         return TRUE;
     }
@@ -249,6 +295,13 @@ void FieldAbility_OnBattleStart(void)
     sState.friskItem = ITEM_NONE;
     if (gBattleTypeFlags & (BATTLE_TYPE_TRAINER | BATTLE_TYPE_LINK | BATTLE_TYPE_RECORDED_LINK | BATTLE_TYPE_SECRET_BASE))
         return;
+    if (gFieldAbilityShowcase.action == SHOWCASE_FRISK)
+    {
+        u32 item = ITEM_NUGGET;
+
+        SetMonData(foe, MON_DATA_HELD_ITEM, &item);
+        gFieldAbilityShowcase.action = SHOWCASE_NONE;
+    }
     sState.friskItem = GetMonData(foe, MON_DATA_HELD_ITEM);
     sState.friskSpecies = GetMonData(foe, MON_DATA_SPECIES);
 }
@@ -422,6 +475,8 @@ static bool32 TryLanternMessage(void)
 
 void FieldAbility_Update(void)
 {
+    if (gFieldAbilityShowcase.action != SHOWCASE_NONE)
+        RunShowcase();
     if (ArePlayerFieldControlsLocked())
         return;
     if (sState.friskPending)
@@ -438,7 +493,7 @@ void FieldAbility_Update(void)
     UpdateSpots();
     if (gPlayerAvatar.tileTransitionState == T_NOT_MOVING && (TryBoulderPrize() || TryLanternMessage()))
         return;
-    if (sState.timer >= 64)
+    if (sState.timer >= 32)
     {
         sState.timer = 0;
         UpdateSixthSense();

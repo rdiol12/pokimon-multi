@@ -78,6 +78,6 @@ if '--open' in sys.argv:
     out = []
     for y in range(1, h - 1):
         for x in range(1, w - 1):
-            if all(not info(x+dx, y+dy)[0] and want in info(x+dx, y+dy)[1] for dx in (-1,0,1) for dy in (-1,0,1)):
+            if all(not info(x+dx, y+dy)[0] and want in info(x+dx, y+dy)[1] and 'WATER' not in info(x+dx, y+dy)[1] and 'WATERFALL' not in info(x+dx, y+dy)[1] for dx in (-1,0,1) for dy in (-1,0,1)):
                 out.append((x, y))
     print(len(out), ' '.join(f'({x},{y})' for x, y in out[::max(1, len(out)//60)]))

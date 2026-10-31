@@ -62,7 +62,6 @@ ICE = [
 save('ice_block', pal('npc_1'), ICE, {'.': 0, 'N': 4, 'M': 3, 'L': 2, 'W': 1, 'r': 5, 'R': 4})
 
 DIG = [
-    "................",
     "..........L.....",
     "..........W.....",
     "........LWWWL...",
@@ -70,12 +69,13 @@ DIG = [
     "...L......L.....",
     "...W............",
     ".LWWWL..........",
-    "......DDDDD.....",
-    "....DDhhhhhDD...",
-    "...DhhhSSSSSDD..",
-    "..DhhSSSSSSSSSD.",
-    "..DSSSSSSdSSSdD.",
-    "...DDSSdSSSSDD..",
+    "...W....D.......",
+    "...L..DDdDD.....",
+    "....DDdShSdDD...",
+    "...DdSShhSSSdD..",
+    "..DdSSSShSSdSdD.",
+    "..DdddSSSSdddDD.",
+    "...DDddddddDDD..",
     ".....DDDDDDD....",
     "................",
 ]

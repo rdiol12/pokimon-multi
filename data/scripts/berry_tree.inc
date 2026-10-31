@@ -153,6 +153,7 @@ BerryTree_EventScript_CheckBerryFullyGrown::
 	lock
 	faceplayer
 	special ObjectEventInteractionGetBerryCountString
+	call FieldAbility_EventScript_BerryHelp
 .if OW_BERRY_MUTATIONS == TRUE
 	goto_if_eq VAR_RESULT, TRUE, BerryTree_EventScript_CheckBerryFullyGrown_Mutation
 .endif
