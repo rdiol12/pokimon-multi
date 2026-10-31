@@ -187,10 +187,10 @@ async function startGame(game) {
     // Browsers start sound only from a tap; iOS wants it from the end of
     // one, so try on every kind of touch until the audio is running.
     for (const type of ['pointerdown', 'touchend', 'click', 'keydown']) {
-        document.addEventListener(type, () => emu.resumeAudio(), { capture: true, passive: true });
+        document.addEventListener(type, () => { if (!muted) emu.resumeAudio(); }, { capture: true, passive: true });
     }
     const release = attachControls($('#pad'), emu, {
-        onPress: () => { emu.resumeAudio(); globalThis.navigator.vibrate?.(8); },
+        onPress: () => { if (!muted) emu.resumeAudio(); globalThis.navigator.vibrate?.(8); },
     });
     try {
         bridge = await startBridge(emu, { log: (m) => console.log(m) });
@@ -215,9 +215,27 @@ async function startGame(game) {
     const pause = () => { release(); persistSave(true); emu.stop(); emu.audio?.ctx.suspend(); };
     document.addEventListener('visibilitychange', () => {
         if (document.hidden) pause();
-        else { emu.start(); emu.resumeAudio(); }
+        else { emu.start(); if (!muted) emu.resumeAudio(); }
     });
     window.addEventListener('pagehide', pause);
+
+    // Shows whether sound is playing; a tap starts it (a sure user gesture
+    // for iOS) or mutes it.
+    const sound = $('#sound');
+    let muted = false;
+    sound.addEventListener('click', () => {
+        const ctx = emu.audio?.ctx;
+        if (!ctx) return toast('Sound is not available on this device');
+        muted = ctx.state === 'running';
+        if (muted) ctx.suspend();
+        else emu.resumeAudio();
+    });
+    setInterval(() => {
+        const on = emu.audio?.ctx.state === 'running';
+        sound.textContent = on ? '🔊' : '🔇';
+        // Keep it going unless the player muted it.
+        if (!on && !muted && !document.hidden) emu.resumeAudio();
+    }, 500);
 
     const ff = $('#ff');
     ff.addEventListener('click', () => {
