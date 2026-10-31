@@ -115,6 +115,10 @@ const struct GuideEntry gGuideEntries[] =
     AREA("MIREBOUGH MARSH", "A guide in FORTREE CITY takes you to the\nrainy marsh.",
          MAPSEC_FORTREE_CITY, MAP_MIREBOUGH_MARSH, 6, FLAG_MIRE_STEW_DONE),
 #endif
+#ifdef FLAG_NIMBUS_CHIMES_DONE
+    AREA("NIMBUS ISLES", "A balloon pilot at the west edge of FORTREE\nflies you up to the sky islands.",
+         MAPSEC_FORTREE_CITY, MAP_NIMBUS_CITY, 7, FLAG_NIMBUS_CHIMES_DONE),
+#endif
     ACTIVITY("CAFE AND COOK-OFF", "The chef of CAFE SOLEIL and the COOK-OFF\njudge stand on the LILYCOVE waterfront.",
              MAPSEC_LILYCOVE_CITY, 0, 0, 0),
     ACTIVITY("MUSEUM DONATIONS", "The curator in the LILYCOVE MUSEUM takes\nfossils and rare finds.",
