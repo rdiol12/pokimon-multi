@@ -38,7 +38,7 @@ class Fake:
         self.f = self.sock.makefile("rw")
         self.seq = 0
         self.say(f"HELLO {name} {tid}")
-        self.f.readline()
+        self.id = int(self.f.readline().split()[1])  # WELCOME <id>
 
     def say(self, line):
         self.f.write(line + "\n")
