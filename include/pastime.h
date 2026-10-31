@@ -202,4 +202,10 @@ void NewGamePlus_GetState(void);
 void NewGamePlus_Start(void);
 void NewGamePlus_AfterInit(void);
 
+// Seasonal festivals (pastime_festival.c).
+void Festival_Update(void);
+void Festival_TalkToHost(void);
+void Festival_VisitStall(void);
+void Festival_ShowList(void);
+
 #endif // GUARD_PASTIME_H

@@ -138,6 +138,12 @@ struct PastimeSaveData
     // New Game+ (src/pastime_new_game_plus.c)
     u8 newGamePlusCount;
     u8 newGamePlusFiller[3];
+    // Seasonal festivals (src/pastime_festival.c)
+    u16 festivalWeek;    // the festival's week + 1 of the stamps
+    u8 festivalStamps;   // a bit per stall
+    u8 festivalPrize;    // TRUE once this festival's prize is given
+    u16 festivalsDone;
+    u16 festivalFiller;
 };
 
 #endif // GUARD_PASTIME_SAVE_H

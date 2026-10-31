@@ -29,6 +29,7 @@
 #define PASTIME_MENU_DETECTIVE  19
 #define PASTIME_MENU_TRACK      20
 #define PASTIME_MENU_NEW_GAME_PLUS 21
+#define PASTIME_MENU_FESTIVALS  22
 #define PASTIME_MENU_CLOSE      31
 
 // NPCs and objects the activities place on maps from code (src/pastime.c)
@@ -240,5 +241,15 @@
 #define TRACK_DAILY_POINTS     5
 #define TRACK_CATCH_POINTS     2
 #define TRACK_TRAINER_POINTS   3
+
+// Seasonal festivals in Lilycove (src/pastime_festival.c).
+#define FESTIVAL_STALLS        3
+#define FESTIVAL_WEEK_DAYS     7
+#define FESTIVAL_DAYS          2  // the last days of each week
+#define FESTIVAL_FLAKE_RATE    2  // a petal or leaf every this many updates, on average
+#define FESTIVAL_FIREWORK_RATE 2
+#define FESTIVAL_NEED_STAMPS   0 // VAR_RESULT of Festival_TalkToHost
+#define FESTIVAL_PRIZE         1
+#define FESTIVAL_DONE          2
 
 #endif // GUARD_CONSTANTS_PASTIME_H

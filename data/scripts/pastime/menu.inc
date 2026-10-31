@@ -23,6 +23,7 @@ Pastime_EventScript_Menu::
 	dynmultipush Pastime_Text_MenuDetective, PASTIME_MENU_DETECTIVE
 	dynmultipush Pastime_Text_MenuTrack, PASTIME_MENU_TRACK
 	dynmultipush Pastime_Text_MenuNewGamePlus, PASTIME_MENU_NEW_GAME_PLUS
+	dynmultipush Pastime_Text_MenuFestivals, PASTIME_MENU_FESTIVALS
 	dynmultipush Pastime_Text_MenuClose, PASTIME_MENU_CLOSE
 	dynmultistack 0, 0, FALSE, 6, FALSE, PASTIME_MENU_LOST_FOUND, DYN_MULTICHOICE_CB_NONE
 	switch VAR_RESULT
@@ -48,6 +49,7 @@ Pastime_EventScript_Menu::
 	case PASTIME_MENU_DETECTIVE, Pastime_EventScript_Detective
 	case PASTIME_MENU_TRACK, Pastime_EventScript_Track
 	case PASTIME_MENU_NEW_GAME_PLUS, Pastime_EventScript_NewGamePlus
+	case PASTIME_MENU_FESTIVALS, Pastime_EventScript_Festivals
 Pastime_EventScript_MenuDone::
 	releaseall
 	end
@@ -190,6 +192,11 @@ Pastime_EventScript_Track:
 	releaseall
 	end
 
+Pastime_EventScript_Festivals:
+	callnative Festival_ShowList, waitstate=1
+	releaseall
+	end
+
 Pastime_Text_MenuLostFound:
 	.string "LOST & FOUND$"
 Pastime_Text_MenuMuseum:
@@ -244,5 +251,7 @@ Pastime_Text_MenuTrack:
 	.string "REWARD TRACK$"
 Pastime_Text_MenuNewGamePlus:
 	.string "NEW GAME+$"
+Pastime_Text_MenuFestivals:
+	.string "FESTIVALS$"
 Pastime_Text_MenuClose:
 	.string "CLOSE$"

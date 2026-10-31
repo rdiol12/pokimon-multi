@@ -466,3 +466,20 @@ stays until then. The carry-over is put back by `NewGamePlus_AfterInit`,
 called in `CB2_NewGame` just after `NewGameInitData`. Screenshots:
 `tools/pastime_shots/new_game_plus.lua` (its `checks.txt` shows the party,
 the PC and the records before and after).
+
+## Seasonal festivals
+
+![Seasonal festivals](images/pastime-festivals.png)
+
+Each season (the seasons of `src/life_seasons.c`) has its festival in
+Lilycove City, held on the last two days of every 7-day week of the game
+clock: the BLOSSOM FESTIVAL in spring, the FIREWORKS FESTIVAL in summer, the
+HARVEST FESTIVAL in autumn and the LIGHTS FESTIVAL in winter. While one is
+on, a host stands by the Pokémon Center and three stalls around town each
+hand out something seasonal and stamp the player's card. A full card earns the
+host's prize, once per festival: a Leaf Stone, a Fire Stone, a Sitrus Berry
+or an Ice Stone. Petals drift over Lilycove in spring and leaves in autumn,
+and on summer festival nights (19:00 to 2:00) fireworks burst in three
+colors. **R > PASTIMES > FESTIVALS** lists the festivals, the days until the
+next one and the festivals enjoyed. Screenshots:
+`tools/pastime_shots/festival.lua`.
