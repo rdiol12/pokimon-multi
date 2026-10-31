@@ -113,6 +113,10 @@ const struct GuideEntry gGuideEntries[] =
          MAPSEC_LAVARIDGE_TOWN, MAP_EMBER_SPRINGS, 4, FLAG_EMBER_QUEST_DONE),
     {COMPOUND_STRING("CINDER CAVERNS"), COMPOUND_STRING("The volcano cave on the north hill of\nEMBER SPRINGS, above LAVARIDGE."),
      MAPSEC_LAVARIDGE_TOWN, MAP_CINDER_CAVERNS_1F, 0, 0, CinderValvesDone, 4},
+#ifdef FLAG_IRONMOOR_SPIRITOMB_DONE
+    AREA("IRONMOOR PRISON", "A boatman on the ROUTE 109 beach rows you\nout to the old prison island.",
+         MAPSEC_ROUTE_109, MAP_IRONMOOR_ISLE, 4, FLAG_IRONMOOR_SPIRITOMB_DONE),
+#endif
     AREA("SUNSCAR DESERT", "A guide in MAUVILLE CITY leads you to the\ndesert and its ruins.",
          MAPSEC_MAUVILLE_CITY, MAP_SUNSCAR_DESERT, 4, FLAG_SUNSCAR_RIDDLE_3),
     AREA("SKYROPE CANYON", "A hiker in FALLARBOR TOWN leads you to the\nrope bridges.",
