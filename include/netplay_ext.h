@@ -66,6 +66,9 @@ void NpxRpc_Send(void);
 u8 NpxRpc_Poll(void);
 void NpxRpc_Release(void);
 
+void Npx_TakeAnswer(void);
+void Npx_ChooseAnswerRow(u32 row);
+void Npx_SetChosen(u32 col, const char *value);
 u32 Npx_RowCount(void);
 const char *Npx_Field(u32 row, u32 col);
 s32 Npx_Num(u32 row, u32 col);
@@ -85,5 +88,7 @@ struct NpxRequest
 };
 
 extern const struct NpxRequest gNpxRequests[NPX_REQ_COUNT];
+
+void NetplayExt_RunRequest(const struct NpxRequest *req);
 
 #endif // GUARD_NETPLAY_EXT_H

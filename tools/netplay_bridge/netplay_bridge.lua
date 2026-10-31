@@ -149,6 +149,8 @@ function Bridge.new(mem, net, shot)
     self:resetConnection()
     -- World features (followers, houses, leaderboards, photos): netplay_world.lua.
     if NetplayWorld then self.world = NetplayWorld.new(self, shot) end
+    -- Community features (tournaments, chat, boss...): netplay_community.lua.
+    if NetplayCommunity then self.community = NetplayCommunity.new(self) end
     return self
 end
 
@@ -402,6 +404,8 @@ function Bridge:handleLine(line)
         })
     elseif cmd == "ERR" then
         self:log("server: " .. line)
+    elseif self.community and self.community:handleLine(cmd, args) then
+        return
     elseif self.world then
         self.world:handleLine(cmd, args)
     end
@@ -754,6 +758,7 @@ function Bridge:onFrame()
     end
     self:step()
     if self.world then self.world:onFrame(self.connected and self.localId ~= 0, self.frame) end
+    if self.community then self.community:onFrame(self.connected and self.localId ~= 0, self.frame) end
 end
 
 -- One frame of the connection: connect, then sync with the server.
@@ -800,6 +805,11 @@ if NetplayWorld == nil then
     local source = debug and debug.getinfo(1, "S").source or ""
     local dir = source:match("^@(.*[/\\])") or ""
     pcall(dofile, dir .. "netplay_world.lua")
+end
+if NetplayCommunity == nil then
+    local source = debug and debug.getinfo(1, "S").source or ""
+    local dir = source:match("^@(.*[/\\])") or ""
+    pcall(dofile, dir .. "netplay_community.lua")
 end
 
 -- mGBA glue --------------------------------------------------------------

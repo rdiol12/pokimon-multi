@@ -5,7 +5,11 @@ FROM python:3.12-slim
 
 WORKDIR /app
 COPY server/*.py server/
-COPY tools/netplay_bridge/netplay_bridge.lua tools/netplay_bridge/
+COPY server/static server/static/
+COPY server/data/ server/data/
+COPY tools/netplay_bridge/*.lua tools/netplay_bridge/extensions.txt tools/netplay_bridge/
+# The shiny gallery draws the game's own Pokémon pictures (server/online_web.py).
+COPY graphics/pokemon graphics/pokemon/
 
 RUN useradd --system --home-dir /data netplay && mkdir -p /data && chown netplay /data
 USER netplay

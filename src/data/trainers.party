@@ -2178,19 +2178,61 @@ IVs: 0 HP / 0 Atk / 0 Def / 0 SpA / 0 SpD / 0 Spe
 
 === TRAINER_CINDY_2 ===
 Name: CINDY
-Class: Lady
-Pic: Lady
+Class: Cooltrainer
+Pic: Cooltrainer F
 Gender: Female
-Music: Female
-Items: Full Restore
+Music: Cool
+Items: Full Restore / Full Restore
 Double Battle: No
-AI: Check Bad Move
+AI: Basic Trainer
 
-Zigzagoon @ Nugget
-Level: 11
-IVs: 0 HP / 0 Atk / 0 Def / 0 SpA / 0 SpD / 0 Spe
-- Tackle
-- Tail Whip
+Ninetales
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Flamethrower
+- Will-O-Wisp
+- Confuse Ray
+- Extrasensory
+
+Torkoal
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Overheat
+- Body Slam
+- Protect
+- Curse
+
+Magcargo
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Flamethrower
+- Rock Slide
+- Amnesia
+- Recover
+
+Houndoom
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Flamethrower
+- Crunch
+- Roar
+- Will-O-Wisp
+
+Arcanine
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Flare Blitz
+- Extreme Speed
+- Crunch
+- Roar
+
+Camerupt
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Eruption
+- Earth Power
+- Rock Slide
+- Yawn
 
 === TRAINER_BRIANNA ===
 Name: BRIANNA
@@ -3068,24 +3110,61 @@ IVs: 0 HP / 0 Atk / 0 Def / 0 SpA / 0 SpD / 0 Spe
 
 === TRAINER_DUDLEY ===
 Name: DUDLEY
-Class: Swimmer M
-Pic: Swimmer M
+Class: Cooltrainer
+Pic: Cooltrainer M
 Gender: Male
-Music: Swimmer
+Music: Cool
+Items: Full Restore / Full Restore
 Double Battle: No
-AI: Check Bad Move
+AI: Basic Trainer
 
-Tentacool
-Level: 33
-IVs: 0 HP / 0 Atk / 0 Def / 0 SpA / 0 SpD / 0 Spe
+Aerodactyl
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Rock Slide
+- Earthquake
+- Crunch
+- Aerial Ace
 
-Wingull
-Level: 33
-IVs: 0 HP / 0 Atk / 0 Def / 0 SpA / 0 SpD / 0 Spe
+Cradily
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Ancient Power
+- Giga Drain
+- Confuse Ray
+- Ingrain
 
-Tentacruel
-Level: 33
-IVs: 0 HP / 0 Atk / 0 Def / 0 SpA / 0 SpD / 0 Spe
+Armaldo
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Rock Blast
+- X-Scissor
+- Slash
+- Earthquake
+
+Golem
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Rock Slide
+- Earthquake
+- Explosion
+- Defense Curl
+
+Aggron
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Iron Tail
+- Rock Slide
+- Earthquake
+- Double-Edge
+
+Tyranitar
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Rock Slide
+- Crunch
+- Earthquake
+- Dragon Dance
 
 === TRAINER_CHAD ===
 Name: CHAD
@@ -8416,20 +8495,61 @@ IVs: 0 HP / 0 Atk / 0 Def / 0 SpA / 0 SpD / 0 Spe
 
 === TRAINER_KAYLEE ===
 Name: KAYLEE
-Class: Swimmer F
-Pic: Swimmer F
+Class: Cooltrainer
+Pic: Cooltrainer F
 Gender: Female
-Music: Swimmer
+Music: Cool
+Items: Full Restore / Full Restore
 Double Battle: No
-AI: Check Bad Move
+AI: Basic Trainer
 
-Lanturn
-Level: 34
-IVs: 0 HP / 0 Atk / 0 Def / 0 SpA / 0 SpD / 0 Spe
+Hitmontop
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Triple Kick
+- Rapid Spin
+- Detect
+- Mach Punch
 
-Pelipper
-Level: 34
-IVs: 0 HP / 0 Atk / 0 Def / 0 SpA / 0 SpD / 0 Spe
+Breloom
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Mach Punch
+- Spore
+- Seed Bomb
+- Sky Uppercut
+
+Hariyama
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Cross Chop
+- Fake Out
+- Knock Off
+- Belly Drum
+
+Machamp
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Cross Chop
+- Rock Slide
+- Bulk Up
+- Earthquake
+
+Lucario
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Aura Sphere
+- Dark Pulse
+- Extreme Speed
+- Close Combat
+
+Medicham
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Hi Jump Kick
+- Zen Headbutt
+- Fire Punch
+- Bulk Up
 
 === TRAINER_LAUREL ===
 Name: LAUREL
@@ -10504,21 +10624,62 @@ Level: 35
 IVs: 6 HP / 6 Atk / 6 Def / 6 SpA / 6 SpD / 6 Spe
 
 === TRAINER_GRUNT_UNUSED ===
-Name: GRUNT
-Class: Team Magma
-Pic: Aqua Grunt F
+Name: MARINA
+Class: Cooltrainer
+Pic: Cooltrainer F
 Gender: Female
-Music: Aqua
+Music: Cool
+Items: Full Restore / Full Restore
 Double Battle: No
-AI: Check Bad Move
+AI: Basic Trainer
 
-Wailmer
-Level: 31
-IVs: 0 HP / 0 Atk / 0 Def / 0 SpA / 0 SpD / 0 Spe
+Sharpedo
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Crunch
+- Waterfall
+- Swagger
+- Aqua Jet
 
-Zubat
-Level: 31
-IVs: 0 HP / 0 Atk / 0 Def / 0 SpA / 0 SpD / 0 Spe
+Walrein
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Blizzard
+- Surf
+- Body Slam
+- Rest
+
+Whiscash
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Earthquake
+- Surf
+- Amnesia
+- Rest
+
+Gyarados
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Waterfall
+- Dragon Dance
+- Earthquake
+- Crunch
+
+Kingdra
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Dragon Pulse
+- Surf
+- Ice Beam
+- Agility
+
+Milotic
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Surf
+- Ice Beam
+- Recover
+- Mirror Coat
 
 === TRAINER_GRUNT_MT_PYRE_4 ===
 Name: GRUNT
@@ -10700,16 +10861,61 @@ IVs: 0 HP / 0 Atk / 0 Def / 0 SpA / 0 SpD / 0 Spe
 
 === TRAINER_TERRY ===
 Name: TERRY
-Class: Psychic
-Pic: Psychic F
-Gender: Female
-Music: Intense
+Class: Cooltrainer
+Pic: Cooltrainer M
+Gender: Male
+Music: Cool
+Items: Full Restore / Full Restore
 Double Battle: No
-AI: Check Bad Move
+AI: Basic Trainer
 
-Girafarig
-Level: 37
-IVs: 0 HP / 0 Atk / 0 Def / 0 SpA / 0 SpD / 0 Spe
+Electrode
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Thunderbolt
+- Light Screen
+- Explosion
+- Swift
+
+Magnezone
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Thunderbolt
+- Flash Cannon
+- Thunder Wave
+- Mirror Shot
+
+Lanturn
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Thunderbolt
+- Surf
+- Confuse Ray
+- Discharge
+
+Jolteon
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Thunderbolt
+- Pin Missile
+- Double Kick
+- Agility
+
+Ampharos
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Thunder
+- Power Gem
+- Cotton Spore
+- Signal Beam
+
+Manectric
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Thunder
+- Bite
+- Quick Attack
+- Charge
 
 === TRAINER_NATE ===
 Name: NATE
@@ -11575,39 +11781,119 @@ IVs: 0 HP / 0 Atk / 0 Def / 0 SpA / 0 SpD / 0 Spe
 
 === TRAINER_LUCAS_2 ===
 Name: LUCAS
-Class: Hiker
-Pic: Hiker
+Class: Cooltrainer
+Pic: Cooltrainer M
 Gender: Male
-Music: Hiker
+Music: Cool
+Items: Full Restore / Full Restore
 Double Battle: No
-AI: Check Bad Move
+AI: Basic Trainer
 
-Wailmer
-Level: 9
-IVs: 0 HP / 0 Atk / 0 Def / 0 SpA / 0 SpD / 0 Spe
-- Splash
-- Water Gun
+Pelipper
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Surf
+- Wing Attack
+- Protect
+- Stockpile
+
+Tropius
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Razor Leaf
+- Aerial Ace
+- Sunny Day
+- Synthesis
+
+Skarmory
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Steel Wing
+- Spikes
+- Drill Peck
+- Agility
+
+Swellow
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Brave Bird
+- Facade
+- Quick Attack
+- Endeavor
+
+Salamence
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Dragon Claw
+- Fly
+- Flamethrower
+- Crunch
+
+Altaria
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Dragon Breath
+- Sky Attack
+- Dragon Dance
+- Perish Song
 
 === TRAINER_MIKE_1 ===
 Name: MIKE
-Class: Hiker
-Pic: Hiker
+Class: Cooltrainer
+Pic: Cooltrainer M
 Gender: Male
-Music: Hiker
+Music: Cool
+Items: Full Restore / Full Restore
 Double Battle: No
-AI: Check Bad Move
+AI: Basic Trainer
 
-Pelipper
-Level: 10
-IVs: 0 HP / 0 Atk / 0 Def / 0 SpA / 0 SpD / 0 Spe
-- Gust
-- Growl
+Xatu
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Psychic
+- Confuse Ray
+- Night Shade
+- Future Sight
 
-Poochyena
-Level: 10
-IVs: 0 HP / 0 Atk / 0 Def / 0 SpA / 0 SpD / 0 Spe
-- Bite
-- Scary Face
+Claydol
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Earthquake
+- Psychic
+- Reflect
+- Light Screen
+
+Lunatone
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Psychic
+- Ice Beam
+- Cosmic Power
+- Hypnosis
+
+Solrock
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Rock Slide
+- Psychic
+- Fire Spin
+- Cosmic Power
+
+Metagross
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Meteor Mash
+- Psychic
+- Earthquake
+- Agility
+
+Gardevoir
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Psychic
+- Moonblast
+- Calm Mind
+- Thunderbolt
 
 === TRAINER_MIKE_2 ===
 Name: MIKE
@@ -16856,27 +17142,103 @@ IVs: 0 HP / 0 Atk / 0 Def / 0 SpA / 0 SpD / 0 Spe
 
 === TRAINER_BRENDAN_PLACEHOLDER ===
 Name: BRENDAN
-Class: RS Protag
-Pic: RS Brendan
+Class: Rival
+Pic: Brendan
 Gender: Male
 Music: Male
+Items: Full Restore / Full Restore / Full Restore
 Double Battle: No
+AI: Basic Trainer
 
-Groudon
-Level: 5
-IVs: 0 HP / 0 Atk / 0 Def / 0 SpA / 0 SpD / 0 Spe
+Tropius
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Leaf Blade
+- Aerial Ace
+- Body Slam
+- Synthesis
+
+Pelipper
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Surf
+- Air Slash
+- Protect
+- Stockpile
+
+Magcargo
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Flamethrower
+- Rock Slide
+- Amnesia
+- Recover
+
+Salamence
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Dragon Claw
+- Fly
+- Crunch
+- Dragon Dance
+
+Metagross
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Meteor Mash
+- Zen Headbutt
+- Earthquake
+- Agility
 
 === TRAINER_MAY_PLACEHOLDER ===
 Name: MAY
-Class: RS Protag
-Pic: RS May
+Class: Rival
+Pic: May
 Gender: Female
-Music: Male
+Music: Female
+Items: Full Restore / Full Restore / Full Restore
 Double Battle: No
+AI: Basic Trainer
 
-Kyogre
-Level: 5
-IVs: 0 HP / 0 Atk / 0 Def / 0 SpA / 0 SpD / 0 Spe
+Tropius
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Leaf Blade
+- Aerial Ace
+- Body Slam
+- Synthesis
+
+Pelipper
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Surf
+- Air Slash
+- Protect
+- Stockpile
+
+Magcargo
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Flamethrower
+- Rock Slide
+- Amnesia
+- Recover
+
+Salamence
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Dragon Claw
+- Fly
+- Crunch
+- Dragon Dance
+
+Metagross
+Level: 60
+IVs: 31 HP / 31 Atk / 31 Def / 31 SpA / 31 SpD / 31 Spe
+- Meteor Mash
+- Zen Headbutt
+- Earthquake
+- Agility
 
 === TRAINER_LEAGUE_KAI ===
 Name: KAI

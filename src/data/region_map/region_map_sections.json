@@ -1638,6 +1638,26 @@
     {
       "id": "MAPSEC_AMBERWOOD_HOLLOW",
       "name": "AMBERWOOD HOLLOW"
+    },
+    {
+      "id": "MAPSEC_ELDERWOOD_FOREST",
+      "name": "ELDERWOOD FOREST"
+    },
+    {
+      "id": "MAPSEC_EMBER_SPRINGS",
+      "name": "EMBER SPRINGS"
+    },
+    {
+      "id": "MAPSEC_CINDER_CAVERNS",
+      "name": "CINDER CAVERNS"
+    },
+    {
+      "id": "MAPSEC_SKYROPE_CANYON",
+      "name": "SKYROPE CANYON"
+    },
+    {
+      "id": "MAPSEC_FROSTVEIN_CAVE",
+      "name": "FROSTVEIN CAVE"
     }
   ]
 }

@@ -23,6 +23,14 @@ SYMBOLS = ["gNetplayMailbox", "gMain", "gParties", "CB2_Overworld", "BattleMainC
            "gReadyToCloseLink", "gPartiesCount", "gSaveBlock1Ptr", "gSaveBlock2Ptr"]
 
 
+def server_env():
+    """The server's environment for a test run: no fishing tournament, whose
+    real-time start notice would otherwise interrupt the scenario depending on
+    the hour (server/online_fishing.py)."""
+    now = time.time()
+    return dict(os.environ, NETPLAY_FISHT_START=str(now + 86400), NETPLAY_FISHT_PERIOD=str(10 * 86400))
+
+
 def read_symbols(map_path):
     found = {}
     pattern = re.compile(r"^\s+0x([0-9a-f]+)\s+(\w+)\s*$")
@@ -102,7 +110,7 @@ def main():
     server = subprocess.Popen(
         [sys.executable, os.path.join(ROOT, "server", "netplay_server.py"),
          "--host", "127.0.0.1", "--port", str(port), "--db", db_path],
-        stdout=open(os.path.join(out, "server.log"), "w"), stderr=subprocess.STDOUT)
+        stdout=open(os.path.join(out, "server.log"), "w"), stderr=subprocess.STDOUT, env=server_env())
     try:
         time.sleep(0.5)
         env = dict(os.environ, NETPLAY_PORT=str(port))

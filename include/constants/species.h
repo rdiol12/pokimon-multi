@@ -1692,6 +1692,12 @@ enum __attribute__((packed)) Species
 
     SPECIES_CUSTOM_START = SPECIES_GLIMMORA_MEGA,
     // Add any custom species between here and SPECIES_CUSTOM_END
+    // Regional forms of Starfall Isle and Amberwood Hollow (docs/adventure.md).
+    SPECIES_WINGULL_STARFALL = 1573,
+    SPECIES_PELIPPER_STARFALL = 1574,
+    SPECIES_LUVDISC_STARFALL = 1575,
+    SPECIES_TEDDIURSA_AMBERWOOD = 1576,
+    SPECIES_URSARING_AMBERWOOD = 1577,
     SPECIES_CUSTOM_END,
 
     SPECIES_EGG = SPECIES_CUSTOM_END,

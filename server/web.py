@@ -10,6 +10,8 @@ import logging
 import os
 import re
 
+import community
+
 log = logging.getLogger("netplay.web")
 
 BRIDGE_PATH = os.path.join(
@@ -17,6 +19,7 @@ BRIDGE_PATH = os.path.join(
 )
 WORLD_BRIDGE_PATH = os.path.join(os.path.dirname(BRIDGE_PATH), "netplay_world.lua")
 EXT_BRIDGE_PATH = os.path.join(os.path.dirname(BRIDGE_PATH), "netplay_ext.lua")
+COMMUNITY_BRIDGE_PATH = os.path.join(os.path.dirname(BRIDGE_PATH), "netplay_community.lua")
 GALLERY_FILE_RE = re.compile(r"^/gallery/([\w.-]+\.png)$")
 
 GALLERY_PAGE = """<!doctype html>
@@ -35,6 +38,22 @@ figcaption {{ font-size: .9rem; color: #555; }}
 <div class="grid">
 {photos}
 </div>
+</body></html>
+"""
+HOF_PAGE = """<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pokimon Multi Hall of Fame</title>
+<style>
+body {{ font-family: system-ui, sans-serif; margin: 0 auto; max-width: 48rem; padding: 1rem; }}
+.entry {{ border: 2px solid #c8a040; border-radius: 6px; padding: .5rem .8rem; margin: .6rem 0; background: #fffbea; }}
+.entry h2 {{ font-size: 1rem; margin: 0 0 .3rem; }}
+.entry small {{ color: #777; font-weight: normal; }}
+.team {{ display: flex; flex-wrap: wrap; gap: .3rem 1rem; font-size: .9rem; }}
+</style></head><body>
+<h1>Hall of Fame</h1>
+<p><a href="/">League</a> &middot; every team that entered the Hall of Fame, newest first.</p>
+{entries}
 </body></html>
 """
 MAX_REQUEST = 8192
@@ -56,7 +75,7 @@ code {{ background: #eee; padding: 0 .2rem; }}
 <tr><th>#</th><th>Trainer</th><th class=n>Rating</th><th class=n>W</th><th class=n>L</th><th class=n>D</th></tr>
 {rows}
 </table>
-<p><a href="/gallery">Photo gallery</a></p>
+<p><a href="/gallery">Photo gallery</a> &middot; <a href="/halloffame">Hall of Fame</a> &middot; <a href="/map">Live map</a> &middot; <a href="/shinies">Shiny gallery</a>{community_links}</p>
 <h2>Play</h2>
 <ol>
 <li>Open the game in mGBA 0.10 or newer.</li>
@@ -87,15 +106,35 @@ class Web:
         with open(BRIDGE_PATH, encoding="utf-8") as f:
             script = f.read()
         # One download: the world features part goes first (netplay_world.lua).
-        if os.path.exists(WORLD_BRIDGE_PATH):
-            with open(WORLD_BRIDGE_PATH, encoding="utf-8") as f:
-                script = f.read() + "\n" + script
+        for part in (WORLD_BRIDGE_PATH, COMMUNITY_BRIDGE_PATH):
+            if os.path.exists(part):
+                with open(part, encoding="utf-8") as f:
+                    script = f.read() + "\n" + script
         # The Online Plaza part goes last: it uses the bridge's NetplayBridge.
         if os.path.exists(EXT_BRIDGE_PATH):
             with open(EXT_BRIDGE_PATH, encoding="utf-8") as f:
                 script = script + "\n" + f.read()
         header = f"NETPLAY_HOST = NETPLAY_HOST or {json.dumps(host)}\nNETPLAY_PORT = NETPLAY_PORT or {self.game_port}\n"
         return header + script
+
+    def hall_of_fame(self):
+        import adventure_hof
+
+        db = self.server.league.db
+        adventure_hof.setup(db)
+        names = adventure_hof.species_names()
+
+        def mon(entry):
+            species, level, shiny = (int(n) for n in entry.split("."))
+            star = " &#9733;" if shiny else ""
+            return f"<span>{html.escape(names.get(species, f'#{species}'))} Lv. {level}{star}</span>"
+
+        entries = "\n".join(
+            f'<div class=entry><h2>#{number} {html.escape(name)} <small>{html.escape(date)}</small></h2>'
+            f'<div class=team>{"".join(mon(m) for m in team.split(","))}</div></div>'
+            for number, name, date, team in adventure_hof.entries(db, 200)
+        ) or "<p>No one has entered the Hall of Fame yet.</p>"
+        return HOF_PAGE.format(entries=entries)
 
     def route(self, path, host_header):
         host = self.public_host or re.sub(r":\d+$", "", host_header or "") or "127.0.0.1"
@@ -121,14 +160,26 @@ class Web:
         if m and gallery and os.path.exists(os.path.join(gallery, m.group(1))):
             with open(os.path.join(gallery, m.group(1)), "rb") as f:
                 return 200, "image/png", f.read()
+        if path == "/halloffame":
+            return 200, "text/html; charset=utf-8", self.hall_of_fame()
         if path == "/":
             rows = "\n".join(
                 f"<tr><td>{r['rank']}</td><td>{html.escape(r['name'])}</td><td class=n>{r['rating']}</td>"
                 f"<td class=n>{r['wins']}</td><td class=n>{r['losses']}</td><td class=n>{r['draws']}</td></tr>"
                 for r in self.board()
             ) or "<tr><td colspan=6>No battles yet.</td></tr>"
-            page = PAGE.format(online=self.online(), rows=rows, address=html.escape(f"{host}:{self.game_port}"))
+            links = "".join(f' &middot; <a href="{p}">{html.escape(t)}</a>' for p, (t, _) in sorted(community.WEB_ROUTES.items()))
+            page = PAGE.format(online=self.online(), rows=rows, address=html.escape(f"{host}:{self.game_port}"),
+                               community_links=links)
             return 200, "text/html; charset=utf-8", page
+        route = community.WEB_ROUTES.get(path)
+        if route is not None:
+            return route[1](self.server)
+        # Pages other modules add (server/online_web.py): fn(path) -> answer or None.
+        for extra in getattr(self.server, "web_routes", []):
+            found = extra(path)
+            if found:
+                return found
         return 404, "text/plain", "not found\n"
 
     async def handle(self, reader, writer):

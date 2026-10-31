@@ -1,0 +1,45 @@
+-- Tournaments: four players fill a cup (NETPLAY_TOUR_SIZE=4), get the match popup and see the bracket.
+dofile(INSTANCE_DIR .. "/../driver_lib.lua")
+local D, K = Driver, Driver.KEY
+local N = INSTANCE
+local parties = {
+    { "SCEPTILE", "SWELLOW", "MANECTRIC" }, { "BLAZIKEN", "ALTARIA", "AGGRON" },
+    { "SWAMPERT", "GARDEVOIR", "SKARMORY" }, { "METAGROSS", "MILOTIC", "FLYGON" },
+}
+D.run(function()
+    D.boot()
+    D.waitFor("the server", 600, D.online)
+    D.showcase({ level = 50, badges = 8, party = parties[N] })
+    D.scene(13, MAPS.MAP_LILYCOVE_CITY, 24 + N * 2, 9)
+    D.wait(400 * N)
+    local before = D.answers()
+    D.community(0, N == 1 and "menu" or nil)
+    D.waitAnswer(before)
+    D.wait(60) D.shot("status")
+    D.press(K.A, 60) D.shot("status2")
+    D.press(K.A, 60) D.shot("join")
+    before = D.answers()
+    D.press(K.A, 10)
+    D.waitAnswer(before)
+    D.wait(90) D.shot("joined")
+    D.press(K.A, 150) D.shot("bracketq")
+    D.press(K.DOWN, 10) D.press(K.A, 60)
+    D.wait(400 * (5 - N))
+    -- The cup is full: the match popup.
+    D.wait(200) D.shot("popup")
+    D.press(K.A, 60)
+    D.wait(60) D.shot("popup2")
+    D.press(K.A, 60)
+    before = D.answers()
+    D.community(0)
+    D.waitAnswer(before)
+    D.wait(60) D.shot("status-playing")
+    D.press(K.A, 60) D.shot("status-playing2")
+    D.press(K.A, 60) D.shot("bracketq2")
+    before = D.answers()
+    D.press(K.A, 10)
+    D.waitAnswer(before)
+    D.wait(60) D.shot("bracket")
+    D.press(K.B, 60)
+    D.wait(200)
+end)

@@ -4,6 +4,7 @@ FortreeCity_MapScripts::
 	.byte 0
 
 FortreeCity_OnTransition:
+	call Community_EventScript_RivalSetup
 	setflag FLAG_VISITED_FORTREE_CITY
 	end
 

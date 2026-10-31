@@ -40,7 +40,8 @@ mailbox. The game makes one request at a time:
 On the server, `server/ext.py` registers `X` and `XD` in
 `Server.extra_commands` and routes each request word to a module:
 `guilds.py`, `wondertrade.py`, `bases.py`, `tower.py`, `bounties.py`,
-`titles.py`, `replays.py`, `draft.py`, `mail.py` and `dexrace.py`. Each has a
+`titles.py`, `replays.py`, `draft.py`, `mail.py` and `dexrace.py` (and
+`adventure_hof.py`, the Hall of Fame wall from `docs/adventure.md`). Each has a
 `COMMANDS` dict of `fn(ctx, args, data) -> bytes` and keeps its tables in the
 league database.
 
