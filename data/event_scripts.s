@@ -1814,6 +1814,7 @@ EventScript_PalletTown_PlayersHouse_2F_TurnOnPC::
 	.include "data/scripts/world.inc"
 	.include "data/scripts/adventure.inc"
 	.include "data/scripts/life.inc"
+	.include "data/scripts/rovers.inc"
 	.include "data/scripts/mechanics.inc"
 	.include "data/scripts/community.inc"
 	.include "data/scripts/pastime.inc"

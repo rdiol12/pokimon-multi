@@ -1,4 +1,5 @@
 #include "global.h"
+#include "rovers.h"
 #include "battle.h"
 #include "battle_anim.h"
 #include "battle_ai_record.h"
@@ -128,6 +129,10 @@ static const u8 sText_PkmnComeBack[] = _("{B_BUFF1}, come back!");
 static const u8 sText_PkmnOkComeBack[] = _("OK, {B_BUFF1}! Come back!");
 static const u8 sText_PkmnGoodComeBack[] = _("Good job, {B_BUFF1}! Come back!");
 static const u8 sText_Trainer1WithdrewPkmn[] = _("{B_TRAINER1_NAME_WITH_CLASS} withdrew {B_BUFF1}!");
+// A watched rover battle: the left trainer is a rover, not the player.
+static const u8 sText_RoverWithdrewPkmn[] = _("{B_PLAYER_NAME} withdrew {B_BUFF1}!");
+static const u8 sText_RoverSentOutPkmn[] = _("{B_PLAYER_NAME} sent out {B_BUFF1}!");
+static const u8 sText_RoverSentOutFirst[] = _("{B_PLAYER_NAME} sent out {B_PLAYER_MON1_NAME}!");
 static const u8 sText_Trainer2WithdrewPkmn[] = _("{B_TRAINER2_NAME_WITH_CLASS} withdrew {B_BUFF1}!");
 static const u8 sText_LinkTrainer1WithdrewPkmn[] = _("{B_LINK_OPPONENT1_NAME} withdrew {B_BUFF1}!");
 static const u8 sText_LinkTrainer2WithdrewPkmn[] = _("{B_LINK_OPPONENT2_NAME} withdrew {B_BUFF1}!");
@@ -2527,7 +2532,11 @@ void BufferStringBattle(enum StringID stringID, enum BattlerId battler)
         }
         break;
     case STRINGID_INTROSENDOUT: // poke first send-out
-        if (IsOnPlayerSide(battler))
+        if (Rovers_IsWatching() && IsOnPlayerSide(battler) && !IsDoubleBattle())
+        {
+            stringPtr = sText_RoverSentOutFirst;
+        }
+        else if (IsOnPlayerSide(battler))
         {
             if (IsDoubleBattle() && IsValidForBattle(GetBattlerMon(GetPartnerBattler(battler))))
             {
@@ -2590,7 +2599,9 @@ void BufferStringBattle(enum StringID stringID, enum BattlerId battler)
         }
         break;
     case STRINGID_RETURNMON: // sending poke to ball msg
-        if ((GetBattlerPosition(battler) & BIT_FLANK) == B_FLANK_LEFT) // battler 0 and 1
+        if (Rovers_IsWatching() && IsOnPlayerSide(battler))
+            stringPtr = sText_RoverWithdrewPkmn;
+        else if ((GetBattlerPosition(battler) & BIT_FLANK) == B_FLANK_LEFT) // battler 0 and 1
         {
             if (BattlerIsPlayer(battler) || BattlerIsWally(battler)) // Player
             {
@@ -2659,7 +2670,9 @@ void BufferStringBattle(enum StringID stringID, enum BattlerId battler)
         }
         break;
     case STRINGID_SWITCHINMON: // switch-in msg
-        if ((GetBattlerPosition(gBattleScripting.battler) & BIT_FLANK) == B_FLANK_LEFT) // battler 0 and 1
+        if (Rovers_IsWatching() && IsOnPlayerSide(gBattleScripting.battler))
+            stringPtr = sText_RoverSentOutPkmn;
+        else if ((GetBattlerPosition(gBattleScripting.battler) & BIT_FLANK) == B_FLANK_LEFT) // battler 0 and 1
         {
             if (BattlerIsPlayer(gBattleScripting.battler)) // Player
             {
@@ -3905,7 +3918,8 @@ void BattlePutTextOnWindow(const u8 *text, u8 windowId)
     else
         gTextFlags.useAlternateDownArrow = TRUE;
 
-    if ((gBattleTypeFlags & (BATTLE_TYPE_LINK | BATTLE_TYPE_RECORDED)) || gTestRunnerEnabled || ((gBattleTypeFlags & BATTLE_TYPE_POKEDUDE) && windowId != B_WIN_OAK_OLD_MAN))
+    if ((gBattleTypeFlags & (BATTLE_TYPE_LINK | BATTLE_TYPE_RECORDED)) || gTestRunnerEnabled || ((gBattleTypeFlags & BATTLE_TYPE_POKEDUDE) && windowId != B_WIN_OAK_OLD_MAN)
+     || Rovers_IsWatching())
         gTextFlags.autoScroll = TRUE;
     else
         gTextFlags.autoScroll = FALSE;

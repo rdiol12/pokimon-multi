@@ -5,6 +5,7 @@
 #include "battle_anim.h"
 #include "battle_arena.h"
 #include "battle_controllers.h"
+#include "rovers.h"
 #include "battle_gfx_sfx_util.h"
 #include "battle_interface.h"
 #include "battle_message.h"
@@ -58,7 +59,7 @@ static void AnimateMonAfterKnockout(enum BattlerId battler);
 
 bool32 IsAiVsAiBattle(void)
 {
-    return (B_FLAG_AI_VS_AI_BATTLE && FlagGet(B_FLAG_AI_VS_AI_BATTLE));
+    return (B_FLAG_AI_VS_AI_BATTLE && FlagGet(B_FLAG_AI_VS_AI_BATTLE)) || Rovers_IsWatching();
 }
 
 bool32 BattlerIsPlayer(enum BattlerId battlerId)

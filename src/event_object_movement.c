@@ -13,6 +13,7 @@
 #include "decompress.h"
 #include "event_data.h"
 #include "event_object_movement.h"
+#include "rovers.h"
 #include "event_scripts.h"
 #include "faraway_island.h"
 #include "field_camera.h"
@@ -2963,6 +2964,8 @@ void RemoveObjectEventsOutsideView(void)
             if (IsOWEDespawnExempt(objectEvent))
                 continue;
             if (Netplay_IsNetplayObjectEvent(objectEvent))
+                continue;
+            if (Rovers_IsRoverObject(objectEvent))
                 continue;
 
             RemoveObjectEventIfOutsideView(objectEvent);

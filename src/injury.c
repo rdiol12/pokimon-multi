@@ -14,6 +14,7 @@
 #include "battle.h"
 #include "event_data.h"
 #include "injury.h"
+#include "rovers.h"
 #include "link.h"
 #include "money.h"
 #include "party_menu.h"
@@ -290,6 +291,10 @@ static bool32 CanInjureInBattle(u32 battler)
 #if TESTING
     return FALSE;
 #else
+    // Roaming trainers' Pokémon get hurt too (src/rovers.c): both sides of a
+    // battle the player watches, and a rover the player battles.
+    if (Rovers_InjuresBattler(battler))
+        return TRUE;
     if (!IsOnPlayerSide(battler))
         return FALSE;
     // Temporary or borrowed parties, replays and tutorials.

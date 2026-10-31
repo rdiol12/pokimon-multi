@@ -79,6 +79,7 @@
 #include "data/battle_move_effects.h"
 #include "test/battle.h"
 #include "follower_npc.h"
+#include "rovers.h"
 #include "load_save.h"
 
 // Helper for accessing command arguments and advancing gBattlescriptCurrInstr.
@@ -10338,7 +10339,7 @@ void BS_JumpIfNoWhiteOut(void)
 {
     NATIVE_ARGS(const u8 *jumpInstr);
 
-    if (FlagGet(B_FLAG_NO_WHITEOUT))
+    if (FlagGet(B_FLAG_NO_WHITEOUT) || Rovers_IsWatching())
         gBattlescriptCurrInstr = cmd->jumpInstr;
     else
         gBattlescriptCurrInstr = cmd->nextInstr;

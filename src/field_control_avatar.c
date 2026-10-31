@@ -14,6 +14,7 @@
 #include "event_scripts.h"
 #include "fieldmap.h"
 #include "field_control_avatar.h"
+#include "rovers.h"
 #include "field_message_box.h"
 #include "field_move.h"
 #include "field_effect.h"
@@ -434,6 +435,8 @@ static const u8 *GetInteractedObjectEventScript(struct MapPosition *position, u8
         script = Pastime_GetTalkScript(objectEventId);
     else if (LifeGhost_IsGhost(&gObjectEvents[objectEventId]))
         script = Life_EventScript_Ghost;
+    else if (Rovers_GetTalkScript(&gObjectEvents[objectEventId]) != NULL)
+        script = Rovers_GetTalkScript(&gObjectEvents[objectEventId]);
     else if (InTrainerHill() == TRUE)
         script = GetTrainerHillTrainerScript();
     else
