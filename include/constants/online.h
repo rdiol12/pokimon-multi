@@ -71,7 +71,14 @@
 #define ONL_REQ_BET_COLLECT 54
 #define ONL_REQ_BET_BOARD   55
 #define ONL_REQ_DOUBLES_BOARD 56
-#define ONL_REQ_COUNT       57
+#define ONL_REQ_TEAM_VIEW   57
+#define ONL_REQ_TEAM_WHO    58
+#define ONL_REQ_TEAM_ASK    59 // the player picked from TEAM_WHO
+#define ONL_REQ_TEAM_YES    60
+#define ONL_REQ_TEAM_NO     61
+#define ONL_REQ_TEAM_LEAVE  62
+#define ONL_REQ_TEAM_BOARD  63
+#define ONL_REQ_COUNT       64
 
 // The hub's rows (VAR_RESULT of its menu).
 #define ONLINE_HUB_GOALS    0
@@ -85,6 +92,7 @@
 #define ONLINE_HUB_PQUESTS  8
 #define ONLINE_HUB_BETTING  9
 #define ONLINE_HUB_DOUBLES  10
+#define ONLINE_HUB_TEAMS    11
 #define ONLINE_HUB_CLOSE    127
 
 // VAR_0x800B of the co-op fishing requests.
@@ -105,5 +113,11 @@
 #define MENTOR_APPRENTICE 1 // has a mentor (gStringVar1)
 #define MENTOR_ON_LIST    2 // a mentor newer trainers can pick
 #define MENTOR_OFF_LIST   3 // enough badges, not on the list
+
+// VAR_0x800B of TEAM_VIEW.
+#define TEAM_NONE    0
+#define TEAM_INVITED 1 // someone asked the player; gStringVar1 is who
+#define TEAM_ASKED   2 // the player asked someone
+#define TEAM_TEAMED  3 // on a team with gStringVar1
 
 #endif // GUARD_CONSTANTS_ONLINE_H

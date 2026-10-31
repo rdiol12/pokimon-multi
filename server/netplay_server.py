@@ -26,9 +26,10 @@ EMOTE_BURST = 4  # emotes a player can send at once; one more each EMOTE_REFILL 
 EMOTE_REFILL = 1.0
 NAME_RE = re.compile(r"^[A-Za-z0-9]{1,7}$")
 HEX_RE = re.compile(r"^[0-9a-fA-F]{2,64}$")
-KINDS = ("battle", "trade", "deal", "coop", "double")
+KINDS = ("battle", "trade", "deal", "coop", "double", "multi")
 OUTCOMES = ("win", "loss", "draw")
-BATTLE_KINDS = ("battle", "double")  # PvP battles with a result
+BATTLE_KINDS = ("battle", "double")  # two-player PvP battles with a result
+RESULT_KINDS = BATTLE_KINDS + ("multi",)  # and 2v2 team battles (server/online_teams.py)
 MAX_LINE = 256
 
 
@@ -156,11 +157,15 @@ class Player:
 
 
 class Session:
-    def __init__(self, sid, kind, host, guest):
+    def __init__(self, sid, kind, host, guest, partners=()):
         self.id = sid
         self.kind = kind
         self.host = host
         self.guest = guest
+        # Everyone linked, by link role: a 2v2 team battle adds the host's
+        # partner (role 2) and the guest's (role 3); roles 0 and 2 are a team.
+        self.members = [host, guest, *partners]
+        self.accepted = {host}
         self.started = False
         self.reports = {}
         self.recorded = False
@@ -220,7 +225,7 @@ class Server:
         log.info("player %d (%s) disconnected", player.id, player.name)
         self.stop_watching(player)
         for session in list(self.sessions.values()):
-            if player in (session.host, session.guest):
+            if player in session.members:
                 self.end_session(session, player)
         self.settle_pending(player)
         if player.map is not None:
@@ -241,10 +246,10 @@ class Server:
     def end_session(self, session, leaver):
         """Close a session because `leaver` quit or disconnected."""
         self.sessions.pop(session.id, None)
-        peer = session.peer(leaver)
-        if peer.id in self.players:
-            peer.send(f"ENDED {session.id}")
-        for p in (session.host, session.guest):
+        for p in session.members:
+            if p is not leaver and p.id in self.players:
+                p.send(f"ENDED {session.id}")
+        for p in session.members:
             if p.session is session:
                 p.session = None
         for watcher in session.watchers:
@@ -252,7 +257,7 @@ class Server:
             if watcher.id in self.players:
                 watcher.send(f"WEND {session.id}")
         session.watchers.clear()
-        if session.kind in BATTLE_KINDS and session.started and not session.recorded:
+        if session.kind in RESULT_KINDS and session.started and not session.recorded:
             self.pending[session.id] = session
             self.settle_pending(leaver)
 
@@ -261,7 +266,7 @@ class Server:
         disconnected, or moved on to another session. Whatever the other side
         reported then stands on its own."""
         for session in list(self.pending.values()):
-            if player not in (session.host, session.guest) or player.key in session.reports:
+            if player not in session.members or player.key in session.reports:
                 continue
             if player.id in self.players and player.session is None:
                 continue
@@ -274,6 +279,9 @@ class Server:
         session.recorded = True
         self.pending.pop(session.id, None)
         h, g = session.host, session.guest
+        if session.kind == "multi":
+            log.info("team battle %d: %s", session.id, self.record_multi(session))
+            return
         # Ranked doubles have their own ladder (server/online_doubles.py).
         record = self.league.record if session.kind == "battle" else getattr(self, "record_" + session.kind)
         status = record(
@@ -281,11 +289,16 @@ class Server:
         )
         log.info("battle %d %s vs %s: %s", session.id, h.name, g.name, status)
 
+    def team_partners(self, host, guest):
+        """The partners `host` and `guest` bring to a 2v2 team battle, or None
+        if they can't have one; server/online_teams.py replaces this."""
+        return None
+
     def require_session(self, player, sid, started=None):
         session = self.sessions.get(int(sid))
         if session is None and started:
             session = self.pending.get(int(sid))
-        if session is None or player not in (session.host, session.guest):
+        if session is None or player not in session.members:
             raise ValueError("no such session")
         if started is not None and session.started != started:
             raise ValueError("session not ready")
@@ -347,39 +360,56 @@ class Server:
         if target is None or target is player or target.name is None or target.session:
             player.send(f"DECLINED {sid}")
             return
-        session = Session(sid, kind, player, target)
+        partners = ()
+        if kind == "multi":
+            # Both leaders bring their team partner (server/online_teams.py).
+            partners = self.team_partners(player, target)
+            if partners is None:
+                player.send(f"DECLINED {sid}")
+                return
+        session = Session(sid, kind, player, target, partners)
         self.sessions[session.id] = session
-        player.session = target.session = session
-        self.settle_pending(player)
-        self.settle_pending(target)
-        target.send(f"INVITE {session.id} {kind} {player.id}")
+        for p in session.members:
+            p.session = session
+            self.settle_pending(p)
+        for p in session.members[1:]:
+            p.send(f"INVITE {session.id} {kind} {player.id}")
 
     def cmd_accept(self, player, sid):
         session = self.require_session(player, sid, started=False)
-        if player is not session.guest:
+        if player is session.host:
             raise ValueError("not your invite")
+        session.accepted.add(player)
+        if len(session.accepted) < len(session.members):
+            return
         session.started = True
-        session.host.send(f"START {session.id} {session.kind} {session.guest.id} 0")
-        session.guest.send(f"START {session.id} {session.kind} {session.host.id} 1")
+        # Each game hears of the other side's leader, and its own link role.
+        for role, p in enumerate(session.members):
+            other = session.guest if role % 2 == 0 else session.host
+            p.send(f"START {session.id} {session.kind} {other.id} {role}")
 
     def cmd_decline(self, player, sid):
         session = self.require_session(player, sid, started=False)
         self.sessions.pop(session.id, None)
-        session.host.session = session.guest.session = None
-        session.peer(player).send(f"DECLINED {session.id}")
+        for p in session.members:
+            p.session = None
+            if p is not player:
+                p.send(f"DECLINED {session.id}")
 
     def cmd_link(self, player, sid, payload):
         session = self.require_session(player, sid, started=True)
         if not HEX_RE.match(payload) or len(payload) % 2:
             raise ValueError("bad payload")
-        session.peer(player).send(f"LINK {session.id} {payload}")
+        for p in session.members:
+            if p is not player:
+                p.send(f"LINK {session.id} {payload}")
 
     def cmd_result(self, player, sid, outcome):
         session = self.require_session(player, sid, started=True)
-        if session.kind not in BATTLE_KINDS or outcome not in OUTCOMES:
+        if session.kind not in RESULT_KINDS or outcome not in OUTCOMES:
             raise ValueError("bad result")
         session.reports.setdefault(player.key, outcome)
-        if len(session.reports) == 2 and not session.recorded:
+        if len(session.reports) == len(session.members) and not session.recorded:
             self.finish_battle(session)
 
     def cmd_quit(self, player, sid):
@@ -388,7 +418,7 @@ class Server:
             # Already over: after a battle or trade both sides quit, and the
             # second QUIT finds nothing left to end.
             return
-        if player not in (session.host, session.guest):
+        if player not in session.members:
             raise ValueError("no such session")
         self.end_session(session, player)
 
@@ -494,7 +524,7 @@ class Server:
     def cmd_watch(self, player, sid):
         self.stop_watching(player)
         session = self.live_battle(sid)
-        if session is None or player in (session.host, session.guest):
+        if session is None or player in session.members:
             player.send(f"WEND {int(sid)}")
             return
         session.watchers.add(player)

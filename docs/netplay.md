@@ -150,7 +150,7 @@ says who writes the field; the other side only reads it.
 | 0x0D3 | 1 | — | padding |
 | 0x0D4 | 4 | ROM/bridge | link TX ring: u8 head (ROM), u8 tail (bridge), 2 pad |
 | 0x0D8 | 16×20 | ROM | link TX packets |
-| 0x218 | 4 | bridge/ROM | link RX ring: u8 head (bridge), u8 tail (ROM), 2 pad |
+| 0x218 | 4 | bridge/ROM | link RX ring: u8 head (bridge), u8 tail (ROM), u16 held senders (ROM, below) |
 | 0x21C | 16×20 | bridge | link RX packets |
 | 0x35C | 40 | ROM | server host, ASCII, NUL-terminated |
 | 0x384 | 2 | ROM | server port |
@@ -250,8 +250,9 @@ bridge writes a new event only after the ROM has acked the previous one.
 | 6 | a player on our map emoted: peer id, kind = emote |
 
 **Link rings:** a packet is 20 bytes: u8 kind (1 data, 2 handshake,
-3 handshake ack, 4 deal offer chunk, 5 deal answer, 6 deal commit), u8 and
-u16 used by deal offers (chunk index, revision), then 16 bytes: one link
+3 handshake ack, 4 deal offer chunk, 5 deal answer, 6 deal commit), u8 sender
+(the link role; deal offers use it for the chunk index), u16 (deal offer
+revision), then 16 bytes: one link
 command (`CMD_LENGTH` = 8 u16) or deal data (see Deals below). A ring is empty when `head == tail`; indices wrap at 16. The writer
 fills `packets[head]`, then advances `head`; the reader consumes
 `packets[tail]`, then advances `tail`. On `START` the bridge empties both rings.
@@ -261,18 +262,32 @@ fills `packets[head]`, then advances `head`; the reader consumes
 While a session is running, `link.c` uses the rings instead of the serial port
 (`Netplay_LinkHandshake` and `Netplay_LinkTransfer` in `src/netplay.c`):
 
-- **Handshake.** When the link opens, the host sends a handshake packet and the
-  guest answers with a handshake ack; each side is connected once it has seen
-  the other's. Packets that arrive before that are left over from an earlier
-  link and are dropped.
+- **Players.** Two games, or four for a 2v2 team battle (session kind
+  `multi`). Each game's link role (0 to 3, from `START`) is its multiplayer
+  id and its battler id; role 0 is the master, and roles 0 and 2 are a team.
+  The server sends each `LINK` to every other game of the session.
+- **Handshake.** When the link opens, the master sends a handshake packet and
+  every other game answers with a handshake ack; the master is connected once
+  it has them all, the others once they've seen the handshake. Packets that
+  arrive before that are left over from an earlier link and are dropped.
 - **Transfer.** Every frame each game sends exactly one data packet: its next
-  queued link command, or zeros. The k-th packet from each side is delivered
-  together as one entry of the receive queue, which is what a serial transfer
-  does. Network delay only delays entries; it never reorders them.
+  queued link command, or zeros. Each player's packets wait in their own FIFO,
+  and the k-th packet of every player is delivered together as one entry of
+  the receive queue, which is what a serial transfer does. Network delay only
+  delays entries; it never reorders them.
+- **Holding back.** A player far ahead of the others could fill the RX ring
+  with their packets and hide everyone else's behind them. So after reading
+  the ring the ROM sets a bit per player whose FIFO couldn't take another full
+  ring (the RX ring's u16), and the bridge keeps those players' data packets
+  back until the bit clears, passing the others' on in order.
+- **Wired.** Pokémon Centers would turn on wireless mode (the Union Room
+  check, `OW_UNION_DISABLE_CHECK` is TRUE for this), and the battle and link
+  setup always switch to wired mode before opening the link.
 
 Battles and trades then run on Emerald's own link code: a battle uses each
 player's whole party (healed, and restored afterwards like a cable club
-battle), and a trade uses the normal trade screen.
+battle), a 2v2 team battle the first three Pokémon of each (a cable club
+multi battle), and a trade uses the normal trade screen.
 
 ## Deals (buy/sell)
 
@@ -304,7 +319,8 @@ Client → server:
 ```
 HELLO <name> <trainer id>
 POS <map group> <map num> <x> <y> <facing> <elevation> <gfx>
-REQ <battle|trade|deal|coop> <target id> (answered with PENDING, then START or DECLINED)
+REQ <battle|trade|deal|coop|double|multi> <target id> (answered with PENDING, then START or DECLINED;
+                                    multi: the target's team, and both teams' partners come too)
 ACCEPT <session id>
 DECLINE <session id>
 LINK <session id> <hex>
@@ -337,8 +353,8 @@ WELCOME <id>
 PENDING <session id>
 PLAYER <id> <name> <map group> <map num> <x> <y> <facing> <elevation> <gfx>
 GONE <id>
-INVITE <session id> <battle|trade|deal> <from id>
-START <session id> <battle|trade|deal> <peer id> <0 host|1 guest>
+INVITE <session id> <kind> <from id>
+START <session id> <kind> <peer id> <link role: 0 host, 1 guest, 2 host's partner, 3 guest's partner>
 DECLINED <session id>
 ENDED <session id>
 LINK <session id> <hex>

@@ -18,6 +18,7 @@ import online_pageant  # noqa: E402
 import online_pquests  # noqa: E402
 import online_shops  # noqa: E402
 import online_sightings  # noqa: E402
+import online_teams  # noqa: E402
 import online_web  # noqa: E402
 from online_ids import ITEMS, MAPS, SPECIES  # noqa: E402
 from test_netplay_server import Client  # noqa: E402
@@ -36,9 +37,10 @@ class OnlineTest(unittest.IsolatedAsyncioTestCase):
                                     [online_goals, online_sightings, online_web, online_fishing, online_coopfish, online_shops,
                                      online_pageant, online_duo, online_mentors,
                                      online_pquests, online_betting,
-                                     online_doubles], clock=lambda: self.now)
+                                     online_doubles, online_teams], clock=lambda: self.now)
         online_betting.install(self.server)
         online_doubles.install(self.server)
+        online_teams.install(self.server)
         self.srv = await asyncio.start_server(self.server.handle, "127.0.0.1", 0)
         self.port = self.srv.sockets[0].getsockname()[1]
         self.clients = []
@@ -498,6 +500,69 @@ class DoublesTest(BettingTest):
         self.assertIn("N", [r[0] for r in rows(out)])
         # The singles ladder didn't change.
         self.assertEqual(self.league.db.execute("SELECT COUNT(*) FROM matches").fetchone()[0], 0)
+
+
+class TeamsTest(OnlineTest):
+    def pid(self, name):
+        return next(p.id for p in self.server.players.values() if p.name == name)
+
+    async def team_up(self, a, b, b_name):
+        status, out = await self.ask(a, "TEAM WHO")
+        self.assertIn(b_name, [r[0] for r in rows(out)[1:]])
+        await self.ask(a, f"TEAM ASK {self.pid(b_name)}")
+        status, out = await self.ask(b, "TEAM VIEW")
+        self.assertEqual(rows(out)[0][1], str(online_teams.INVITED))
+        status, out = await self.ask(b, "TEAM YES")
+        self.assertEqual(status, 0)
+
+    async def recv_until(self, c, prefix):
+        while not (line := await c.recv()).startswith(prefix):
+            pass
+        return line
+
+    async def test_team_battle(self):
+        a, b, c, d = [await self.connect(n, i) for i, n in enumerate(("Ann", "Ben", "Cat", "Dan"), 1)]
+        # Without a team, a team battle is declined.
+        await a.send(f"REQ multi {self.pid('Ben')}")
+        await self.recv_until(a, "DECLINED ")
+        await self.team_up(a, c, "Cat")
+        await self.team_up(b, d, "Dan")
+        status, out = await self.ask(a, "TEAM VIEW")
+        self.assertEqual(rows(out)[0][1], str(online_teams.TEAMED))
+        self.assertIn("Ann & Cat", rows(out)[0][0])
+
+        await a.send(f"REQ multi {self.pid('Ben')}")
+        invites = [await self.recv_until(x, "INVITE ") for x in (b, c, d)]
+        sid = invites[0].split()[1]
+        self.assertTrue(all(i.split()[1:3] == [sid, "multi"] for i in invites))
+        for x in (b, c, d):
+            await x.send(f"ACCEPT {sid}")
+        starts = [await self.recv_until(x, f"START {sid} ") for x in (a, b, c, d)]
+        self.assertEqual([s.split()[4] for s in starts], ["0", "1", "2", "3"])
+        self.assertEqual(starts[2].split()[3], str(self.pid("Ben")))  # the other side's leader
+
+        # Link packets go to the three others.
+        await c.send(f"LINK {sid} 01020304")
+        for x in (a, b, d):
+            self.assertEqual(await self.recv_until(x, "LINK "), f"LINK {sid} 01020304")
+
+        for x, outcome in ((a, "loss"), (c, "loss"), (b, "win"), (d, "win")):
+            await x.send(f"RESULT {sid} {outcome}")
+        await self.ask(d, "OSTAT")
+        status, out = await self.ask(b, "TEAM BOARD")
+        self.assertEqual(rows(out)[3], ["*1", "Ben & Dan", "1016", "1-0-0"])
+        self.assertEqual(rows(out)[4], ["2", "Ann & Cat", "984", "0-1-0"])
+
+    async def test_partner_leaving_ends_it_for_all(self):
+        a, b, c, d = [await self.connect(n, i) for i, n in enumerate(("Ann", "Ben", "Cat", "Dan"), 1)]
+        await self.team_up(a, c, "Cat")
+        await self.team_up(b, d, "Dan")
+        await a.send(f"REQ multi {self.pid('Ben')}")
+        sid = (await self.recv_until(d, "INVITE ")).split()[1]
+        await d.send(f"DECLINE {sid}")
+        for x in (a, b, c):
+            await self.recv_until(x, f"DECLINED {sid}")
+        self.assertIsNone(self.server.players[self.pid("Cat")].session)
 
 
 if __name__ == "__main__":
