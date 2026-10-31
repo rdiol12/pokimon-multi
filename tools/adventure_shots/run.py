@@ -14,7 +14,11 @@ through gAdventureShowcase (src/adventure.c):
     ladder is), wild = "SPECIES" (every wild Pokémon is that one; "" for
     as usual), treasure = n (today's treasure map is spot n, see
     src/treasure.c), frontier = {factory, arena, pyramid} (record streaks,
-    level 50).
+    level 50), hofEnter = true (the party enters the Hall of Fame, for the
+    wall).
+
+The bridge runs from its own folder, so it loads its extensions (the Online
+Plaza's request channel, which the Hall of Fame wall uses).
 """
 import os
 import sys
@@ -51,6 +55,7 @@ function Driver.adventure(t)
             E.write8(s + 42 + i * 2, v & 0xFF); E.write8(s + 43 + i * 2, v >> 8)
         end
     end
+    if t.hofEnter then E.write8(s + 50, 1) end
     if t.wild then
         local id = t.wild == "" and 0 or SPECIES_ID[t.wild]
         E.write8(s + 40, id & 0xFF); E.write8(s + 41, id >> 8)
@@ -85,4 +90,6 @@ end
 """
 
 if __name__ == "__main__":
+    sys.argv[1:3] = [os.path.abspath(a) for a in sys.argv[1:3]]
+    os.chdir(os.path.join(here, "..", "netplay_bridge"))
     world_run.main()

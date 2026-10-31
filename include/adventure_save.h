@@ -12,6 +12,15 @@ struct DailyQuestSlot
     u16 count; // catches or trainers counted since
 };
 
+// A team member as it goes on the Hall of Fame wall; the server reads the
+// same 4 bytes (server/adventure_hof.py).
+struct HofWallMon
+{
+    u16 species;
+    u8 level;
+    u8 shiny;
+};
+
 // Saved state of the fourth-batch game features (docs/adventure.md). Lives
 // at the end of SaveBlock3.
 
@@ -50,6 +59,12 @@ struct AdventureSaveData
     u16 frontierWins[FRONTIER_ONLINE_FACILITIES];
     u8 frontierStarted;
     u8 filler3;
+    // Hall of Fame wall: the last team that entered, kept until the server
+    // has it.
+    struct HofWallMon hofTeam[PARTY_SIZE];
+    u8 hofPending;
+    u8 filler4;
+    u16 hofEntry; // its number on the wall, 0 = not up yet
 };
 
 #endif // GUARD_ADVENTURE_SAVE_H

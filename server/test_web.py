@@ -49,6 +49,17 @@ class WebTest(unittest.IsolatedAsyncioTestCase):
         # The Online Plaza part comes after the bridge, whose NetplayBridge it uses.
         self.assertGreater(body.index("NetplayExtLoaded"), body.index("NetplayBridge = {"))
 
+    async def test_hall_of_fame_page(self):
+        import adventure_hof
+
+        adventure_hof.setup(self.league.db)
+        adventure_hof.add(self.league.db, ("Ash", 1), "25.50.1,1573.42.0")
+        status, body = await self.get("/halloffame")
+        self.assertEqual(status, 200)
+        self.assertIn("#1 Ash", body)
+        self.assertIn("Pikachu Lv. 50 &#9733;", body)
+        self.assertIn("Wingull Starfall Lv. 42", body)
+
     async def test_health_and_404(self):
         status, body = await self.get("/health")
         self.assertEqual((status, json.loads(body)), (200, {"ok": True, "online": 0}))

@@ -105,6 +105,6 @@ class Ext:
 
 
 def install(server):
-    import bases, bounties, dexrace, draft, guilds, mail, replays, titles, tower, wondertrade
+    import adventure_hof, bases, bounties, dexrace, draft, guilds, mail, replays, titles, tower, wondertrade
 
-    return Ext(server, [guilds, titles, dexrace, wondertrade, bounties, mail, bases, tower, draft, replays])
+    return Ext(server, [guilds, titles, dexrace, wondertrade, bounties, mail, bases, tower, draft, replays, adventure_hof])

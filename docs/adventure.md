@@ -268,6 +268,28 @@ gives 5 trainer XP online (streak growth since the last look, saved in
 A records keeper outside the Ranking Hall (Battle Frontier east, 38,14)
 and R > ADVENTURE > FRONTIER RECORDS show the boards.
 
+## Hall of Fame wall
+
+![The Hall of Fame wall: the curator in the Pokémon League, the wall with three teams from two players, and R > ADVENTURE > HALL OF FAME WALL](images/adventure-hall-of-fame.png)
+
+Every team that enters the Hall of Fame goes up on a wall on the server
+(`src/hall_of_fame_wall.c`, `server/adventure_hof.py`). Entering keeps the
+team (species, level, shiny) in the save (`hofTeam`, `hofPending`), and the
+overworld sends it as soon as the game is online, so a champion who played
+offline still gets on the wall. The same player entering again with the
+same team adds nothing.
+
+It goes through the Online Plaza's request channel
+(`docs/netplay_ext.md`): `HOF ADD` with the team as 24 bytes of data,
+and `HOF LIST`, which answers the 16 newest teams (number, trainer, date,
+`species.level.shiny` per Pokémon) after a `total|mine` line.
+
+The curator in the Pokémon League (Ever Grande City, League 1F, 6,4) and
+R > ADVENTURE > HALL OF FAME WALL show the wall: the newest teams first,
+and the selected team's Pokémon icons with their levels (a star for
+shiny) along the bottom. The server's web page has every team at
+`/halloffame`, linked from the league page.
+
 ## Screenshots
 
 ```sh
@@ -281,11 +303,12 @@ python3 tools/adventure_shots/run.py tools/adventure_shots/regional_forms.lua ou
 python3 tools/adventure_shots/run.py tools/adventure_shots/treasure.lua out/treasure 9000
 python3 tools/adventure_shots/run.py tools/adventure_shots/treasure_online.lua out/treasure_online 8000 2
 python3 tools/adventure_shots/run.py tools/adventure_shots/frontier_online.lua out/frontier_online 7000 2
+python3 tools/adventure_shots/run.py tools/adventure_shots/hall_of_fame.lua out/hall_of_fame 14000 2
 ```
 
 `run.py` is `tools/world_shots/run.py` (headless libmgba, `Driver.scene`,
 two players with a server when the last argument is 2) plus
 `Driver.adventure{xp = ..., outfit = ..., items = {...}, ranch = {...},
 dungeonFloor = ..., wild = "SPECIES", treasure = n,
-frontier = {factory, arena, pyramid}}`, which sets up a scene through
+frontier = {factory, arena, pyramid}, hofEnter = true}`, which sets up a scene through
 `gAdventureShowcase` (`src/adventure.c`).
