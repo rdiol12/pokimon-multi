@@ -1,0 +1,92 @@
+{
+  "id": "MAP_SUNSCAR_RUINS_VAULT",
+  "name": "SunscarRuins_Vault",
+  "layout": "LAYOUT_SUNSCAR_RUINS_VAULT",
+  "music": "MUS_SEALED_CHAMBER",
+  "region": "REGION_HOENN",
+  "region_map_section": "MAPSEC_SUNSCAR_DESERT",
+  "requires_flash": false,
+  "weather": "WEATHER_NONE",
+  "map_type": "MAP_TYPE_UNDERGROUND",
+  "allow_cycling": false,
+  "allow_escaping": true,
+  "allow_running": true,
+  "show_map_name": false,
+  "battle_scene": "MAP_BATTLE_SCENE_NORMAL",
+  "connections": null,
+  "object_events": [
+    {
+      "local_id": "LOCALID_SUNSCAR_SPIRITOMB",
+      "graphics_id": "OBJ_EVENT_GFX_SPECIES(SPIRITOMB)",
+      "x": 10,
+      "y": 5,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_FACE_DOWN",
+      "movement_range_x": 0,
+      "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE",
+      "trainer_sight_or_berry_tree_id": "0",
+      "script": "SunscarRuins_Vault_EventScript_Spiritomb",
+      "flag": "FLAG_HIDE_SUNSCAR_SPIRITOMB"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_ITEM_BALL",
+      "x": 9,
+      "y": 4,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_LOOK_AROUND",
+      "movement_range_x": 0,
+      "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE",
+      "trainer_sight_or_berry_tree_id": "0",
+      "script": "SunscarRuins_Vault_EventScript_Item_OddKeystone",
+      "flag": "FLAG_ITEM_SUNSCAR_ODD_KEYSTONE"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_ITEM_BALL",
+      "x": 4,
+      "y": 10,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_LOOK_AROUND",
+      "movement_range_x": 0,
+      "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE",
+      "trainer_sight_or_berry_tree_id": "0",
+      "script": "SunscarRuins_Vault_EventScript_Item_DuskBall",
+      "flag": "FLAG_ITEM_SUNSCAR_DUSK_BALL"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_ITEM_BALL",
+      "x": 15,
+      "y": 10,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_LOOK_AROUND",
+      "movement_range_x": 0,
+      "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE",
+      "trainer_sight_or_berry_tree_id": "0",
+      "script": "SunscarRuins_Vault_EventScript_Item_RelicGold",
+      "flag": "FLAG_ITEM_SUNSCAR_RELIC_GOLD"
+    }
+  ],
+  "warp_events": [
+    {
+      "x": 10,
+      "y": 13,
+      "elevation": 0,
+      "dest_map": "MAP_SUNSCAR_RUINS_HALL",
+      "dest_warp_id": "1"
+    }
+  ],
+  "coord_events": [],
+  "bg_events": [
+    {
+      "type": "hidden_item",
+      "x": 4,
+      "y": 4,
+      "elevation": 3,
+      "item": "ITEM_RELIC_COPPER",
+      "flag": "FLAG_HIDDEN_ITEM_SUNSCAR_RELIC_COPPER"
+    }
+  ]
+}

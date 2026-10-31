@@ -9455,6 +9455,36 @@
       "secondary_tileset": "gTileset_Cave",
       "border_filepath": "data/layouts/FrostveinCave_B1F/border.bin",
       "blockdata_filepath": "data/layouts/FrostveinCave_B1F/map.bin"
+    },
+    {
+      "id": "LAYOUT_SUNSCAR_DESERT",
+      "name": "SunscarDesert_Layout",
+      "width": 48,
+      "height": 44,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Mauville",
+      "border_filepath": "data/layouts/SunscarDesert/border.bin",
+      "blockdata_filepath": "data/layouts/SunscarDesert/map.bin"
+    },
+    {
+      "id": "LAYOUT_SUNSCAR_RUINS_HALL",
+      "name": "SunscarRuins_Hall_Layout",
+      "width": 24,
+      "height": 20,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Cave",
+      "border_filepath": "data/layouts/SunscarRuins_Hall/border.bin",
+      "blockdata_filepath": "data/layouts/SunscarRuins_Hall/map.bin"
+    },
+    {
+      "id": "LAYOUT_SUNSCAR_RUINS_VAULT",
+      "name": "SunscarRuins_Vault_Layout",
+      "width": 20,
+      "height": 16,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Cave",
+      "border_filepath": "data/layouts/SunscarRuins_Vault/border.bin",
+      "blockdata_filepath": "data/layouts/SunscarRuins_Vault/map.bin"
     }
   ]
 }
