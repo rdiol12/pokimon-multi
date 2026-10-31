@@ -575,10 +575,18 @@ import world  # noqa: E402
 
 world.install(Server)
 
+# Community features (tournaments, daycare, boss, cards, contests, chat,
+# legality checks): server/community.py and server/community_*.py.
+import community  # noqa: E402
+
+community.install(Server)
+
 
 async def serve(host, port, db_path, http_port=0, public_host="", season_days=28):
     server = Server(League(db_path), season_days)
     world.attach(server, db_path)
+    community.attach(server, db_path)
+
     import ext
     import online
 

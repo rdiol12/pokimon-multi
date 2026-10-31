@@ -1,5 +1,6 @@
 import asyncio
 import os
+import struct
 import sys
 import unittest
 
@@ -107,6 +108,23 @@ class ExtTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(answer, b"1|Ash\0" + MON)
         await self.ask(b, "TOWER WON")
         self.assertEqual((await self.ask(b, "TOWER STATE"))[1], b"2|1")
+
+    async def test_hall_of_fame_wall(self):
+        a = await self.connect("Ash", 1)
+        b = await self.connect("Misty", 2)
+        team = struct.pack("<HBB", 25, 50, 1) + struct.pack("<HBB", 1573, 42, 0) + bytes(16)
+        self.assertEqual(await self.ask(a, "HOF ADD", team), (0, b"1|1"))
+        # The same team again is the same entry; a new one goes up.
+        self.assertEqual(await self.ask(a, "HOF ADD", team), (0, b"1|1"))
+        self.assertEqual(await self.ask(b, "HOF ADD", struct.pack("<HBB", 1, 9, 0) + bytes(20)), (0, b"2|2"))
+        status, answer = await self.ask(a, "HOF LIST")
+        rows = [r.split("|") for r in answer.decode().split("\n")]
+        self.assertEqual(rows[0], ["2", "1"])
+        self.assertEqual([r[:2] for r in rows[1:]], [["2", "Misty"], ["1", "Ash"]])
+        self.assertEqual(rows[2][3:], ["25.50.1", "1573.42.0"])
+        self.assertEqual((await self.ask(a, "HOF ADD", bytes(24)))[0], ext.STATUS_BAD)
+        self.assertEqual((await self.ask(a, "HOF ADD", struct.pack("<HBB", 25, 0, 0) + bytes(20)))[0], ext.STATUS_BAD)
+        self.assertEqual((await self.ask(a, "HOF ADD", b"x"))[0], ext.STATUS_BAD)
 
 
 if __name__ == "__main__":

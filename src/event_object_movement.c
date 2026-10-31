@@ -25,6 +25,7 @@
 #include "graphics.h"
 #include "item.h"
 #include "mauville_old_man.h"
+#include "mechanics.h"
 #include "metatile_behavior.h"
 #include "overworld.h"
 #include "palette.h"
@@ -595,6 +596,7 @@ static const struct SpritePalette sObjectEventSpritePalettes[] = {
     {gObjectEventPaletteLight2,             OBJ_EVENT_PAL_TAG_LIGHT_2},
     {gObjectEventPaletteEmotes,             OBJ_EVENT_PAL_TAG_EMOTES},
     {gObjectEventPaletteNeonLight,          OBJ_EVENT_PAL_TAG_NEON_LIGHT},
+    {gObjectEventPal_Eclipse,               OBJ_EVENT_PAL_TAG_ECLIPSE},
 #ifdef BUGFIX
     {NULL,                                  OBJ_EVENT_PAL_TAG_NONE},
 #else
@@ -2436,7 +2438,7 @@ static bool8 SpeciesHasType(enum Species species, u8 type)
 
 // Display an emote above an object event
 // Note that this is not a movement action
-static void ObjectEventEmote(struct ObjectEvent *objEvent, u8 emotion)
+void ObjectEventEmote(struct ObjectEvent *objEvent, u8 emotion)
 {
     emotion %= FOLLOWER_EMOTION_LENGTH;
     ObjectEventGetLocalIdAndMap(objEvent, &gFieldEffectArguments[0], &gFieldEffectArguments[1], &gFieldEffectArguments[2]);
@@ -2602,6 +2604,8 @@ void GetFollowerAction(struct ScriptContext *ctx) // Essentially a big switch fo
     }
     // Set the script to the very end; we'll be calling another script dynamically
     ScriptJump(ctx, EventScript_FollowerEnd);
+    if (Mechanics_TryFollowerPersonaLine(ctx, mon, objEvent))
+        return;
     species = GetMonData(mon, MON_DATA_SPECIES);
     multi = GetMonData(mon, MON_DATA_FRIENDSHIP);
     if (multi > 80)
@@ -2617,6 +2621,7 @@ void GetFollowerAction(struct ScriptContext *ctx) // Essentially a big switch fo
         emotion_weight[FOLLOWER_EMOTION_HAPPY] = 30;
         emotion_weight[FOLLOWER_EMOTION_LOVE] = 30;
     }
+    Mechanics_AdjustFollowerMoods(mon, emotion_weight);
     // Special C-based conditions follower
     // Weather-related
     if (GetCurrentWeather() == WEATHER_SUNNY_CLOUDS)

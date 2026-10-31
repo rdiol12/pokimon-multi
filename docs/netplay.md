@@ -41,6 +41,10 @@ The server JOIN ONLINE connects to is built into the game: set
 2. Pick **JOIN ONLINE** on the title menu (it replaces MYSTERY GIFT).
    CONTINUE plays offline: the bridge doesn't connect.
 
+On a phone, the Android and iOS apps in `mobile/` (see `mobile/README.md`)
+run the same bridge inside the app: no script to load, JOIN ONLINE just
+works.
+
 `NETPLAY_HOST`/`NETPLAY_PORT` globals set before loading the script override
 the address in the game (the copy downloaded from the leaderboard page does
 this).

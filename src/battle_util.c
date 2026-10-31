@@ -37,6 +37,7 @@
 #include "event_data.h"
 #include "link.h"
 #include "malloc.h"
+#include "mechanics.h"
 #include "berry.h"
 #include "pokedex.h"
 #include "mail.h"
@@ -1423,7 +1424,7 @@ static bool32 IsGimmickChosenForAction(enum BattlerId battler, enum Gimmick gimm
 u32 TrySetCantSelectMoveBattleScript(enum BattlerId battler)
 {
     u32 limitations = 0;
-    u8 moveId = gBattleResources->bufferB[battler][2] & ~RET_GIMMICK;
+    u8 moveId = gBattleResources->bufferB[battler][2] & ~(RET_GIMMICK | STYLE_RET_MASK);
     enum Move move = gBattleMons[battler].moves[moveId];
     enum HoldEffect holdEffect = GetBattlerHoldEffect(battler);
     u16 *choicedMove = &gBattleStruct->choicedMove[battler];
@@ -6483,7 +6484,7 @@ static inline u32 CalcMoveBasePowerAfterModifiers(struct DamageContext *ctx)
     enum BattleMoveEffects moveEffect = GetMoveEffect(move);
 
     uq4_12_t holdEffectModifier;
-    uq4_12_t modifier = UQ_4_12(1.0);
+    uq4_12_t modifier = Mechanics_GetStylePowerModifier(battlerAtk);
     u32 atkSide = GetBattlerSide(battlerAtk);
 
     // move effect
@@ -9954,7 +9955,7 @@ bool32 AreMultiPartiesFullTeams(void)
 
     if (TRAINER_BATTLE_PARAM.opponentA == TRAINER_LINK_OPPONENT
      || gBattleTypeFlags & BATTLE_TYPE_TOWER_LINK_MULTI
-     || (gTrainers[difficulty][TRAINER_BATTLE_PARAM.opponentA].multiTeamSize == MULTI_TEAM_SIZE_HALF)
+     || (!IsAreaTrainerId(TRAINER_BATTLE_PARAM.opponentA) && gTrainers[difficulty][TRAINER_BATTLE_PARAM.opponentA].multiTeamSize == MULTI_TEAM_SIZE_HALF)
      || (gTrainers[difficulty][TRAINER_BATTLE_PARAM.opponentB].multiTeamSize == MULTI_TEAM_SIZE_HALF))
     {
         gSpecialVar_Result = FALSE;
@@ -10847,6 +10848,8 @@ bool32 IsBattlerInvalidForSpreadMove(enum BattlerId battlerAtk, enum BattlerId b
 
 bool32 IsAllowedToUseBag(void)
 {
+    if (Mechanics_IsBagBanned())
+        return FALSE;
     switch (VarGet(B_VAR_NO_BAG_USE))
     {
     case NO_BAG_RESTRICTION:

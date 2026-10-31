@@ -23,6 +23,8 @@
 #include "tv.h"
 #include "wild_encounter.h"
 #include "world.h"
+#include "dungeon.h"
+#include "life.h"
 #include "battle_debug.h"
 #include "battle_pike.h"
 #include "battle_pyramid.h"
@@ -573,13 +575,13 @@ bool8 TryGenerateWildMon(const struct WildPokemonInfo *wildMonInfo, enum WildPok
         break;
     }
 
-    level = ChooseWildMonLevel(wildMonInfo->wildPokemon, wildMonIndex, area);
+    level = Dungeon_ModifyWildLevel(ChooseWildMonLevel(wildMonInfo->wildPokemon, wildMonIndex, area));
     if (flags & WILD_CHECK_REPEL && !IsWildLevelAllowedByRepel(level))
         return FALSE;
     if (gMapHeader.mapLayoutId != LAYOUT_BATTLE_FRONTIER_BATTLE_PIKE_ROOM_WILD_MONS && flags & WILD_CHECK_KEEN_EYE && !IsAbilityAllowingEncounter(level))
         return FALSE;
 
-    CreateWildMon(World_ModifyWildSpecies(wildMonInfo->wildPokemon[wildMonIndex].species, level), level);
+    CreateWildMon(Life_ModifyWildSpecies(World_ModifyWildSpecies(wildMonInfo->wildPokemon[wildMonIndex].species, level), level), level);
     return TRUE;
 }
 
@@ -669,7 +671,7 @@ bool8 StandardWildEncounter(u16 curMetatileBehavior, u16 prevMetatileBehavior)
     enum TimeOfDay timeOfDay;
     struct Roamer *roamer;
 
-    if (sWildEncountersDisabled == TRUE)
+    if (sWildEncountersDisabled == TRUE || LifePhoto_IsActive())
         return FALSE;
 
     headerId = GetCurrentMapWildMonHeaderId();

@@ -1,5 +1,6 @@
 #include "global.h"
 #include "adventure.h"
+#include "pastime.h"
 #include "achievements.h"
 #include "battle.h"
 #include "berry.h"
@@ -8,6 +9,7 @@
 #include "field_screen_effect.h"
 #include "script.h"
 #include "main.h"
+#include "mechanics.h"
 #include "overworld.h"
 #include "pokemon.h"
 #include "rtc.h"
@@ -122,6 +124,8 @@ bool32 World_OverworldUpdate(void)
     WorldOnline_Update();
     Achievements_Update();
     Adventure_Update();
+    Mechanics_Update();
+    Pastime_Update();
     if (Online_OverworldUpdate())
         return TRUE;
     return Hardcore_Update();
@@ -130,7 +134,7 @@ bool32 World_OverworldUpdate(void)
 // A pressed facing (x, y), map coordinates with MAP_OFFSET.
 bool32 World_TryInteract(s16 x, s16 y)
 {
-    return Legends_TryInteract(x, y) || House_TryInteract(x, y);
+    return Legends_TryInteract(x, y) || House_TryInteract(x, y) || Adventure_TryInteract(x, y) || Mechanics_TryInteract(x, y) || Pastime_TryInteract(x, y);
 }
 
 bool32 World_TryOpenMenu(void)
@@ -142,6 +146,7 @@ bool32 World_TryOpenMenu(void)
 enum Species World_ModifyWildSpecies(enum Species species, u8 level)
 {
     species = RoamingWeather_ModifyWildSpecies(species, level);
+    species = Adventure_ModifyWildSpecies(species);
     ShinyChain_OnWildSpecies(species);
     return species;
 }
@@ -154,8 +159,9 @@ void World_OnWildBattleEnd(void)
     {
         Achievements_OnCatch(gBattleResults.caughtMonSpecies, gBattleResults.shinyWildMon);
         WorldOnline_OnCatch();
-        Adventure_OnCatch();
+        Adventure_OnCatch(gBattleResults.caughtMonSpecies);
         Online_OnCatch();
+        Pastime_OnCatch();
     }
     ShinyChain_OnWildBattleEnd();
     Records_OnWildBattleEnd();
@@ -165,6 +171,8 @@ void World_OnWildBattleEnd(void)
 void World_OnTrainerBattleEnd(void)
 {
     Adventure_OnTrainerBattleEnd();
+    Pastime_OnTrainerBattleEnd();
     Hardcore_OnBattleEnd(FALSE);
+    Mechanics_OnTrainerBattleEnd();
 }
 

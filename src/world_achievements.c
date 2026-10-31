@@ -204,6 +204,9 @@ static void ShowAchievementBanner(u8 id)
 // free. Only the latest one is kept.
 static EWRAM_DATA u8 sToastTitle[32] = {0};
 static EWRAM_DATA u8 sToastText[48] = {0};
+// EWRAM starts zeroed, and 0 isn't EOS, so the buffers alone can't tell
+// "no toast" apart from an empty one.
+static EWRAM_DATA bool8 sToastPending = FALSE;
 
 void World_ShowToast(const u8 *title, const u8 *text)
 {
@@ -211,6 +214,7 @@ void World_ShowToast(const u8 *title, const u8 *text)
     sToastTitle[sizeof(sToastTitle) - 1] = EOS;
     StringCopyN(sToastText, text, sizeof(sToastText) - 1);
     sToastText[sizeof(sToastText) - 1] = EOS;
+    sToastPending = TRUE;
 }
 
 #undef tTimer
@@ -289,12 +293,12 @@ void Achievements_Update(void)
 
     if ((gMain.vblankCounter1 & 0x7F) == 0)
         CheckCounters();
-    if ((sPendingBanners == 0 && sToastTitle[0] == EOS) || ArePlayerFieldControlsLocked() || FuncIsActiveTask(Task_Banner))
+    if ((sPendingBanners == 0 && !sToastPending) || ArePlayerFieldControlsLocked() || FuncIsActiveTask(Task_Banner))
         return;
     if (sPendingBanners == 0)
     {
         ShowBanner(sToastTitle, sToastText, FALSE);
-        sToastTitle[0] = EOS;
+        sToastPending = FALSE;
         return;
     }
     for (i = 0; i < ACHIEVEMENT_COUNT; i++)

@@ -1,0 +1,16 @@
+{
+  "name": "pokimon-multi-mobile",
+  "private": true,
+  "description": "Phone app for Pokimon Multi: mGBA in a WebView with the netplay bridge",
+  "license": "MPL-2.0",
+  "type": "module",
+  "scripts": {
+    "assemble": "node scripts/assemble.mjs",
+    "e2e": "node test/e2e_two_players.mjs",
+    "serve": "python3 dev/serve.py"
+  },
+  "dependencies": {
+    "@wasm-gaming/mgba-wasm": "0.1.1",
+    "wasmoon": "1.16.0"
+  }
+}

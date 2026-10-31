@@ -18,6 +18,7 @@
 #include "fieldmap.h"
 #include "link.h"
 #include "load_save.h"
+#include "decoration.h"
 #include "main.h"
 #include "menu.h"
 #include "money.h"
@@ -1241,7 +1242,10 @@ struct NetplayDeal
     const u8 *status;
 };
 
-static EWRAM_DATA struct NetplayDeal sDeal = {0};
+// A deal never happens while a decoration is being placed, so the deal state
+// borrows that EWRAM.
+STATIC_ASSERT(sizeof(struct NetplayDeal) <= DECORATION_SCRATCH_SIZE, NetplayDealTooBig);
+#define sDeal (*(struct NetplayDeal *)gDecorationScratch)
 
 static const struct WindowTemplate sDealWindowTemplates[DEAL_WIN_COUNT] =
 {

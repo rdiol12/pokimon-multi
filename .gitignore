@@ -67,3 +67,5 @@ tools/aif2pcm/aif2pcm
 __pycache__
 .map_version
 tools/netplay_bridge/photo-*.png
+src/data/area_trainers.h
+tools/areas/__pycache__/

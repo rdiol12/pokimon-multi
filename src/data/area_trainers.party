@@ -1,0 +1,374 @@
+/* begin ElderwoodForest */
+=== AREA_TRAINER_ELDERWOOD_IVY ===
+Name: IVY
+Class: Pkmn Ranger
+Pic: Pokemon Ranger F
+Gender: Female
+Music: Female
+Double Battle: No
+AI: Basic Trainer
+
+Dartrix
+Level: 36
+
+Tropius
+Level: 37
+
+Leavanny
+Level: 38
+
+=== AREA_TRAINER_ELDERWOOD_HAL ===
+Name: HAL
+Class: Bug Maniac
+Pic: Bug Maniac
+Gender: Male
+Music: Suspicious
+Double Battle: No
+AI: Basic Trainer
+
+Heracross
+Level: 36
+
+Pinsir
+Level: 36
+
+Yanmega
+Level: 37
+
+=== AREA_TRAINER_ELDERWOOD_FERN ===
+Name: FERN
+Class: Aroma Lady
+Pic: Aroma Lady
+Gender: Female
+Music: Female
+Double Battle: No
+AI: Basic Trainer
+
+Steenee
+Level: 36
+
+Comfey
+Level: 37
+
+Breloom
+Level: 37
+/* end ElderwoodForest */
+
+/* begin EmberSprings */
+=== AREA_TRAINER_EMBER_BLAZE ===
+Name: BLAZE
+Class: Kindler
+Pic: Kindler
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Basic Trainer
+
+Magmar
+Level: 31
+
+Torkoal
+Level: 32
+
+=== AREA_TRAINER_EMBER_CINDY ===
+Name: CINDY
+Class: Beauty
+Pic: Beauty
+Gender: Female
+Music: Female
+Double Battle: No
+AI: Basic Trainer
+
+Ponyta
+Level: 31
+
+Vulpix
+Level: 31
+
+Fletchinder
+Level: 32
+
+=== AREA_TRAINER_EMBER_ROCCO ===
+Name: ROCCO
+Class: Hiker
+Pic: Hiker
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Basic Trainer
+
+Rolycoly
+Level: 30
+
+Carkol
+Level: 32
+
+Camerupt
+Level: 33
+
+=== AREA_TRAINER_EMBER_SAKI ===
+Name: SAKI
+Class: Expert
+Pic: Expert F
+Gender: Female
+Music: Intense
+Double Battle: No
+AI: Basic Trainer
+
+Salandit
+Level: 32
+
+Litleo
+Level: 32
+
+Turtonator
+Level: 34
+/* end EmberSprings */
+
+/* begin CinderCaverns */
+=== AREA_TRAINER_CINDER_IGNATIUS ===
+Name: IGNATIUS
+Class: Kindler
+Pic: Kindler
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Basic Trainer
+
+Magmar
+Level: 34
+
+Houndoom
+Level: 35
+
+=== AREA_TRAINER_CINDER_ROSA ===
+Name: ROSA
+Class: Hex Maniac
+Pic: Hex Maniac
+Gender: Female
+Music: Suspicious
+Double Battle: No
+AI: Basic Trainer
+
+Litwick
+Level: 33
+
+Lampent
+Level: 35
+
+Sandygast
+Level: 34
+
+=== AREA_TRAINER_CINDER_BRUNO ===
+Name: BRUNO
+Class: Hiker
+Pic: Hiker
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Basic Trainer
+
+Coalossal
+Level: 36
+
+Magcargo
+Level: 35
+
+=== AREA_TRAINER_CINDER_TESS ===
+Name: TESS
+Class: Cooltrainer
+Pic: Cooltrainer F
+Gender: Female
+Music: Cool
+Double Battle: No
+AI: Basic Trainer
+
+Arcanine
+Level: 36
+
+Salazzle
+Level: 36
+
+Centiskorch
+Level: 37
+/* end CinderCaverns */
+
+/* begin SkyropeCanyon */
+=== AREA_TRAINER_SKYROPE_HAMISH ===
+Name: HAMISH
+Class: Hiker
+Pic: Hiker
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Basic Trainer
+
+Boldore
+Level: 31
+
+Rhyhorn
+Level: 32
+
+=== AREA_TRAINER_SKYROPE_WREN ===
+Name: WREN
+Class: Bird Keeper
+Pic: Bird Keeper
+Gender: Male
+Music: Cool
+Double Battle: No
+AI: Basic Trainer
+
+Rufflet
+Level: 31
+
+Swablu
+Level: 31
+
+Skarmory
+Level: 33
+
+=== AREA_TRAINER_SKYROPE_DAISY ===
+Name: DAISY
+Class: Picnicker
+Pic: Picnicker
+Gender: Female
+Music: Girl
+Double Battle: No
+AI: Basic Trainer
+
+Mudbray
+Level: 32
+
+Marill
+Level: 32
+
+=== AREA_TRAINER_SKYROPE_KOJI ===
+Name: KOJI
+Class: Black Belt
+Pic: Black Belt
+Gender: Male
+Music: Intense
+Double Battle: No
+AI: Basic Trainer
+
+Machoke
+Level: 33
+
+Hawlucha
+Level: 34
+/* end SkyropeCanyon */
+
+/* begin FrostveinCave */
+=== AREA_TRAINER_FROSTVEIN_GLEN ===
+Name: GLEN
+Class: Cooltrainer
+Pic: Cooltrainer M
+Gender: Male
+Music: Cool
+Double Battle: No
+AI: Basic Trainer
+
+Sneasel
+Level: 40
+
+Glalie
+Level: 41
+
+=== AREA_TRAINER_FROSTVEIN_BJORN ===
+Name: BJORN
+Class: Hiker
+Pic: Hiker
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Basic Trainer
+
+Bergmite
+Level: 39
+
+Piloswine
+Level: 41
+
+=== AREA_TRAINER_FROSTVEIN_NIVA ===
+Name: NIVA
+Class: Cooltrainer
+Pic: Cooltrainer F
+Gender: Female
+Music: Cool
+Double Battle: No
+AI: Basic Trainer
+
+Froslass
+Level: 42
+
+Vanillish
+Level: 41
+
+Cryogonal
+Level: 42
+
+=== AREA_TRAINER_FROSTVEIN_SORA ===
+Name: SORA
+Class: Psychic
+Pic: Psychic M
+Gender: Male
+Music: Intense
+Double Battle: No
+AI: Basic Trainer
+
+Jynx
+Level: 42
+
+Smoochum
+Level: 40
+/* end FrostveinCave */
+
+/* begin Sunscar */
+=== AREA_TRAINER_SUNSCAR_DEXTER ===
+Name: DEXTER
+Class: Ruin Maniac
+Pic: Ruin Maniac
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Basic Trainer
+
+Baltoy
+Level: 35
+
+Sigilyph
+Level: 37
+
+=== AREA_TRAINER_SUNSCAR_MILO ===
+Name: MILO
+Class: Camper
+Pic: Camper
+Gender: Male
+Music: Twins
+Double Battle: No
+AI: Basic Trainer
+
+Krokorok
+Level: 36
+
+Vibrava
+Level: 37
+
+=== AREA_TRAINER_SUNSCAR_SABLE ===
+Name: SABLE
+Class: Expert
+Pic: Expert F
+Gender: Female
+Music: Intense
+Double Battle: No
+AI: Basic Trainer
+
+Cacturne
+Level: 37
+
+Hippowdon
+Level: 38
+
+Garchomp
+Level: 36
+/* end Sunscar */

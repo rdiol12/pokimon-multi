@@ -1,5 +1,6 @@
 #include "global.h"
 #include "world.h"
+#include "mechanics.h"
 #include "item_use.h"
 #include "battle.h"
 #include "battle_anim.h"
@@ -1133,6 +1134,8 @@ static u32 GetBallThrowableState(void)
         return BALL_THROW_UNABLE_DISABLED_FLAG;
     else if (Hardcore_IsCatchBlocked())
         return BALL_THROW_UNABLE_HARDCORE;
+    else if (Mechanics_IsCatchBlocked())
+        return BALL_THROW_UNABLE_DISABLED_FLAG;
 
     return BALL_THROW_ABLE;
 }

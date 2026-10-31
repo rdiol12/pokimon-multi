@@ -125,6 +125,8 @@ static const u8* const *GetTrainerSlideArray(enum DifficultyLevel difficulty, u3
 #if TESTING
     return (FlagGet(TESTING_FLAG_TRAINER_SLIDES) ? sTestTrainerSlides[difficulty][trainerId] : NULL);
 #else
+    if (trainerId >= TRAINER_PARTNER(PARTNER_COUNT)) // area trainers (constants/areas.h) have no slides
+        return NULL;
     if (gBattleTypeFlags & BATTLE_TYPE_FRONTIER)
         return sFrontierTrainerSlides[difficulty][trainerId];
     else

@@ -1,6 +1,7 @@
 #ifndef GUARD_NETPLAY_EXT_H
 #define GUARD_NETPLAY_EXT_H
 
+#include "list_menu.h"
 #include "constants/netplay_ext.h"
 
 struct SecretBase;
@@ -55,6 +56,10 @@ enum
 };
 
 #define NPX_MAX_ROWS  24
+
+// Rows for the list screens (the plaza's and the online hub's).
+extern u8 gNpxListText[NPX_MAX_ROWS + 1][32];
+extern struct ListMenuItem gNpxListItems[NPX_MAX_ROWS + 1];
 #define NPX_MAX_COLS  8
 
 bool32 NpxRpc_Begin(const char *word);
@@ -88,5 +93,7 @@ struct NpxRequest
 };
 
 extern const struct NpxRequest gNpxRequests[NPX_REQ_COUNT];
+
+void NetplayExt_RunRequest(const struct NpxRequest *req);
 
 #endif // GUARD_NETPLAY_EXT_H

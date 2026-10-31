@@ -113,8 +113,6 @@ struct OnlineShowcase
 };
 
 EWRAM_DATA struct OnlineShowcase gOnlineShowcase = {0};
-static EWRAM_DATA u8 sItemText[NPX_MAX_ROWS + 1][32] = {0};
-static EWRAM_DATA struct ListMenuItem sItems[NPX_MAX_ROWS + 1] = {0};
 
 extern const u8 Online_EventScript_Hub[];
 extern const u8 Online_EventScript_Notice[];
@@ -650,13 +648,13 @@ void Online_Choose(void)
 
     for (i = 0; i < count; i++)
     {
-        Online_CopyText(sItemText[i], Online_DataField(i, 0), 24);
-        sItems[i].name = sItemText[i];
-        sItems[i].id = i;
+        Online_CopyText(gNpxListText[i], Online_DataField(i, 0), 24);
+        gNpxListItems[i].name = gNpxListText[i];
+        gNpxListItems[i].id = i;
     }
-    sItems[count].name = gText_Cancel;
-    sItems[count].id = LIST_CANCEL;
-    Online_OpenList(sItems, count + 1, Task_Choose);
+    gNpxListItems[count].name = gText_Cancel;
+    gNpxListItems[count].id = LIST_CANCEL;
+    Online_OpenList(gNpxListItems, count + 1, Task_Choose);
 }
 
 #undef tListTaskId
