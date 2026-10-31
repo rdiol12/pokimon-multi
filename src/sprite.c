@@ -250,8 +250,12 @@ const struct OamDimensions gOamDimensions[3][4] =
 };
 
 // iwram bss
-static u16 sSpriteTileRangeTags[MAX_SPRITES];
-static u16 sSpriteTileRanges[MAX_SPRITES][2];
+// (the tile range tables are sized by MAX_SPRITES, so they live in EWRAM to keep IWRAM free)
+EWRAM_DATA static u16 sSpriteTileRangeTags[MAX_SPRITES] = {0};
+EWRAM_DATA static u16 sSpriteTileRanges[MAX_SPRITES][2] = {0};
+// BuildOamBuffer's sort buffers: too big for the IWRAM stack at MAX_SPRITES
+EWRAM_DATA static u32 sSpritePriorities[MAX_SPRITES] = {0};
+EWRAM_DATA static u8 sSkippedSprites[MAX_SPRITES] = {0};
 static struct AffineAnimState sAffineAnimStates[OAM_MATRIX_COUNT];
 static u16 sSpritePaletteTags[PKX_OBJ_PALETTES]; // 16..63 exist only on extended GBA v2
 
@@ -398,9 +402,9 @@ void BuildOamBuffer(void)
     // Index has its own byte even though it only needs 6 bits so that
     // we can load it with a ldrb instead of having to mask out the
     // bottom 6 bits.
-    u32 spritePriorities[MAX_SPRITES];
+    u32 *spritePriorities = sSpritePriorities;
     s32 toSort = 0;
-    u8 skippedSprites[MAX_SPRITES];
+    u8 *skippedSprites = sSkippedSprites;
     u32 skippedSpritesN = 0;
     u32 matrices = 0;
 
