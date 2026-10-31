@@ -1730,6 +1730,10 @@
     {
       "id": "MAPSEC_VERDANT_RIVER",
       "name": "VERDANT RIVER"
+    },
+    {
+      "id": "MAPSEC_IRONMOOR_PRISON",
+      "name": "IRONMOOR PRISON"
     }
   ]
 }

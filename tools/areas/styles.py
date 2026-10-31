@@ -182,3 +182,17 @@ def crystal():
                       0x2BB, 0x2BC, 0x2C3, 0x2C4, 0x204, 0x205}  # ladders, holes, exits and the plank bridges
         _cache['crystal'] = st
     return _cache['crystal']
+
+
+def prison():
+    """Mt. Pyre's slopes and summit: grey-brown rock, sparse grass and
+    graves. Drawn with gTileset_Prison (the same tiles plus the prison art,
+    tools/areas/prison_art.py)."""
+    if 'prison' not in _cache:
+        st = Style('gTileset_General', 'gTileset_Facility', ['LAYOUT_MT_PYRE_EXTERIOR', 'LAYOUT_MT_PYRE_SUMMIT'])
+        st.min_count = 2
+        st.exclude = ({0xCF, 0xAF, 0x2B3, 0x2B4, 0x2B5, 0x2BB, 0x2BC, 0x2BD}  # stairs and the shrine door
+                      | set(range(0x1D8, 0x1E3)) | set(range(0x330, 0x340)))  # the summit's carpet and lights
+        st.secondary = 'gTileset_Prison'
+        _cache['prison'] = st
+    return _cache['prison']

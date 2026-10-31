@@ -195,6 +195,17 @@ const struct Tileset gTileset_Jungle =
     .callback = NULL,
 };
 
+const struct Tileset gTileset_Prison =
+{
+    .isCompressed = TRUE,
+    .isSecondary = TRUE,
+    .tiles = gTilesetTiles_Prison,
+    .palettes = gTilesetPalettes_Prison,
+    .metatiles = gMetatiles_Prison,
+    .metatileAttributes = gMetatileAttributes_Prison,
+    .callback = NULL,
+};
+
 const struct Tileset gTileset_Bamboo =
 {
     .isCompressed = TRUE,
