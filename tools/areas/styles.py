@@ -167,3 +167,18 @@ def plant():
         st.exclude = set(range(0x2B0, 0x2F8)) | {0x22E, 0x236, 0x24F, 0x23E, 0x269, 0x271}
         _cache['plant'] = st
     return _cache['plant']
+
+
+def crystal():
+    """Victory Road and Granite Cave in violet: the Prism Caverns, drawn with
+    gTileset_Crystal (the cave tiles recoloured plus the crystals, pads and
+    camp of tools/areas/crystal_art.py)."""
+    if 'crystal' not in _cache:
+        st = Style('gTileset_General', 'gTileset_Cave',
+                   ['LAYOUT_VICTORY_ROAD_1F', 'LAYOUT_VICTORY_ROAD_B1F', 'LAYOUT_GRANITE_CAVE_B1F'])
+        st.min_count = 1
+        st.secondary = 'gTileset_Crystal'
+        st.exclude = {0x23F, 0x23E, 0x23D, 0x23C, 0x207, 0x22F, 0x0E8, 0x209, 0x252, 0x246, 0x23B, 0x23A, 0x242,
+                      0x2BB, 0x2BC, 0x2C3, 0x2C4, 0x204, 0x205}  # ladders, holes, exits and the plank bridges
+        _cache['crystal'] = st
+    return _cache['crystal']

@@ -1718,6 +1718,10 @@
     {
       "id": "MAPSEC_WONDERWILD_PARK",
       "name": "WONDERWILD PARK"
+    },
+    {
+      "id": "MAPSEC_PRISM_CAVERNS",
+      "name": "PRISM CAVERNS"
     }
   ]
 }

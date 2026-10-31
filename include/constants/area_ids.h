@@ -4,7 +4,7 @@
 // Flags, vars and trainers of each new area. AREA_TRAINER_* index the area
 // trainer table; TRAINER_* are the ids scripts battle.
 
-#define AREA_TRAINERS_COUNT 140
+#define AREA_TRAINERS_COUNT 150
 
 /* begin ElderwoodForest */
 #define FLAG_ELDERWOOD_BOUNSWEET_HOME         AREA_FLAG(0)
@@ -477,5 +477,44 @@
 #define AREA_TRAINER_PARK_GLORIA              139
 #define TRAINER_PARK_GLORIA                   AREA_TRAINER(AREA_TRAINER_PARK_GLORIA)
 /* end WonderwildPark */
+
+/* begin PrismCaverns */
+#define FLAG_PRISM_RUBY                       AREA_FLAG(432)
+#define FLAG_PRISM_SAPPHIRE                   AREA_FLAG(433)
+#define FLAG_PRISM_EMERALD                    AREA_FLAG(434)
+#define FLAG_PRISM_TOPAZ                      AREA_FLAG(435)
+#define FLAG_PRISM_SEAL_OPEN                  AREA_FLAG(436)
+#define FLAG_PRISM_DIANCIE_DONE               AREA_FLAG(437)
+#define FLAG_PRISM_GLIMMET                    AREA_FLAG(438)
+#define FLAG_PRISM_GEOLOGIST_TALKED           AREA_FLAG(439)
+#define FLAG_ITEM_PRISM_ULTRA_BALL            AREA_FLAG(440)
+#define FLAG_ITEM_PRISM_HYPER_POTION          AREA_FLAG(441)
+#define FLAG_ITEM_PRISM_MAX_REPEL             AREA_FLAG(442)
+#define FLAG_ITEM_PRISM_TM_REFLECT            AREA_FLAG(443)
+#define FLAG_ITEM_PRISM_SHINY_STONE           AREA_FLAG(444)
+#define FLAG_ITEM_PRISM_MAX_REVIVE            AREA_FLAG(445)
+#define FLAG_ITEM_PRISM_RARE_CANDY            AREA_FLAG(446)
+#define FLAG_ITEM_PRISM_TM_LIGHT_SCREEN       AREA_FLAG(447)
+#define FLAG_ITEM_PRISM_COMET_SHARD           AREA_FLAG(448)
+#define FLAG_ITEM_PRISM_PP_UP                 AREA_FLAG(449)
+#define FLAG_ITEM_PRISM_FULL_RESTORE          AREA_FLAG(450)
+#define FLAG_HIDDEN_ITEM_PRISM_STAR_PIECE     AREA_FLAG(451)
+#define FLAG_HIDDEN_ITEM_PRISM_STARDUST       AREA_FLAG(452)
+#define FLAG_HIDDEN_ITEM_PRISM_PEARL          AREA_FLAG(453)
+#define FLAG_HIDDEN_ITEM_PRISM_BIG_PEARL      AREA_FLAG(454)
+#define FLAG_HIDDEN_ITEM_PRISM_NUGGET         AREA_FLAG(455)
+#define AREA_TRAINER_PRISM_GARNET             144
+#define TRAINER_PRISM_GARNET                  AREA_TRAINER(AREA_TRAINER_PRISM_GARNET)
+#define AREA_TRAINER_PRISM_QUINN              145
+#define TRAINER_PRISM_QUINN                   AREA_TRAINER(AREA_TRAINER_PRISM_QUINN)
+#define AREA_TRAINER_PRISM_LUCAS              146
+#define TRAINER_PRISM_LUCAS                   AREA_TRAINER(AREA_TRAINER_PRISM_LUCAS)
+#define AREA_TRAINER_PRISM_OSWIN              147
+#define TRAINER_PRISM_OSWIN                   AREA_TRAINER(AREA_TRAINER_PRISM_OSWIN)
+#define AREA_TRAINER_PRISM_BRUNO              148
+#define TRAINER_PRISM_BRUNO                   AREA_TRAINER(AREA_TRAINER_PRISM_BRUNO)
+#define AREA_TRAINER_PRISM_TESSA              149
+#define TRAINER_PRISM_TESSA                   AREA_TRAINER(AREA_TRAINER_PRISM_TESSA)
+/* end PrismCaverns */
 
 #endif // GUARD_CONSTANTS_AREA_IDS_H

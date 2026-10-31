@@ -39968,6 +39968,144 @@
               }
             ]
           }
+        },
+        {
+          "map": "MAP_PRISM_CAVERNS",
+          "base_label": "gPrismCaverns",
+          "land_mons": {
+            "encounter_rate": 8,
+            "mons": [
+              {
+                "min_level": 29,
+                "max_level": 31,
+                "species": "SPECIES_GOLBAT"
+              },
+              {
+                "min_level": 29,
+                "max_level": 31,
+                "species": "SPECIES_BOLDORE"
+              },
+              {
+                "min_level": 29,
+                "max_level": 31,
+                "species": "SPECIES_SABLEYE"
+              },
+              {
+                "min_level": 29,
+                "max_level": 31,
+                "species": "SPECIES_NOSEPASS"
+              },
+              {
+                "min_level": 30,
+                "max_level": 32,
+                "species": "SPECIES_BRONZOR"
+              },
+              {
+                "min_level": 30,
+                "max_level": 32,
+                "species": "SPECIES_GRAVELER"
+              },
+              {
+                "min_level": 30,
+                "max_level": 32,
+                "species": "SPECIES_LAIRON"
+              },
+              {
+                "min_level": 30,
+                "max_level": 32,
+                "species": "SPECIES_CARBINK"
+              },
+              {
+                "min_level": 31,
+                "max_level": 32,
+                "species": "SPECIES_MAWILE"
+              },
+              {
+                "min_level": 31,
+                "max_level": 32,
+                "species": "SPECIES_CHINGLING"
+              },
+              {
+                "min_level": 31,
+                "max_level": 33,
+                "species": "SPECIES_LUNATONE"
+              },
+              {
+                "min_level": 31,
+                "max_level": 33,
+                "species": "SPECIES_SOLROCK"
+              }
+            ]
+          }
+        },
+        {
+          "map": "MAP_PRISM_CAVERNS_DEPTHS",
+          "base_label": "gPrismCavernsDepths",
+          "land_mons": {
+            "encounter_rate": 8,
+            "mons": [
+              {
+                "min_level": 31,
+                "max_level": 33,
+                "species": "SPECIES_GOLBAT"
+              },
+              {
+                "min_level": 31,
+                "max_level": 33,
+                "species": "SPECIES_BOLDORE"
+              },
+              {
+                "min_level": 31,
+                "max_level": 33,
+                "species": "SPECIES_SABLEYE"
+              },
+              {
+                "min_level": 31,
+                "max_level": 33,
+                "species": "SPECIES_CARBINK"
+              },
+              {
+                "min_level": 32,
+                "max_level": 33,
+                "species": "SPECIES_BRONZOR"
+              },
+              {
+                "min_level": 32,
+                "max_level": 33,
+                "species": "SPECIES_LAIRON"
+              },
+              {
+                "min_level": 32,
+                "max_level": 33,
+                "species": "SPECIES_NOSEPASS"
+              },
+              {
+                "min_level": 32,
+                "max_level": 34,
+                "species": "SPECIES_CHIMECHO"
+              },
+              {
+                "min_level": 32,
+                "max_level": 34,
+                "species": "SPECIES_MAWILE"
+              },
+              {
+                "min_level": 33,
+                "max_level": 34,
+                "species": "SPECIES_LUNATONE"
+              },
+              {
+                "min_level": 33,
+                "max_level": 34,
+                "species": "SPECIES_CRYOGONAL"
+              },
+              {
+                "min_level": 34,
+                "max_level": 35,
+                "species": "SPECIES_PROBOPASS"
+              }
+            ]
+          }
         }
       ]
     },
