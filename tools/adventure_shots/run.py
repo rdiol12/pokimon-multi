@@ -8,7 +8,8 @@ The same runner as tools/world_shots/run.py (Driver.scene, two players
 with a server, ...), plus Driver.adventure{...}, which sets up a scene
 through gAdventureShowcase (src/adventure.c):
     xp = trainer XP, outfit = OUTFIT_* number, items = {"ORAN_BERRY", ...}
-    (10 of each, up to 8).
+    (10 of each, up to 8), ranch = {"MARILL", ...} (the RANCH box, up to 6),
+    ranchHoursAgo = hours since the last ranch visit.
 """
 import os
 import sys
@@ -31,6 +32,11 @@ function Driver.adventure(t)
         local id = ITEM_ID[name]
         E.write8(s + 6 + i * 2, id & 0xFF); E.write8(s + 7 + i * 2, id >> 8)
     end
+    for i, name in ipairs(t.ranch or {}) do
+        local id = SPECIES_ID[name]
+        E.write8(s + 22 + i * 2, id & 0xFF); E.write8(s + 23 + i * 2, id >> 8)
+    end
+    if t.ranchHoursAgo then E.write8(s + 36, t.ranchHoursAgo) end
     E.write8(s, 1)
     -- B closes whatever message is still open, so the scene can run.
     Driver.waitFor("the adventure scene", 1800, function() return E.read8(s) == 0 end, function(i)
