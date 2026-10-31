@@ -16,6 +16,7 @@ BRIDGE_PATH = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), "..", "tools", "netplay_bridge", "netplay_bridge.lua"
 )
 WORLD_BRIDGE_PATH = os.path.join(os.path.dirname(BRIDGE_PATH), "netplay_world.lua")
+EXT_BRIDGE_PATH = os.path.join(os.path.dirname(BRIDGE_PATH), "netplay_ext.lua")
 GALLERY_FILE_RE = re.compile(r"^/gallery/([\w.-]+\.png)$")
 
 GALLERY_PAGE = """<!doctype html>
@@ -89,6 +90,10 @@ class Web:
         if os.path.exists(WORLD_BRIDGE_PATH):
             with open(WORLD_BRIDGE_PATH, encoding="utf-8") as f:
                 script = f.read() + "\n" + script
+        # The Online Plaza part goes last: it uses the bridge's NetplayBridge.
+        if os.path.exists(EXT_BRIDGE_PATH):
+            with open(EXT_BRIDGE_PATH, encoding="utf-8") as f:
+                script = script + "\n" + f.read()
         header = f"NETPLAY_HOST = NETPLAY_HOST or {json.dumps(host)}\nNETPLAY_PORT = NETPLAY_PORT or {self.game_port}\n"
         return header + script
 
