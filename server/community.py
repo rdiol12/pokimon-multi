@@ -41,6 +41,7 @@ FEATURES = (
     "community_chat",
     "community_legal",
     "community_fusion",
+    "community_reserve",
 )
 
 OK, OFFLINE = 0, 1

@@ -1734,6 +1734,10 @@
     {
       "id": "MAPSEC_IRONMOOR_PRISON",
       "name": "IRONMOOR PRISON"
+    },
+    {
+      "id": "MAPSEC_HAVEN_RESERVE",
+      "name": "HAVEN RESERVE"
     }
   ]
 }
