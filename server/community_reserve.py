@@ -22,7 +22,7 @@ import time
 import community
 from community import Answer, request
 
-REQ_LIST, REQ_LEAVE, REQ_CLAIM, REQ_RESULT, REQ_LOG = 70, 71, 72, 73, 74
+REQ_LIST, REQ_LEAVE, REQ_CLAIM, REQ_RESULT, REQ_LOG = 75, 76, 77, 78, 79
 GONE, FULL = 2, 3
 END_STILL_HERE, END_CAUGHT, END_KNOCKED_OUT = 0, 1, 2
 LISTED_MINE = 1

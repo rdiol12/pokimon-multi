@@ -57,15 +57,15 @@ gender, shininess and IVs.
 ### Server requests
 
 The reserve uses the community request channel (`gCommunityMailbox`,
-`docs/community.md`), request types 70-74:
+`docs/community.md`), request types 75-79:
 
 | Type | Name | In | Out |
 |---|---|---|---|
-| 70 | `RESERVE_LIST` | | up to 8 roaming: 12 bytes each (id u32, personality u32, species u16, level u8, flags u8: 1 yours, 2 shiny, 4 female); row 1+n = who left each; args: count, residents |
-| 71 | `RESERVE_LEAVE` | args species, level, flags; data: the Pokémon's 80 bytes + 12-byte nickname | args[0] its id; status 3 if the reserve is full |
-| 72 | `RESERVE_CLAIM` | args[0] id | its 80 bytes (none for an NPC trainer's), args species, level, personality; status 2 if gone or someone else is battling it |
-| 73 | `RESERVE_RESULT` | args id, end (0 still here, 1 caught, 2 knocked out) | |
-| 74 | `RESERVE_LOG` | | rows: the latest news |
+| 75 | `RESERVE_LIST` | | up to 8 roaming: 12 bytes each (id u32, personality u32, species u16, level u8, flags u8: 1 yours, 2 shiny, 4 female); row 1+n = who left each; args: count, residents |
+| 76 | `RESERVE_LEAVE` | args species, level, flags; data: the Pokémon's 80 bytes + 12-byte nickname | args[0] its id; status 3 if the reserve is full |
+| 77 | `RESERVE_CLAIM` | args[0] id | its 80 bytes (none for an NPC trainer's), args species, level, personality; status 2 if gone or someone else is battling it |
+| 78 | `RESERVE_RESULT` | args id, end (0 still here, 1 caught, 2 knocked out) | |
+| 79 | `RESERVE_LOG` | | rows: the latest news |
 
 The eight shown are picked fresh every 5 minutes (`NETPLAY_RESERVE_ROTATE_SECONDS`)
 from the residents nobody is battling, the same for everyone. A claim lasts

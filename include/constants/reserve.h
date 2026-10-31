@@ -19,11 +19,11 @@
 #define RESERVE_STRAYS       3
 
 // Requests (gCommunityMailbox.reqType, include/constants/community.h).
-#define COMMUNITY_REQ_RESERVE_LIST   70 // who roams the reserve now
-#define COMMUNITY_REQ_RESERVE_LEAVE  71 // leave a Pokémon there
-#define COMMUNITY_REQ_RESERVE_CLAIM  72 // start a battle with one
-#define COMMUNITY_REQ_RESERVE_RESULT 73 // how that battle ended
-#define COMMUNITY_REQ_RESERVE_LOG    74 // the notice board
+#define COMMUNITY_REQ_RESERVE_LIST   75 // who roams the reserve now
+#define COMMUNITY_REQ_RESERVE_LEAVE  76 // leave a Pokémon there
+#define COMMUNITY_REQ_RESERVE_CLAIM  77 // start a battle with one
+#define COMMUNITY_REQ_RESERVE_RESULT 78 // how that battle ended
+#define COMMUNITY_REQ_RESERVE_LOG    79 // the notice board
 
 // Answer statuses (after COMMUNITY_OK / COMMUNITY_OFFLINE).
 #define RESERVE_GONE 2 // someone else got to it first / it left
