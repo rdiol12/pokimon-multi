@@ -87,6 +87,86 @@ class ServerTest(unittest.IsolatedAsyncioTestCase):
         await a.send("EMOTE 99")
         self.assertTrue((await a.recv()).startswith("ERR"))
 
+    async def friends(self, client):
+        await client.send("FRIENDS")
+        rows = []
+        while (line := await client.recv()) != "FRIENDSEND":
+            rows.append(line)
+        return rows
+
+    async def test_friends(self):
+        a = await self.connect("Ash", 11)
+        b = await self.connect("Misty", 22, map_key=(3, 4), xy=(7, 8))
+        self.assertEqual(await self.friends(a), [])
+        await a.send(f"FRIEND ADD {b.id}")
+        self.assertEqual(await a.recv(), "FRIENDADD ok Misty")
+        await a.send(f"FRIEND ADD {b.id}")  # again: no duplicate
+        self.assertEqual(await a.recv(), "FRIENDADD ok Misty")
+        self.assertEqual(await self.friends(a), [f"FRIEND Misty 22 {b.id} 3 4 7 8 100 0"])
+        self.assertEqual(await self.friends(b), [], "one-way")
+        b.writer.close()
+        await asyncio.sleep(0.05)
+        self.assertEqual(await self.friends(a), ["FRIEND Misty 22 0 0 0 0 0 0 0"])
+        await a.send("FRIEND DEL Misty 22")
+        self.assertEqual(await self.friends(a), [])
+        await a.send(f"FRIEND ADD {a.id}")
+        self.assertTrue((await a.recv()).startswith("ERR"))
+
+    async def market_page(self, client, page=0):
+        await client.send(f"MARKET LIST {page}")
+        rows = []
+        while True:
+            line = await client.recv()
+            if line.startswith("MARKETEND"):
+                return rows, line
+            rows.append(line)
+
+    async def test_market(self):
+        mon = "ab" * 100
+        a = await self.connect("Ash", 11)
+        await a.send(f"MARKET SELL 25 12 500 {mon}")
+        listed = await a.recv()
+        self.assertTrue(listed.startswith("MLISTED ok "))
+        listing = int(listed.split()[2])
+        a.writer.close()  # the listing stays while the seller is away
+        await asyncio.sleep(0.05)
+
+        b = await self.connect("Misty", 22, map_key=(3, 4))
+        self.assertEqual(await self.market_page(b), ([f"MITEM {listing} Ash 25 12 500 0"], "MARKETEND 0 1"))
+        await b.send(f"MARKET BUY {listing}")
+        self.assertEqual(await b.recv(), f"MBOUGHT ok 500 {mon}")
+        await b.send(f"MARKET BUY {listing}")
+        self.assertEqual(await b.recv(), "MBOUGHT gone 0 -")
+        self.assertEqual(await self.market_page(b), ([], "MARKETEND 0 1"))
+
+        a = await self.connect("Ash", 11, map_key=(5, 6))
+        await a.send("MARKET COLLECT")
+        self.assertEqual(await a.recv(), "MCOLLECT 500 1")
+        await a.send("MARKET COLLECT")
+        self.assertEqual(await a.recv(), "MCOLLECT 0 0")
+
+    async def test_market_cancel_and_limits(self):
+        mon = "00" * 100
+        a = await self.connect("Ash", 11)
+        b = await self.connect("Misty", 22, map_key=(3, 4))
+        ids = []
+        for _ in range(5):
+            await a.send(f"MARKET SELL 1 5 10 {mon}")
+            ids.append(int((await a.recv()).split()[2]))
+        await a.send(f"MARKET SELL 1 5 10 {mon}")
+        self.assertEqual(await a.recv(), "MLISTED full 0")
+        rows, end = await self.market_page(a)
+        self.assertEqual((len(rows), end), (5, "MARKETEND 0 1"))
+        self.assertTrue(rows[0].endswith(" 1"), "marked as mine")
+        await a.send(f"MARKET BUY {ids[0]}")
+        self.assertEqual(await a.recv(), "MBOUGHT self 0 -")
+        await b.send(f"MARKET CANCEL {ids[0]}")
+        self.assertEqual(await b.recv(), "MCANCELED gone -", "not theirs")
+        await a.send(f"MARKET CANCEL {ids[0]}")
+        self.assertEqual(await a.recv(), f"MCANCELED ok {mon}")
+        await a.send("MARKET SELL 1 5 0 " + mon)
+        self.assertTrue((await a.recv()).startswith("ERR"), "free listings are refused")
+
     async def test_disconnect_broadcasts_gone(self):
         a = await self.connect("Ash")
         b = await self.connect("Misty")
@@ -118,6 +198,30 @@ class ServerTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(await a.recv(), f"START {sid} {kind} {b.id} 0")
         self.assertEqual(await b.recv(), f"START {sid} {kind} {a.id} 1")
         return a, b, sid
+
+    async def test_spectate(self):
+        a, b, sid = await self.start_session()
+        c = await self.connect("Brock", 33, map_key=(3, 4))
+        state = "258 30 3 90 2 2 263 30 2 70 2 2"
+        await a.send(f"BSTATE {sid} {state}")
+        await a.send(f"BTEXT {sid} Go! MUDKIP!")
+        await c.send("LIVE")
+        self.assertEqual(await c.recv(), f"LIVE {sid} Ash Misty")
+        self.assertEqual(await c.recv(), "LIVEEND")
+        await c.send(f"WATCH {sid}")
+        self.assertEqual(await c.recv(), f"WATCHING {sid}")
+        self.assertEqual(await c.recv(), f"WSTATE {sid} {state}", "caught up")
+        self.assertEqual(await c.recv(), f"WTEXT {sid} Go! MUDKIP!")
+        await a.send(f"BTEXT {sid} MUDKIP used TACKLE!")
+        self.assertEqual(await c.recv(), f"WTEXT {sid} MUDKIP used TACKLE!")
+        await b.send(f"BTEXT {sid} only the host reports")
+        self.assertTrue((await b.recv()).startswith("ERR"))
+        await b.send(f"WATCH {sid}")
+        self.assertEqual(await b.recv(), f"WEND {sid}", "players can't watch their own battle")
+        await a.send(f"QUIT {sid}")
+        self.assertEqual(await c.recv(), f"WEND {sid}")
+        await c.send("LIVE")
+        self.assertEqual(await c.recv(), "LIVEEND")
 
     async def test_link_relay(self):
         a, b, sid = await self.start_session("trade")
@@ -195,6 +299,24 @@ class ServerTest(unittest.IsolatedAsyncioTestCase):
         await a.send("MYRANK")
         self.assertEqual(await a.recv(), "MYRANK 1 1016 1 0 0")
 
+    async def test_season_and_claim(self):
+        a, b, sid = await self.start_session()
+        await a.send("SEASON")
+        self.assertEqual(await a.recv(), "SEASON 1 28 0 1000 -1 0")
+        await a.send(f"RESULT {sid} win")
+        await b.send(f"RESULT {sid} loss")
+        await a.send(f"QUIT {sid}")
+        self.assertEqual(await b.recv(), f"ENDED {sid}")
+        await a.send("SEASON")
+        self.assertEqual(await a.recv(), "SEASON 1 28 1 1016 -1 0")
+        self.server.seasons.end_season(*self.server.seasons.current())
+        await a.send("SEASON")
+        self.assertEqual(await a.recv(), "SEASON 2 28 0 1008 1 1")
+        await a.send("CLAIM")
+        self.assertEqual(await a.recv(), "CLAIMED 1 1")
+        await a.send("CLAIM")
+        self.assertEqual(await a.recv(), "CLAIMED -1 0")
+
     async def test_disputed_results_do_not_count(self):
         a, b, sid = await self.start_session()
         await a.send(f"RESULT {sid} win")
@@ -261,6 +383,38 @@ class ServerTest(unittest.IsolatedAsyncioTestCase):
         sid = (await b.recv()).split()[1]
         await a.send(f"LINK {sid} 00")
         self.assertTrue((await a.recv()).startswith("ERR"))
+
+
+class SeasonTest(unittest.TestCase):
+    def test_season_end_gives_rewards_and_softens_ratings(self):
+        import seasons
+        now = [1000.0]
+        league = ns.League(":memory:")
+        s = seasons.Seasons(league.db, ns.START_RATING, days=1, clock=lambda: now[0])
+        league.record(("A", 1), "win", ("B", 2), "loss")
+        league.db.execute("UPDATE players SET rating = 1240 WHERE name = 'A'")
+        self.assertEqual(s.current()[0], 1)
+        self.assertEqual(s.days_left(), 1)
+        self.assertEqual(s.roll_if_due(), 0)
+        now[0] += seasons.DAY
+        self.assertEqual(s.roll_if_due(), 1)
+        self.assertEqual(s.current()[0], 2)
+        self.assertEqual(s.pending_reward(("A", 1)), (1, 3))  # PLATINUM
+        self.assertEqual(s.pending_reward(("B", 2)), (1, 0))  # BRONZE (984)
+        self.assertEqual(league.rating(("A", 1)), 1120)
+        self.assertEqual(league.rank_of(("A", 1))[0], 0, "unranked until a battle this season")
+        self.assertEqual(s.claim(("A", 1)), (1, 3))
+        self.assertIsNone(s.claim(("A", 1)), "only once")
+        now[0] += 3 * seasons.DAY  # three more seasons pass while nobody plays
+        self.assertEqual(s.roll_if_due(), 3)
+        self.assertEqual(s.current()[0], 5)
+        self.assertIsNone(s.pending_reward(("A", 1)), "no reward without battles")
+        league.db.close()
+
+    def test_tiers(self):
+        import seasons
+        self.assertEqual([seasons.tier_of(r) for r in (0, 999, 1000, 1099, 1100, 1399, 1400, 2000)],
+                         [0, 0, 1, 1, 2, 4, 5, 5])
 
 
 class LeagueTest(unittest.TestCase):

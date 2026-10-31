@@ -10,13 +10,36 @@ Netplay_EventScript_TalkToPlayer::
 	dynmultipush Netplay_Text_Battle, NETPLAY_KIND_BATTLE
 	dynmultipush Netplay_Text_Trade, NETPLAY_KIND_TRADE
 	dynmultipush Netplay_Text_BuySell, NETPLAY_KIND_DEAL
+	dynmultipush Netplay_Text_AddFriend, NETPLAY_KIND_FRIEND
+	dynmultipush Netplay_Text_Coop, NETPLAY_KIND_COOP
 	dynmultipush Netplay_Text_Cancel, NETPLAY_KIND_NONE
-	dynmultistack 0, 0, FALSE, 4, FALSE, NETPLAY_KIND_BATTLE, DYN_MULTICHOICE_CB_NONE
+	dynmultistack 0, 0, FALSE, 6, FALSE, NETPLAY_KIND_BATTLE, DYN_MULTICHOICE_CB_NONE
 	switch VAR_RESULT
 	case NETPLAY_KIND_BATTLE, Netplay_EventScript_SendInvite
+	case NETPLAY_KIND_COOP, Netplay_EventScript_SendInvite
 	case NETPLAY_KIND_TRADE, Netplay_EventScript_SendInvite
 	case NETPLAY_KIND_DEAL, Netplay_EventScript_SendInvite
+	case NETPLAY_KIND_FRIEND, Netplay_EventScript_AddFriend
 	goto Netplay_EventScript_CloseAndRelease
+	end
+
+Netplay_EventScript_AddFriend:
+	special Netplay_AddFriend
+	goto_if_eq VAR_RESULT, NETPLAY_FRIEND_ADD_OK, Netplay_EventScript_FriendAdded
+	goto_if_eq VAR_RESULT, NETPLAY_FRIEND_ADD_FULL, Netplay_EventScript_FriendsFull
+	msgbox Netplay_Text_NoAnswer, MSGBOX_DEFAULT
+	releaseall
+	end
+
+Netplay_EventScript_FriendAdded:
+	playse SE_SUCCESS
+	msgbox Netplay_Text_FriendAdded, MSGBOX_DEFAULT
+	releaseall
+	end
+
+Netplay_EventScript_FriendsFull:
+	msgbox Netplay_Text_FriendsFull, MSGBOX_DEFAULT
+	releaseall
 	end
 
 Netplay_EventScript_SendInvite:
@@ -37,6 +60,7 @@ Netplay_EventScript_Invite::
 	goto_if_eq VAR_RESULT, NETPLAY_KIND_NONE, Netplay_EventScript_ReleaseAll
 	goto_if_eq VAR_RESULT, NETPLAY_KIND_TRADE, Netplay_EventScript_TradeInvite
 	goto_if_eq VAR_RESULT, NETPLAY_KIND_DEAL, Netplay_EventScript_DealInvite
+	goto_if_eq VAR_RESULT, NETPLAY_KIND_COOP, Netplay_EventScript_CoopInvite
 	playse SE_PIN
 	msgbox Netplay_Text_BattleInvite, MSGBOX_YESNO
 	goto Netplay_EventScript_AnswerInvite
@@ -45,6 +69,12 @@ Netplay_EventScript_Invite::
 Netplay_EventScript_TradeInvite:
 	playse SE_PIN
 	msgbox Netplay_Text_TradeInvite, MSGBOX_YESNO
+	goto Netplay_EventScript_AnswerInvite
+	end
+
+Netplay_EventScript_CoopInvite:
+	playse SE_PIN
+	msgbox Netplay_Text_CoopInvite, MSGBOX_YESNO
 	goto Netplay_EventScript_AnswerInvite
 	end
 
@@ -115,6 +145,30 @@ Netplay_EventScript_DealEnd:
 	releaseall
 	end
 
+@ The market board on the wall of every Poké Mart (src/netplay.c).
+Netplay_EventScript_MarketBoard::
+	lockall
+	specialvar VAR_RESULT, Netplay_MarketAvailable
+	goto_if_eq VAR_RESULT, FALSE, Netplay_EventScript_MarketOffline
+	special Netplay_MarketBegin
+Netplay_EventScript_MarketScreen:
+	special Netplay_MarketScreen
+	goto_if_eq VAR_RESULT, NETPLAY_MARKET_SCREEN_SELL, Netplay_EventScript_MarketSell
+	releaseall
+	end
+
+Netplay_EventScript_MarketSell:
+	special ChoosePartyMon
+	waitstate
+	special Netplay_MarketPickedMon
+	goto Netplay_EventScript_MarketScreen
+	end
+
+Netplay_EventScript_MarketOffline:
+	msgbox Netplay_Text_MarketOffline, MSGBOX_DEFAULT
+	releaseall
+	end
+
 Netplay_EventScript_CloseAndRelease:
 	closemessage
 Netplay_EventScript_ReleaseAll:
@@ -128,11 +182,29 @@ Netplay_Text_WhatToDo:
 Netplay_Text_Battle:
 	.string "Battle$"
 
+Netplay_Text_Coop:
+	.string "Co-op battle$"
+
 Netplay_Text_Trade:
 	.string "Trade$"
 
 Netplay_Text_BuySell:
 	.string "Buy/Sell$"
+
+Netplay_Text_AddFriend:
+	.string "Add friend$"
+
+Netplay_Text_FriendAdded:
+	.string "{STR_VAR_1} is now on your friend list!\p"
+	.string "See where your friends are with\n"
+	.string "START {RIGHT_ARROW} ONLINE {RIGHT_ARROW} FRIENDS.$"
+
+Netplay_Text_FriendsFull:
+	.string "Your friend list is full.\n"
+	.string "Remove someone first.$"
+
+Netplay_Text_NoAnswer:
+	.string "The server didn't answer.$"
 
 Netplay_Text_Cancel:
 	.string "Cancel$"
@@ -165,9 +237,19 @@ Netplay_Text_LinkFailed:
 	.string "The link with the other player\n"
 	.string "couldn't be made.$"
 
+Netplay_Text_CoopInvite:
+	.string "{STR_VAR_1} wants to team up against\n"
+	.string "two tough TRAINERS. Join in?$"
+
 Netplay_Text_DealInvite:
 	.string "{STR_VAR_1} wants to make a deal\n"
 	.string "with POKéMON or money. Accept?$"
+
+Netplay_Text_MarketOffline:
+	.string "MARKET BOARD\n"
+	.string "Trainers buy and sell POKéMON here.\p"
+	.string "Pick JOIN ONLINE on the title menu\n"
+	.string "to use it.$"
 
 Netplay_Text_DealDone:
 	.string "The deal is done!$"
