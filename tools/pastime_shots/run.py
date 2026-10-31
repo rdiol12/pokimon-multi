@@ -17,7 +17,7 @@ here = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(here, "..", "world_shots"))
 import run as world_run  # noqa: E402
 
-world_run.SYMBOLS += ["gPastimeSavePtr"]
+world_run.SYMBOLS += ["gPastimeSavePtr", "gLocalTime", "gQuizRound"]
 world_run.HELPERS += """
 -- struct PastimeSaveData (include/pastime_save.h) in SaveBlock3.
 function Driver.pastimeAddr(offset)

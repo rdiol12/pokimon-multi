@@ -27,6 +27,17 @@ struct PastimeSaveData
     u32 deliveryStart;  // play time in seconds when it was picked up
     u16 deliveryLimit;  // seconds allowed
     u16 deliveries;     // parcels delivered
+    // Mail courier routes.
+    u16 mailDay;        // day the route was taken (gLocalTime.days)
+    u8 mailTown;
+    u8 mailLetters;     // a bit per letter still to deliver, | MAIL_ACTIVE or MAIL_PAID
+    u16 mailRoutes;     // routes finished
+    u16 mailLettersDelivered;
+    // Battle quiz hall.
+    u16 quizBest;       // best round score
+    u16 quizPrizeDay;   // day the daily prize was won
+    u16 quizRounds;
+    u16 quizPerfect;    // rounds with every answer right
 };
 
 #endif // GUARD_PASTIME_SAVE_H
