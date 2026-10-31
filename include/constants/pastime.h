@@ -16,6 +16,7 @@
 #define PASTIME_MENU_CAFE       6
 #define PASTIME_MENU_COOKING    7
 #define PASTIME_MENU_BUG_CONTEST 8
+#define PASTIME_MENU_TRADING    9
 #define PASTIME_MENU_CLOSE      31
 
 // NPCs and objects the activities place on maps from code (src/pastime.c)
@@ -99,5 +100,15 @@
 #define BUG_CONTEST_RUNNING    1
 #define BUG_CONTEST_DONE_TODAY 2
 #define WORLD_BOARD_BUG_CONTEST 18 // server leaderboard (server/world.py)
+
+// Trading post in the Slateport market (src/pastime_trading.c).
+#define TRADING_OFFERS      3    // barters a day
+#define TRADING_SWAP_DONE   0x80 // tradeDone bit
+#define TRADING_MENU_SWAP   13
+#define TRADING_MENU_CANCEL 14
+#define TRADING_OK          0    // VAR_RESULT of the checks
+#define TRADING_DONE        1
+#define TRADING_MISSING     2
+#define TRADING_EGG         3
 
 #endif // GUARD_CONSTANTS_PASTIME_H

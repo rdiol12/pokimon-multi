@@ -100,5 +100,12 @@ void BugContest_GetState(void);
 void BugContest_Start(void);
 void BugContest_Judge(void);
 void BugContest_ShowList(void);
+void Trading_PushMenu(void);
+void Trading_CheckBarter(void);
+void Trading_DoBarter(void);
+void Trading_GetSwap(void);
+void Trading_CheckSwapMon(void);
+void Trading_DoSwap(void);
+void Trading_ShowList(void);
 
 #endif // GUARD_PASTIME_H

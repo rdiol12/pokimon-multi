@@ -219,3 +219,19 @@ best catch, best ever, wins and entries, and the board. Hooks:
 `Pastime_ModifyWildSpecies` in `World_ModifyWildSpecies` (`src/world.c`);
 the wild Pokémon is read at battle start (`Pastime_OnBattleStart`).
 Screenshots: `tools/pastime_shots/bug_contest.lua` (two players online).
+
+## Trading post
+
+![Trading post](images/pastime-trading-post.png)
+
+The trader stands at the end of the Slateport market row. Each day he has
+three barters from a pool of 18 (5 Oran Berries for a Sitrus Berry, 5 Great
+Balls for 2 Ultra Balls, a Star Piece for a Thunder Stone, 2 Heart Scales for
+a Fire Stone...), each once a day. He also makes one **Pokémon swap** a
+day: bring a Pokémon of the type he wants and he trades you a Pokémon from
+another region at level 20, holding a gift (a Fire type for SNEASEL "FROSTY"
+with a Quick Claw, a Water type for GROWLITHE "EMBER" with Charcoal, a
+Flying type for DRATINI "NOODLE" with a Dragon Fang, and six more). The
+traded Pokémon has OT TRADER and goes in the same party slot; the Pokédex
+marks it caught. **R > PASTIMES > TRADING POST** lists today's offers (grey
+once done) and the trades made. Screenshots: `tools/pastime_shots/trading.lua`.

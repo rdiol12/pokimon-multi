@@ -64,6 +64,12 @@ struct PastimeSaveData
     u16 bugBestSpecies;
     u16 bugWins;
     u16 bugEntries;
+    // Trading post (src/pastime_trading.c)
+    u16 tradeDay;     // day + 1 the offers below are for
+    u8 tradeDone;     // a bit per barter done today, TRADING_SWAP_DONE
+    u8 tradeFiller;
+    u16 tradeBarters;
+    u16 tradeSwaps;
 };
 
 #endif // GUARD_PASTIME_SAVE_H
