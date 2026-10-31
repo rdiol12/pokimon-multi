@@ -81,6 +81,10 @@ const struct GuideEntry gGuideEntries[] =
 #endif
     ACTIVITY("RULE BATTLES", "A referee in SLATEPORT's BATTLE TENT runs\nINVERSE battles and other rule sets.",
              MAPSEC_SLATEPORT_CITY, 0, 0, FLAG_MECH_MET_REFEREE),
+#ifdef FLAG_VOLT_POWER_ON
+    AREA("VOLTSPIRE PLANT", "A guide in MAUVILLE CITY leads you to the\nold power plant.",
+         MAPSEC_MAUVILLE_CITY, MAP_VOLTSPIRE_PLANT, 3, FLAG_VOLT_POWER_ON),
+#endif
     ACTIVITY("POKéMON JOBS", "The job agent in MAUVILLE's POKéMON CENTER\nsends your POKéMON out on errands.",
              MAPSEC_MAUVILLE_CITY, 0, 0, 0),
     ACTIVITY("BATTLE QUIZ", "The QUIZMASTER in MAUVILLE asks about type\nmatchups. Ten questions a round.",
