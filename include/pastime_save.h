@@ -144,6 +144,12 @@ struct PastimeSaveData
     u8 festivalPrize;    // TRUE once this festival's prize is given
     u16 festivalsDone;
     u16 festivalFiller;
+    // Archaeology digs (src/pastime_dig.c)
+    u16 digDay[DIG_SITES]; // day + 1 each site was last dug
+    u16 digFinds;          // everything unearthed
+    u16 digFossils;
+    u8 digRewards;         // the archaeologist's rewards given
+    u8 digFiller[3];
 };
 
 #endif // GUARD_PASTIME_SAVE_H

@@ -483,3 +483,21 @@ and on summer festival nights (19:00 to 2:00) fireworks burst in three
 colors. **R > PASTIMES > FESTIVALS** lists the festivals, the days until the
 next one and the festivals enjoyed. Screenshots:
 `tools/pastime_shots/festival.lua`.
+
+## Archaeology digs
+
+![Archaeology digs](images/pastime-archaeology.png)
+
+An archaeologist in Fallarbor Town has four dig sites around Mt. Chimney
+(Routes 114, 113, 115 and 111), each marked by a bone poking out of the
+ground. Each site can be dug once a day: three finds are buried in an 8x6
+patch and the player gets 14 digs (the + Control Pad moves the shovel, A
+digs, B stops). An empty square glows red next to a buried find, orange
+two squares away and yellow three away; a find comes out once all its
+squares are dug. The biggest find is a fossil (any of the eleven the
+expansion has, 2x2 squares) or a Rare Bone (2x1); the others are one-square
+treasures like evolution stones, Star Pieces, Heart Scales and Light Clay.
+Fossils can go to the Lilycove Museum's curator. The archaeologist rewards
+3, 10, 20 and 35 finds (Rare Bone, Old Amber, Comet Shard, Ability Patch).
+**R > PASTIMES > DIG SITES** shows which sites are ready today and the
+finds and fossils so far. Screenshots: `tools/pastime_shots/dig.lua`.
