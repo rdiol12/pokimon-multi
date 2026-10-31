@@ -175,6 +175,7 @@ void SetObjectInvisibility(u8 localId, u8 mapNum, u8 mapGroup, bool8 invisible);
 void FreeAndReserveObjectSpritePalettes(void);
 u8 LoadObjectEventPalette(u16 paletteTag);
 u8 LoadObjectEventPaletteCopy(u16 originalTag, u16 copyTag);
+const u16 *GetObjectEventPaletteDataByTag(u16 paletteTag);
 u8 LoadPlayerObjectEventPalette(enum Gender gender);
 void SetObjectEventSpritePosByLocalIdAndMap(u8 localId, u8 mapNum, u8 mapGroup, s16 x, s16 y);
 void ResetObjectSubpriority(u8 localId, u8 mapNum, u8 mapGroup);

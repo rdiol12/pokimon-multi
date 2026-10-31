@@ -1,4 +1,5 @@
 #include "global.h"
+#include "trainer_look.h"
 #include "overworld.h"
 #include "battle_pyramid.h"
 #include "battle_setup.h"
@@ -1869,6 +1870,7 @@ static void OverworldBasic(void)
     ScriptContext_RunScript();
     RunTasks();
     AnimateSprites();
+    TrainerLook_UpdateOverlays();
     CameraUpdate();
     UpdateCameraPanning();
     BuildOamBuffer();

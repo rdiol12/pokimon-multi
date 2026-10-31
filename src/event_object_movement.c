@@ -41,6 +41,7 @@
 #include "sprite.h"
 #include "task.h"
 #include "trainer_see.h"
+#include "trainer_look.h"
 #include "trainer_hill.h"
 #include "util.h"
 #include "wild_encounter.h"
@@ -1896,6 +1897,7 @@ static u8 TrySetupObjectEventSprite(const struct ObjectEventTemplate *objectEven
 
     SetObjectSubpriorityByElevation(objectEvent->previousElevation, sprite, 1);
     UpdateObjectEventVisibility(objectEvent, sprite);
+    TrainerLook_ApplyToObjectEvent(objectEvent);
     return objectEventId;
 }
 
@@ -3064,6 +3066,7 @@ static void SpawnObjectEventOnReturnToField(u8 objectEventId, s16 x, s16 y)
         ResetObjectEventFldEffData(objectEvent);
         SetObjectSubpriorityByElevation(objectEvent->previousElevation, sprite, 1);
         RestoreSavedOWEBehaviorState(objectEvent, sprite);
+        TrainerLook_ApplyToObjectEvent(objectEvent);
     }
 }
 
@@ -3153,6 +3156,7 @@ void ObjectEventSetGraphicsId(struct ObjectEvent *objectEvent, u16 graphicsId)
     objectEvent->graphicsId = graphicsId;
     ObjectEventSetGraphics(objectEvent, GetObjectEventGraphicsInfo(graphicsId));
     objectEvent->graphicsId = graphicsId;
+    TrainerLook_ApplyToObjectEvent(objectEvent);
 }
 
 void ObjectEventTurn(struct ObjectEvent *objectEvent, enum Direction direction)
@@ -3321,6 +3325,14 @@ u8 LoadObjectEventPalette(u16 paletteTag)
     if (i == 0xFF)
         return i;
     return LoadSpritePaletteIfTagExists(&sObjectEventSpritePalettes[i]);
+}
+
+// The colours behind an object event palette tag, or NULL.
+const u16 *GetObjectEventPaletteDataByTag(u16 paletteTag)
+{
+    u32 i = FindObjectEventPaletteIndexByTag(paletteTag);
+
+    return i == 0xFF ? NULL : sObjectEventSpritePalettes[i].data;
 }
 
 u8 LoadObjectEventPaletteCopy(u16 originalTag, u16 copyTag)

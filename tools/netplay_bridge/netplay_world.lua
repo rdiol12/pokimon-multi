@@ -35,6 +35,8 @@ local OFF_REMOTES = 0x034
 local REMOTE_SIZE = 0x18
 local OFF_ROWS = 0x0F4
 local OFF_ACCESSORY = 0x194
+local OFF_TRAINER_LOOK = 0x198  -- u32: colours and accessories (include/trainer_look.h)
+local OFF_REMOTE_TRAINER_LOOKS = 0x19C -- u32 per slot
 local ROW_SIZE = 0x10
 local BOARD_ROWS = 10
 local DECOR_SIZE = 16
@@ -112,7 +114,7 @@ end
 function NetplayWorld:handleLine(cmd, args)
     if cmd == "LOOK" then
         self.looks[tonumber(args[2])] = { follower = tonumber(args[3]), mount = tonumber(args[4]),
-                                          accessory = tonumber(args[5]) or 0 }
+                                          accessory = tonumber(args[5]) or 0, trainer = tonumber(args[6]) or 0 }
     elseif cmd == "HOUSE" then
         self.houses[tonumber(args[2])] = { open = tonumber(args[3]), decor = args[4] }
     elseif cmd == "HUNT" and self.base then
@@ -147,7 +149,8 @@ function NetplayWorld:handleLine(cmd, args)
 end
 
 function NetplayWorld:sendLook(net)
-    local look = string.format("LOOK %d %d %d", self:r16(OFF_FOLLOWER), self:r16(OFF_MOUNT), self:r8(OFF_ACCESSORY))
+    local look = string.format("LOOK %d %d %d %d", self:r16(OFF_FOLLOWER), self:r16(OFF_MOUNT), self:r8(OFF_ACCESSORY),
+                               self:r32(OFF_TRAINER_LOOK))
     if look ~= self.lastLook then
         self.lastLook = look
         net.send(look)
@@ -184,6 +187,7 @@ function NetplayWorld:writeRemotes()
             self:w16(off + 4, look and look.mount or 0)
             self:w8(off + 6, house and house.open or 0)
             self:w8(off + 7, look and look.accessory or 0)
+            self:w32(OFF_REMOTE_TRAINER_LOOKS + slot * 4, look and look.trainer or 0)
             for i = 0, DECOR_SIZE - 1 do
                 local byte = house and tonumber(house.decor:sub(i * 2 + 1, i * 2 + 2), 16) or 0
                 self:w8(off + 8 + i, byte)
@@ -191,6 +195,7 @@ function NetplayWorld:writeRemotes()
             self:w16(off, id)
         else
             self:w16(off, 0)
+            self:w32(OFF_REMOTE_TRAINER_LOOKS + slot * 4, 0)
         end
     end
 end
