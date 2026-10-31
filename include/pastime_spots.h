@@ -25,5 +25,6 @@ struct PastimeSpotList
 
 extern const struct PastimeSpot gLostFoundSpots[]; // an owner and an item each
 extern const struct PastimeSpot gMuseumSpots[];
+extern const struct PastimeSpot gDeliverySpots[];
 
 #endif // GUARD_PASTIME_SPOTS_H

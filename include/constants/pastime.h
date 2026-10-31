@@ -9,6 +9,7 @@
 // R > PASTIMES submenu (data/scripts/pastime/menu.inc).
 #define PASTIME_MENU_LOST_FOUND 0
 #define PASTIME_MENU_MUSEUM     1
+#define PASTIME_MENU_DELIVERY   2
 #define PASTIME_MENU_CLOSE      31
 
 // NPCs and objects the activities place on maps from code (src/pastime.c)
@@ -33,5 +34,13 @@
 #define MUSEUM_RARE_ALREADY   2
 #define MUSEUM_RARE_FULL      3
 #define MUSEUM_RARE_EGG       4
+
+// Delivery jobs (src/pastime_delivery.c).
+#define DELIVERY_TOWN_COUNT 8
+#define DELIVERY_NONE       0xFF
+#define DELIVERY_OFFER      0 // VAR_RESULT of Delivery_Talk
+#define DELIVERY_NO_TOWNS   1
+#define DELIVERY_DELIVERED  2
+#define DELIVERY_ELSEWHERE  3
 
 #endif // GUARD_CONSTANTS_PASTIME_H

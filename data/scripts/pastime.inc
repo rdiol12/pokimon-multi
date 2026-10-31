@@ -3,3 +3,4 @@
 	.include "data/scripts/pastime/menu.inc"
 	.include "data/scripts/pastime/lost.inc"
 	.include "data/scripts/pastime/museum.inc"
+	.include "data/scripts/pastime/delivery.inc"

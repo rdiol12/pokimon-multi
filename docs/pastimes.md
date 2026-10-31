@@ -69,3 +69,23 @@ fossil, rare Pokémon and photo wall section is an exhibit point; at 1, 3,
 Big Nugget, Comet Shard, Ability Patch and finally a Master Ball.
 **R > PASTIMES > MUSEUM** lists the exhibits. Screenshots:
 `tools/pastime_shots/museum.lua`.
+
+## Delivery jobs
+
+![Delivery jobs](images/pastime-delivery.png)
+
+HOENN EXPRESS has a PARCEL DESK outside the Pokémon Center in Oldale,
+Petalburg, Rustboro, Slateport, Mauville, Fallarbor, Fortree and Lilycove
+(plus a VIGOROTH mover at the Slateport head office). A desk offers a
+parcel for another of those towns you've already visited. The time limit is
+90 seconds plus 20 per step of distance on the region map, counted in play
+time; pay is ¥300 plus ¥100 per step.
+
+- Delivered in half the time: **EXPRESS**, +50% pay.
+- In time: full pay. Late: half pay (a notice pops up when time runs out).
+- Every fifth parcel also earns an item (Great Ball, Hyper Potion, Rare
+  Candy, PP Up, Nugget, Ultra Ball, Big Nugget, in turn).
+
+**R > PASTIMES > DELIVERY** shows the parcel, where it goes, the time left
+and the parcels delivered. Talking to another desk while carrying one lets
+you give the job up. Screenshots: `tools/pastime_shots/delivery.lua`.
