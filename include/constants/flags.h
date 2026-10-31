@@ -2448,5 +2448,7 @@
 #define TESTING_FLAG_UNUSED_7                   (TESTING_FLAGS_START + 0x7)
 #endif // TESTING
 
+// Flags of the new areas live in SaveBlock3 (constants/areas.h).
+#include "constants/areas.h"
 
 #endif // GUARD_CONSTANTS_FLAGS_H

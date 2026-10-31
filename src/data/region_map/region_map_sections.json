@@ -1638,6 +1638,10 @@
     {
       "id": "MAPSEC_AMBERWOOD_HOLLOW",
       "name": "AMBERWOOD HOLLOW"
+    },
+    {
+      "id": "MAPSEC_ELDERWOOD_FOREST",
+      "name": "ELDERWOOD FOREST"
     }
   ]
 }

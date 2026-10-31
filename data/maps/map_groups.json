@@ -136,7 +136,8 @@
     "Underwater_Route105",
     "Underwater_Route125",
     "StarfallIsle",
-    "AmberwoodHollow"
+    "AmberwoodHollow",
+    "ElderwoodForest"
   ],
   "gMapGroup_IndoorLittleroot": [
     "LittlerootTown_BrendansHouse_1F",
@@ -263,7 +264,9 @@
     "FortreeCity_House3",
     "FortreeCity_House4",
     "FortreeCity_House5",
-    "FortreeCity_DecorationShop"
+    "FortreeCity_DecorationShop",
+    "ElderwoodForest_ElderHouse",
+    "ElderwoodForest_Lookout"
   ],
   "gMapGroup_IndoorLilycove": [
     "LilycoveCity_CoveLilyMotel_1F",

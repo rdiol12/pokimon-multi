@@ -9375,6 +9375,16 @@
       "border_filepath": "data/layouts/AdventureDungeon/border.bin",
       "blockdata_filepath": "data/layouts/AdventureDungeon/map.bin",
       "layout_version": "emerald"
+    },
+    {
+      "id": "LAYOUT_ELDERWOOD_FOREST",
+      "name": "ElderwoodForest_Layout",
+      "width": 56,
+      "height": 52,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Fortree",
+      "border_filepath": "data/layouts/ElderwoodForest/border.bin",
+      "blockdata_filepath": "data/layouts/ElderwoodForest/map.bin"
     }
   ]
 }

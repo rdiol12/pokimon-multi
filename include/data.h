@@ -3,6 +3,7 @@
 
 #include "constants/moves.h"
 #include "constants/trainers.h"
+#include "constants/areas.h"
 #include "constants/battle.h"
 #include "constants/pokeball.h"
 #include "difficulty.h"
@@ -279,12 +280,21 @@ static inline u16 GetPartnerIdFromTrainerId(u16 trainerId)
 // A trainer that isn't in gTrainers, for the battle in progress
 // (src/life_battle.c).
 extern const struct Trainer *gLifeTrainer;
+extern const struct Trainer gAreaTrainers[DIFFICULTY_COUNT][AREA_TRAINERS_COUNT];
+
+static inline bool32 IsAreaTrainerId(u16 trainerId)
+{
+    return trainerId >= AREA_TRAINERS_START && trainerId < AREA_TRAINERS_START + AREA_TRAINERS_COUNT;
+}
 
 static inline const struct Trainer *GetTrainerStructFromId(u16 trainerId)
 {
     if (gIsDebugBattle) return GetDebugAiTrainer();
     if (gLifeTrainer != NULL) return gLifeTrainer;
     enum DifficultyLevel difficulty;
+
+    if (IsAreaTrainerId(trainerId))
+        return &gAreaTrainers[DIFFICULTY_NORMAL][trainerId - AREA_TRAINERS_START];
 
     if (IsPartnerTrainerId(trainerId))
     {

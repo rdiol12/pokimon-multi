@@ -1,0 +1,46 @@
+-- Elderwood Forest: the guide in Fortree, the forest, the canopy, the
+-- keeper quest, a trainer, the Elder and Zarude in the hidden grove.
+dofile(INSTANCE_DIR .. "/../driver_lib.lua")
+local D, K = Driver, Driver.KEY
+local EW = MAPS.MAP_ELDERWOOD_FOREST
+
+local function say(dir, name, pages)
+    D.talk(dir, name, pages)
+    D.wait(30)
+end
+
+D.run(function()
+    D.boot()
+    D.wait(60)
+    D.flag("FLAG_BADGE06_GET", true)
+    D.scene(12, MAPS.MAP_FORTREE_CITY, 37, 10)
+    D.shot("01-fortree-guide")
+    say(K.UP, "02-guide", 3)
+    D.wait(200)
+    D.waitFor("the overworld", 1200, D.inOverworld)
+    D.wait(120)
+    D.shot("03-arrive")
+    D.scene(12, EW, 27, 40); D.shot("04-clearing")
+    D.scene(12, EW, 16, 12); D.shot("05-treehouses")
+    D.scene(12, EW, 30, 7); D.shot("06-canopy-walkway")
+    D.scene(12, EW, 35, 8); say(K.UP, "07-rowlet", 3)
+    D.scene(12, EW, 13, 33); D.wait(30); D.shot("08-bounsweet-grass")
+    D.scene(12, EW, 32, 37); D.shot("09-pond")
+    D.scene(12, EW, 49, 31); D.shot("10-shrine")
+    -- quest done: the Elder, then Zarude
+    D.flag("FLAG_ELDERWOOD_BOUNSWEET_HOME", true)
+    D.flag("FLAG_ELDERWOOD_ROWLET_HOME", true)
+    D.flag("FLAG_ELDERWOOD_GROOKEY_HOME", true)
+    D.scene(12, MAPS.MAP_ELDERWOOD_FOREST_ELDER_HOUSE, 2, 3)
+    D.shot("13-elder-house")
+    say(K.UP, "14-elder", 6)
+    D.flag("FLAG_ELDERWOOD_QUEST_DONE", true)
+    D.flag("FLAG_TEMP_11", true)
+    D.scene(12, EW, 5, 22)
+    D.shot("15-grove-zarude")
+    say(K.UP, "16-zarude", 1)
+    D.waitFor("the battle", 1500, D.inBattle)
+    D.wait(400)
+    D.shot("17-zarude-battle")
+    D.result("ok")
+end)

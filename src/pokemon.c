@@ -4796,6 +4796,9 @@ s32 GetBattlerMultiplayerId(u16 id)
 
 u8 GetTrainerEncounterMusicId(u16 trainerOpponentId)
 {
+    if (IsAreaTrainerId(trainerOpponentId))
+        return GetTrainerStructFromId(trainerOpponentId)->encounterMusic;
+
     u32 sanitizedTrainerId = SanitizeTrainerId(trainerOpponentId);
     enum DifficultyLevel difficulty = GetTrainerDifficultyLevel(sanitizedTrainerId);
 

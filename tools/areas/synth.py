@@ -1,0 +1,119 @@
+"""Turns a terrain sketch into metatiles by learning from Hoenn's own maps.
+
+A sketch is a grid of terrain classes ('#' wall/tree/rock, '~' water,
+'"' tall grass, '.' floor, plus per-style classes such as 'p' for path).
+For every cell, synth() looks at the 3x3 class neighbourhood and the
+metatiles already chosen to its left and above, and picks the metatile the
+real maps use most often in that situation. That way tree canopies, cliff
+edges and shorelines join up the way Game Freak drew them.
+"""
+import math
+from collections import Counter, defaultdict
+import numpy as np
+from tiles import Pair, layouts, load_blocks
+
+WATER = set(range(0x10, 0x16))
+GRASS = {0x02, 0x03}
+
+
+class Style:
+    def __init__(self, primary, secondary, corpus, classes=None, wall_classes=None):
+        """corpus: layout ids to learn from (same tileset pair).
+        classes: {char: set of metatile ids} for extra floor classes.
+        wall_classes: {char: set of metatile ids} for extra wall classes."""
+        self.primary, self.secondary = primary, secondary
+        self.pair = Pair(primary, secondary)
+        self.classes = classes or {}
+        self.wall_classes = wall_classes or {}
+        self.models = [defaultdict(Counter) for _ in range(8)]
+        self.H, self.V, self.D = defaultdict(Counter), defaultdict(Counter), defaultdict(Counter)
+        self.elev = defaultdict(Counter)
+        L = layouts()
+        for lid in corpus:
+            l = L[lid]
+            if (l['primary_tileset'], l['secondary_tileset']) != (primary, secondary):
+                raise ValueError(f'{lid} uses another tileset')
+            self.learn(load_blocks(l))
+
+    def cls(self, block):
+        m, coll = block & 0x3FF, block >> 10 & 3
+        if coll:
+            for c, s in self.wall_classes.items():
+                if m in s:
+                    return c
+        for c, s in self.classes.items():
+            if m in s:
+                return c
+        beh = self.pair.attr(m) & 0xFF
+        if beh in WATER:
+            return '~'
+        if coll:
+            return '#'
+        if beh in GRASS:
+            return '"'
+        return '.'
+
+    def keys(self, pat, left, up, upright):
+        c = pat[4]
+        cross = pat[1] + pat[3] + pat[4] + pat[5] + pat[7]
+        return [(0, pat, left, up, upright), (1, pat, left, up), (2, pat, left), (3, pat, up), (4, pat),
+                (5, cross, left, up), (6, cross), (7, c)]
+
+    def learn(self, b):
+        h, w = b.shape
+        cl = np.array([[self.cls(int(v)) for v in row] for row in b])
+        pad = np.pad(cl, 1, mode='edge')
+        for y in range(h):
+            for x in range(w):
+                pat = ''.join(pad[y + dy, x + dx] for dy in range(3) for dx in range(3))
+                left = int(b[y, x - 1]) & 0x3FF if x else -1
+                up = int(b[y - 1, x]) & 0x3FF if y else -1
+                upr = int(b[y - 1, x + 1]) & 0x3FF if y and x + 1 < w else -1
+                m = int(b[y, x])
+                if x: self.H[left][m & 0x3FF] += 1
+                if y: self.V[up][m & 0x3FF] += 1
+                if y and x: self.D[int(b[y - 1, x - 1]) & 0x3FF][m & 0x3FF] += 1
+                for i, k in enumerate(self.keys(pat, left, up, upr)):
+                    self.models[i][k[1:]][m & 0x3FF] += 1
+                self.elev[m & 0x3FF][m & 0xFC00] += 1
+
+    def choose(self, pat, left, up, upleft):
+        keys = self.keys(pat, left, up, -1)
+        cands = None
+        for i in (1, 2, 3, 4, 6, 7):
+            cands = self.models[i].get(keys[i][1:])
+            if cands:
+                break
+        if not cands:
+            return None
+        def score(m):
+            sc = math.log(1 + cands[m])
+            for table, prev, wgt in ((self.H, left, 3), (self.V, up, 3), (self.D, upleft, 1)):
+                if prev >= 0:
+                    n = table[prev][m]
+                    sc += wgt * (math.log(1 + n) if n else -4)
+            return sc
+        return max(cands, key=score)
+
+    def synth(self, sketch, fixed=None):
+        """sketch: list of strings. fixed: {(x, y): block} cells already chosen.
+        Returns a uint16 array of map blocks (metatile | collision | elevation)."""
+        h, w = len(sketch), len(sketch[0])
+        pad = [sketch[0][0] * (w + 2)]
+        pad = [''.join([r[0]] + list(r) + [r[-1]]) for r in [sketch[0]] + list(sketch) + [sketch[-1]]]
+        out = np.zeros((h, w), np.uint16)
+        fixed = fixed or {}
+        for y in range(h):
+            for x in range(w):
+                if (x, y) in fixed:
+                    out[y, x] = fixed[(x, y)]
+                    continue
+                pat = ''.join(pad[y + dy][x + dx] for dy in range(3) for dx in range(3))
+                left = int(out[y, x - 1]) & 0x3FF if x else -1
+                up = int(out[y - 1, x]) & 0x3FF if y else -1
+                upr = -1
+                m = self.choose(pat, left, up, int(out[y - 1, x - 1]) & 0x3FF if x and y else -1)
+                if m is None:
+                    raise ValueError(f'no metatile for class {pat[4]!r} at {x},{y}')
+                out[y, x] = m | self.elev[m].most_common(1)[0][0]
+        return out

@@ -37851,6 +37851,160 @@
               }
             ]
           }
+        },
+        {
+          "map": "MAP_ELDERWOOD_FOREST",
+          "base_label": "gElderwoodForest",
+          "land_mons": {
+            "encounter_rate": 20,
+            "mons": [
+              {
+                "min_level": 33,
+                "max_level": 35,
+                "species": "SPECIES_ROWLET"
+              },
+              {
+                "min_level": 33,
+                "max_level": 35,
+                "species": "SPECIES_BOUNSWEET"
+              },
+              {
+                "min_level": 33,
+                "max_level": 35,
+                "species": "SPECIES_SHROOMISH"
+              },
+              {
+                "min_level": 33,
+                "max_level": 35,
+                "species": "SPECIES_SEWADDLE"
+              },
+              {
+                "min_level": 34,
+                "max_level": 36,
+                "species": "SPECIES_TROPIUS"
+              },
+              {
+                "min_level": 34,
+                "max_level": 36,
+                "species": "SPECIES_HERACROSS"
+              },
+              {
+                "min_level": 34,
+                "max_level": 36,
+                "species": "SPECIES_PINSIR"
+              },
+              {
+                "min_level": 33,
+                "max_level": 35,
+                "species": "SPECIES_COMBEE"
+              },
+              {
+                "min_level": 35,
+                "max_level": 37,
+                "species": "SPECIES_STEENEE"
+              },
+              {
+                "min_level": 35,
+                "max_level": 37,
+                "species": "SPECIES_SWADLOON"
+              },
+              {
+                "min_level": 33,
+                "max_level": 35,
+                "species": "SPECIES_GROOKEY"
+              },
+              {
+                "min_level": 37,
+                "max_level": 38,
+                "species": "SPECIES_YANMEGA"
+              }
+            ]
+          },
+          "water_mons": {
+            "encounter_rate": 4,
+            "mons": [
+              {
+                "min_level": 30,
+                "max_level": 35,
+                "species": "SPECIES_LOTAD"
+              },
+              {
+                "min_level": 30,
+                "max_level": 35,
+                "species": "SPECIES_WOOPER"
+              },
+              {
+                "min_level": 33,
+                "max_level": 37,
+                "species": "SPECIES_LOMBRE"
+              },
+              {
+                "min_level": 33,
+                "max_level": 37,
+                "species": "SPECIES_QUAGSIRE"
+              },
+              {
+                "min_level": 35,
+                "max_level": 38,
+                "species": "SPECIES_ARAQUANID"
+              }
+            ]
+          },
+          "fishing_mons": {
+            "encounter_rate": 20,
+            "mons": [
+              {
+                "min_level": 10,
+                "max_level": 30,
+                "species": "SPECIES_MAGIKARP"
+              },
+              {
+                "min_level": 10,
+                "max_level": 30,
+                "species": "SPECIES_GOLDEEN"
+              },
+              {
+                "min_level": 25,
+                "max_level": 30,
+                "species": "SPECIES_POLIWAG"
+              },
+              {
+                "min_level": 25,
+                "max_level": 30,
+                "species": "SPECIES_GOLDEEN"
+              },
+              {
+                "min_level": 25,
+                "max_level": 30,
+                "species": "SPECIES_POLIWHIRL"
+              },
+              {
+                "min_level": 30,
+                "max_level": 35,
+                "species": "SPECIES_POLIWHIRL"
+              },
+              {
+                "min_level": 30,
+                "max_level": 35,
+                "species": "SPECIES_SEAKING"
+              },
+              {
+                "min_level": 30,
+                "max_level": 35,
+                "species": "SPECIES_DEWPIDER"
+              },
+              {
+                "min_level": 35,
+                "max_level": 38,
+                "species": "SPECIES_ARAQUANID"
+              },
+              {
+                "min_level": 38,
+                "max_level": 40,
+                "species": "SPECIES_POLITOED"
+              }
+            ]
+          }
         }
       ]
     },
