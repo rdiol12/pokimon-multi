@@ -9333,6 +9333,16 @@
       "secondary_tileset": "gTileset_Lilycove",
       "border_filepath": "data/layouts/StarfallIsle/border.bin",
       "blockdata_filepath": "data/layouts/StarfallIsle/map.bin"
+    },
+    {
+      "id": "LAYOUT_AMBERWOOD_HOLLOW",
+      "name": "AmberwoodHollow_Layout",
+      "width": 40,
+      "height": 36,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Amberwood",
+      "border_filepath": "data/layouts/AmberwoodHollow/border.bin",
+      "blockdata_filepath": "data/layouts/AmberwoodHollow/map.bin"
     }
   ]
 }
