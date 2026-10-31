@@ -166,8 +166,8 @@ static void ApplyIceFilter(u8 paletteNum, u16 *dest)
 static void LoadObjectRegularReflectionPalette(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
     const struct Sprite *mainSprite = &gSprites[objectEvent->spriteId];
-    u16 baseTag = GetSpritePaletteTagByPaletteNum(mainSprite->oam.paletteNum);
-    u16 paletteTag = REFLECTION_PAL_TAG(baseTag, mainSprite->oam.paletteNum);
+    u16 baseTag = GetSpritePaletteTagByPaletteNum(GetSpritePaletteSlot(mainSprite));
+    u16 paletteTag = REFLECTION_PAL_TAG(baseTag, GetSpritePaletteSlot(mainSprite));
     u8 paletteNum = IndexOfSpritePaletteTag(paletteTag);
     if (paletteNum == 0xFF)
     {
@@ -175,13 +175,13 @@ static void LoadObjectRegularReflectionPalette(struct ObjectEvent *objectEvent, 
         u16 filteredData[16];
         struct SpritePalette filteredPal = {.tag = paletteTag, .data = filteredData};
         if (sprite->sIsStillReflection == FALSE)
-            ApplyPondFilter(mainSprite->oam.paletteNum, filteredData);
+            ApplyPondFilter(GetSpritePaletteSlot(mainSprite), filteredData);
         else
-            ApplyIceFilter(mainSprite->oam.paletteNum, filteredData);
+            ApplyIceFilter(GetSpritePaletteSlot(mainSprite), filteredData);
         paletteNum = LoadSpritePalette(&filteredPal);
         UpdateSpritePaletteWithWeather(paletteNum, TRUE);
     }
-    sprite->oam.paletteNum = paletteNum;
+    SetSpritePaletteSlot(sprite, paletteNum);
     sprite->oam.objMode = ST_OAM_OBJ_BLEND;
 }
 
@@ -192,8 +192,8 @@ static void LoadObjectHighBridgeReflectionPalette(struct ObjectEvent *objectEven
     u16 blueData[16];
     struct SpritePalette bluePalette = {.tag = HIGH_BRIDGE_PAL_TAG, .data = blueData};
     CpuFill16(0x55C9, blueData, PLTT_SIZE_4BPP);
-    sprite->oam.paletteNum = LoadSpritePalette(&bluePalette);
-    UpdateSpritePaletteWithWeather(sprite->oam.paletteNum, TRUE);
+    SetSpritePaletteSlot(sprite, LoadSpritePalette(&bluePalette));
+    UpdateSpritePaletteWithWeather(GetSpritePaletteSlot(sprite), TRUE);
 }
 
 static void UpdateObjectReflectionSprite(struct Sprite *reflectionSprite)
@@ -204,16 +204,16 @@ static void UpdateObjectReflectionSprite(struct Sprite *reflectionSprite)
     if (!objectEvent->active || !objectEvent->hasReflection || objectEvent->localId != reflectionSprite->sReflectionObjEventLocalId)
     {
         reflectionSprite->inUse = FALSE;
-        FieldEffectFreePaletteIfUnused(reflectionSprite->oam.paletteNum);
+        FieldEffectFreePaletteIfUnused(GetSpritePaletteSlot(reflectionSprite));
         return;
     }
 
     // Only filter palette if not using the high bridge blue palette
     // This is basically a copy of LoadObjectRegularReflectionPalette
-    if (IndexOfSpritePaletteTag(HIGH_BRIDGE_PAL_TAG) != reflectionSprite->oam.paletteNum)
+    if (IndexOfSpritePaletteTag(HIGH_BRIDGE_PAL_TAG) != GetSpritePaletteSlot(reflectionSprite))
     {
-        u16 baseTag = GetSpritePaletteTagByPaletteNum(mainSprite->oam.paletteNum);
-        u16 paletteTag = REFLECTION_PAL_TAG(baseTag, mainSprite->oam.paletteNum);
+        u16 baseTag = GetSpritePaletteTagByPaletteNum(GetSpritePaletteSlot(mainSprite));
+        u16 paletteTag = REFLECTION_PAL_TAG(baseTag, GetSpritePaletteSlot(mainSprite));
         u8 paletteNum = IndexOfSpritePaletteTag(paletteTag);
         if (paletteNum == 0xFF)
         {
@@ -222,16 +222,16 @@ static void UpdateObjectReflectionSprite(struct Sprite *reflectionSprite)
             struct SpritePalette filteredPal = {.tag = paletteTag, .data = filteredData};
             // Free palette if unused
             reflectionSprite->inUse = FALSE;
-            FieldEffectFreePaletteIfUnused(reflectionSprite->oam.paletteNum);
+            FieldEffectFreePaletteIfUnused(GetSpritePaletteSlot(reflectionSprite));
             reflectionSprite->inUse = TRUE;
             if (reflectionSprite->sIsStillReflection == FALSE)
-                ApplyPondFilter(mainSprite->oam.paletteNum, filteredData);
+                ApplyPondFilter(GetSpritePaletteSlot(mainSprite), filteredData);
             else
-                ApplyIceFilter(mainSprite->oam.paletteNum, filteredData);
+                ApplyIceFilter(GetSpritePaletteSlot(mainSprite), filteredData);
             paletteNum = LoadSpritePalette(&filteredPal);
             UpdateSpritePaletteWithWeather(paletteNum, TRUE);
         }
-        reflectionSprite->oam.paletteNum = paletteNum;
+        SetSpritePaletteSlot(reflectionSprite, paletteNum);
     }
     reflectionSprite->oam.shape = mainSprite->oam.shape;
     reflectionSprite->oam.size = mainSprite->oam.size;
@@ -283,7 +283,7 @@ u8 CreateWarpArrowSprite(void)
     {
         struct Sprite *sprite = &gSprites[spriteId];
         // Can use either gender's palette, so try to use the one that should be loaded
-        sprite->oam.paletteNum = LoadPlayerObjectEventPalette(gSaveBlock2Ptr->playerGender);
+        SetSpritePaletteSlot(sprite, LoadPlayerObjectEventPalette(gSaveBlock2Ptr->playerGender));
         sprite->oam.priority = 1;
         sprite->coordOffsetEnabled = TRUE;
         sprite->invisible = TRUE;
@@ -1208,7 +1208,7 @@ u32 FldEff_SurfBlob(void)
         sprite->coordOffsetEnabled = TRUE;
         sprite->sPlayerObjId = gFieldEffectArguments[2];
         // Can use either gender's palette, so try to use the one that should be loaded
-        sprite->oam.paletteNum = LoadPlayerObjectEventPalette(gSaveBlock2Ptr->playerGender);
+        SetSpritePaletteSlot(sprite, LoadPlayerObjectEventPalette(gSaveBlock2Ptr->playerGender));
         sprite->sVelocity = -1;
         sprite->sPrevX = -1;
         sprite->sPrevY = -1;
@@ -1557,7 +1557,7 @@ static u32 ShowDisguiseFieldEffect(u8 fldEff, u8 fldEffObj, u8 paletteNum)
     if (spriteId != MAX_SPRITES)
     {
         struct Sprite *sprite = &gSprites[spriteId];
-        sprite->oam.paletteNum = LoadObjectEventPalette(gFieldEffectObjectTemplatePointers[fldEffObj]->paletteTag);
+        SetSpritePaletteSlot(sprite, LoadObjectEventPalette(gFieldEffectObjectTemplatePointers[fldEffObj]->paletteTag));
         sprite->coordOffsetEnabled ++;
         sprite->sFldEff = fldEff;
         sprite->sLocalId = gFieldEffectArguments[0];

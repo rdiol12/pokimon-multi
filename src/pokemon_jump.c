@@ -2845,7 +2845,7 @@ static void UpdateVineAnim(struct PokemonJumpGfx *jumpGfx, int vineState)
     {
         jumpGfx->vineSprites[count]->y = sVineYCoords[i][vineState];
         jumpGfx->vineSprites[count]->oam.priority = priority;
-        jumpGfx->vineSprites[count]->oam.paletteNum = palNum;
+        SetSpritePaletteSlot(jumpGfx->vineSprites[count], palNum);
         StartSpriteAnim(jumpGfx->vineSprites[count], vineState);
         count++;
     }
@@ -2854,7 +2854,7 @@ static void UpdateVineAnim(struct PokemonJumpGfx *jumpGfx, int vineState)
     {
         jumpGfx->vineSprites[count]->y = sVineYCoords[i][vineState];
         jumpGfx->vineSprites[count]->oam.priority = priority;
-        jumpGfx->vineSprites[count]->oam.paletteNum = palNum;
+        SetSpritePaletteSlot(jumpGfx->vineSprites[count], palNum);
         StartSpriteAnim(jumpGfx->vineSprites[count], vineState);
         count++;
     }

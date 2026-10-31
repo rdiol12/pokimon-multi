@@ -271,7 +271,7 @@ void EvolutionScene(struct Pokemon *mon, enum Species postEvoSpecies, bool32 can
     sEvoStructPtr->preEvoSpriteId = id = CreateSprite(&gMultiuseSpriteTemplate, 120, 64, 30);
 
     gSprites[id].callback = SpriteCallbackDummy_2;
-    gSprites[id].oam.paletteNum = 1;
+    SetSpritePaletteSlot(&gSprites[id], 1);
     gSprites[id].invisible = TRUE;
 
     // postEvo sprite
@@ -285,7 +285,7 @@ void EvolutionScene(struct Pokemon *mon, enum Species postEvoSpecies, bool32 can
     gMultiuseSpriteTemplate.affineAnims = gDummySpriteAffineAnimTable;
     sEvoStructPtr->postEvoSpriteId = id = CreateSprite(&gMultiuseSpriteTemplate, 120, 64, 30);
     gSprites[id].callback = SpriteCallbackDummy_2;
-    gSprites[id].oam.paletteNum = 2;
+    SetSpritePaletteSlot(&gSprites[id], 2);
     gSprites[id].invisible = TRUE;
 
     LoadEvoSparkleSpriteAndPal();
@@ -363,7 +363,7 @@ static void CB2_EvolutionSceneLoadGraphics(void)
     sEvoStructPtr->postEvoSpriteId = id = CreateSprite(&gMultiuseSpriteTemplate, 120, 64, 30);
 
     gSprites[id].callback = SpriteCallbackDummy_2;
-    gSprites[id].oam.paletteNum = 2;
+    SetSpritePaletteSlot(&gSprites[id], 2);
 
     SetGpuReg(REG_OFFSET_DISPCNT, DISPCNT_OBJ_ON | DISPCNT_BG_ALL_ON | DISPCNT_OBJ_1D_MAP);
 
@@ -443,7 +443,7 @@ static void CB2_TradeEvolutionSceneLoadGraphics(void)
             sEvoStructPtr->postEvoSpriteId = id = CreateSprite(&gMultiuseSpriteTemplate, 120, 64, 30);
 
             gSprites[id].callback = SpriteCallbackDummy_2;
-            gSprites[id].oam.paletteNum = 2;
+            SetSpritePaletteSlot(&gSprites[id], 2);
             gMain.state++;
             LinkTradeDrawWindow();
         }
@@ -502,7 +502,7 @@ void TradeEvolutionScene(struct Pokemon *mon, enum Species postEvoSpecies, u8 pr
     sEvoStructPtr->postEvoSpriteId = id = CreateSprite(&gMultiuseSpriteTemplate, 120, 64, 30);
 
     gSprites[id].callback = SpriteCallbackDummy_2;
-    gSprites[id].oam.paletteNum = 2;
+    SetSpritePaletteSlot(&gSprites[id], 2);
     gSprites[id].invisible = TRUE;
 
     LoadEvoSparkleSpriteAndPal();
@@ -1146,7 +1146,7 @@ static void Task_TradeEvolutionScene(u8 taskId)
         if (!gPaletteFade.active)
         {
             StartBgAnimation(TRUE);
-            var = gSprites[sEvoStructPtr->preEvoSpriteId].oam.paletteNum + 16;
+            var = GetSpritePaletteSlot(&gSprites[sEvoStructPtr->preEvoSpriteId]) + 16;
             sEvoGraphicsTaskId = EvolutionSparkles_SpiralUpward(var);
             gTasks[taskId].tState++;
             SetGpuReg(REG_OFFSET_BG3CNT, BGCNT_PRIORITY(3) | BGCNT_SCREENBASE(6));
@@ -1261,7 +1261,7 @@ static void Task_TradeEvolutionScene(u8 taskId)
         if (!gTasks[sEvoGraphicsTaskId].isActive)
         {
             m4aMPlayAllStop();
-            BeginNormalPaletteFade((1 << (gSprites[sEvoStructPtr->preEvoSpriteId].oam.paletteNum + 16)) | (0x4001C), 0, 0x10, 0, RGB_WHITE);
+            BeginNormalPaletteFade((1 << (GetSpritePaletteSlot(&gSprites[sEvoStructPtr->preEvoSpriteId]) + 16)) | (0x4001C), 0, 0x10, 0, RGB_WHITE);
             gTasks[taskId].tState++;
         }
         break;

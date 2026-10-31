@@ -42,6 +42,7 @@ struct WeatherCallbacks
 static bool8 LightenSpritePaletteInFog(u8);
 static void UpdateWeatherColorMap(void);
 static void ApplyColorMap(u8 startPalIndex, u8 numPalettes, s8 colorMapIndex);
+static void ApplyColorMapRange(u8 startPalIndex, u8 numPalettes, s8 colorMapIndex);
 static void ApplyColorMapWithBlend(u8 startPalIndex, u8 numPalettes, s8 colorMapIndex, u8 blendCoeff, u32 blendColor);
 static void ApplyDroughtColorMapWithBlend(s8 colorMapIndex, u8 blendCoeff, u32 blendColor);
 static void ApplyFogBlend(u8 blendCoeff, u32 blendColor);
@@ -58,7 +59,9 @@ static u8 None_Finish(void);
 static bool32 IsSpritePalTagBlendImmune(u32 palIndex);
 
 EWRAM_DATA struct Weather gWeather = {0};
-EWRAM_DATA static u8 ALIGNED(2) sFieldEffectPaletteColorMapTypes[32] = {0};
+// 16 background palettes, then sprite palettes 0..63 (16..63 exist on extended GBA v2)
+#define NUM_COLOR_MAP_PALETTES (16 + PKX_OBJ_PALETTES)
+EWRAM_DATA static u8 ALIGNED(2) sFieldEffectPaletteColorMapTypes[NUM_COLOR_MAP_PALETTES] = {0};
 
 static const u8 *sPaletteColorMapTypes;
 
@@ -446,12 +449,63 @@ static bool8 FadeInScreen_FogHorizontal(void)
 static void DoNothing(void)
 { }
 
+// Weather palette indexes 32+ are the extended sprite palettes 16..63
+static u32 GetPaletteColorMapType(u32 palIndex)
+{
+    if (palIndex < 32 || sPaletteColorMapTypes == sFieldEffectPaletteColorMapTypes)
+        return sPaletteColorMapTypes[palIndex];
+    return COLOR_MAP_DARK_CONTRAST;
+}
+
+// The palette after palIndex to process when going through all palettes: 0..31, then the
+// extended sprite palettes in use.
+static u32 NextWeatherPalIndex(u32 palIndex)
+{
+    u64 ext;
+    palIndex++;
+    if (palIndex < 32)
+        return palIndex;
+    ext = GetExtSpritePalettesInUse() >> (palIndex - 32);
+    while (ext != 0 && !(ext & 1))
+    {
+        ext >>= 1;
+        palIndex++;
+    }
+    return ext != 0 ? palIndex : NUM_COLOR_MAP_PALETTES;
+}
+
+static void UpdatePaletteWithTime(u32 palIndex)
+{
+    if (palIndex < 32)
+        UpdatePalettesWithTime(1u << palIndex);
+    else
+        UpdateSpritePaletteWithTime(palIndex - 16);
+}
+
 static bool32 IsSpritePalTagBlendImmune(u32 palIndex)
 {
     return (palIndex >= 16 && IS_BLEND_IMMUNE_TAG(GetSpritePaletteTagByPaletteNum(palIndex - 16)));
 }
 
 static void ApplyColorMap(u8 startPalIndex, u8 numPalettes, s8 colorMapIndex)
+{
+    u32 end = startPalIndex + numPalettes;
+    if (startPalIndex >= 32)
+    {
+        ApplyColorMapRange(startPalIndex, numPalettes, colorMapIndex);
+        return;
+    }
+    ApplyColorMapRange(startPalIndex, min(end, 32) - startPalIndex, colorMapIndex);
+    // A range covering every sprite palette also covers the extended ones
+    if (startPalIndex <= 16 && end >= 32)
+    {
+        u32 i;
+        for (i = NextWeatherPalIndex(31); i < NUM_COLOR_MAP_PALETTES; i = NextWeatherPalIndex(i))
+            ApplyColorMapRange(i, 1, colorMapIndex);
+    }
+}
+
+static void ApplyColorMapRange(u8 startPalIndex, u8 numPalettes, s8 colorMapIndex)
 {
     u16 curPalIndex;
     u16 palOffset;
@@ -463,14 +517,23 @@ static void ApplyColorMap(u8 startPalIndex, u8 numPalettes, s8 colorMapIndex)
         // Create the palette mask
         u32 palettes = PALETTES_ALL;
         numPalettes += startPalIndex;
-        palettes = (palettes >> startPalIndex) << startPalIndex;
-        palettes = (palettes << (32 - numPalettes)) >> (32 - numPalettes);
+        if (startPalIndex < 32)
+        {
+            palettes = (palettes >> startPalIndex) << startPalIndex;
+            palettes = (palettes << (32 - numPalettes)) >> (32 - numPalettes);
+        }
+        else
+        {
+            palettes = 0; // an extended sprite palette
+        }
         numPalettes -= startPalIndex;
         colorMapIndex--;
         palOffset = PLTT_ID(startPalIndex);
         UpdateAltBgPalettes(palettes & PALETTES_BG);
         // Thunder gamma-shift looks bad on night-blended palettes, so ignore time blending in some situations
-        if (colorMapIndex <= 3 && MapHasNaturalLight(gMapHeader.mapType))
+        if (colorMapIndex <= 3 && MapHasNaturalLight(gMapHeader.mapType) && startPalIndex >= 32)
+            UpdatePaletteWithTime(startPalIndex);
+        else if (colorMapIndex <= 3 && MapHasNaturalLight(gMapHeader.mapType))
             UpdatePalettesWithTime(palettes);
         else
             CpuFastCopy(gPlttBufferUnfaded + palOffset, gPlttBufferFaded + palOffset, PLTT_SIZE_4BPP * numPalettes);
@@ -481,7 +544,7 @@ static void ApplyColorMap(u8 startPalIndex, u8 numPalettes, s8 colorMapIndex)
         while (curPalIndex < numPalettes)
         {
             // don't blend special palettes immune to blending
-            if (sPaletteColorMapTypes[curPalIndex] == COLOR_MAP_NONE || IsSpritePalTagBlendImmune(curPalIndex))
+            if (GetPaletteColorMapType(curPalIndex) == COLOR_MAP_NONE || IsSpritePalTagBlendImmune(curPalIndex))
             {
                 // No palette change.
                 palOffset += 16;
@@ -490,7 +553,7 @@ static void ApplyColorMap(u8 startPalIndex, u8 numPalettes, s8 colorMapIndex)
             {
                 u8 r, g, b;
 
-                if (sPaletteColorMapTypes[curPalIndex] == COLOR_MAP_CONTRAST || curPalIndex - 16 == gWeatherPtr->contrastColorMapSpritePalIndex)
+                if (GetPaletteColorMapType(curPalIndex) == COLOR_MAP_CONTRAST || curPalIndex - 16 == gWeatherPtr->contrastColorMapSpritePalIndex)
                     colorMap = sContrastColorMaps[colorMapIndex];
                 else
                     colorMap = sDarkenedContrastColorMaps[colorMapIndex];
@@ -519,7 +582,7 @@ static void ApplyColorMap(u8 startPalIndex, u8 numPalettes, s8 colorMapIndex)
 
         while (curPalIndex < numPalettes)
         {
-            if (sPaletteColorMapTypes[curPalIndex] == COLOR_MAP_NONE || IsSpritePalTagBlendImmune(curPalIndex))
+            if (GetPaletteColorMapType(curPalIndex) == COLOR_MAP_NONE || IsSpritePalTagBlendImmune(curPalIndex))
             {
                 // No palette change.
                 CpuFastCopy(&gPlttBufferUnfaded[palOffset], &gPlttBufferFaded[palOffset], PLTT_SIZE_4BPP);
@@ -542,9 +605,16 @@ static void ApplyColorMap(u8 startPalIndex, u8 numPalettes, s8 colorMapIndex)
         if (MapHasNaturalLight(gMapHeader.mapType))
         {
             // Time-blend
-            u32 palettes = ((1 << numPalettes) - 1) << startPalIndex;
-            UpdateAltBgPalettes(palettes & PALETTES_BG);
-            UpdatePalettesWithTime(palettes);
+            if (startPalIndex >= 32)
+            {
+                UpdatePaletteWithTime(startPalIndex);
+            }
+            else
+            {
+                u32 palettes = (numPalettes >= 32 ? PALETTES_ALL : ((1u << numPalettes) - 1)) << startPalIndex;
+                UpdateAltBgPalettes(palettes & PALETTES_BG);
+                UpdatePalettesWithTime(palettes);
+            }
         }
         else
         {
@@ -568,12 +638,17 @@ static void ApplyColorMapWithBlend(u8 startPalIndex, u8 numPalettes, s8 colorMap
     colorMapIndex--;
     curPalIndex = startPalIndex;
 
+    // A range covering every sprite palette also covers the extended ones
+    if (startPalIndex <= 16 && numPalettes >= 32)
+        numPalettes = NUM_COLOR_MAP_PALETTES;
     while (curPalIndex < numPalettes)
     {
-        UpdateAltBgPalettes((1 << (palOffset >> 4)) & PALETTES_BG);
+        palOffset = PLTT_ID(curPalIndex);
+        if (curPalIndex < 16)
+            UpdateAltBgPalettes((1 << curPalIndex) & PALETTES_BG);
         CpuFastCopy(gPlttBufferUnfaded + palOffset, gPlttBufferFaded + palOffset, 16 * sizeof(u16));
-        UpdatePalettesWithTime(1 << (palOffset >> 4)); // Apply TOD blend
-        if (sPaletteColorMapTypes[curPalIndex] == COLOR_MAP_NONE || IsSpritePalTagBlendImmune(curPalIndex))
+        UpdatePaletteWithTime(curPalIndex); // Apply TOD blend
+        if (GetPaletteColorMapType(curPalIndex) == COLOR_MAP_NONE || IsSpritePalTagBlendImmune(curPalIndex))
         {
             // No color map. Simply blend the colors.
             BlendPalettesFine(1, gPlttBufferFaded + palOffset, gPlttBufferFaded + palOffset, blendCoeff, blendColor);
@@ -583,7 +658,7 @@ static void ApplyColorMapWithBlend(u8 startPalIndex, u8 numPalettes, s8 colorMap
         {
             const u8 *colorMap;
 
-            if (sPaletteColorMapTypes[curPalIndex] == COLOR_MAP_DARK_CONTRAST)
+            if (GetPaletteColorMapType(curPalIndex) == COLOR_MAP_DARK_CONTRAST)
                 colorMap = sDarkenedContrastColorMaps[colorMapIndex];
             else
                 colorMap = sContrastColorMaps[colorMapIndex];
@@ -603,7 +678,7 @@ static void ApplyColorMapWithBlend(u8 startPalIndex, u8 numPalettes, s8 colorMap
             }
         }
 
-        curPalIndex++;
+        curPalIndex = NextWeatherPalIndex(curPalIndex);
     }
 }
 
@@ -622,10 +697,10 @@ static void ApplyDroughtColorMapWithBlend(s8 colorMapIndex, u8 blendCoeff, u32 b
     rBlend = color.r;
     gBlend = color.g;
     bBlend = color.b;
-    palOffset = 0;
-    for (curPalIndex = 0; curPalIndex < 32; curPalIndex++)
+    for (curPalIndex = 0; curPalIndex < NUM_COLOR_MAP_PALETTES; curPalIndex = NextWeatherPalIndex(curPalIndex))
     {
-        if (sPaletteColorMapTypes[curPalIndex] == COLOR_MAP_NONE|| IsSpritePalTagBlendImmune(curPalIndex))
+        palOffset = PLTT_ID(curPalIndex);
+        if (GetPaletteColorMapType(curPalIndex) == COLOR_MAP_NONE || IsSpritePalTagBlendImmune(curPalIndex))
         {
             // No color map. Simply blend the colors.
             BlendPalette(palOffset, 16, blendCoeff, blendColor);
@@ -671,13 +746,13 @@ static void ApplyFogBlend(u8 blendCoeff, u32 blendColor)
 
     // First blend all palettes with time
     UpdateAltBgPalettes(PALETTES_BG);
-    CpuFastCopy(gPlttBufferUnfaded, gPlttBufferFaded, PLTT_BUFFER_SIZE * 2);
+    CpuFastCopy(gPlttBufferUnfaded, gPlttBufferFaded, sizeof(gPlttBufferFaded));
     UpdatePalettesWithTime(PALETTES_ALL);
     // Then blend tile palettes [0, 12] faded->faded with fadeIn color
     BlendPalettesFine(PALETTES_MAP, gPlttBufferFaded, gPlttBufferFaded, blendCoeff, blendColor);
 
     // Do fog blending on marked sprite palettes
-    for (curPalIndex = 16; curPalIndex < 32; curPalIndex++)
+    for (curPalIndex = 16; curPalIndex < NUM_COLOR_MAP_PALETTES; curPalIndex = NextWeatherPalIndex(curPalIndex))
     {
         if (LightenSpritePaletteInFog(curPalIndex))
             BlendPalettesFine(1, gPlttBufferFaded + PLTT_ID(curPalIndex), gPlttBufferFaded + PLTT_ID(curPalIndex), fogCoeff, RGB(28, 31, 28));
@@ -1162,15 +1237,17 @@ void SetWeatherPalStateIdle(void)
 
 const u8 *SetPaletteColorMapType(u8 paletteIndex, enum ColorMapType colorMapType)
 {
-    if (sPaletteColorMapTypes[paletteIndex] == colorMapType)
+    if (GetPaletteColorMapType(paletteIndex) == colorMapType)
         return sPaletteColorMapTypes;
     // setup field effect color map
     if (sPaletteColorMapTypes != sFieldEffectPaletteColorMapTypes)
     {
         CpuCopy16(sBasePaletteColorMapTypes, sFieldEffectPaletteColorMapTypes, 32);
+        memset(&sFieldEffectPaletteColorMapTypes[32], COLOR_MAP_DARK_CONTRAST, NUM_COLOR_MAP_PALETTES - 32);
         sPaletteColorMapTypes = sFieldEffectPaletteColorMapTypes;
     }
-    sFieldEffectPaletteColorMapTypes[paletteIndex] = colorMapType;
+    if (paletteIndex < NUM_COLOR_MAP_PALETTES)
+        sFieldEffectPaletteColorMapTypes[paletteIndex] = colorMapType;
     return sPaletteColorMapTypes;
 }
 
@@ -1181,8 +1258,8 @@ void PreservePaletteInWeather(u8 preservedPalIndex)
 
 void ResetPaletteColorMapType(u8 paletteIndex)
 {
-    if (sPaletteColorMapTypes != sBasePaletteColorMapTypes)
-        sFieldEffectPaletteColorMapTypes[paletteIndex] = sBasePaletteColorMapTypes[paletteIndex];
+    if (sPaletteColorMapTypes != sBasePaletteColorMapTypes && paletteIndex < NUM_COLOR_MAP_PALETTES)
+        sFieldEffectPaletteColorMapTypes[paletteIndex] = paletteIndex < 32 ? sBasePaletteColorMapTypes[paletteIndex] : COLOR_MAP_DARK_CONTRAST;
 }
 
 void ResetPreservedPalettesInWeather(void)

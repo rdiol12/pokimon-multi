@@ -2842,7 +2842,7 @@ static void SpriteCB_WaterDrop_Ripple(struct Sprite *sprite)
             palNum = (sprite->data[2] - 192) / 128 + 9;
             if (palNum > 15)
                 palNum = 15;
-            sprite->oam.paletteNum = palNum;
+            SetSpritePaletteSlot(sprite, palNum);
         }
     }
     else

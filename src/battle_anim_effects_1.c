@@ -5691,7 +5691,7 @@ static void AnimLockOnTarget_Step4(struct Sprite *sprite)
     {
         int pal;
         sprite->data[2]++;
-        pal = sprite->oam.paletteNum;
+        pal = GetSpritePaletteSlot(sprite);
         LoadPalette(&gPlttBufferUnfaded[OBJ_PLTT_ID(pal) + 8], OBJ_PLTT_ID(pal) + 1, PLTT_SIZEOF(2));
         PlaySE12WithPanning(SE_M_LEER, BattleAnimAdjustPanning(SOUND_PAN_TARGET));
     }
@@ -6555,7 +6555,7 @@ void PrepareDoubleTeamAnim(u32 taskId, enum AnimBattler animBattler, bool32 forA
     task->tBattlerId = GetAnimBattlerId(animBattler);
     task->tIsAllySwitch = forAllySwitch;
     palOffsetSpoon = OBJ_PLTT_ID(task->tSpoonPal);
-    palOffsetBattler = OBJ_PLTT_ID2(gSprites[task->tBattlerSpriteId].oam.paletteNum);
+    palOffsetBattler = OBJ_PLTT_ID2(GetSpritePaletteSlot(&gSprites[task->tBattlerSpriteId]));
     for (i = 1; i < 16; i++)
         gPlttBufferUnfaded[palOffsetSpoon + i] = gPlttBufferUnfaded[palOffsetBattler + i];
 
@@ -6566,7 +6566,7 @@ void PrepareDoubleTeamAnim(u32 taskId, enum AnimBattler animBattler, bool32 forA
         spriteId = CloneBattlerSpriteWithBlend(animBattler);
         if (spriteId < 0)
             break;
-        gSprites[spriteId].oam.paletteNum = task->tSpoonPal;
+        SetSpritePaletteSlot(&gSprites[spriteId], task->tSpoonPal);
         gSprites[spriteId].sCounter = 0;
         gSprites[spriteId].sSinIndex = i << 7;
         gSprites[spriteId].sTaskId = taskId;
@@ -6967,7 +6967,7 @@ static void AnimWavyMusicNotes(struct Sprite *sprite)
     SetSpriteCoordsToAnimAttackerCoords(sprite);
     StartSpriteAnim(sprite, cmd->unk0);
     if ((index = IndexOfSpritePaletteTag(gParticlesColorBlendTable[cmd->unk1][0])) != 0xFF)
-        sprite->oam.paletteNum = index;
+        SetSpritePaletteSlot(sprite, index);
 
     sprite->sBlendTableIdx = cmd->unk1;
     sprite->sBlendTimer = 0;
@@ -7033,7 +7033,7 @@ static void AnimWavyMusicNotes_Step(struct Sprite *sprite)
 
             index = IndexOfSpritePaletteTag(gParticlesColorBlendTable[sprite->sBlendTableIdx][0]);
             if (index != 0xFF)
-                sprite->oam.paletteNum = index;
+                SetSpritePaletteSlot(sprite, index);
         }
     }
 }
@@ -7109,7 +7109,7 @@ void AnimSlowFlyingMusicNotes(struct Sprite *sprite)
     StartSpriteAnim(sprite, cmd->unk1);
     index = IndexOfSpritePaletteTag(gParticlesColorBlendTable[cmd->unk2][0]);
     if (index != 0xFF)
-        sprite->oam.paletteNum = index;
+        SetSpritePaletteSlot(sprite, index);
 
     xDiff = (cmd->unk0 == 0) ? -32 : 32;
     sprite->data[0] = 40;

@@ -861,7 +861,7 @@ static void DrawOptionLabelGfx(const u16 *const *optionGfx, s32 yPos, s32 deltaY
             for (j = 0; j < NUM_OPTION_SUBSPRITES; j++)
             {
                 gfx->iconSprites[i][j]->oam.tileNum = (*optionGfx)[0] + baseTile + 8 * j;
-                gfx->iconSprites[i][j]->oam.paletteNum = IndexOfSpritePaletteTag((*optionGfx)[1] + PALTAG_OPTIONS_START);
+                SetSpritePaletteSlot(gfx->iconSprites[i][j], IndexOfSpritePaletteTag((*optionGfx)[1] + PALTAG_OPTIONS_START));
                 gfx->iconSprites[i][j]->invisible = TRUE;
                 gfx->iconSprites[i][j]->y = yPos;
                 gfx->iconSprites[i][j]->x = OPTION_DEFAULT_X;

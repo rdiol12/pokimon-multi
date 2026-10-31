@@ -387,9 +387,9 @@ static void SpriteCallback_PorygonHit(struct Sprite* sprite)
     if (sprite->sTimer % 8 == 0)
     {
         if (sprite->sTimer % 16 == 0)
-            LoadPalette(sSpritePal_PorygonShiny, PLTT_ID(16 + sprite->oam.paletteNum), PLTT_SIZE_4BPP);
+            LoadPalette(sSpritePal_PorygonShiny, PLTT_ID(16 + GetSpritePaletteSlot(sprite)), PLTT_SIZE_4BPP);
         else
-            LoadPalette(sSpritePal_Porygon, PLTT_ID(16 + sprite->oam.paletteNum), PLTT_SIZE_4BPP);
+            LoadPalette(sSpritePal_Porygon, PLTT_ID(16 + GetSpritePaletteSlot(sprite)), PLTT_SIZE_4BPP);
     }
 
     sprite->sTimer++;

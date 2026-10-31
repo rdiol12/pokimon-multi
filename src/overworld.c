@@ -1844,6 +1844,14 @@ void UpdatePalettesWithTime(u32 palettes)
         return;
     u32 i;
     u32 mask = 1 << 16;
+    // Extended sprite palettes 16..63 follow the sprite palettes when all of them are blended
+    if ((palettes & PALETTES_OBJECTS) == PALETTES_OBJECTS)
+    {
+        u64 ext = GetExtSpritePalettesInUse();
+        for (i = 16; ext != 0; i++, ext >>= 1)
+            if (ext & 1)
+                UpdateSpritePaletteWithTime(i);
+    }
     if (palettes >= (1 << 16))
         for (i = 0; i < 16; i++, mask <<= 1)
         {

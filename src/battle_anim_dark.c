@@ -954,7 +954,7 @@ void AnimTask_MetallicShine(u8 taskId)
 
     gBattle_BG1_X = -gSprites[spriteId].x + 96;
     gBattle_BG1_Y = -gSprites[spriteId].y + 32;
-    paletteNum = 16 + gSprites[spriteId].oam.paletteNum;
+    paletteNum = 16 + GetSpritePaletteSlot(&gSprites[spriteId]);
 
     if (cmd->useColor == 0)
         SetGrayscaleOrOriginalPalette(paletteNum, FALSE);
@@ -985,7 +985,7 @@ static void AnimTask_MetallicShine_Step(u8 taskId)
         if (gTasks[taskId].data[11] == 2)
         {
             spriteId = GetAnimBattlerSpriteId(ANIM_ATTACKER);
-            paletteNum = 16 + gSprites[spriteId].oam.paletteNum;
+            paletteNum = 16 + GetSpritePaletteSlot(&gSprites[spriteId]);
             if (gTasks[taskId].data[1] == 0)
                 SetGrayscaleOrOriginalPalette(paletteNum, TRUE);
 
@@ -1062,7 +1062,7 @@ void AnimTask_SetGrayscaleOrOriginalPal(u8 taskId)
     }
 
     if (spriteId != SPRITE_NONE)
-        SetGrayscaleOrOriginalPalette(gSprites[spriteId].oam.paletteNum + 16, cmd->mode);
+        SetGrayscaleOrOriginalPalette(GetSpritePaletteSlot(&gSprites[spriteId]) + 16, cmd->mode);
 
     DestroyAnimVisualTask(taskId);
 }

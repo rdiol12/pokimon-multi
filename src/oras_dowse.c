@@ -319,9 +319,9 @@ u32 FldEff_ORASDowsing(void)
         sprite->coordOffsetEnabled = TRUE;
         palNum = LoadSpritePalette(&gSpritePalette_ORASDowsing);
         if (palNum != 0xFF)
-            sprite->oam.paletteNum = palNum;
+            SetSpritePaletteSlot(sprite, palNum);
         else
-            sprite->oam.paletteNum = LoadPlayerObjectEventPalette(gSaveBlock2Ptr->playerGender);
+            SetSpritePaletteSlot(sprite, LoadPlayerObjectEventPalette(gSaveBlock2Ptr->playerGender));
 
         playerObj->fieldEffectSpriteId = spriteId;
         sprite->sDowseState = ORASD_WIGGLE_NONE;

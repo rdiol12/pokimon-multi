@@ -1362,7 +1362,7 @@ bool32 Task_TryLoadInfoScreen_HGSS(u8 taskId)
         if (gTasks[taskId].tBgLoaded)
             preservedPalettes = 0x14; // each bit represents a palette index
         if (gTasks[taskId].tMonSpriteDone)
-            preservedPalettes |= (1 << (gSprites[gTasks[taskId].tMonSpriteId].oam.paletteNum + 16));
+            preservedPalettes |= (1 << (GetSpritePaletteSlot(&gSprites[gTasks[taskId].tMonSpriteId]) + 16));
         BeginNormalPaletteFade(~preservedPalettes, 0, 16, 0, RGB_BLACK);
         SetVBlankCallback(gPokedexVBlankCB);
         gMain.state++;
@@ -1586,7 +1586,7 @@ void Task_DisplayCaughtMonDexPageHGSS(u8 taskId)
         const u16 *paletteData = GetMonSpritePalFromSpeciesAndPersonality(species, FALSE, personality);
 
         spriteId = Pokedex_CreateCaughtMonSprite(species, MON_PAGE_X, MON_PAGE_Y);
-        LoadPalette(paletteData, OBJ_PLTT_ID(gSprites[spriteId].oam.paletteNum), PLTT_SIZE_4BPP);
+        LoadPalette(paletteData, OBJ_PLTT_ID(GetSpritePaletteSlot(&gSprites[spriteId])), PLTT_SIZE_4BPP);
         BeginNormalPaletteFade(PALETTES_ALL, 0, 0x10, 0, RGB_BLACK);
         SetVBlankCallback(gPokedexVBlankCB);
         gTasks[taskId].tMonSpriteId = spriteId;
@@ -1688,9 +1688,9 @@ static void SetTypeIconPosAndPal(u8 typeId, u8 x, u8 y, u8 spriteArrayId)
     sprite = &gSprites[sPokedexView->typeIconSpriteIds[spriteArrayId]];
     StartSpriteAnim(sprite, typeId);
     if (typeId < NUMBER_OF_MON_TYPES)
-        sprite->oam.paletteNum = gTypesInfo[typeId].palette + TYPE_INFO_PALETTE_NUM_OFFSET;
+        SetSpritePaletteSlot(sprite, gTypesInfo[typeId].palette + TYPE_INFO_PALETTE_NUM_OFFSET);
     else
-        sprite->oam.paletteNum = gContestCategoryInfo[typeId - NUMBER_OF_MON_TYPES].palette  + TYPE_INFO_PALETTE_NUM_OFFSET;
+        SetSpritePaletteSlot(sprite, gContestCategoryInfo[typeId - NUMBER_OF_MON_TYPES].palette  + TYPE_INFO_PALETTE_NUM_OFFSET);
     sprite->x = x + 16;
     sprite->y = y + 8;
     SetSpriteInvisibility(spriteArrayId, FALSE);
@@ -2041,7 +2041,7 @@ static void Task_LoadStatsScreen(u8 taskId)
         if (gTasks[taskId].data[2] != 0)
             preservedPalettes = 0x14; // each bit represents a palette index
         if (gTasks[taskId].data[1] != 0)
-            preservedPalettes |= (1 << (gSprites[gTasks[taskId].tMonSpriteId].oam.paletteNum + 16));
+            preservedPalettes |= (1 << (GetSpritePaletteSlot(&gSprites[gTasks[taskId].tMonSpriteId]) + 16));
         BeginNormalPaletteFade(~preservedPalettes, 0, 16, 0, RGB_BLACK);
         SetVBlankCallback(gPokedexVBlankCB);
         gMain.state++;
@@ -3167,7 +3167,7 @@ static void Task_LoadEvolutionScreen(u8 taskId)
         if (gTasks[taskId].data[2] != 0)
             preservedPalettes = 0x14; // each bit represents a palette index
         if (gTasks[taskId].data[1] != 0)
-            preservedPalettes |= (1 << (gSprites[gTasks[taskId].tMonSpriteId].oam.paletteNum + 16));
+            preservedPalettes |= (1 << (GetSpritePaletteSlot(&gSprites[gTasks[taskId].tMonSpriteId]) + 16));
         BeginNormalPaletteFade(~preservedPalettes, 0, 16, 0, RGB_BLACK);
         SetVBlankCallback(gPokedexVBlankCB);
         gMain.state++;
@@ -4073,7 +4073,7 @@ static void Task_LoadFormsScreen(u8 taskId)
         if (gTasks[taskId].data[2] != 0)
             preservedPalettes = 0x14; // each bit represents a palette index
         if (gTasks[taskId].data[1] != 0)
-            preservedPalettes |= (1 << (gSprites[gTasks[taskId].tMonSpriteId].oam.paletteNum + 16));
+            preservedPalettes |= (1 << (GetSpritePaletteSlot(&gSprites[gTasks[taskId].tMonSpriteId]) + 16));
         BeginNormalPaletteFade(~preservedPalettes, 0, 16, 0, RGB_BLACK);
         SetVBlankCallback(gPokedexVBlankCB);
         gMain.state++;
