@@ -2,7 +2,7 @@
 #define GUARD_SPRITE_H
 
 #define OAM_MATRIX_COUNT 32
-#define MAX_SPRITES 128 // 64 on a stock GBA; extended GBA v2 has OAM room for more (emulator/README.md)
+#define MAX_SPRITES 240 // 64 on a stock GBA; extended GBA v2 has OAM room for more (emulator/README.md). Must stay below SPRITE_NONE (0xFF).
 #define SPRITE_NONE 0xFF
 #define TAG_NONE 0xFFFF
 
