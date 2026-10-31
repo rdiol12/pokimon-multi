@@ -75,7 +75,8 @@
     "gMapGroup_IndoorTwoIslandRoute_Frlg",
     "gMapGroup_IndoorSixIslandRoute_Frlg",
     "gMapGroup_IndoorSevenIslandRoute_Frlg",
-    "gMapGroup_Adventure"
+    "gMapGroup_Adventure",
+    "gMapGroup_Online"
   ],
   "gMapGroup_TownsAndRoutes": [
     "PetalburgCity",
@@ -1193,5 +1194,8 @@
   "gMapGroup_Adventure": [
     "AdventureRanch",
     "AdventureDungeon"
+  ],
+  "gMapGroup_Online": [
+    "OnlineGuildHall"
   ]
 }

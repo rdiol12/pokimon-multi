@@ -78,7 +78,18 @@
 #define ONL_REQ_TEAM_NO     61
 #define ONL_REQ_TEAM_LEAVE  62
 #define ONL_REQ_TEAM_BOARD  63
-#define ONL_REQ_COUNT       64
+#define ONL_REQ_GHALL_VIEW    64
+#define ONL_REQ_GHALL_MEMBERS 65
+#define ONL_REQ_GHALL_CHEST   66
+#define ONL_REQ_GHALL_PUT     67 // VAR_0x8005 item, VAR_0x8006 count
+#define ONL_REQ_GHALL_TAKE    68 // the item picked from GHALL_CHEST
+#define ONL_REQ_WAR_BOARD     69
+#define ONL_REQ_WAR_CLAIM     70
+#define ONL_REQ_RAID_DEFEND   71
+#define ONL_REQ_RAID_LIST     72
+#define ONL_REQ_RAID_GET      73 // the base picked from RAID_LIST
+#define ONL_REQ_RAID_RESULT   74 // VAR_0x8005: TRUE if the raid won
+#define ONL_REQ_COUNT         75
 
 // The hub's rows (VAR_RESULT of its menu).
 #define ONLINE_HUB_GOALS    0
@@ -93,6 +104,7 @@
 #define ONLINE_HUB_BETTING  9
 #define ONLINE_HUB_DOUBLES  10
 #define ONLINE_HUB_TEAMS    11
+#define ONLINE_HUB_GUILD    12
 #define ONLINE_HUB_CLOSE    127
 
 // VAR_0x800B of the co-op fishing requests.
@@ -119,5 +131,10 @@
 #define TEAM_INVITED 1 // someone asked the player; gStringVar1 is who
 #define TEAM_ASKED   2 // the player asked someone
 #define TEAM_TEAMED  3 // on a team with gStringVar1
+
+// VAR_0x800B of GHALL_VIEW. gStringVar1: the guild's tag, gStringVar2: its name.
+#define GUILD_NONE   0
+#define GUILD_MEMBER 1
+#define GUILD_LEADER 2
 
 #endif // GUARD_CONSTANTS_ONLINE_H

@@ -138,6 +138,7 @@ class Player:
         self.name = None
         self.tid = 0
         self.map = None
+        self.room = None  # players on a map only see those in the same room (see room_of)
         self.pos = (0, 0, 0, 0, 0)  # x, y, facing, elevation, gfx
         self.session = None
         self.watching = None  # the battle session this player spectates
@@ -229,18 +230,23 @@ class Server:
                 self.end_session(session, player)
         self.settle_pending(player)
         if player.map is not None:
-            self.broadcast_map(player.map, f"GONE {player.id}", exclude=player)
+            self.broadcast_map(player.map, f"GONE {player.id}", exclude=player, room=player.room)
 
     # --- helpers --------------------------------------------------------
 
-    def on_map(self, map_key, exclude=None):
+    def room_of(self, player, map_key):
+        """Splits a map into rooms whose players don't see each other, like a
+        guild hall (server/online_guilds.py replaces this)."""
+        return None
+
+    def on_map(self, map_key, exclude=None, room=None):
         return [
             p for p in self.players.values()
-            if p.map == map_key and p is not exclude and p.name is not None
+            if p.map == map_key and p.room == room and p is not exclude and p.name is not None
         ]
 
-    def broadcast_map(self, map_key, line, exclude=None):
-        for p in self.on_map(map_key, exclude):
+    def broadcast_map(self, map_key, line, exclude=None, room=None):
+        for p in self.on_map(map_key, exclude, room):
             p.send(line)
 
     def end_session(self, session, leaver):
@@ -337,17 +343,18 @@ class Server:
 
     def cmd_pos(self, player, group, num, x, y, facing, elevation, gfx):
         new_map = (int(group), int(num))
+        new_room = self.room_of(player, new_map)
         player.pos = (int(x), int(y), int(facing), int(elevation), int(gfx))
-        old_map = player.map
-        player.map = new_map
-        if old_map != new_map:
+        old_map, old_room = player.map, player.room
+        player.map, player.room = new_map, new_room
+        if (old_map, old_room) != (new_map, new_room):
             if old_map is not None:
-                self.broadcast_map(old_map, f"GONE {player.id}", exclude=player)
-                for other in self.on_map(old_map, exclude=player):
+                self.broadcast_map(old_map, f"GONE {player.id}", exclude=player, room=old_room)
+                for other in self.on_map(old_map, exclude=player, room=old_room):
                     player.send(f"GONE {other.id}")
-            for other in self.on_map(new_map, exclude=player):
+            for other in self.on_map(new_map, exclude=player, room=new_room):
                 player.send(other.describe())
-        self.broadcast_map(new_map, player.describe(), exclude=player)
+        self.broadcast_map(new_map, player.describe(), exclude=player, room=new_room)
 
     def cmd_req(self, player, kind, target_id):
         if kind not in KINDS:
@@ -432,7 +439,7 @@ class Server:
         if player.map is None or player.emote_tokens < 1:
             return  # flooding: drop it
         player.emote_tokens -= 1
-        self.broadcast_map(player.map, f"EMOTE {player.id} {emote}", exclude=player)
+        self.broadcast_map(player.map, f"EMOTE {player.id} {emote}", exclude=player, room=player.room)
 
     def online_player(self, key):
         return next((p for p in self.players.values() if p.key == key), None)

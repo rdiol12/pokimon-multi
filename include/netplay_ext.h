@@ -43,6 +43,8 @@ void NetplayExt_Init(void);
 bool32 NetplayExt_OverworldUpdate(void);
 void NetplayExt_OnLinkBattleEnd(u8 battleOutcome);
 const struct SecretBase *NetplayExt_GetBattleBase(void);
+void NetplayExt_AddTeamRecord(void);
+bool32 NetplayExt_StoreBattleTeam(void);
 void NetplayExt_OpenPlazaFromMenu(void);
 
 // Shared with src/netplay_ext_features.c and src/netplay_ext_plaza.c.

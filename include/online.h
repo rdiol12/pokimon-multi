@@ -29,6 +29,10 @@ void Online_AddBadgeCount(void);
 bool32 Online_PlayerQuestUpdate(void);
 void Online_PlayerQuestRetry(void);
 
+// Guild base raids (src/online_guilds.c).
+void Online_AddTeamRecord(void);
+void Online_StoreRaidTeam(void);
+
 // Asks for the live features' status within a few frames.
 void Online_PollStatusSoon(void);
 

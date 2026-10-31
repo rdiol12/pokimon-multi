@@ -218,6 +218,22 @@ static bool32 StoreBaseAnswer(void)
     return TRUE;
 }
 
+// For other features' requests (guild base raids, src/online_guilds.c): the
+// player's team goes with the request, and a team in the answer is stored
+// for NetplayExt_PrepStoredBattle.
+void NetplayExt_AddTeamRecord(void)
+{
+    struct SecretBase team;
+
+    BuildTeamRecord(&team);
+    NpxRpc_Data(&team, sizeof(team));
+}
+
+bool32 NetplayExt_StoreBattleTeam(void)
+{
+    return StoreBaseAnswer();
+}
+
 // Guilds -----------------------------------------------------------------
 
 static void BuildGuildInfo(void)   { NpxRpc_Word("INFO"); }

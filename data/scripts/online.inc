@@ -34,6 +34,7 @@ Online_EventScript_Hub::
 	dynmultipush Online_Text_HubBetting, ONLINE_HUB_BETTING
 	dynmultipush Online_Text_HubDoubles, ONLINE_HUB_DOUBLES
 	dynmultipush Online_Text_HubTeams, ONLINE_HUB_TEAMS
+	dynmultipush Online_Text_HubGuild, ONLINE_HUB_GUILD
 	dynmultipush Online_Text_HubClose, ONLINE_HUB_CLOSE
 	dynmultistack 0, 0, FALSE, 6, FALSE, 0, DYN_MULTICHOICE_CB_NONE
 	switch VAR_RESULT
@@ -49,6 +50,7 @@ Online_EventScript_Hub::
 	case ONLINE_HUB_BETTING, Online_EventScript_Betting
 	case ONLINE_HUB_DOUBLES, Online_EventScript_Doubles
 	case ONLINE_HUB_TEAMS, Online_EventScript_Teams
+	case ONLINE_HUB_GUILD, Online_EventScript_GuildHall
 	releaseall
 	end
 
@@ -116,6 +118,9 @@ Online_Text_HubDoubles:
 Online_Text_HubTeams:
 	.string "TEAM LADDER$"
 
+Online_Text_HubGuild:
+	.string "GUILD HALL$"
+
 Online_Text_HubClose:
 	.string "CLOSE$"
 
@@ -130,6 +135,7 @@ Online_Text_HubClose:
 	.include "data/scripts/online/pquests.inc"
 	.include "data/scripts/online/betting.inc"
 	.include "data/scripts/online/teams.inc"
+	.include "data/scripts/online/guilds.inc"
 
 @ Ranked doubles: the ladder (the battles start from talking to a player).
 Online_EventScript_Doubles::
