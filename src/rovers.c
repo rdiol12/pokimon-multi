@@ -18,6 +18,7 @@
 #include "pokemon.h"
 #include "random.h"
 #include "rovers.h"
+#include "netplay.h"
 #include "script.h"
 #include "script_pokemon_util.h"
 #include "sound.h"
@@ -101,6 +102,8 @@ enum
     REQ_MAJOR_CLEAR,
     REQ_GIFT,
     REQ_EXPLORED,
+    REQ_LEAGUE_RESULT,
+    REQ_LEAGUE_SEEN,
 };
 
 enum
@@ -123,7 +126,7 @@ struct RoverMon
     u8 lostParts;
     u8 injuryFlags;
     u16 fusion;      // a fusion's father species (docs/breed_fusion.md), or 0
-}; // 18 bytes
+} __attribute__((packed, aligned(2))); // 18 bytes (packed: GBA structs round up to 4)
 
 struct RoverWire
 {
@@ -143,7 +146,9 @@ struct RoverWire
     // What it thinks of this player (server/rovers.py bond_wire()).
     u8 bond;       // ROVER_BOND_*
     u8 friendship;
-}; // 126 bytes
+} __attribute__((packed, aligned(2))); // 126 bytes
+STATIC_ASSERT(sizeof(struct RoverMon) == 18, RoverMonSize);
+STATIC_ASSERT(sizeof(struct RoverWire) == 126, RoverWireSize);
 
 #define ROVER_BOND_RIVAL  (1 << 0) // the player beat it; it wants a rematch
 #define ROVER_BOND_FRIEND (1 << 1)
@@ -215,6 +220,15 @@ struct RoverState
     u8 farewellId;     // 1 + the rover id that just parted ways
     u16 farewellItem;
     u8 farewellDelay;  // frames, so the map's name shows first
+    // The weekly Rover League (server/rovers_league.py).
+    u16 leagueMatch;   // the player's match
+    u16 leagueWatch;   // a match to watch
+    u8 leagueRound;
+    bool8 leagueFighting;
+    bool8 leagueWon;
+    u8 leagueAsk;      // 1 + a LEAGUE request waiting for the channel
+    u16 leagueAskArg;
+    u16 leagueAskWait; // frames it has waited
     // Watching.
     bool8 watching;
     u8 duelResult;     // a watched duel's result, 1 + left won, for the map
@@ -326,6 +340,14 @@ static bool32 IsOutdoorsOrCave(void)
     default:
         return FALSE;
     }
+}
+
+// The automated tests (Netplay_TryTestBoot) walk set routes: no rovers,
+// chargers, rampaging Pokémon or boards turn up to get in their way, unless
+// a screenshot scene asked for rovers (gRoverShowcase).
+static bool32 QuietForTests(void)
+{
+    return Netplay_IsTestBoot() && gRoverShowcase.scene == 0;
 }
 
 static bool32 IsRift(void)
@@ -936,7 +958,8 @@ static void SetUpScene(u32 count, u32 scene)
 static void QueueRequest(u8 type, u8 a, u8 b, u8 c, u16 d)
 {
     struct RoverRequest *r;
-    if (!Npx_IsOnline() || gRoverShowcase.offline)
+    // A showcase's rovers stay off the server; league results don't.
+    if (!Npx_IsOnline() || (gRoverShowcase.offline && type != REQ_LEAGUE_RESULT && type != REQ_LEAGUE_SEEN))
         return;
     if (sRovers.queued >= QUEUE_SIZE)
         return;
@@ -1121,6 +1144,15 @@ static bool32 SendRequest(const struct RoverRequest *r)
         NpxRpc_Num(gSaveBlock1Ptr->location.mapGroup);
         NpxRpc_Num(gSaveBlock1Ptr->location.mapNum);
         break;
+    case REQ_LEAGUE_RESULT:
+    case REQ_LEAGUE_SEEN:
+        if (!NpxRpc_Begin("ROVER"))
+            return FALSE;
+        NpxRpc_Word("LEAGUE");
+        NpxRpc_Word(r->type == REQ_LEAGUE_RESULT ? "RESULT" : "SEEN");
+        NpxRpc_Num(r->d);
+        NpxRpc_Num(r->b);
+        break;
     case REQ_MAJOR_CLEAR:
         if (!NpxRpc_Begin("MAJOR"))
             return FALSE;
@@ -1135,6 +1167,8 @@ static bool32 SendRequest(const struct RoverRequest *r)
     sRovers.waiting = r->type;
     return TRUE;
 }
+
+static void SendLeagueAsk(void);
 
 static void UpdateRequests(void)
 {
@@ -1175,6 +1209,11 @@ static void UpdateRequests(void)
     if (!Npx_IsOnline())
     {
         sRovers.queued = 0;
+        return;
+    }
+    if (sRovers.leagueAsk != 0)
+    {
+        SendLeagueAsk();
         return;
     }
     if (sRovers.wantHere && !ArePlayerFieldControlsLocked())
@@ -1227,7 +1266,7 @@ void Rovers_OnMapTransition(void)
     sRovers.majorId = 0;
     sRovers.majorSpawned = FALSE;
     sRovers.foeTrainer = TRAINER_NONE;
-    if (!IsOutdoorsOrCave())
+    if (!IsOutdoorsOrCave() || QuietForTests())
     {
         sRovers.spawned = TRUE;
         return;
@@ -2686,6 +2725,15 @@ void Rovers_OnLifeBattleEnd(const struct Trainer *trainer, bool32 playerWon)
     if (trainer != &sRoverTrainer)
         return;
     a = &sRovers.actors[sRovers.talk];
+    if (sRovers.leagueFighting)
+    {
+        // A league match: the server keeps the rover's record.
+        sRovers.leagueFighting = FALSE;
+        sRovers.leagueWon = playerWon;
+        QueueRequest(REQ_LEAGUE_RESULT, 0, playerWon, 0, sRovers.leagueMatch);
+        a->state = RS_NONE;
+        return;
+    }
     ReadInjuries(gParties[B_TRAINER_OPPONENT_A], a);
     if (playerWon)
         a->w.losses++, a->w.hurt++;
@@ -2958,6 +3006,252 @@ void Rovers_BoardShowRankings(void)
     FinishBoardRead();
 }
 
+// The weekly Rover League ------------------------------------------------------------------------
+//
+// On the quest boards (server/rovers_league.py): the bracket, entering,
+// playing the player's match, and watching a match still to be played.
+// The rovers in a league match are loaded into the last two actor slots
+// (whoever was there walks off) and never spawned on the map.
+
+#define LEAGUE_A (ROVERS_MAX_HERE - 2)
+#define LEAGUE_B (ROVERS_MAX_HERE - 1)
+
+static const char *const sLeagueWords[] = {"INFO", "ENTER", "FIGHT", "WATCH"};
+enum { LEAGUE_INFO, LEAGUE_ENTER, LEAGUE_FIGHT, LEAGUE_WATCH };
+
+// The request goes out when the channel is free (other features share it);
+// the script waits for the answer.
+static void LeagueAsk(u32 word, u16 arg)
+{
+    if (!Npx_IsOnline())
+    {
+        sRovers.boardOk = FALSE;
+        ScriptContext_Enable();
+        return;
+    }
+    sRovers.leagueAsk = word + 1;
+    sRovers.leagueAskArg = arg;
+    sRovers.leagueAskWait = 0;
+}
+
+static void SendLeagueAsk(void)
+{
+    u32 word = sRovers.leagueAsk - 1;
+
+    if (sRovers.waiting != REQ_NONE || !NpxRpc_Begin("ROVER"))
+    {
+        if (++sRovers.leagueAskWait > 60 * 20)
+        {
+            sRovers.leagueAsk = 0;
+            sRovers.boardOk = FALSE;
+            ScriptContext_Enable();
+        }
+        return;
+    }
+    sRovers.leagueAsk = 0;
+    NpxRpc_Word("LEAGUE");
+    NpxRpc_Word(sLeagueWords[word]);
+    if (word == LEAGUE_WATCH)
+        NpxRpc_Num(sRovers.leagueAskArg);
+    NpxRpc_Send();
+    sRovers.waiting = REQ_BOARD;
+    sRovers.boardWaiting = TRUE;
+}
+
+void Rovers_LeagueInfoFetch(void)  { LeagueAsk(LEAGUE_INFO, 0); }
+void Rovers_LeagueEnterFetch(void) { LeagueAsk(LEAGUE_ENTER, 0); }
+void Rovers_LeagueFightFetch(void) { LeagueAsk(LEAGUE_FIGHT, 0); }
+void Rovers_LeagueWatchFetch(void) { LeagueAsk(LEAGUE_WATCH, sRovers.leagueWatch); }
+
+static const u8 *const sRoundNames[] = {
+    COMPOUND_STRING("QUARTERFINALS"), COMPOUND_STRING("SEMIFINALS"), COMPOUND_STRING("FINAL"),
+};
+
+// After Rovers_LeagueInfoFetch: the bracket in gStringVar4. VAR_RESULT FALSE
+// if the server didn't answer; VAR_0x8004 the player can enter, VAR_0x8005
+// their match is waiting (STR_VAR_3 the opponent), VAR_0x8006 a match can
+// be watched (STR_VAR_1 and STR_VAR_2 its rovers).
+void Rovers_LeagueShow(void)
+{
+    u8 *s = gStringVar4;
+    u8 a[16], b[16];
+    u32 rows, r, round, state, lastRound = 0xFF, n = 0;
+
+    gSpecialVar_Result = sRovers.boardOk;
+    gSpecialVar_0x8004 = gSpecialVar_0x8005 = gSpecialVar_0x8006 = 0;
+    if (!sRovers.boardOk)
+        return;
+    round = AnswerNum(0, 1);
+    state = AnswerNum(0, 3);
+    sRovers.leagueMatch = AnswerNum(0, 4);
+    AnswerText(gStringVar3, 0, 5, PLAYER_NAME_LENGTH);
+    gSpecialVar_0x8004 = AnswerNum(0, 6);
+    gSpecialVar_0x8005 = (state == 1);
+    s = StringCopy(s, COMPOUND_STRING("ROVER LEAGUE, this week\n"));
+    if (round < 3)
+    {
+        s = StringCopy(s, sRoundNames[round]);
+        s = StringCopy(s, COMPOUND_STRING(": "));
+        s = ConvertIntToDecimalStringN(s, AnswerNum(0, 2), STR_CONV_MODE_LEFT_ALIGN, 3);
+        s = StringCopy(s, COMPOUND_STRING(" hours left"));
+    }
+    else
+    {
+        s = StringCopy(s, COMPOUND_STRING("It's over until next week!"));
+    }
+    rows = AnswerRows();
+    for (r = 1; r < rows; r++)
+    {
+        u32 rnd = AnswerNum(r, 0), winner = AnswerNum(r, 4);
+        AnswerText(a, r, 2, PLAYER_NAME_LENGTH);
+        AnswerText(b, r, 3, PLAYER_NAME_LENGTH);
+        if (rnd != lastRound)
+        {
+            s = StringCopy(s, COMPOUND_STRING("\p"));
+            s = StringCopy(s, sRoundNames[rnd % 3]);
+            s = StringCopy(s, COMPOUND_STRING("\n"));
+            lastRound = rnd;
+            n = 0;
+        }
+        else
+        {
+            s = StringCopy(s, n % 2 ? COMPOUND_STRING("\p") : COMPOUND_STRING("\n"));
+        }
+        n++;
+        s = StringCopy(s, a);
+        s = StringCopy(s, COMPOUND_STRING(" vs "));
+        s = StringCopy(s, b);
+        if (winner != 0)
+        {
+            s = StringCopy(s, COMPOUND_STRING(": "));
+            s = StringCopy(s, winner == 1 ? a : b);
+            s = StringCopy(s, COMPOUND_STRING(" won"));
+        }
+        if (AnswerNum(r, 6) && !gSpecialVar_0x8006)
+        {
+            gSpecialVar_0x8006 = TRUE;
+            sRovers.leagueWatch = AnswerNum(r, 5);
+            StringCopy(gStringVar1, a);
+            StringCopy(gStringVar2, b);
+        }
+    }
+    if (state == 3)
+        s = StringCopy(s, COMPOUND_STRING("\pYou're out this week. Next time!"));
+    else if (state == 4)
+        s = StringCopy(s, COMPOUND_STRING("\pAnd you're this week's champion!"));
+    else if (state == 2)
+        s = StringCopy(s, COMPOUND_STRING("\pYour next match comes when this\nround is over."));
+    FinishBoardRead();
+}
+
+// After Rovers_LeagueEnterFetch: STR_VAR_3 the first opponent.
+void Rovers_LeagueEntered(void)
+{
+    gSpecialVar_Result = sRovers.boardOk;
+    if (!sRovers.boardOk)
+        return;
+    sRovers.leagueMatch = AnswerNum(0, 0);
+    AnswerText(gStringVar3, 0, 1, PLAYER_NAME_LENGTH);
+    FinishBoardRead();
+}
+
+static bool32 LoadLeagueRover(u32 slot, const u8 *wire)
+{
+    struct RoverActor *a = &sRovers.actors[slot];
+    struct RoverActor *other;
+
+    // Whoever stood in this slot walks off; a duel it was in ends.
+    if (a->state == RS_DUEL || a->state == RS_DUEL_OVER)
+    {
+        if (a->partner < ROVERS_MAX_HERE)
+        {
+            other = &sRovers.actors[a->partner];
+            if (other->state == RS_DUEL || other->state == RS_DUEL_OVER)
+                other->state = RS_WANDER;
+        }
+    }
+    Actor_Remove(slot);
+    memset(a, 0, sizeof(*a));
+    memcpy(&a->w, wire, sizeof(a->w));
+    if (a->w.id >= ROVER_COUNT || a->w.count == 0)
+        return FALSE;
+    NormalizeTeam(a);
+    return TRUE;
+}
+
+// After Rovers_LeagueFightFetch: the opponent, ready for
+// Rovers_StartChallenge. VAR_RESULT FALSE if it couldn't be loaded.
+void Rovers_LeagueLoadFight(void)
+{
+    u32 size;
+    const u8 *data;
+
+    gSpecialVar_Result = FALSE;
+    if (!sRovers.boardOk)
+        return;
+    data = AnswerBinary(&size);
+    sRovers.leagueMatch = AnswerNum(0, 0);
+    sRovers.leagueRound = AnswerNum(0, 1);
+    if (data != NULL && size >= sizeof(struct RoverWire) && LoadLeagueRover(LEAGUE_A, data))
+    {
+        sRovers.talk = LEAGUE_A;
+        sRovers.leagueFighting = TRUE;
+        StringCopy(gStringVar3, Cast(&sRovers.actors[LEAGUE_A])->name);
+        gSpecialVar_Result = TRUE;
+    }
+    FinishBoardRead();
+}
+
+// After the match: VAR_RESULT TRUE if the player won (the prize is paid,
+// STR_VAR_2), and whether that made them champion (VAR_0x8004).
+void Rovers_LeagueAfterFight(void)
+{
+    u32 prize = 2000 * (sRovers.leagueRound + 1);
+
+    gSpecialVar_Result = sRovers.leagueWon;
+    gSpecialVar_0x8004 = sRovers.leagueWon && sRovers.leagueRound == 2;
+    if (gSpecialVar_0x8004)
+        prize += 10000;
+    if (sRovers.leagueWon)
+    {
+        AddMoney(&gSaveBlock1Ptr->money, prize);
+        ConvertIntToDecimalStringN(gStringVar2, prize, STR_CONV_MODE_LEFT_ALIGN, 6);
+    }
+    sRovers.leagueWon = FALSE;
+}
+
+// After Rovers_LeagueWatchFetch: both rovers, ready for Rovers_StartWatch.
+void Rovers_LeagueLoadWatch(void)
+{
+    u32 size;
+    const u8 *data;
+
+    gSpecialVar_Result = FALSE;
+    if (!sRovers.boardOk)
+        return;
+    data = AnswerBinary(&size);
+    sRovers.leagueWatch = AnswerNum(0, 0);
+    if (data != NULL && size >= 2 * sizeof(struct RoverWire)
+     && LoadLeagueRover(LEAGUE_A, data) && LoadLeagueRover(LEAGUE_B, data + sizeof(struct RoverWire)))
+    {
+        sRovers.actors[LEAGUE_A].partner = LEAGUE_B;
+        sRovers.actors[LEAGUE_B].partner = LEAGUE_A;
+        sRovers.talk = LEAGUE_A;
+        gSpecialVar_Result = TRUE;
+    }
+    FinishBoardRead();
+}
+
+// After watching: what the player saw is the result. STR_VAR_1 the winner.
+void Rovers_LeagueAfterWatch(void)
+{
+    bool32 leftWon = gSpecialVar_Result;
+    StringCopy(gStringVar1, Cast(&sRovers.actors[leftWon ? LEAGUE_A : LEAGUE_B])->name);
+    QueueRequest(REQ_LEAGUE_SEEN, 0, leftWon, 0, sRovers.leagueWatch);
+    sRovers.actors[LEAGUE_A].state = RS_NONE;
+    sRovers.actors[LEAGUE_B].state = RS_NONE;
+}
+
 // Every frame ------------------------------------------------------------------------------------
 
 static void RespawnMissing(void)
@@ -3011,7 +3305,7 @@ bool32 Rovers_OverworldUpdate(void)
         }
         sRovers.duelResult = 0;
     }
-    if (!OnRoverMap() || ArePlayerFieldControlsLocked())
+    if (!OnRoverMap() || ArePlayerFieldControlsLocked() || QuietForTests())
         return FALSE;
     if (!sRovers.spawned)
     {

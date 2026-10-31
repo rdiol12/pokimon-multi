@@ -5,6 +5,7 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(__file__))
 import rovers  # noqa: E402
+import rovers_league  # noqa: E402
 import test_ext  # noqa: E402
 
 ROUTE101 = rovers.BY_NAME["Route101"]
@@ -195,6 +196,52 @@ class RoverTest(unittest.IsolatedAsyncioTestCase):
         baby = r.team[-1]
         self.assertEqual((baby["level"], baby["fusion"]), (1, father))
         self.assertEqual(rovers.unpack_mon(rovers.pack_mon(baby))["fusion"], father)
+
+    async def test_league(self):
+        a = await self.connect("Ash", 1)
+        L = rovers_league
+        self.t = L.week_start(3000) + 3600  # Monday, 01:00
+        status, info = await self.ask(a, "ROVER LEAGUE INFO")
+        rows = [r.split("|") for r in info.decode().split("\n")]
+        self.assertEqual(rows[0][1:4], ["0", "47", "0"])  # quarterfinals, not in yet
+        self.assertEqual(rows[0][6], "1")                 # open to enter
+        self.assertEqual(len(rows), 5)
+        self.assertTrue(all(r[6] == "1" for r in rows[1:]))
+        # Ash enters in place of the 8th seed and plays the quarterfinal.
+        status, ans = await self.ask(a, "ROVER LEAGUE ENTER")
+        mid, foe = ans.decode().split("|")
+        status, ans = await self.ask(a, "ROVER LEAGUE FIGHT")
+        head, wire = ans.split(b"\0", 1)
+        self.assertEqual(head.decode().split("|"), [mid, "0", foe])
+        self.assertEqual(len(wire), rovers.ROVER_SIZE)
+        self.assertEqual((await self.ask(a, f"ROVER LEAGUE RESULT {mid} 1"))[1], b"")
+        # Someone watches a rover match: what they saw is the result.
+        rows = [r.split("|") for r in (await self.ask(a, "ROVER LEAGUE INFO"))[1].decode().split("\n")]
+        self.assertEqual(rows[0][3], "2")  # in, waiting for the semifinals
+        watch = next(r for r in rows[1:] if r[6] == "1")
+        status, ans = await self.ask(a, f"ROVER LEAGUE WATCH {watch[5]}")
+        self.assertEqual(len(ans.split(b"\0", 1)[1]), 2 * rovers.ROVER_SIZE)
+        await self.ask(a, f"ROVER LEAGUE SEEN {watch[5]} 0")
+        rows = [r.split("|") for r in (await self.ask(a, "ROVER LEAGUE INFO"))[1].decode().split("\n")]
+        self.assertEqual(next(r for r in rows[1:] if r[5] == watch[5])[4], "2")
+        # Wednesday: the rest are played out and the semifinals are on.
+        self.t = L.week_start(3000) + 2 * 86400 + 60
+        rows = [r.split("|") for r in (await self.ask(a, "ROVER LEAGUE INFO"))[1].decode().split("\n")]
+        self.assertEqual(rows[0][1], "1")
+        self.assertEqual(rows[0][3], "1")  # Ash's semifinal is waiting
+        self.assertEqual(rows[0][6], "0")  # too late to enter
+        # Ash doesn't play it: on Friday it's a loss, and by Sunday there's a champion.
+        self.t = L.week_start(3000) + 6 * 86400 + 60
+        rows = [r.split("|") for r in (await self.ask(a, "ROVER LEAGUE INFO"))[1].decode().split("\n")]
+        self.assertEqual((rows[0][1], rows[0][3]), ("3", "3"))
+        self.assertEqual(len(rows), 8)
+        self.assertTrue(all(r[4] != "0" for r in rows[1:]))
+        news = [n for (n,) in self.league.db.execute("SELECT line FROM rover_news")]
+        self.assertTrue(any("won this week's Rover League" in n for n in news))
+        # A new week, a new bracket.
+        self.t += 86400
+        rows = [r.split("|") for r in (await self.ask(a, "ROVER LEAGUE INFO"))[1].decode().split("\n")]
+        self.assertEqual((rows[0][0], rows[0][1], rows[0][3]), ("3001", "0", "0"))
 
     async def test_rift_divers(self):
         a = await self.connect("Ash", 1)

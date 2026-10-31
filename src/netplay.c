@@ -730,6 +730,11 @@ static bool32 IsTestBoot(void)
     return (gNetplayMailbox.testBoot & 0xF0) == NETPLAY_TEST_BOOT_MAGIC;
 }
 
+bool32 Netplay_IsTestBoot(void)
+{
+    return IsTestBoot();
+}
+
 static void SetUpCoopBattle(void)
 {
     u32 i;

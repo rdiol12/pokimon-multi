@@ -185,6 +185,61 @@ Rovers_EventScript_BoardJobs:
 	callnative Rovers_BoardShowRankings
 	goto_if_eq VAR_RESULT, FALSE, Rovers_EventScript_BoardOffline
 	msgbox gStringVar4, MSGBOX_DEFAULT
+	msgbox Rovers_Text_LeagueAsk, MSGBOX_YESNO
+	goto_if_eq VAR_RESULT, NO, Rovers_EventScript_BoardDone
+	closemessage
+	callnative Rovers_LeagueInfoFetch, waitstate=1
+	callnative Rovers_LeagueShow
+	goto_if_eq VAR_RESULT, FALSE, Rovers_EventScript_BoardOffline
+	msgbox gStringVar4, MSGBOX_DEFAULT
+	goto_if_eq VAR_0x8004, 0, Rovers_EventScript_LeagueFight
+	msgbox Rovers_Text_LeagueEnterAsk, MSGBOX_YESNO
+	goto_if_eq VAR_RESULT, NO, Rovers_EventScript_LeagueWatch
+	closemessage
+	callnative Rovers_LeagueEnterFetch, waitstate=1
+	callnative Rovers_LeagueEntered
+	goto_if_eq VAR_RESULT, FALSE, Rovers_EventScript_BoardOffline
+	msgbox Rovers_Text_LeagueEntered, MSGBOX_DEFAULT
+	setvar VAR_0x8005, 1
+Rovers_EventScript_LeagueFight:
+	goto_if_eq VAR_0x8005, 0, Rovers_EventScript_LeagueWatch
+	msgbox Rovers_Text_LeagueFightAsk, MSGBOX_YESNO
+	goto_if_eq VAR_RESULT, NO, Rovers_EventScript_LeagueWatch
+	closemessage
+	callnative Rovers_LeagueFightFetch, waitstate=1
+	callnative Rovers_LeagueLoadFight
+	goto_if_eq VAR_RESULT, FALSE, Rovers_EventScript_BoardOffline
+	callnative Rovers_StartChallenge, waitstate=1
+	callnative Rovers_LeagueAfterFight
+	goto_if_eq VAR_RESULT, FALSE, Rovers_EventScript_LeagueLost
+	goto_if_eq VAR_0x8004, TRUE, Rovers_EventScript_LeagueChampion
+	msgbox Rovers_Text_LeagueWon, MSGBOX_DEFAULT
+	releaseall
+	end
+
+Rovers_EventScript_LeagueChampion:
+	playfanfare MUS_OBTAIN_BADGE
+	msgbox Rovers_Text_LeagueChampion, MSGBOX_DEFAULT
+	waitfanfare
+	releaseall
+	end
+
+Rovers_EventScript_LeagueLost:
+	msgbox Rovers_Text_LeagueLost, MSGBOX_DEFAULT
+	releaseall
+	end
+
+Rovers_EventScript_LeagueWatch:
+	goto_if_eq VAR_0x8006, 0, Rovers_EventScript_BoardDone
+	msgbox Rovers_Text_LeagueWatchAsk, MSGBOX_YESNO
+	goto_if_eq VAR_RESULT, NO, Rovers_EventScript_BoardDone
+	closemessage
+	callnative Rovers_LeagueWatchFetch, waitstate=1
+	callnative Rovers_LeagueLoadWatch
+	goto_if_eq VAR_RESULT, FALSE, Rovers_EventScript_BoardOffline
+	callnative Rovers_StartWatch, waitstate=1
+	callnative Rovers_LeagueAfterWatch
+	msgbox Rovers_Text_LeagueWatched, MSGBOX_DEFAULT
 Rovers_EventScript_BoardDone:
 	releaseall
 	end
@@ -193,6 +248,42 @@ Rovers_EventScript_BoardOffline:
 	msgbox Rovers_Text_BoardOffline, MSGBOX_DEFAULT
 	releaseall
 	end
+
+Rovers_Text_LeagueAsk:
+	.string "Look at this week's ROVER LEAGUE?$"
+
+Rovers_Text_LeagueEnterAsk:
+	.string "The quarterfinals are still on.\n"
+	.string "Enter the league in a rover's place?$"
+
+Rovers_Text_LeagueEntered:
+	.string "You're in! Your quarterfinal is\n"
+	.string "against {STR_VAR_3}.$"
+
+Rovers_Text_LeagueFightAsk:
+	.string "Play your league match against\n"
+	.string "{STR_VAR_3} now?$"
+
+Rovers_Text_LeagueWon:
+	.string "You won the match and ¥{STR_VAR_2}!\n"
+	.string "On to the next round!$"
+
+Rovers_Text_LeagueChampion:
+	.string "You won the final and ¥{STR_VAR_2}!\n"
+	.string "You're this week's ROVER LEAGUE\l"
+	.string "champion!$"
+
+Rovers_Text_LeagueLost:
+	.string "You lost the match. There's always\n"
+	.string "next week's league!$"
+
+Rovers_Text_LeagueWatchAsk:
+	.string "{STR_VAR_1} vs {STR_VAR_2} hasn't been\n"
+	.string "played yet. Watch it?\p"
+	.string "Whatever you see is the result!$"
+
+Rovers_Text_LeagueWatched:
+	.string "{STR_VAR_1} goes through!$"
 
 Rovers_Text_Hello:
 	.string "I'm {STR_VAR_1} the {STR_VAR_2}!\n"

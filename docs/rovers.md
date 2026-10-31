@@ -42,6 +42,18 @@ heal at Pokémon Centers. The player meets them anywhere and can:
   auctions when the price is fair, and gets its money back when outbid.
   Rovers don't buy from each other, and at most 8 of their listings and 4
   of their auctions are up at once, so the boards stay the players'.
+- follow, enter or watch the **weekly Rover League** on any quest board
+  (online). Every week (from Monday 00:00 UTC) the eight strongest rovers
+  play a knockout bracket on the shared clock: quarterfinals until
+  Wednesday, semifinals until Friday, the final until Sunday. Until the
+  quarterfinals end a player can enter in place of one of the lowest
+  seeds (up to four players) and plays their matches against the rover
+  in their own game, for prize money (2,000 a round more each round, and
+  10,000 more for winning the final). A rover-vs-rover match not played
+  yet can be watched as a real AI-vs-AI battle, and what the player sees
+  is its result. At each deadline the rest are decided by strength, and a
+  player who didn't play their match loses it. Results go to the news
+  (`server/rovers_league.py`).
 
 Also here:
 
@@ -161,8 +173,14 @@ rover as its trainer, when it arrives (`Rovers_FromListing`, called from
   lets a Pokémon go drops it there, and rovers in Verdanturf sometimes catch
   one. Optional: rovers.py works without it.
 
+- The automated tests boot the game with `Netplay_IsTestBoot` (the e2e
+  drivers and the screenshot runners): then no rovers, chargers, rampaging
+  Pokémon or boards appear unless a screenshot scene asked for rovers
+  (`gRoverShowcase`), so nothing gets in the way of the tests' set routes.
+
 ## Screenshots
 
 `tools/rovers/shots/run.py` with the scenarios in `tools/rovers/shots/`
 (run from `tools/netplay_bridge`). `gRoverShowcase` puts chosen rovers in a
-chosen scene on the current map.
+chosen scene on the current map. `league.lua` needs the server's clock on
+a Monday: `ROVERS_TIME_OFFSET` (seconds added to the server's time).

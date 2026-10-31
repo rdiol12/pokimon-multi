@@ -31,11 +31,13 @@ import json
 import os
 import random
 import struct
+import sys
 import time
 
 from ext import Refused, text
 import rovers_life as life
 import rovers_trade
+import rovers_league
 
 try:  # the shared day/night clock (server/world.py, day/night branch), if this server has it
     import world
@@ -115,10 +117,14 @@ LEAGUE_LEVEL = 58
 START_MAP = BY_NAME.get("LittlerootTown")
 
 now = time.time  # tests replace this
+if os.environ.get("ROVERS_TIME_OFFSET"):  # screenshot runs: another day of the week
+    _OFFSET = float(os.environ["ROVERS_TIME_OFFSET"])
+    now = lambda: time.time() + _OFFSET  # noqa: E731
 rng = random.Random()
 
 
 def setup(db):
+    rovers_league.setup(db)
     db.execute(
         """
         CREATE TABLE IF NOT EXISTS rovers (
@@ -899,7 +905,8 @@ def cmd_major_clear(ctx, args, data):
 
 
 ROVER = {"GIFT": cmd_gift, "HERE": cmd_here, "SYNC": cmd_sync, "FIGHT": cmd_fight, "BEAT": cmd_beat, "LEAVE": cmd_leave, "EXPLORED": cmd_explored,
-         "BOARD": cmd_board, "INFO": cmd_ask}
+         "BOARD": cmd_board, "INFO": cmd_ask,
+         "LEAGUE": lambda ctx, args, data: rovers_league.cmd_league(ctx, args, data, sys.modules[__name__])}
 MAJOR = {"LIST": cmd_majors, "CLEAR": cmd_major_clear}
 
 
