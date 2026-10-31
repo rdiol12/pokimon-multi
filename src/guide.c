@@ -153,6 +153,10 @@ const struct GuideEntry gGuideEntries[] =
     AREA("HOLLOWMERE", "An old ferryman in LILYCOVE CITY rows you\nthere, but only at night.",
          MAPSEC_LILYCOVE_CITY, MAP_HOLLOWMERE, 7, FLAG_HOLLOW_MANOR_KEY),
 #endif
+#ifdef FLAG_MIRAGE_SPRING_DONE
+    AREA("MIRAGE OASIS", "A caravan master on ROUTE 111, south of\nthe desert, leads you to the far dunes.",
+         MAPSEC_ROUTE_111, MAP_MIRAGE_DUNES, 8, FLAG_MIRAGE_SPRING_DONE),
+#endif
     AREA("STARFALL ISLE", "A sailor in LILYCOVE CITY sails to the\nisland of rare POKéMON.",
          MAPSEC_LILYCOVE_CITY, MAP_STARFALL_ISLE, 8, FLAG_STARFALL_SKWOVET_REWARD),
     ACTIVITY("STARFALL HOTEL", "The bellhop in STARFALL ISLE's plaza makes\nyou the hotel's manager.",
