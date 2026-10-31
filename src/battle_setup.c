@@ -1,4 +1,5 @@
 #include "global.h"
+#include "world.h"
 #include "data.h"
 #include "main.h"
 #include "battle.h"
@@ -412,6 +413,7 @@ static void DoStandardWildBattle(bool32 isDouble)
     }
     CreateBattleStartTask(GetWildBattleTransition(), 0);
     IncrementGameStat(GAME_STAT_TOTAL_BATTLES);
+    World_OnWildBattleStart();
     IncrementGameStat(GAME_STAT_WILD_BATTLES);
     IncrementDailyWildBattles();
     TryUpdateGymLeaderRematchFromWild();
@@ -693,6 +695,7 @@ static void CB2_EndWildBattle(void)
 {
     CpuFill16(0, (void *)(BG_PLTT), BG_PLTT_SIZE);
     ResetOamRange(0, 128);
+    World_OnWildBattleEnd();
 
     if (IsNPCFollowerWildBattle())
     {
@@ -719,6 +722,7 @@ static void CB2_EndScriptedWildBattle(void)
 {
     CpuFill16(0, (void *)(BG_PLTT), BG_PLTT_SIZE);
     ResetOamRange(0, 128);
+    World_OnWildBattleEnd();
 
     if (IsPlayerDefeated(gBattleOutcome) == TRUE)
     {
@@ -1572,6 +1576,7 @@ static void HandleBattleVariantEndParty(void)
 static void CB2_EndTrainerBattle(void)
 {
     HandleBattleVariantEndParty();
+    World_OnTrainerBattleEnd();
 
     gIsDebugBattle = FALSE;
     if (FollowerNPCIsBattlePartner())

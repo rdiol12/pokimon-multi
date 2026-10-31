@@ -57,6 +57,7 @@ enum {
     BALL_THROW_UNABLE_SEMI_INVULNERABLE,
     BALL_THROW_ABLE,
     BALL_THROW_UNABLE_DISABLED_FLAG,
+    BALL_THROW_UNABLE_HARDCORE, // hardcore mode: not the first encounter in this area
 };
 
 bool32 CanThrowBall(void);

@@ -1,5 +1,6 @@
 -- Bridge extension for the Online Plaza (docs/netplay_ext.md). Loaded by
--- netplay_bridge.lua through extensions.txt.
+-- netplay_bridge.lua through extensions.txt; the server's bridge download
+-- has it appended.
 --
 -- The game's second mailbox (gNetplayExtMailbox) holds one request at a
 -- time. Its data goes to the server as XD lines, the request as an X line,
@@ -98,7 +99,10 @@ function Ext:onLine(args)
     return false
 end
 
-if NetplayBridge ~= nil then
+-- Once only: the server's bridge download has this file appended, and
+-- extensions.txt may name it too.
+if NetplayBridge ~= nil and not NetplayExtLoaded then
+    NetplayExtLoaded = true
     local ext = Ext.new(NetplayBridge.send)
     NetplayBridge.addHook({
         onLine = function(args) return ext:onLine(args) end,

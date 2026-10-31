@@ -537,8 +537,15 @@ class Server:
         player.send("BOARDEND")
 
 
+# World features (followers, houses, leaderboards, hunts, photos): server/world.py.
+import world  # noqa: E402
+
+world.install(Server)
+
+
 async def serve(host, port, db_path, http_port=0, public_host="", season_days=28):
     server = Server(League(db_path), season_days)
+    world.attach(server, db_path)
     import ext
 
     ext.install(server)

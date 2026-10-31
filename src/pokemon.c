@@ -1,4 +1,5 @@
 #include "global.h"
+#include "world.h"
 #include "malloc.h"
 #include "apprentice.h"
 #include "battle.h"
@@ -892,6 +893,8 @@ bool32 ComputePlayerShinyOdds(u32 personality, u32 value)
 
     if (gDexNavSpecies)
         totalRerolls += CalculateDexNavShinyRolls();
+
+    totalRerolls += ShinyChain_ExtraRolls();
 
     while (GET_SHINY_VALUE(value, personality) >= SHINY_ODDS && totalRerolls > 0)
     {
