@@ -8,6 +8,7 @@
 #define NETPLAY_KIND_DEAL   3 // Pokémon and/or money, for Pokémon and/or money
 #define NETPLAY_KIND_COOP   4 // together against two NPC trainers
 #define NETPLAY_KIND_DOUBLE 5 // a ranked double battle (its own ladder)
+#define NETPLAY_KIND_MULTI  6 // a 2v2 team battle: four games linked (team ladder)
 
 // Not a session: the talk menu's "Add friend".
 #define NETPLAY_KIND_FRIEND 10

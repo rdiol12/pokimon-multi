@@ -224,6 +224,26 @@ Results go to their own Elo ladder (`server/online_doubles.py`, table
 each winner, and HUB → DOUBLES LADDER shows the board. Spectator betting
 takes double battles too.
 
+## 2v2 team ladder
+
+![TEST2 picks 2v2 TEAM BATTLE, TEST1's partner TEST3 is asked to join from inside the Pokémon Center, the four-player battle, the win/loss screen, everyone hears who won, the 2V2 TEAM LADDER](images/online-team-ladder.png)
+
+Two players form a team in HUB → TEAM LADDER (FORM A TEAM picks someone
+online, who answers in the same place; SPLIT UP ends it). A team takes on
+another by talking to one of its members and picking 2V2 TEAM BATTLE: the
+other three are asked to join (a partner out of sight gets "Your team has a
+2v2 team battle!"), and once all have said yes, all four games link up for a
+multi battle, each player with the first three Pokémon of their party.
+
+The link is the plaza's network link grown to four players (see
+`docs/netplay.md`, Link over the network): session kind `multi`, link roles
+0 to 3, a FIFO per player, and the bridge holding back a player who runs too
+far ahead. Results go to the team's own Elo rating (`server/online_teams.py`,
+table `online_teams`); a team's members have to agree on the result, and the
+server announces the winners. Building it turned up that every Pokémon
+Center switched the game to wireless mode (the Union Room check), which broke
+any online link started indoors; that check is off now.
+
 ## How it talks to the server
 
 These features use the Online Plaza's request channel (`NpxRpc_*` in

@@ -62,4 +62,11 @@ const struct OnlineRequest gOnlineRequests[ONL_REQ_COUNT] =
     [ONL_REQ_BET_COLLECT] = {"BET COLLECT"},
     [ONL_REQ_BET_BOARD]   = {"BET BOARD"},
     [ONL_REQ_DOUBLES_BOARD] = {"DOUBLES BOARD"},
+    [ONL_REQ_TEAM_VIEW]  = {"TEAM VIEW"},
+    [ONL_REQ_TEAM_WHO]   = {"TEAM WHO"},
+    [ONL_REQ_TEAM_ASK]   = {"TEAM ASK", .flags = ONL_ARG_CHOSEN},
+    [ONL_REQ_TEAM_YES]   = {"TEAM YES"},
+    [ONL_REQ_TEAM_NO]    = {"TEAM NO"},
+    [ONL_REQ_TEAM_LEAVE] = {"TEAM LEAVE"},
+    [ONL_REQ_TEAM_BOARD] = {"TEAM BOARD"},
 };

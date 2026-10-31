@@ -8,16 +8,18 @@ Netplay_EventScript_TalkToPlayer::
 	message Netplay_Text_WhatToDo
 	waitmessage
 	dynmultipush Netplay_Text_Battle, NETPLAY_KIND_BATTLE
-	dynmultipush Netplay_Text_Double, NETPLAY_KIND_DOUBLE
 	dynmultipush Netplay_Text_Trade, NETPLAY_KIND_TRADE
 	dynmultipush Netplay_Text_BuySell, NETPLAY_KIND_DEAL
 	dynmultipush Netplay_Text_AddFriend, NETPLAY_KIND_FRIEND
 	dynmultipush Netplay_Text_Coop, NETPLAY_KIND_COOP
+	dynmultipush Netplay_Text_Double, NETPLAY_KIND_DOUBLE
+	dynmultipush Netplay_Text_Multi, NETPLAY_KIND_MULTI
 	dynmultipush Netplay_Text_Cancel, NETPLAY_KIND_NONE
 	dynmultistack 0, 0, FALSE, 6, FALSE, NETPLAY_KIND_BATTLE, DYN_MULTICHOICE_CB_NONE
 	switch VAR_RESULT
 	case NETPLAY_KIND_BATTLE, Netplay_EventScript_SendInvite
 	case NETPLAY_KIND_DOUBLE, Netplay_EventScript_SendInvite
+	case NETPLAY_KIND_MULTI, Netplay_EventScript_SendInvite
 	case NETPLAY_KIND_COOP, Netplay_EventScript_SendInvite
 	case NETPLAY_KIND_TRADE, Netplay_EventScript_SendInvite
 	case NETPLAY_KIND_DEAL, Netplay_EventScript_SendInvite
@@ -64,6 +66,7 @@ Netplay_EventScript_Invite::
 	goto_if_eq VAR_RESULT, NETPLAY_KIND_DEAL, Netplay_EventScript_DealInvite
 	goto_if_eq VAR_RESULT, NETPLAY_KIND_COOP, Netplay_EventScript_CoopInvite
 	goto_if_eq VAR_RESULT, NETPLAY_KIND_DOUBLE, Netplay_EventScript_DoubleInvite
+	goto_if_eq VAR_RESULT, NETPLAY_KIND_MULTI, Netplay_EventScript_MultiInvite
 	playse SE_PIN
 	msgbox Netplay_Text_BattleInvite, MSGBOX_YESNO
 	goto Netplay_EventScript_AnswerInvite
@@ -78,6 +81,19 @@ Netplay_EventScript_TradeInvite:
 Netplay_EventScript_DoubleInvite:
 	playse SE_PIN
 	msgbox Netplay_Text_DoubleInvite, MSGBOX_YESNO
+	goto Netplay_EventScript_AnswerInvite
+	end
+
+@ A team battle's partners are often elsewhere, out of sight of who started it.
+Netplay_EventScript_MultiInvite:
+	playse SE_PIN
+	goto_if_eq VAR_0x8005, FALSE, Netplay_EventScript_MultiInviteUnseen
+	msgbox Netplay_Text_MultiInvite, MSGBOX_YESNO
+	goto Netplay_EventScript_AnswerInvite
+	end
+
+Netplay_EventScript_MultiInviteUnseen:
+	msgbox Netplay_Text_MultiInviteUnseen, MSGBOX_YESNO
 	goto Netplay_EventScript_AnswerInvite
 	end
 
@@ -197,6 +213,17 @@ Netplay_Text_Double:
 Netplay_Text_DoubleInvite:
 	.string "{STR_VAR_1} challenges you to a\n"
 	.string "ranked double battle! Accept?$"
+
+Netplay_Text_Multi:
+	.string "2v2 team battle$"
+
+Netplay_Text_MultiInvite:
+	.string "{STR_VAR_1} started a 2v2 team battle!\n"
+	.string "Will you join in?$"
+
+Netplay_Text_MultiInviteUnseen:
+	.string "Your team has a 2v2 team battle!\n"
+	.string "Will you join in?$"
 
 Netplay_Text_Coop:
 	.string "Co-op battle$"
