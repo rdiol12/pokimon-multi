@@ -61,7 +61,7 @@ MAX_TEAM = 6
 MAX_HERE = 4          # the game shows at most this many on one map
 STEP = 600            # seconds of rover life per simulation step
 MAX_STEPS = 72        # catching up after a long quiet spell stops at 12 hours
-TID_BASE = 70000      # rovers' trainer ids on the PvP ladder (above any real id)
+TID_BASE = 70000      # rovers' trainer ids (above any real id); they're not on the PvP ladder
 MAX_MAJORS = 12
 MAJOR_REWARD = 3000   # per 10 levels
 MAX_NEWS = 40
@@ -278,7 +278,7 @@ def add_injury(m, lo, hi):
 
 
 def fight(db, a, b, winner_a):
-    """Records a rover-vs-rover fight, on the rovers and the PvP ladder."""
+    """Records a rover-vs-rover fight on both rovers (not on the PvP ladder)."""
     w, l = (a, b) if winner_a else (b, a)
     w.wins += 1
     l.losses += 1
@@ -358,8 +358,7 @@ class Sim:
             o = rng.choice(rivals)
             sa, sb = r.strength(), o.strength()
             won = rng.random() < sa / max(sa + sb, 1)
-            w, l = fight(self.db, r, o, won)
-            self.league.record(w.key, "win", l.key, "loss")
+            fight(self.db, r, o, won)
             o.save(self.db)
             return
         # Day Care.
@@ -520,7 +519,6 @@ def cmd_fight(ctx, args, data):
     if a.id == b.id:
         raise ValueError("a rover can't fight itself")
     w, l = fight(ctx.db, a, b, int(args[3]) != 0)
-    ctx.league.record(w.key, "win", l.key, "loss")
     news(ctx.db, f"{w.name} beat {l.name}!")
     a.save(ctx.db)
     b.save(ctx.db)
@@ -536,12 +534,8 @@ def cmd_beat(ctx, args, data):
     else:
         r.losses += 1
         r.hurt += 1
+    # Rovers stay off the PvP ladder (ron, 2026-10-31): their own record only.
     if who == 1:
-        ctx.db.execute("INSERT OR IGNORE INTO players (name, tid) VALUES (?, ?)", r.key)
-        if won:
-            ctx.league.record(r.key, "win", ctx.key, "loss")
-        else:
-            ctx.league.record(ctx.key, "win", r.key, "loss")
         news(ctx.db, f"{ctx.key[0]} {'lost to' if won else 'beat'} {r.name}.")
     r.save(ctx.db)
     return b""

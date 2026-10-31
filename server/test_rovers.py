@@ -65,10 +65,10 @@ class RoverTest(unittest.IsolatedAsyncioTestCase):
         r = rovers.load(self.league.db, w[0])
         self.assertEqual([m["species"] for m in r.team][1], 265)
         self.assertEqual(r.team[1]["moves"][:2], [33, 81])
-        # Then a fight: on the ladder too.
+        # Then a fight: counted for the rovers, kept off the PvP ladder.
         self.assertEqual(await self.ask(a, "ROVER FIGHT 3 9 1"), (0, b""))
         top = [row[0] for row in self.league.top()]
-        self.assertIn(rovers.CAST[3]["name"], top)
+        self.assertNotIn(rovers.CAST[3]["name"], top)
         self.assertEqual(rovers.load(self.league.db, 9).losses, 1)
         status, board = await self.ask(a, "ROVER BOARD")
         self.assertIn(b"-", board)

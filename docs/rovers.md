@@ -11,8 +11,8 @@ heal at Pokémon Centers. The player meets them anywhere and can:
   sides played by the AI. The result counts for both trainers.
 - **talk** to a wandering one to see its badges, record and team, and
   **battle** it.
-- see their **rankings and news** on the quest board in every town, and on the
-  PvP ladder (rover-vs-rover fights are rated like player battles).
+- see their **rankings and news** on the quest board in every town. They
+  are not on the PvP ladder, which stays for players.
 
 Also here:
 
