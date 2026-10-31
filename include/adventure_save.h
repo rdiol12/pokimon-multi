@@ -28,7 +28,12 @@ struct AdventureSaveData
     struct DailyQuestSlot dailyQuests[DAILY_QUEST_GIVERS];
     // Crafting.
     u16 itemsCrafted;
-    u16 filler;
+    // Ranch.
+    u16 ranchItemsGathered;
+    u32 ranchLastHour;          // the clock (days * 24 + hours) when finds were last counted
+    u8 ranchStarted;
+    u8 ranchShown[RANCH_SHOWN]; // box positions of the Pokémon in the pasture
+    u8 filler;
 };
 
 #endif // GUARD_ADVENTURE_SAVE_H

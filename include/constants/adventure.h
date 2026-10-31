@@ -14,6 +14,7 @@
 
 // Flags (FLAG_UNUSED_0x264-0x27C and 0x281-0x28D are this batch's).
 #define FLAG_ADVENTURE_CRAFTING FLAG_UNUSED_0x264 // the Rustboro crafter showed how to craft
+#define FLAG_HIDE_RANCH_MON_1   FLAG_UNUSED_0x265 // ... _6 = 0x26A: empty spots in the ranch pasture
 
 // Trainer levels (src/trainer_level.c).
 #define TRAINER_LEVEL_MAX 30
@@ -47,5 +48,14 @@
 #define DAILY_QUEST_TALK_PROGRESS  1
 #define DAILY_QUEST_TALK_COMPLETE  2
 #define DAILY_QUEST_TALK_COME_BACK 3
+
+// Ranch (src/ranch.c).
+#define RANCH_SHOWN 6 // Pokémon wandering the pasture
+
+// Ranch_Collect results.
+#define RANCH_TALK_FIRST       0
+#define RANCH_TALK_EMPTY       1
+#define RANCH_TALK_NOTHING_YET 2
+#define RANCH_TALK_HAUL        3
 
 #endif // GUARD_CONSTANTS_ADVENTURE_H

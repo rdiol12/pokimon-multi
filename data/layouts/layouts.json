@@ -9354,6 +9354,16 @@
       "secondary_tileset": "gTileset_Amberwood",
       "border_filepath": "data/layouts/AmberwoodHollow/border.bin",
       "blockdata_filepath": "data/layouts/AmberwoodHollow/map.bin"
+    },
+    {
+      "id": "LAYOUT_ADVENTURE_RANCH",
+      "name": "AdventureRanch_Layout",
+      "width": 24,
+      "height": 18,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Mauville",
+      "border_filepath": "data/layouts/AdventureRanch/border.bin",
+      "blockdata_filepath": "data/layouts/AdventureRanch/map.bin"
     }
   ]
 }

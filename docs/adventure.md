@@ -116,12 +116,47 @@ online.
 | Fire, Water, Thunder, Leaf Stone | 4 Red, Blue, Yellow or Green Shards (like the Route 124 treasure hunter) |
 | Star Piece | 4 Stardust |
 
+## Pokémon ranching
+
+![Ranching: the ranch hand on Route 117, the ranch, the rancher, the Pokémon in the pasture, and what they found](images/adventure-ranch.png)
+
+The **Hoenn Ranch** (`MAP_ADVENTURE_RANCH`) is a meadow behind the Route
+117 Day Care: the ranch house, a stone-fenced pasture, a flower bed and a
+path back. The ranch hand next to the Day Care (Route 117, 55,6) takes
+the player there; walking out at the bottom leads back.
+`tools/adventure/make_ranch.py` builds the layout from Route 117's own
+metatiles (same tilesets), and `tools/adventure/render_map.py` draws any
+layout to a PNG.
+
+The Pokémon in the **last PC box** live at the ranch; the rancher names
+that box RANCH on the first visit. The first six wander the pasture
+(object graphics set from the box when the map loads, `Ranch_SetupMap`),
+and talking to one plays its cry. All of them gather while the player is
+away: one find every 6 hours of the clock each, up to a day's worth (40
+finds at most), handed over by the rancher with a list of who found what
+(`src/ranch.c`). Collecting gives 10 trainer XP online.
+
+What a Pokémon finds:
+
+- its species' own speciality: Shuckle → Berry Juice, Miltank → Moomoo
+  Milk, Chansey/Blissey/Happiny → Oval Stone (rarely a Lucky Egg),
+  Combee/Vespiquen → Honey;
+- Honey with Honey Gather, Emerald's Pickup items with Pickup;
+- Berries (Oran, Pecha, Cheri, Chesto, Rawst, Aspear, Leppa) half the
+  time for Grass and Bug types;
+- otherwise by one of its types, mostly crafting materials: Apricorns
+  (Fire → Red, Water → Blue, Electric → Yellow, Psychic/Fairy → Pink,
+  Dark/Ghost/Poison → Black...), Shards (Ground, Rock, Steel), Mushrooms,
+  Heart Scales, Stardust, and a rare one per type (Pearl, Hard Stone,
+  Charcoal, Star Piece, Dragon Scale...).
+
 ## Screenshots
 
 ```sh
 python3 tools/adventure_shots/run.py tools/adventure_shots/trainer_level.lua out/trainer_level 30000 2
 python3 tools/adventure_shots/run.py tools/adventure_shots/daily_quests.lua out/daily_quests 40000
 python3 tools/adventure_shots/run.py tools/adventure_shots/crafting.lua out/crafting 20000
+python3 tools/adventure_shots/run.py tools/adventure_shots/ranch.lua out/ranch 20000
 ```
 
 `run.py` is `tools/world_shots/run.py` (headless libmgba, `Driver.scene`,

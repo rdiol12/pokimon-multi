@@ -4,6 +4,7 @@
 #include "item.h"
 #include "script.h"
 #include "daily_quest.h"
+#include "ranch.h"
 #include "trainer_level.h"
 
 // Entry points for the fourth-batch game features (docs/adventure.md),
@@ -18,6 +19,8 @@ struct AdventureShowcase
     u8 filler[2];
     u32 setXp;   // trainer XP + 1, 0 = leave as is
     u16 items[8]; // 10 of each go in the bag
+    u16 ranchSpecies[RANCH_SHOWN]; // put in the RANCH box
+    u8 ranchHoursAgo;              // the last ranch visit, hours ago
 };
 
 EWRAM_DATA struct AdventureShowcase gAdventureShowcase = {0};
@@ -33,6 +36,10 @@ static void RunShowcase(void)
             AddBagItem(gAdventureShowcase.items[i], 10);
         gAdventureShowcase.items[i] = ITEM_NONE;
     }
+    if (gAdventureShowcase.ranchSpecies[0] != SPECIES_NONE || gAdventureShowcase.ranchHoursAgo != 0)
+        Ranch_Showcase(gAdventureShowcase.ranchSpecies, RANCH_SHOWN, gAdventureShowcase.ranchHoursAgo);
+    memset(gAdventureShowcase.ranchSpecies, 0, sizeof(gAdventureShowcase.ranchSpecies));
+    gAdventureShowcase.ranchHoursAgo = 0;
     if (gAdventureShowcase.setXp != 0)
         TrainerLevel_SetXp(gAdventureShowcase.setXp - 1);
     if (gAdventureShowcase.outfit != 0)
