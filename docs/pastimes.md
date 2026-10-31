@@ -552,3 +552,21 @@ has been found. The bottle is a sprite of its own (not an object event);
 picking it up and digging go through `Pastime_TryInteract`. These treasures
 are separate from the daily treasure hunt of `docs/adventure.md`.
 Screenshots: `tools/pastime_shots/bottle.lua`.
+
+## Pokémon fashion
+
+![Pokémon fashion](images/pastime-fashion.png)
+
+A stylist at the Pokémon Fan Club in Slateport sells eight accessories
+(RED BOW, STRAW HAT, BLUE SCARF, FLOWER CROWN, SUNGLASSES, GOLD CROWN, BELL
+COLLAR, PARTY HAT, from ¥800 to ¥8000) and dresses the lead Pokémon in one.
+It wears it while following the player: the accessory is a sprite that
+rides on the follower's sprite (`GetFollowerObject`), with glasses and
+collars hidden from behind. The accessory belongs to that Pokémon (by its
+personality), so it comes off when another Pokémon leads. Each day the
+stylist has a theme (CUTE, COOL, NATURAL, ROYAL or FUN); TODAY'S LOOK with
+a lead Pokémon wearing an accessory of that theme wins the day's prize
+(a Heart Scale, PP Up, Star Piece, Big Pearl or Rare Candy, by the day).
+**R > PASTIMES > FASHION** lists the accessories, their themes, which are
+owned and which is worn, and today's theme. Screenshots:
+`tools/pastime_shots/fashion.lua`.

@@ -238,4 +238,13 @@ void Bottle_HideMap(void);
 void Bottle_Dig(void);
 void Bottle_ShowList(void);
 
+// Pokémon fashion (pastime_fashion.c).
+void Fashion_Update(void);
+void Fashion_PushBuyMenu(void);
+void Fashion_Buy(void);
+void Fashion_PushDressMenu(void);
+void Fashion_Dress(void);
+void Fashion_Judge(void);
+void Fashion_ShowList(void);
+
 #endif // GUARD_PASTIME_H

@@ -53,6 +53,7 @@ static const struct PastimeSpotList sSpotLists[] =
     {gDigSpots, 1 + DIG_SITES},
     {gAlphaSpots, ALPHA_COUNT},
     {gLighthouseSpots, 1},
+    {gFashionSpots, 1},
 };
 
 #define MAX_SHOWN (LOCALID_PASTIME_LAST - LOCALID_PASTIME_FIRST + 1)
@@ -168,6 +169,7 @@ void Pastime_Update(void)
     Track_Update();
     Festival_Update();
     Bottle_Update();
+    Fashion_Update();
 }
 
 // A pressed facing (x, y), map coordinates with MAP_OFFSET.
