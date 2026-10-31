@@ -58,6 +58,33 @@ struct PastimeSaveData
     u8 cookBest;
     u16 cookWins;
     u16 cookEntries;
+    // Bug-catching contest (src/pastime_bug_contest.c)
+    u16 bugDay;       // day + 1 of the last contest entered
+    u16 bugBest;
+    u16 bugBestSpecies;
+    u16 bugWins;
+    u16 bugEntries;
+    // Trading post (src/pastime_trading.c)
+    u16 tradeDay;     // day + 1 the offers below are for
+    u8 tradeDone;     // a bit per barter done today, TRADING_SWAP_DONE
+    u8 tradeFiller;
+    u16 tradeBarters;
+    u16 tradeSwaps;
+    // Battle dojo (src/pastime_dojo.c)
+    u16 dojoDay;      // day + 1 of dojoSessions
+    u8 dojoSessions;
+    u8 dojoFiller;
+    u16 dojoPoints;
+    u16 dojoEarned;
+    u16 dojoTaught;
+    // Ranger missions (src/pastime_ranger.c)
+    u16 rangerDay;      // day + 1 of rangerToday
+    u8 rangerToday;     // missions given today
+    u8 rangerMission;   // index + 1 in sMissions, 0: none
+    u8 rangerProgress;
+    u8 rangerFiller;
+    u16 rangerPoints;
+    u16 rangerDone;
 };
 
 #endif // GUARD_PASTIME_SAVE_H

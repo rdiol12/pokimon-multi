@@ -408,6 +408,11 @@ static void FormatBoardValue(u8 *dest, u8 board, u32 value, u32 extra)
         ConvertIntToDecimalStringN(gStringVar2, extra, STR_CONV_MODE_LEFT_ALIGN, 2);
         StringExpandPlaceholders(dest, COMPOUND_STRING("{STR_VAR_1} pts ({STR_VAR_2}/10)"));
         break;
+    case WORLD_BOARD_BUG_CONTEST: // extra: species
+        ConvertIntToDecimalStringN(gStringVar1, value, STR_CONV_MODE_LEFT_ALIGN, 3);
+        StringCopy(gStringVar2, GetSpeciesName(extra));
+        StringExpandPlaceholders(dest, COMPOUND_STRING("{STR_VAR_1} {STR_VAR_2}"));
+        break;
     case WORLD_BOARD_COOKING: // extra: contests won
         ConvertIntToDecimalStringN(gStringVar1, value, STR_CONV_MODE_LEFT_ALIGN, 3);
         ConvertIntToDecimalStringN(gStringVar2, extra, STR_CONV_MODE_LEFT_ALIGN, 4);
@@ -472,6 +477,7 @@ static const u8 *const sBoardTitles[] =
     [WORLD_BOARD_PYRAMID]  = COMPOUND_STRING("BATTLE PYRAMID"),
     [WORLD_BOARD_QUIZ]     = COMPOUND_STRING("QUIZ CHAMPS"),
     [WORLD_BOARD_COOKING]  = COMPOUND_STRING("COOK-OFF CHAMPS"),
+    [WORLD_BOARD_BUG_CONTEST] = COMPOUND_STRING("BUG CONTEST"),
 };
 
 static void Task_WaitBoard(u8 taskId)

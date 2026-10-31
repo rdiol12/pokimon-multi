@@ -1,4 +1,5 @@
 #include "global.h"
+#include "battle.h"
 #include "event_data.h"
 #include "event_object_movement.h"
 #include "field_effect.h"
@@ -37,6 +38,10 @@ static const struct PastimeSpotList sSpotLists[] =
     {gHotelSpots, HOTEL_SPOT_COUNT},
     {gCafeSpots, 1},
     {gCookingSpots, 1},
+    {gBugContestSpots, 1},
+    {gTradingSpots, 1},
+    {gDojoSpots, 1},
+    {gRangerSpots, 1 + RANGER_LOST_COUNT},
 };
 
 #define MAX_SHOWN (LOCALID_PASTIME_LAST - LOCALID_PASTIME_FIRST + 1)
@@ -141,6 +146,7 @@ void Pastime_Update(void)
     sTimer = 0;
     UpdateSpots();
     Delivery_Update();
+    BugContest_Update();
 }
 
 // A pressed facing (x, y), map coordinates with MAP_OFFSET.
@@ -184,9 +190,30 @@ void Pastime_HideMonPic(void)
     sPicShown = FALSE;
 }
 
+// Called as a battle is set up (CreateBattleStartTask in battle_setup.c).
+void Pastime_OnBattleStart(void)
+{
+    Cafe_OnBattleStart();
+    BugContest_OnBattleStart();
+}
+
 // Called when the player caught a wild Pokémon.
 void Pastime_OnCatch(void)
 {
+    BugContest_OnCatch(gBattleResults.caughtMonSpecies);
+    Ranger_OnCatch(gBattleResults.caughtMonSpecies);
+}
+
+// Back from a wild battle, before the field reloads.
+void Pastime_OnWildBattleEnd(void)
+{
+    Ranger_OnWildBattleEnd();
+}
+
+// World_ModifyWildSpecies: changes the species of a wild encounter.
+u16 Pastime_ModifyWildSpecies(u16 species)
+{
+    return BugContest_ModifyWildSpecies(species);
 }
 
 // Back from a trainer battle.

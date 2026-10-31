@@ -9,6 +9,10 @@ Pastime_EventScript_Menu::
 	dynmultipush Pastime_Text_MenuHotel, PASTIME_MENU_HOTEL
 	dynmultipush Pastime_Text_MenuCafe, PASTIME_MENU_CAFE
 	dynmultipush Pastime_Text_MenuCooking, PASTIME_MENU_COOKING
+	dynmultipush Pastime_Text_MenuBugContest, PASTIME_MENU_BUG_CONTEST
+	dynmultipush Pastime_Text_MenuTrading, PASTIME_MENU_TRADING
+	dynmultipush Pastime_Text_MenuDojo, PASTIME_MENU_DOJO
+	dynmultipush Pastime_Text_MenuRanger, PASTIME_MENU_RANGER
 	dynmultipush Pastime_Text_MenuClose, PASTIME_MENU_CLOSE
 	dynmultistack 0, 0, FALSE, 6, FALSE, PASTIME_MENU_LOST_FOUND, DYN_MULTICHOICE_CB_NONE
 	switch VAR_RESULT
@@ -20,6 +24,10 @@ Pastime_EventScript_Menu::
 	case PASTIME_MENU_HOTEL, Pastime_EventScript_Hotel
 	case PASTIME_MENU_CAFE, Pastime_EventScript_Cafe
 	case PASTIME_MENU_COOKING, Pastime_EventScript_Cooking
+	case PASTIME_MENU_BUG_CONTEST, Pastime_EventScript_BugContest
+	case PASTIME_MENU_TRADING, Pastime_EventScript_Trading
+	case PASTIME_MENU_DOJO, Pastime_EventScript_Dojo
+	case PASTIME_MENU_RANGER, Pastime_EventScript_Ranger
 Pastime_EventScript_MenuDone::
 	releaseall
 	end
@@ -86,6 +94,37 @@ Pastime_EventScript_CookChamps:
 	releaseall
 	end
 
+Pastime_EventScript_BugContest:
+	dynmultipush Pastime_Text_CookRecords, 0
+	dynmultipush Pastime_Text_BugChamps, 1
+	dynmultistack 0, 0, FALSE, 2, FALSE, 0, DYN_MULTICHOICE_CB_NONE
+	goto_if_eq VAR_RESULT, 1, Pastime_EventScript_BugChamps
+	goto_if_ne VAR_RESULT, 0, Pastime_EventScript_MenuDone
+	callnative BugContest_ShowList, waitstate=1
+	releaseall
+	end
+
+Pastime_EventScript_BugChamps:
+	setvar VAR_0x8004, WORLD_BOARD_BUG_CONTEST
+	callnative WorldOnline_ShowBoard, waitstate=1
+	releaseall
+	end
+
+Pastime_EventScript_Trading:
+	callnative Trading_ShowList, waitstate=1
+	releaseall
+	end
+
+Pastime_EventScript_Dojo:
+	callnative Dojo_ShowList, waitstate=1
+	releaseall
+	end
+
+Pastime_EventScript_Ranger:
+	callnative Ranger_ShowList, waitstate=1
+	releaseall
+	end
+
 Pastime_Text_MenuLostFound:
 	.string "LOST & FOUND$"
 Pastime_Text_MenuMuseum:
@@ -110,5 +149,15 @@ Pastime_Text_CookRecords:
 	.string "MY RECORDS$"
 Pastime_Text_CookChamps:
 	.string "COOK-OFF CHAMPS$"
+Pastime_Text_MenuBugContest:
+	.string "BUG CONTEST$"
+Pastime_Text_BugChamps:
+	.string "BUG CONTEST BOARD$"
+Pastime_Text_MenuTrading:
+	.string "TRADING POST$"
+Pastime_Text_MenuDojo:
+	.string "BATTLE DOJO$"
+Pastime_Text_MenuRanger:
+	.string "RANGER$"
 Pastime_Text_MenuClose:
 	.string "CLOSE$"

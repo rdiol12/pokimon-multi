@@ -147,6 +147,7 @@ enum Species World_ModifyWildSpecies(enum Species species, u8 level)
 {
     species = RoamingWeather_ModifyWildSpecies(species, level);
     species = Adventure_ModifyWildSpecies(species);
+    species = Pastime_ModifyWildSpecies(species);
     ShinyChain_OnWildSpecies(species);
     return species;
 }
@@ -165,6 +166,7 @@ void World_OnWildBattleEnd(void)
     }
     ShinyChain_OnWildBattleEnd();
     Records_OnWildBattleEnd();
+    Pastime_OnWildBattleEnd();
     Hardcore_OnBattleEnd(TRUE);
 }
 

@@ -191,3 +191,91 @@ The best score goes to the server's **COOK-OFF CHAMPS** leaderboard (world
 board 17 in `server/world.py`). **R > PASTIMES > COOK-OFF** has MY RECORDS
 (rank, best score, wins, entries, today's contest) and COOK-OFF CHAMPS.
 Screenshots: `tools/pastime_shots/cooking.lua` (two players online).
+
+## Bug-catching contest
+
+![Bug-catching contest](images/pastime-bug-contest.png)
+
+The contest officer stands at the north edge of Route 119's big field of
+tall grass (below the Weather Institute). Once a day, enter to get 20 Sport
+Balls and 10 minutes on the clock (overworld time; battles and menus pause
+it). While the contest is on, every wild Pokémon in Route 119's grass is a
+Bug type: common ones (Caterpie, Weedle, Wurmple, Ledyba, Spinarak,
+Kricketot, Sewaddle, Nincada, Blipbug), uncommon ones (Venonat, Paras,
+Surskit, Volbeat, Illumise, Combee, Yanma, Cutiefly, Nymble) and rare ones
+(Scyther, Pinsir, Heracross, Karrablast, Shelmet, Larvesta). You keep
+everything you catch.
+
+Each Bug caught scores 20, 50 or 100 for rarity, 3 a level, half its IV
+total and 50 if it's shiny; your best one counts ("NEW BEST BUG!"). One
+minute before the end, and when time's up, a notice tells you to go back
+to the officer (or end early by talking to him). The judges compare your
+best Bug with three rivals: 1st wins a Sun Stone, 2nd an Everstone, 3rd a
+Sitrus Berry, 4th an Oran Berry. Leftover Sport Balls are collected.
+
+The score goes to the server's **BUG CONTEST** board (world board 18 in
+`server/world.py`). **R > PASTIMES > BUG CONTEST** shows the clock, your
+best catch, best ever, wins and entries, and the board. Hooks:
+`Pastime_ModifyWildSpecies` in `World_ModifyWildSpecies` (`src/world.c`);
+the wild Pokémon is read at battle start (`Pastime_OnBattleStart`).
+Screenshots: `tools/pastime_shots/bug_contest.lua` (two players online).
+
+## Trading post
+
+![Trading post](images/pastime-trading-post.png)
+
+The trader stands at the end of the Slateport market row. Each day he has
+three barters from a pool of 18 (5 Oran Berries for a Sitrus Berry, 5 Great
+Balls for 2 Ultra Balls, a Star Piece for a Thunder Stone, 2 Heart Scales for
+a Fire Stone...), each once a day. He also makes one **Pokémon swap** a
+day: bring a Pokémon of the type he wants and he trades you a Pokémon from
+another region at level 20, holding a gift (a Fire type for SNEASEL "FROSTY"
+with a Quick Claw, a Water type for GROWLITHE "EMBER" with Charcoal, a
+Flying type for DRATINI "NOODLE" with a Dragon Fang, and six more). The
+traded Pokémon has OT TRADER and goes in the same party slot; the Pokédex
+marks it caught. **R > PASTIMES > TRADING POST** lists today's offers (grey
+once done) and the trades made. Screenshots: `tools/pastime_shots/trading.lua`.
+
+## Battle dojo
+
+![Battle dojo](images/pastime-dojo.png)
+
+The DOJO MASTER stands outside Dewford Gym. **TRAIN**: three sessions a
+day, each five timing meter drills; every good drill earns 2 Dojo Points
+(DP). Points earned in total raise your belt: WHITE, YELLOW (20), GREEN
+(60), BLUE (120), BLACK (200), and the meter gets faster with it.
+
+**LEARN A MOVE**: 16 moves the Pokémon Center relearner doesn't teach, from
+6 to 16 DP, the stronger ones locked behind belts: Fire/Ice/Thunder Punch
+and Seed Bomb (WHITE); Zen Headbutt, Aqua Tail, Knock Off (YELLOW); Iron
+Head, Drain Punch, Hyper Voice (GREEN); Earth Power, Heat Wave, Gunk Shot
+(BLUE); Stealth Rock, Superpower, Body Press (BLACK). Any Pokémon of the
+move's type can learn it here, as well as any that has it on its tutor
+list: `Pastime_CanLearnTeachableMove` is checked first in
+`CanLearnTeachableMove` (`src/pokemon.c`), and only while the master is
+teaching that move. It uses the usual tutor box and "forget a move" screens.
+**R > PASTIMES > BATTLE DOJO** shows the belt, points, sessions left, moves
+learned and the move list with prices. Screenshots: `tools/pastime_shots/dojo.lua`.
+
+## Ranger missions
+
+![Ranger missions](images/pastime-ranger.png)
+
+The RANGER stands outside Fortree Gym and gives one mission at a time, up
+to three a day, from a pool of 15 picked by the day:
+
+- **Rescue**: a lost Pokémon (Skitty on Route 104, Plusle on Route 110,
+  Azurill on Route 117, Whismur on Route 116, Spinda on Route 113) appears
+  on its route only while the mission is on. Find it and talk to it.
+- **Calm**: wild Pokémon are rampaging on a route (119, 110, 117, 104, 113);
+  win 3 or 4 wild battles there.
+- **Survey**: catch 1 to 3 Pokémon of a type (Water, Grass, Bug, Flying,
+  Electric) anywhere.
+
+Progress notices pop up as you go ("1 of 3 done", "MISSION COMPLETE!").
+Report back for 3 to 5 Ranger Points. Points raise your rank, and each
+promotion comes with a prize: RANGER at 10 points (Ultra Ball), AREA RANGER
+at 30 (Exp. Share), TOP RANGER at 60 (Master Ball). **R > PASTIMES > RANGER**
+shows the rank, points, missions done today and the current mission. Hooks:
+`Pastime_OnWildBattleEnd` in `World_OnWildBattleEnd` (`src/world.c`) and
+`Pastime_OnCatch`. Screenshots: `tools/pastime_shots/ranger.lua`.

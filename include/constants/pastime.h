@@ -15,6 +15,10 @@
 #define PASTIME_MENU_HOTEL      5
 #define PASTIME_MENU_CAFE       6
 #define PASTIME_MENU_COOKING    7
+#define PASTIME_MENU_BUG_CONTEST 8
+#define PASTIME_MENU_TRADING    9
+#define PASTIME_MENU_DOJO       10
+#define PASTIME_MENU_RANGER     11
 #define PASTIME_MENU_CLOSE      31
 
 // NPCs and objects the activities place on maps from code (src/pastime.c)
@@ -92,5 +96,45 @@
 #define COOK_RIVALS       3
 #define COOK_STEPS        3 // chop, stir, plate: one timing meter round each
 #define WORLD_BOARD_COOKING 17 // server leaderboard (server/world.py)
+
+// Bug-catching contest on Route 119 (src/pastime_bug_contest.c).
+#define BUG_CONTEST_OPEN       0 // VAR_RESULT of BugContest_GetState
+#define BUG_CONTEST_RUNNING    1
+#define BUG_CONTEST_DONE_TODAY 2
+#define WORLD_BOARD_BUG_CONTEST 18 // server leaderboard (server/world.py)
+
+// Trading post in the Slateport market (src/pastime_trading.c).
+#define TRADING_OFFERS      3    // barters a day
+#define TRADING_SWAP_DONE   0x80 // tradeDone bit
+#define TRADING_MENU_SWAP   13
+#define TRADING_MENU_CANCEL 14
+#define TRADING_OK          0    // VAR_RESULT of the checks
+#define TRADING_DONE        1
+#define TRADING_MISSING     2
+#define TRADING_EGG         3
+
+// Battle dojo in Dewford (src/pastime_dojo.c).
+#define DOJO_SESSIONS     3  // training sessions a day
+#define DOJO_DRILLS       5  // timing meter rounds a session
+#define DOJO_BELT_COUNT   5
+#define DOJO_MOVE_COUNT   16
+#define DOJO_MENU_TRAIN   0
+#define DOJO_MENU_LEARN   1
+#define DOJO_MENU_CANCEL  31
+#define DOJO_OK           0  // VAR_RESULT of Dojo_CheckMove
+#define DOJO_NO_BELT      1
+#define DOJO_NO_POINTS    2
+
+// Ranger missions from Fortree (src/pastime_ranger.c).
+#define RANGER_RESCUE            0
+#define RANGER_CALM              1
+#define RANGER_SURVEY            2
+#define RANGER_LOST_COUNT        5
+#define RANGER_RANK_COUNT        4
+#define RANGER_MISSIONS_PER_DAY  3
+#define RANGER_STATE_OPEN        0 // VAR_RESULT of Ranger_GetState
+#define RANGER_STATE_ACTIVE      1
+#define RANGER_STATE_COMPLETE    2
+#define RANGER_STATE_DONE_TODAY  3
 
 #endif // GUARD_CONSTANTS_PASTIME_H

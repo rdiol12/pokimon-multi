@@ -128,8 +128,8 @@ static u8 *AppendRecipe(u8 *dest, u32 dish, bool32 inMessage)
 }
 
 // Queues the dish's stat boosts for the player's battlers, like a totem's
-// aura. Called as a battle is set up (battle_setup.c).
-void Pastime_OnBattleStart(void)
+// aura. Called as a battle is set up (Pastime_OnBattleStart).
+void Cafe_OnBattleStart(void)
 {
     const struct Dish *dish;
     u32 stat, i;
