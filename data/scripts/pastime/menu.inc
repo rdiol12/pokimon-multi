@@ -13,6 +13,7 @@ Pastime_EventScript_Menu::
 	dynmultipush Pastime_Text_MenuTrading, PASTIME_MENU_TRADING
 	dynmultipush Pastime_Text_MenuDojo, PASTIME_MENU_DOJO
 	dynmultipush Pastime_Text_MenuRanger, PASTIME_MENU_RANGER
+	dynmultipush Pastime_Text_MenuSchool, PASTIME_MENU_SCHOOL
 	dynmultipush Pastime_Text_MenuClose, PASTIME_MENU_CLOSE
 	dynmultistack 0, 0, FALSE, 6, FALSE, PASTIME_MENU_LOST_FOUND, DYN_MULTICHOICE_CB_NONE
 	switch VAR_RESULT
@@ -28,6 +29,7 @@ Pastime_EventScript_Menu::
 	case PASTIME_MENU_TRADING, Pastime_EventScript_Trading
 	case PASTIME_MENU_DOJO, Pastime_EventScript_Dojo
 	case PASTIME_MENU_RANGER, Pastime_EventScript_Ranger
+	case PASTIME_MENU_SCHOOL, Pastime_EventScript_School
 Pastime_EventScript_MenuDone::
 	releaseall
 	end
@@ -125,6 +127,11 @@ Pastime_EventScript_Ranger:
 	releaseall
 	end
 
+Pastime_EventScript_School:
+	callnative School_ShowList, waitstate=1
+	releaseall
+	end
+
 Pastime_Text_MenuLostFound:
 	.string "LOST & FOUND$"
 Pastime_Text_MenuMuseum:
@@ -159,5 +166,7 @@ Pastime_Text_MenuDojo:
 	.string "BATTLE DOJO$"
 Pastime_Text_MenuRanger:
 	.string "RANGER$"
+Pastime_Text_MenuSchool:
+	.string "TRAINER SCHOOL$"
 Pastime_Text_MenuClose:
 	.string "CLOSE$"

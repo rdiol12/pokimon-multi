@@ -279,3 +279,18 @@ at 30 (Exp. Share), TOP RANGER at 60 (Master Ball). **R > PASTIMES > RANGER**
 shows the rank, points, missions done today and the current mission. Hooks:
 `Pastime_OnWildBattleEnd` in `World_OnWildBattleEnd` (`src/world.c`) and
 `Pastime_OnCatch`. Screenshots: `tools/pastime_shots/ranger.lua`.
+
+## Trainer school
+
+![Trainer school](images/pastime-school.png)
+
+A new teacher at the Rustboro Trainer's School (by the window, right of
+the old teacher) gives five lessons: STATUS, WEATHER, HELD ITEMS, ABILITIES
+and BATTLE BASICS. Each is a five-question multiple-choice test ("Which
+type can never be burned?", "LEFTOVERS restore how much max HP each
+turn?", "A critical hit does how much damage?"); a wrong answer shows the
+right one. Four right passes. The first pass of each lesson wins a prize
+(Full Heal, Damp Rock, Shell Bell, Bottle Cap, Expert Belt), and passing all
+five graduates you, for an Amulet Coin. Tests can be retaken any time.
+**R > PASTIMES > TRAINER SCHOOL** shows the lessons passed and tests taken.
+Screenshots: `tools/pastime_shots/school.lua`.

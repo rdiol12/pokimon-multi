@@ -19,6 +19,7 @@
 #define PASTIME_MENU_TRADING    9
 #define PASTIME_MENU_DOJO       10
 #define PASTIME_MENU_RANGER     11
+#define PASTIME_MENU_SCHOOL     12
 #define PASTIME_MENU_CLOSE      31
 
 // NPCs and objects the activities place on maps from code (src/pastime.c)
@@ -136,5 +137,15 @@
 #define RANGER_STATE_ACTIVE      1
 #define RANGER_STATE_COMPLETE    2
 #define RANGER_STATE_DONE_TODAY  3
+
+// Trainer school in Rustboro (src/pastime_school.c).
+#define SCHOOL_LESSONS      5
+#define SCHOOL_QUESTIONS    5
+#define SCHOOL_ANSWERS      4
+#define SCHOOL_PASS_MARK    4
+#define SCHOOL_MENU_CANCEL  15
+#define SCHOOL_FAILED       0 // VAR_RESULT of School_Finish
+#define SCHOOL_PASSED       1
+#define SCHOOL_PASSED_FIRST 2
 
 #endif // GUARD_CONSTANTS_PASTIME_H
