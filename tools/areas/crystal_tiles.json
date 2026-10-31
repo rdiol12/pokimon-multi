@@ -1,0 +1,289 @@
+{
+ "num_tiles": 488,
+ "first_new_metatile": 926,
+ "objects": {
+  "cluster": [
+   [
+    926
+   ],
+   [
+    927
+   ]
+  ],
+  "formation": [
+   [
+    928,
+    929
+   ],
+   [
+    930,
+    931
+   ]
+  ],
+  "small": [
+   [
+    932
+   ]
+  ],
+  "shards": [
+   [
+    933
+   ]
+  ],
+  "geode": [
+   [
+    934
+   ]
+  ],
+  "seal": [
+   [
+    935,
+    936,
+    937
+   ],
+   [
+    938,
+    939,
+    940
+   ]
+  ],
+  "heart": [
+   [
+    941,
+    942
+   ],
+   [
+    943,
+    944
+   ]
+  ],
+  "tent": [
+   [
+    945,
+    946
+   ],
+   [
+    947,
+    948
+   ]
+  ],
+  "lamp": [
+   [
+    949
+   ],
+   [
+    950
+   ]
+  ],
+  "crate": [
+   [
+    951
+   ]
+  ],
+  "ceiling": [
+   [
+    952
+   ]
+  ],
+  "res_red": [
+   [
+    953
+   ],
+   [
+    954
+   ]
+  ],
+  "res_red_lit": [
+   [
+    955
+   ],
+   [
+    956
+   ]
+  ],
+  "res_blue": [
+   [
+    957
+   ],
+   [
+    958
+   ]
+  ],
+  "res_blue_lit": [
+   [
+    959
+   ],
+   [
+    960
+   ]
+  ],
+  "res_green": [
+   [
+    961
+   ],
+   [
+    962
+   ]
+  ],
+  "res_green_lit": [
+   [
+    963
+   ],
+   [
+    964
+   ]
+  ],
+  "res_gold": [
+   [
+    965
+   ],
+   [
+    966
+   ]
+  ],
+  "res_gold_lit": [
+   [
+    967
+   ],
+   [
+    968
+   ]
+  ],
+  "pad_red": [
+   [
+    969
+   ]
+  ],
+  "pad_red_dull": [
+   [
+    970
+   ]
+  ],
+  "pad_blue": [
+   [
+    971
+   ]
+  ],
+  "pad_blue_dull": [
+   [
+    972
+   ]
+  ],
+  "pad_green": [
+   [
+    973
+   ]
+  ],
+  "pad_green_dull": [
+   [
+    974
+   ]
+  ],
+  "pad_gold": [
+   [
+    975
+   ]
+  ],
+  "pad_gold_dull": [
+   [
+    976
+   ]
+  ],
+  "pad_white": [
+   [
+    977
+   ]
+  ],
+  "pad_white_dull": [
+   [
+    978
+   ]
+  ]
+ },
+ "walkable": {
+  "cluster": [],
+  "formation": [],
+  "small": [],
+  "shards": [
+   [
+    0,
+    0
+   ]
+  ],
+  "geode": [],
+  "seal": [],
+  "heart": [],
+  "tent": [],
+  "lamp": [],
+  "crate": [],
+  "ceiling": [],
+  "res_red": [],
+  "res_red_lit": [],
+  "res_blue": [],
+  "res_blue_lit": [],
+  "res_green": [],
+  "res_green_lit": [],
+  "res_gold": [],
+  "res_gold_lit": [],
+  "pad_red": [
+   [
+    0,
+    0
+   ]
+  ],
+  "pad_red_dull": [
+   [
+    0,
+    0
+   ]
+  ],
+  "pad_blue": [
+   [
+    0,
+    0
+   ]
+  ],
+  "pad_blue_dull": [
+   [
+    0,
+    0
+   ]
+  ],
+  "pad_green": [
+   [
+    0,
+    0
+   ]
+  ],
+  "pad_green_dull": [
+   [
+    0,
+    0
+   ]
+  ],
+  "pad_gold": [
+   [
+    0,
+    0
+   ]
+  ],
+  "pad_gold_dull": [
+   [
+    0,
+    0
+   ]
+  ],
+  "pad_white": [
+   [
+    0,
+    0
+   ]
+  ],
+  "pad_white_dull": [
+   [
+    0,
+    0
+   ]
+  ]
+ }
+}

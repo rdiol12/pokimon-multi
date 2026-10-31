@@ -1191,3 +1191,98 @@ Level: 19
 Cleffa
 Level: 20
 /* end WonderwildPark */
+
+/* begin PrismCaverns */
+=== AREA_TRAINER_PRISM_GARNET ===
+Name: GARNET
+Class: Hiker
+Pic: Hiker
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Basic Trainer
+
+Boldore
+Level: 31
+
+Graveler
+Level: 32
+
+=== AREA_TRAINER_PRISM_QUINN ===
+Name: QUINN
+Class: Cooltrainer
+Pic: Cooltrainer F
+Gender: Female
+Music: Cool
+Double Battle: No
+AI: Basic Trainer
+
+Carbink
+Level: 31
+
+Mawile
+Level: 32
+
+=== AREA_TRAINER_PRISM_LUCAS ===
+Name: LUCAS
+Class: Psychic
+Pic: Psychic M
+Gender: Male
+Music: Intense
+Double Battle: No
+AI: Basic Trainer
+
+Chimecho
+Level: 32
+
+Bronzor
+Level: 32
+
+Lunatone
+Level: 33
+
+=== AREA_TRAINER_PRISM_OSWIN ===
+Name: OSWIN
+Class: Ruin Maniac
+Pic: Ruin Maniac
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Basic Trainer
+
+Sableye
+Level: 32
+
+Nosepass
+Level: 33
+
+=== AREA_TRAINER_PRISM_BRUNO ===
+Name: BRUNO
+Class: Hiker
+Pic: Hiker
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Basic Trainer
+
+Lairon
+Level: 33
+
+Boldore
+Level: 34
+
+=== AREA_TRAINER_PRISM_TESSA ===
+Name: TESSA
+Class: Cooltrainer
+Pic: Cooltrainer F
+Gender: Female
+Music: Cool
+Double Battle: No
+AI: Basic Trainer
+
+Sneasel
+Level: 33
+
+Bronzong
+Level: 34
+/* end PrismCaverns */

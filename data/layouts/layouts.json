@@ -9715,6 +9715,26 @@
       "secondary_tileset": "gTileset_Park",
       "border_filepath": "data/layouts/WonderwildPark/border.bin",
       "blockdata_filepath": "data/layouts/WonderwildPark/map.bin"
+    },
+    {
+      "id": "LAYOUT_PRISM_CAVERNS",
+      "name": "PrismCaverns_Layout",
+      "width": 56,
+      "height": 44,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Crystal",
+      "border_filepath": "data/layouts/PrismCaverns/border.bin",
+      "blockdata_filepath": "data/layouts/PrismCaverns/map.bin"
+    },
+    {
+      "id": "LAYOUT_PRISM_CAVERNS_DEPTHS",
+      "name": "PrismCaverns_Depths_Layout",
+      "width": 48,
+      "height": 40,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Crystal",
+      "border_filepath": "data/layouts/PrismCaverns_Depths/border.bin",
+      "blockdata_filepath": "data/layouts/PrismCaverns_Depths/map.bin"
     }
   ]
 }

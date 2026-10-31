@@ -410,6 +410,37 @@ drawn by tools/areas/park_art.py into gTileset_Park.
   items.
 - Map id: MAP_WONDERWILD_PARK. Done flag FLAG_PARK_PARADE.
 
+## Prism Caverns
+
+A crystal cave for after the fifth badge (trainers Lv31–34). A geologist
+just inside Meteor Falls (by the Route 114 entrance) takes you there once
+you have Norman's badge; the arrow at the camp's south end leads back. The
+caverns are Victory Road and Granite Cave's cave style turned violet, with
+a darker rock ceiling so the halls read clearly. Crystal clusters and
+formations, shards, geodes, the resonance crystals, the teleport pads, the
+crystal seal, the heart crystal and the geologists' camp are drawn by
+tools/areas/crystal_art.py into gTileset_Crystal.
+
+- The resonance crystals: ruby, sapphire, emerald and topaz. Touch one and
+  it lights up, and every teleport pad of its colour wakes (a pad is plain
+  floor while it sleeps and an MB_AQUA_HIDEOUT_WARP pad once awake). The
+  ruby is at the end of the crystal garden; the red pad by the camp takes
+  you to the west gallery and the sapphire; the blue pads reach the north
+  hall and the ladder to the Depths. There, red and blue pads link six rock
+  islands: one dead end, one with the emerald, whose green pad reaches the
+  topaz. With all four lit the crystal seal shatters, and Diancie (Lv40)
+  waits by the heart crystal. A gold pad takes you back to the landing.
+- Dr. Mica, the team leader, follows your progress and gives you a Lv30
+  Glimmet once the seal breaks. The white pad behind the camp wakes then
+  too, and leads to a hidden geode grotto (TM Light Screen, Comet Shard,
+  PP Up and a hidden Big Pearl). A carving in the north hall hints at it.
+- Also: Hiker Garnet, Cooltrainer Quinn, Psychic Lucas, Ruin Maniac Oswin,
+  Cooltrainer Tessa and Hiker Bruno, a medic who heals your team, TM
+  Reflect, a Shiny Stone, Rare Candy, Max Revive, Full Restore and hidden
+  items.
+- Map ids: MAP_PRISM_CAVERNS, MAP_PRISM_CAVERNS_DEPTHS. Done flag
+  FLAG_PRISM_SEAL_OPEN.
+
 ## How the maps are made
 
 - `tools/areas/tiles.py` renders any tileset or layout to PNG.
