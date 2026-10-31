@@ -240,6 +240,8 @@ void Bottle_ShowList(void);
 
 // Pokémon fashion (pastime_fashion.c).
 void Fashion_Update(void);
+u32 Fashion_WornNow(void);
+void Fashion_ShowRemote(u32 slot, u8 followerObjectId, u32 worn);
 void Fashion_PushBuyMenu(void);
 void Fashion_Buy(void);
 void Fashion_PushDressMenu(void);
