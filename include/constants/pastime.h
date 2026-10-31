@@ -12,6 +12,7 @@
 #define PASTIME_MENU_DELIVERY   2
 #define PASTIME_MENU_MAIL       3
 #define PASTIME_MENU_QUIZ       4
+#define PASTIME_MENU_HOTEL      5
 #define PASTIME_MENU_CLOSE      31
 
 // NPCs and objects the activities place on maps from code (src/pastime.c)
@@ -63,5 +64,16 @@
 #define QUIZ_NOT_VERY    2
 #define QUIZ_NO_EFFECT   3
 #define WORLD_BOARD_QUIZ 16 // server leaderboard (server/world.py)
+
+// Pokémon hotel on Starfall Isle (src/pastime_hotel.c).
+#define HOTEL_MAX_STARS     5
+#define HOTEL_MAX_GUESTS    6
+#define HOTEL_SPOT_COUNT    (2 + HOTEL_MAX_GUESTS) // bellhop outside, manager desk, guests
+#define HOTEL_GUEST_SERVED  0 // VAR_RESULT of Hotel_TalkToGuest
+#define HOTEL_GUEST_ASKS    1
+#define HOTEL_GUEST_CANT    2
+#define HOTEL_DESK_COLLECT  0 // VAR_RESULT of Hotel_TalkToDesk
+#define HOTEL_DESK_WAITING  1
+#define HOTEL_DESK_DONE     2
 
 #endif // GUARD_CONSTANTS_PASTIME_H

@@ -291,7 +291,8 @@
     "StarfallIsle_Cave",
     "StarfallIsle_EldersHouse",
     "StarfallIsle_ExplorersHouse",
-    "StarfallIsle_PlayerHouse"
+    "StarfallIsle_PlayerHouse",
+    "StarfallIsle_Hotel"
   ],
   "gMapGroup_IndoorMossdeep": [
     "MossdeepCity_Gym",

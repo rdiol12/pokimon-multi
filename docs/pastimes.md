@@ -122,3 +122,24 @@ board 16 in `server/world.py`); **R > PASTIMES > QUIZ HALL** has MY RECORDS
 `Pastime_ShowMonPic` is a picture box that can share the screen with a
 multichoice menu (`showmonpic` can't). Screenshots:
 `tools/pastime_shots/quiz.lua` (two players online).
+
+## Pokémon hotel
+
+![Pokémon hotel](images/pastime-hotel.png)
+
+You're the new manager of the STARFALL HOTEL on Starfall Isle. The bellhop
+in the plaza (south of the houses) takes you into the lobby, a new map
+`MAP_STARFALL_ISLE_HOTEL` that reuses the Battle Frontier lounge layout;
+leaving puts you back next to the bellhop (a warp arrival point added to
+Starfall Isle).
+
+Each day, two guests plus one per star sit in the lobby, each wanting
+something (Fresh Water, Soda Pop, a Berry, a Potion, a Repel...). Give it
+to them from your bag for a tip. At the front desk, collect the day's room
+money (the star rate per guest, double for guests you served) and tips;
+the guests then check out and new ones come the next day. The desk also
+renovates the hotel for ¥3,000, ¥8,000, ¥20,000 and ¥45,000 up to five
+stars: more guests and better rates, and at five stars STEVEN checks in,
+asks for a Lava Cookie and gives a Metal Coat and a big tip.
+**R > PASTIMES > HOTEL** shows the stars, totals and today's guests with
+what they want. Screenshots: `tools/pastime_shots/hotel.lua`.
