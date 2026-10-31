@@ -63,6 +63,17 @@
 #define PKX_OAM_ATTR         (PKX_VIDEO + 0x2000) // one byte per OAM entry 0..511: bits 0-1 = palette bank
 #define PKX_OBJ_PALETTES     64
 #define PKX_OAM_ENTRIES      512
+// Version 5: three more 32 KiB banks of sprite tiles. Attribute bits 2-3 pick the bank
+// (0 = normal OBJ VRAM). Write to them with the CPU or DMA; read them with the CPU.
+#define PKX_OBJ_TILES        (PKX_VIDEO + 0x10000)
+#define PKX_OBJ_TILE_BANKS   3
+#define PKX_OBJ_TILE_COUNT_ALL (1024 * (PKX_OBJ_TILE_BANKS + 1))
+// Version 5: 48 more background palettes, and a register that picks a palette bank for
+// each background (2 bits per BG; 0 = the normal 16 palettes, 1-3 = PKX_BG_PLTT banks).
+// Text-mode backgrounds only.
+#define PKX_BG_PLTT          (PKX_VIDEO + 0x3000)
+#define PKX_EXT_BG_PALETTES  48
+#define REG_ADDR_PKX_BG_PALETTE_BANKS 0x4FFF7F6
 // Version 3: 1 MiB of battery-backed RAM saved with the flash save. CPU access only (no DMA).
 #define PKX_SAVE             (PKX_VIDEO + 0x100000)
 #define PKX_SAVE_SIZE        0x100000

@@ -1750,8 +1750,9 @@ static s16 ReallocSpriteTiles(struct Sprite *sprite, u32 byteSize)
         {
             // Fill the allocated area with zeroes
             // To avoid visual glitches if the frame hasn't been copied yet
-            CpuFastFill16(0, (u8 *)OBJ_VRAM0 + TILE_SIZE_4BPP * i, byteSize);
+            CpuFastFill16(0, SpriteTileAddr(i), byteSize);
             sprite->oam.tileNum = i;
+            sprite->tileBank = i / TOTAL_OBJ_TILE_COUNT;
         }
     }
     else
@@ -1832,6 +1833,7 @@ u16 LoadSheetGraphicsInfo(const struct ObjectEventGraphicsInfo *info, u16 uuid, 
     else if (sprite && sprite->usingSheet)
     {
         sprite->oam.tileNum = sprite->sheetTileStart;
+        sprite->tileBank = sprite->sheetTileStart / TOTAL_OBJ_TILE_COUNT;
         sprite->usingSheet = FALSE;
 
     }

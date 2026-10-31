@@ -60,7 +60,10 @@ static bool32 IsSpritePalTagBlendImmune(u32 palIndex);
 
 EWRAM_DATA struct Weather gWeather = {0};
 // 16 background palettes, then sprite palettes 0..63 (16..63 exist on extended GBA v2)
-#define NUM_COLOR_MAP_PALETTES (16 + PKX_OBJ_PALETTES)
+// 0..15 BG, 16..79 sprite palette slots, 80..127 extended BG palettes (extended GBA v5).
+// Index i is always at PLTT_ID(i) in the palette buffers.
+#define EXT_BG_WEATHER_PAL_START (16 + PKX_OBJ_PALETTES)
+#define NUM_COLOR_MAP_PALETTES (EXT_BG_WEATHER_PAL_START + PKX_EXT_BG_PALETTES)
 EWRAM_DATA static u8 ALIGNED(2) sFieldEffectPaletteColorMapTypes[NUM_COLOR_MAP_PALETTES] = {0};
 
 static const u8 *sPaletteColorMapTypes;
@@ -449,9 +452,12 @@ static bool8 FadeInScreen_FogHorizontal(void)
 static void DoNothing(void)
 { }
 
-// Weather palette indexes 32+ are the extended sprite palettes 16..63
+// Weather palette indexes 32+ are the extended sprite palettes 16..63, then the extended
+// BG palettes, which are treated like the normal BG palette with the same number
 static u32 GetPaletteColorMapType(u32 palIndex)
 {
+    if (palIndex >= EXT_BG_WEATHER_PAL_START)
+        return sPaletteColorMapTypes[(palIndex - EXT_BG_WEATHER_PAL_START) % 16];
     if (palIndex < 32 || sPaletteColorMapTypes == sFieldEffectPaletteColorMapTypes)
         return sPaletteColorMapTypes[palIndex];
     return COLOR_MAP_DARK_CONTRAST;
@@ -465,7 +471,19 @@ static u32 NextWeatherPalIndex(u32 palIndex)
     palIndex++;
     if (palIndex < 32)
         return palIndex;
-    ext = GetExtSpritePalettesInUse() >> (palIndex - 32);
+    if (palIndex < EXT_BG_WEATHER_PAL_START)
+    {
+        ext = GetExtSpritePalettesInUse() >> (palIndex - 32);
+        while (ext != 0 && !(ext & 1))
+        {
+            ext >>= 1;
+            palIndex++;
+        }
+        if (ext != 0)
+            return palIndex;
+        palIndex = EXT_BG_WEATHER_PAL_START;
+    }
+    ext = GetExtBgPalettesInUse() >> (palIndex - EXT_BG_WEATHER_PAL_START);
     while (ext != 0 && !(ext & 1))
     {
         ext >>= 1;
@@ -478,13 +496,15 @@ static void UpdatePaletteWithTime(u32 palIndex)
 {
     if (palIndex < 32)
         UpdatePalettesWithTime(1u << palIndex);
-    else
+    else if (palIndex < EXT_BG_WEATHER_PAL_START)
         UpdateSpritePaletteWithTime(palIndex - 16);
+    else
+        UpdateExtBgPaletteWithTime(palIndex - EXT_BG_WEATHER_PAL_START);
 }
 
 static bool32 IsSpritePalTagBlendImmune(u32 palIndex)
 {
-    return (palIndex >= 16 && IS_BLEND_IMMUNE_TAG(GetSpritePaletteTagByPaletteNum(palIndex - 16)));
+    return (palIndex >= 16 && palIndex < EXT_BG_WEATHER_PAL_START && IS_BLEND_IMMUNE_TAG(GetSpritePaletteTagByPaletteNum(palIndex - 16)));
 }
 
 static void ApplyColorMap(u8 startPalIndex, u8 numPalettes, s8 colorMapIndex)
@@ -500,8 +520,19 @@ static void ApplyColorMap(u8 startPalIndex, u8 numPalettes, s8 colorMapIndex)
     if (startPalIndex <= 16 && end >= 32)
     {
         u32 i;
-        for (i = NextWeatherPalIndex(31); i < NUM_COLOR_MAP_PALETTES; i = NextWeatherPalIndex(i))
+        for (i = NextWeatherPalIndex(31); i < EXT_BG_WEATHER_PAL_START; i = NextWeatherPalIndex(i))
             ApplyColorMapRange(i, 1, colorMapIndex);
+    }
+    // Extended BG palettes follow the normal BG palette with the same number
+    if (startPalIndex < 16)
+    {
+        u32 i;
+        for (i = NextWeatherPalIndex(EXT_BG_WEATHER_PAL_START - 1); i < NUM_COLOR_MAP_PALETTES; i = NextWeatherPalIndex(i))
+        {
+            u32 n = (i - EXT_BG_WEATHER_PAL_START) % 16;
+            if (n >= startPalIndex && n < end)
+                ApplyColorMapRange(i, 1, colorMapIndex);
+        }
     }
 }
 
@@ -752,7 +783,7 @@ static void ApplyFogBlend(u8 blendCoeff, u32 blendColor)
     BlendPalettesFine(PALETTES_MAP, gPlttBufferFaded, gPlttBufferFaded, blendCoeff, blendColor);
 
     // Do fog blending on marked sprite palettes
-    for (curPalIndex = 16; curPalIndex < NUM_COLOR_MAP_PALETTES; curPalIndex = NextWeatherPalIndex(curPalIndex))
+    for (curPalIndex = 16; curPalIndex < EXT_BG_WEATHER_PAL_START; curPalIndex = NextWeatherPalIndex(curPalIndex))
     {
         if (LightenSpritePaletteInFog(curPalIndex))
             BlendPalettesFine(1, gPlttBufferFaded + PLTT_ID(curPalIndex), gPlttBufferFaded + PLTT_ID(curPalIndex), fogCoeff, RGB(28, 31, 28));

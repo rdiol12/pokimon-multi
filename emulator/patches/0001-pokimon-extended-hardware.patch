@@ -13,10 +13,10 @@ index 5ef2da9..02c66bb 100644
  	int32_t bankedRegisters[6][7];
  	int32_t bankedSPSRs[6];
 diff --git a/include/mgba/internal/gba/io.h b/include/mgba/internal/gba/io.h
-index 2891c65..d784686 100644
+index 2891c65..93245e6 100644
 --- a/include/mgba/internal/gba/io.h
 +++ b/include/mgba/internal/gba/io.h
-@@ -166,6 +166,11 @@ enum GBAIORegisters {
+@@ -166,6 +166,12 @@ enum GBAIORegisters {
  	GBA_REG_DEBUG_STRING = 0xFFF600,
  	GBA_REG_DEBUG_FLAGS = 0xFFF700,
  	GBA_REG_DEBUG_ENABLE = 0xFFF780,
@@ -25,11 +25,12 @@ index 2891c65..d784686 100644
 +	GBA_REG_PKX_ID = 0xFFF7F0,
 +	GBA_REG_PKX_VERSION = 0xFFF7F2,
 +	GBA_REG_PKX_CONTROL = 0xFFF7F4,
++	GBA_REG_PKX_BG_PALETTE_BANKS = 0xFFF7F6, // v5
  };
  
  mLOG_DECLARE_CATEGORY(GBA_IO);
 diff --git a/include/mgba/internal/gba/memory.h b/include/mgba/internal/gba/memory.h
-index 0aad912..1c004e3 100644
+index 0aad912..b6e7bf8 100644
 --- a/include/mgba/internal/gba/memory.h
 +++ b/include/mgba/internal/gba/memory.h
 @@ -22,6 +22,7 @@ CXX_GUARD_START
@@ -71,7 +72,7 @@ index 0aad912..1c004e3 100644
 +
 +// Pokimon extended hardware
 +#define GBA_PKX_ID 0x504B /* "PK" */
-+#define GBA_PKX_VERSION 4
++#define GBA_PKX_VERSION 5
 +#define GBA_PKX_UNLOCK_EWRAM 0x4558 /* "EX": write to GBA_REG_PKX_CONTROL */
 +#define GBA_PKX_CONTROL_EWRAM 0x0001 /* read from GBA_REG_PKX_CONTROL */
 +#define GBA_PKX_ENABLE_OBJ 0x4F41 /* "OA": draw sprites from the extended OAM */
@@ -124,7 +125,7 @@ index ed16917..b48c99b 100644
  CXX_GUARD_END
  
 diff --git a/include/mgba/internal/gba/renderers/video-software.h b/include/mgba/internal/gba/renderers/video-software.h
-index ce91877..ffce814 100644
+index ce91877..58ca3e5 100644
 --- a/include/mgba/internal/gba/renderers/video-software.h
 +++ b/include/mgba/internal/gba/renderers/video-software.h
 @@ -100,10 +100,10 @@ struct GBAVideoSoftwareRenderer {
@@ -135,10 +136,10 @@ index ce91877..ffce814 100644
 -	mColor variantPalette[512];
 -	mColor highlightPalette[512];
 -	mColor highlightVariantPalette[512];
-+	mColor normalPalette[512 + GBA_PKX_EXT_PALETTE_COLORS];
-+	mColor variantPalette[512 + GBA_PKX_EXT_PALETTE_COLORS];
-+	mColor highlightPalette[512 + GBA_PKX_EXT_PALETTE_COLORS];
-+	mColor highlightVariantPalette[512 + GBA_PKX_EXT_PALETTE_COLORS];
++	mColor normalPalette[GBA_PKX_ALL_PALETTE_COLORS];
++	mColor variantPalette[GBA_PKX_ALL_PALETTE_COLORS];
++	mColor highlightPalette[GBA_PKX_ALL_PALETTE_COLORS];
++	mColor highlightVariantPalette[GBA_PKX_ALL_PALETTE_COLORS];
  
  	uint16_t blda;
  	uint16_t bldb;
@@ -201,7 +202,7 @@ index 0192cd9..d06d81c 100644
  };
  
 diff --git a/include/mgba/internal/gba/video.h b/include/mgba/internal/gba/video.h
-index 2896894..ca2af7b 100644
+index 2896894..a64195b 100644
 --- a/include/mgba/internal/gba/video.h
 +++ b/include/mgba/internal/gba/video.h
 @@ -201,6 +201,7 @@ struct GBAVideoRenderer {
@@ -212,7 +213,7 @@ index 2896894..ca2af7b 100644
  	struct mCacheSet* cache;
  
  	bool disableBG[4];
-@@ -214,6 +215,27 @@ struct GBAVideoRenderer {
+@@ -214,6 +215,42 @@ struct GBAVideoRenderer {
  	uint8_t highlightAmount;
  };
  
@@ -224,8 +225,19 @@ index 2896894..ca2af7b 100644
 +#define GBA_PKX_OAM_OFFSET 0x1000
 +#define GBA_PKX_ATTR_OFFSET 0x2000
 +#define GBA_PKX_REGION_SIZE 0x2200
++// v5: three more 32 KiB banks of sprite tiles, picked per sprite by attribute bits 2-3
++#define GBA_PKX_OBJ_TILE_OFFSET 0x10000
++#define GBA_PKX_OBJ_TILE_BANKS 3
++#define GBA_PKX_OBJ_TILE_BANK_SIZE 0x8000
++// v5: 48 more background palettes (three banks of 16); each background layer picks a bank
++#define GBA_PKX_BG_PALETTE_OFFSET 0x3000
++#define GBA_PKX_EXT_BG_PALETTE_COLORS (48 * 16)
++// Renderer palette arrays: normal 512, extended sprite palettes, then extended BG palettes
++#define GBA_PKX_EXT_BG_PALETTE_BASE (512 + GBA_PKX_EXT_PALETTE_COLORS)
++#define GBA_PKX_ALL_PALETTE_COLORS (GBA_PKX_EXT_BG_PALETTE_BASE + GBA_PKX_EXT_BG_PALETTE_COLORS)
 +DECL_BITFIELD(GBAPKXObjAttr, uint8_t);
 +DECL_BITS(GBAPKXObjAttr, PaletteBank, 0, 2);
++DECL_BITS(GBAPKXObjAttr, TileBank, 2, 2);
 +
 +struct GBAPKXVideo {
 +	uint16_t palette[GBA_PKX_EXT_PALETTE_COLORS];
@@ -235,12 +247,16 @@ index 2896894..ca2af7b 100644
 +	uint8_t overclock; // v4: CPU multiplier (kept here so savestates carry it)
 +	bool paletteDirty;
 +	bool oamDirty;
++	// v5, kept last: savestates from before v5 end here
++	uint16_t objTiles[GBA_PKX_OBJ_TILE_BANKS][GBA_PKX_OBJ_TILE_BANK_SIZE / 2];
++	uint16_t bgPalette[GBA_PKX_EXT_BG_PALETTE_COLORS];
++	uint8_t bgPaletteBanks; // 2 bits per background: 0 = normal palettes, 1-3 = extended bank
 +};
 +
  struct GBAVideo {
  	struct GBA* p;
  	struct GBAVideoRenderer* renderer;
-@@ -225,6 +247,7 @@ struct GBAVideo {
+@@ -225,6 +262,7 @@ struct GBAVideo {
  	uint16_t palette[512];
  	uint16_t* vram;
  	union GBAOAM oam;
@@ -323,7 +339,7 @@ index edb21e2..eb910ff 100644
  	if (registers & 0x02) {
  		memset(gba->memory.iwram, 0, GBA_SIZE_IWRAM - 0x200);
 diff --git a/src/gba/core.c b/src/gba/core.c
-index 8450f0d..948d49d 100644
+index 8450f0d..cb1e512 100644
 --- a/src/gba/core.c
 +++ b/src/gba/core.c
 @@ -60,7 +60,7 @@ static const struct mCoreChannelInfo _GBAAudioChannels[] = {
@@ -389,7 +405,7 @@ index 8450f0d..948d49d 100644
  	{ GBA_REGION_IWRAM, "iwram", "IWRAM", "Internal Working RAM (32kiB)", GBA_BASE_IWRAM, GBA_BASE_IWRAM + GBA_SIZE_IWRAM, GBA_SIZE_IWRAM, mCORE_MEMORY_RW | mCORE_MEMORY_MAPPED },
  	{ GBA_REGION_IO, "io", "MMIO", "Memory-Mapped I/O", GBA_BASE_IO, GBA_BASE_IO + GBA_SIZE_IO, GBA_SIZE_IO, mCORE_MEMORY_RW | mCORE_MEMORY_MAPPED },
  	{ GBA_REGION_PALETTE_RAM, "palette", "Palette", "Palette RAM (1kiB)", GBA_BASE_PALETTE_RAM, GBA_BASE_PALETTE_RAM + GBA_SIZE_PALETTE_RAM, GBA_SIZE_PALETTE_RAM, mCORE_MEMORY_RW | mCORE_MEMORY_MAPPED },
-@@ -892,6 +892,33 @@ static bool _GBACoreLoadExtraState(struct mCore* core, const struct mStateExtdat
+@@ -892,6 +892,36 @@ static bool _GBACoreLoadExtraState(struct mCore* core, const struct mStateExtdat
  	struct GBA* gba = core->board;
  	struct mStateExtdataItem item;
  	bool ok = true;
@@ -409,8 +425,11 @@ index 8450f0d..948d49d 100644
 +		}
 +	}
 +	if (mStateExtdataGet(extdata, EXTDATA_SUBSYSTEM_START + GBA_SUBSYSTEM_PKX_VIDEO, &item)) {
-+		if ((size_t) item.size == sizeof(gba->video.pkx)) {
-+			memcpy(&gba->video.pkx, item.data, sizeof(gba->video.pkx));
++		// States from before v5 stop before the extra sprite tiles
++		size_t oldSize = offsetof(struct GBAPKXVideo, objTiles);
++		if ((size_t) item.size == sizeof(gba->video.pkx) || (size_t) item.size == oldSize) {
++			memset((uint8_t*) &gba->video.pkx + oldSize, 0, sizeof(gba->video.pkx) - oldSize);
++			memcpy(&gba->video.pkx, item.data, item.size);
 +			gba->video.pkx.paletteDirty = true;
 +			gba->cpu->overclock = gba->video.pkx.overclock ? gba->video.pkx.overclock : 1;
 +			gba->cpu->overclockRemainder = 0;
@@ -423,7 +442,7 @@ index 8450f0d..948d49d 100644
  	if (mStateExtdataGet(extdata, EXTDATA_SUBSYSTEM_START + GBA_SUBSYSTEM_VIDEO_RENDERER, &item)) {
  		if ((uint32_t) item.size > sizeof(uint32_t)) {
  			uint32_t type;
-@@ -926,6 +953,30 @@ static bool _GBACoreSaveExtraState(struct mCore* core, struct mStateExtdata* ext
+@@ -926,6 +956,30 @@ static bool _GBACoreSaveExtraState(struct mCore* core, struct mStateExtdata* ext
  	struct GBA* gba = core->board;
  	void* buffer = NULL;
  	size_t size = 0;
@@ -443,7 +462,7 @@ index 8450f0d..948d49d 100644
 +		memcpy((uint8_t*) item.data + sizeof(length), ext, length);
 +		mStateExtdataPut(extdata, EXTDATA_SUBSYSTEM_START + GBA_SUBSYSTEM_PKX_EWRAM, &item);
 +	}
-+	if (gba->video.pkx.objEnabled || gba->video.pkx.overclock > 1) {
++	if (gba->video.pkx.objEnabled || gba->video.pkx.overclock > 1 || gba->video.pkx.bgPaletteBanks) {
 +		struct mStateExtdataItem item;
 +		item.size = sizeof(gba->video.pkx);
 +		item.data = malloc(item.size);
@@ -454,7 +473,7 @@ index 8450f0d..948d49d 100644
  	gba->video.renderer->saveState(gba->video.renderer, &buffer, &size);
  	if (size > 0 && buffer) {
  		struct mStateExtdataItem item;
-@@ -1168,7 +1219,7 @@ void* _GBACoreGetMemoryBlock(struct mCore* core, size_t id, size_t* sizeOut) {
+@@ -1168,7 +1222,7 @@ void* _GBACoreGetMemoryBlock(struct mCore* core, size_t id, size_t* sizeOut) {
  		*sizeOut = GBA_SIZE_BIOS;
  		return gba->memory.bios;
  	case GBA_REGION_EWRAM:
@@ -463,7 +482,7 @@ index 8450f0d..948d49d 100644
  		return gba->memory.wram;
  	case GBA_REGION_IWRAM:
  		*sizeOut = GBA_SIZE_IWRAM;
-@@ -1468,7 +1519,7 @@ static struct mCheatDevice* _GBACoreCheatDevice(struct mCore* core) {
+@@ -1468,7 +1522,7 @@ static struct mCheatDevice* _GBACoreCheatDevice(struct mCore* core) {
  
  static size_t _GBACoreSavedataClone(struct mCore* core, void** sram) {
  	struct GBA* gba = core->board;
@@ -564,15 +583,18 @@ index c30bd94..c0ec84d 100644
  			gba->romVf->unmap(gba->romVf, gba->memory.rom, gba->pristineRomSize);
  		}
 diff --git a/src/gba/io.c b/src/gba/io.c
-index 658036e..30b0f51 100644
+index 658036e..3d20ebf 100644
 --- a/src/gba/io.c
 +++ b/src/gba/io.c
-@@ -551,6 +551,12 @@ void GBAIOWrite(struct GBA* gba, uint32_t address, uint16_t value) {
+@@ -551,6 +551,15 @@ void GBAIOWrite(struct GBA* gba, uint32_t address, uint16_t value) {
  	case GBA_REG_DEBUG_ENABLE:
  		gba->debug = value == 0xC0DE;
  		return;
 +	case GBA_REG_PKX_CONTROL:
 +		GBAPKXWriteControl(gba, value);
++		return;
++	case GBA_REG_PKX_BG_PALETTE_BANKS:
++		gba->video.pkx.bgPaletteBanks = value;
 +		return;
 +	case GBA_REG_PKX_ID:
 +	case GBA_REG_PKX_VERSION:
@@ -580,7 +602,7 @@ index 658036e..30b0f51 100644
  	case GBA_REG_DEBUG_FLAGS:
  		if (gba->debug) {
  			GBADebug(gba, value);
-@@ -993,6 +999,15 @@ uint16_t GBAIORead(struct GBA* gba, uint32_t address) {
+@@ -993,6 +1002,18 @@ uint16_t GBAIORead(struct GBA* gba, uint32_t address) {
  		}
  		// Fall through
  	default:
@@ -593,11 +615,14 @@ index 658036e..30b0f51 100644
 +		if (address == GBA_REG_PKX_CONTROL) {
 +			return GBAPKXReadControl(gba);
 +		}
++		if (address == GBA_REG_PKX_BG_PALETTE_BANKS) {
++			return gba->video.pkx.bgPaletteBanks;
++		}
  		mLOG(GBA_IO, GAME_ERROR, "Read from unused I/O register: %03X", address);
  		return GBALoadBad(gba->cpu);
  	}
 diff --git a/src/gba/memory.c b/src/gba/memory.c
-index 45cf666..34ce81d 100644
+index 45cf666..bf79126 100644
 --- a/src/gba/memory.c
 +++ b/src/gba/memory.c
 @@ -90,8 +90,9 @@ void GBAMemoryInit(struct GBA* gba) {
@@ -621,7 +646,7 @@ index 45cf666..34ce81d 100644
  	if (gba->memory.rom) {
  		mappedMemoryFree(gba->memory.rom, gba->memory.romSize);
  	}
-@@ -116,10 +117,141 @@ void GBAMemoryDeinit(struct GBA* gba) {
+@@ -116,10 +117,153 @@ void GBAMemoryDeinit(struct GBA* gba) {
  	GBACartEReaderDeinit(&gba->memory.ereader);
  }
  
@@ -692,6 +717,16 @@ index 45cf666..34ce81d 100644
 +		*part = 2;
 +		return pkx->attr + offset - GBA_PKX_ATTR_OFFSET;
 +	}
++	// v5: extended background palettes
++	if (offset >= GBA_PKX_BG_PALETTE_OFFSET && offset + width <= GBA_PKX_BG_PALETTE_OFFSET + sizeof(pkx->bgPalette)) {
++		*part = 0;
++		return (uint8_t*) pkx->bgPalette + offset - GBA_PKX_BG_PALETTE_OFFSET;
++	}
++	// v5: extra sprite tile banks
++	if (offset >= GBA_PKX_OBJ_TILE_OFFSET && offset + width <= GBA_PKX_OBJ_TILE_OFFSET + sizeof(pkx->objTiles)) {
++		*part = 4;
++		return (uint8_t*) pkx->objTiles + offset - GBA_PKX_OBJ_TILE_OFFSET;
++	}
 +	// v3: battery-backed extended save
 +	if (offset >= GBA_PKX_SAVE_ADDRESS && offset + width <= GBA_PKX_SAVE_ADDRESS + GBA_PKX_SAVE_SIZE
 +	    && gba->memory.savedata.type != GBA_SAVEDATA_FORCE_NONE) {
@@ -750,6 +785,8 @@ index 45cf666..34ce81d 100644
 +		GBASavedataPKXDirty(&gba->memory.savedata);
 +	} else if (part == 0) {
 +		gba->video.pkx.paletteDirty = true;
++	} else if (part == 4) {
++		// Tiles are read straight from memory while drawing
 +	} else {
 +		gba->video.pkx.oamDirty = true;
 +	}
@@ -764,7 +801,7 @@ index 45cf666..34ce81d 100644
  
  	if (gba->memory.iwram) {
  		memset(gba->memory.iwram, 0, GBA_SIZE_IWRAM);
-@@ -290,7 +422,7 @@ static void GBASetActiveRegion(struct ARMCore* cpu, uint32_t address) {
+@@ -290,7 +434,7 @@ static void GBASetActiveRegion(struct ARMCore* cpu, uint32_t address) {
  		} else {
  			cpu->memory.activeMask &= -WORD_SIZE_ARM;
  		}
@@ -773,7 +810,7 @@ index 45cf666..34ce81d 100644
  			return;
  		}
  	}
-@@ -308,7 +440,7 @@ static void GBASetActiveRegion(struct ARMCore* cpu, uint32_t address) {
+@@ -308,7 +452,7 @@ static void GBASetActiveRegion(struct ARMCore* cpu, uint32_t address) {
  	case GBA_REGION_EWRAM:
  		cpu->memory.accessSource = mACCESS_PROGRAM;
  		cpu->memory.activeRegion = memory->wram;
@@ -782,7 +819,7 @@ index 45cf666..34ce81d 100644
  		break;
  	case GBA_REGION_IWRAM:
  		cpu->memory.accessSource = mACCESS_PROGRAM;
-@@ -344,7 +476,15 @@ static void GBASetActiveRegion(struct ARMCore* cpu, uint32_t address) {
+@@ -344,7 +488,15 @@ static void GBASetActiveRegion(struct ARMCore* cpu, uint32_t address) {
  		cpu->memory.accessSource = mACCESS_PROGRAM;
  		cpu->memory.activeRegion = memory->rom;
  		cpu->memory.activeMask = memory->romMask;
@@ -799,7 +836,7 @@ index 45cf666..34ce81d 100644
  			break;
  		}
  		if ((address & 0x00FFFFFE) == AGB_PRINT_FLUSH_ADDR && memory->agbPrintProtect == 0x20) {
-@@ -394,7 +534,7 @@ static void GBASetActiveRegion(struct ARMCore* cpu, uint32_t address) {
+@@ -394,7 +546,7 @@ static void GBASetActiveRegion(struct ARMCore* cpu, uint32_t address) {
  	}
  
  #define LOAD_EWRAM \
@@ -808,7 +845,7 @@ index 45cf666..34ce81d 100644
  	wait += waitstatesRegion[GBA_REGION_EWRAM];
  
  #define LOAD_IWRAM LOAD_32(value, address & (GBA_SIZE_IWRAM - 4), memory->iwram);
-@@ -424,8 +564,8 @@ static void GBASetActiveRegion(struct ARMCore* cpu, uint32_t address) {
+@@ -424,8 +576,8 @@ static void GBASetActiveRegion(struct ARMCore* cpu, uint32_t address) {
  
  #define LOAD_CART \
  	wait += waitstatesRegion[address >> BASE_OFFSET]; \
@@ -819,7 +856,7 @@ index 45cf666..34ce81d 100644
  	} else if (memory->unl.type == GBA_UNL_CART_VFAME) { \
  		value = GBAVFameGetPatternValue(address, 32); \
  	} else { \
-@@ -481,6 +621,9 @@ uint32_t GBALoad32(struct ARMCore* cpu, uint32_t address, int* cycleCounter) {
+@@ -481,6 +633,9 @@ uint32_t GBALoad32(struct ARMCore* cpu, uint32_t address, int* cycleCounter) {
  	char* waitstatesRegion = memory->waitstatesNonseq32;
  
  	switch (address >> BASE_OFFSET) {
@@ -829,7 +866,7 @@ index 45cf666..34ce81d 100644
  	case GBA_REGION_BIOS:
  		LOAD_BIOS;
  		break;
-@@ -539,6 +682,9 @@ uint32_t GBALoad16(struct ARMCore* cpu, uint32_t address, int* cycleCounter) {
+@@ -539,6 +694,9 @@ uint32_t GBALoad16(struct ARMCore* cpu, uint32_t address, int* cycleCounter) {
  	int wait = 0;
  
  	switch (address >> BASE_OFFSET) {
@@ -839,7 +876,7 @@ index 45cf666..34ce81d 100644
  	case GBA_REGION_BIOS:
  		if (address < GBA_SIZE_BIOS) {
  			if (memory->activeRegion == GBA_REGION_BIOS) {
-@@ -553,7 +699,7 @@ uint32_t GBALoad16(struct ARMCore* cpu, uint32_t address, int* cycleCounter) {
+@@ -553,7 +711,7 @@ uint32_t GBALoad16(struct ARMCore* cpu, uint32_t address, int* cycleCounter) {
  		}
  		break;
  	case GBA_REGION_EWRAM:
@@ -848,7 +885,7 @@ index 45cf666..34ce81d 100644
  		wait = memory->waitstatesNonseq16[GBA_REGION_EWRAM];
  		break;
  	case GBA_REGION_IWRAM:
-@@ -589,8 +735,8 @@ uint32_t GBALoad16(struct ARMCore* cpu, uint32_t address, int* cycleCounter) {
+@@ -589,8 +747,8 @@ uint32_t GBALoad16(struct ARMCore* cpu, uint32_t address, int* cycleCounter) {
  	case GBA_REGION_ROM1_EX:
  	case GBA_REGION_ROM2:
  		wait = memory->waitstatesNonseq16[address >> BASE_OFFSET];
@@ -859,7 +896,7 @@ index 45cf666..34ce81d 100644
  		} else if (memory->unl.type == GBA_UNL_CART_VFAME) {
  			value = GBAVFameGetPatternValue(address, 16);
  		} else if ((address & (GBA_SIZE_ROM0 - 2)) >= AGB_PRINT_BASE) {
-@@ -614,8 +760,8 @@ uint32_t GBALoad16(struct ARMCore* cpu, uint32_t address, int* cycleCounter) {
+@@ -614,8 +772,8 @@ uint32_t GBALoad16(struct ARMCore* cpu, uint32_t address, int* cycleCounter) {
  			value = GBASavedataReadEEPROM(&memory->savedata);
  		} else if ((address & 0x0DFC0000) >= 0x0DF80000 && memory->hw.devices & HW_EREADER) {
  			value = GBACartEReaderRead(&memory->ereader, address);
@@ -870,7 +907,7 @@ index 45cf666..34ce81d 100644
  		} else if (memory->unl.type == GBA_UNL_CART_VFAME) {
  			value = GBAVFameGetPatternValue(address, 16);
  		} else {
-@@ -654,6 +800,9 @@ uint32_t GBALoad8(struct ARMCore* cpu, uint32_t address, int* cycleCounter) {
+@@ -654,6 +812,9 @@ uint32_t GBALoad8(struct ARMCore* cpu, uint32_t address, int* cycleCounter) {
  	int wait = 0;
  
  	switch (address >> BASE_OFFSET) {
@@ -880,7 +917,7 @@ index 45cf666..34ce81d 100644
  	case GBA_REGION_BIOS:
  		if (address < GBA_SIZE_BIOS) {
  			if (memory->activeRegion == GBA_REGION_BIOS) {
-@@ -668,7 +817,7 @@ uint32_t GBALoad8(struct ARMCore* cpu, uint32_t address, int* cycleCounter) {
+@@ -668,7 +829,7 @@ uint32_t GBALoad8(struct ARMCore* cpu, uint32_t address, int* cycleCounter) {
  		}
  		break;
  	case GBA_REGION_EWRAM:
@@ -889,7 +926,7 @@ index 45cf666..34ce81d 100644
  		wait = memory->waitstatesNonseq16[GBA_REGION_EWRAM];
  		break;
  	case GBA_REGION_IWRAM:
-@@ -705,8 +854,8 @@ uint32_t GBALoad8(struct ARMCore* cpu, uint32_t address, int* cycleCounter) {
+@@ -705,8 +866,8 @@ uint32_t GBALoad8(struct ARMCore* cpu, uint32_t address, int* cycleCounter) {
  	case GBA_REGION_ROM2:
  	case GBA_REGION_ROM2_EX:
  		wait = memory->waitstatesNonseq16[address >> BASE_OFFSET];
@@ -900,7 +937,7 @@ index 45cf666..34ce81d 100644
  		} else if (memory->unl.type == GBA_UNL_CART_VFAME) {
  			value = GBAVFameGetPatternValue(address, 8);
  		} else {
-@@ -757,7 +906,7 @@ uint32_t GBALoad8(struct ARMCore* cpu, uint32_t address, int* cycleCounter) {
+@@ -757,7 +918,7 @@ uint32_t GBALoad8(struct ARMCore* cpu, uint32_t address, int* cycleCounter) {
  }
  
  #define STORE_EWRAM \
@@ -909,7 +946,7 @@ index 45cf666..34ce81d 100644
  	wait += waitstatesRegion[GBA_REGION_EWRAM];
  
  #define STORE_IWRAM \
-@@ -830,6 +979,9 @@ void GBAStore32(struct ARMCore* cpu, uint32_t address, int32_t value, int* cycle
+@@ -830,6 +991,9 @@ void GBAStore32(struct ARMCore* cpu, uint32_t address, int32_t value, int* cycle
  	char* waitstatesRegion = memory->waitstatesNonseq32;
  
  	switch (address >> BASE_OFFSET) {
@@ -919,7 +956,7 @@ index 45cf666..34ce81d 100644
  	case GBA_REGION_EWRAM:
  		STORE_EWRAM;
  		break;
-@@ -881,8 +1033,11 @@ void GBAStore16(struct ARMCore* cpu, uint32_t address, int16_t value, int* cycle
+@@ -881,8 +1045,11 @@ void GBAStore16(struct ARMCore* cpu, uint32_t address, int16_t value, int* cycle
  	int16_t oldValue;
  
  	switch (address >> BASE_OFFSET) {
@@ -932,7 +969,7 @@ index 45cf666..34ce81d 100644
  		wait = memory->waitstatesNonseq16[GBA_REGION_EWRAM];
  		break;
  	case GBA_REGION_IWRAM:
-@@ -1026,8 +1181,11 @@ void GBAStore8(struct ARMCore* cpu, uint32_t address, int8_t value, int* cycleCo
+@@ -1026,8 +1193,11 @@ void GBAStore8(struct ARMCore* cpu, uint32_t address, int8_t value, int* cycleCo
  	uint16_t oldValue;
  
  	switch (address >> BASE_OFFSET) {
@@ -945,7 +982,7 @@ index 45cf666..34ce81d 100644
  		wait = memory->waitstatesNonseq16[GBA_REGION_EWRAM];
  		break;
  	case GBA_REGION_IWRAM:
-@@ -1224,8 +1382,8 @@ void GBAPatch32(struct ARMCore* cpu, uint32_t address, int32_t value, int32_t* o
+@@ -1224,8 +1394,8 @@ void GBAPatch32(struct ARMCore* cpu, uint32_t address, int32_t value, int32_t* o
  
  	switch (address >> BASE_OFFSET) {
  	case GBA_REGION_EWRAM:
@@ -956,7 +993,7 @@ index 45cf666..34ce81d 100644
  		break;
  	case GBA_REGION_IWRAM:
  		LOAD_32(oldValue, address & (GBA_SIZE_IWRAM - 4), memory->iwram);
-@@ -1298,8 +1456,8 @@ void GBAPatch16(struct ARMCore* cpu, uint32_t address, int16_t value, int16_t* o
+@@ -1298,8 +1468,8 @@ void GBAPatch16(struct ARMCore* cpu, uint32_t address, int16_t value, int16_t* o
  
  	switch (address >> BASE_OFFSET) {
  	case GBA_REGION_EWRAM:
@@ -967,7 +1004,7 @@ index 45cf666..34ce81d 100644
  		break;
  	case GBA_REGION_IWRAM:
  		LOAD_16(oldValue, address & (GBA_SIZE_IWRAM - 2), memory->iwram);
-@@ -1380,8 +1538,8 @@ void GBAPatch8(struct ARMCore* cpu, uint32_t address, int8_t value, int8_t* old)
+@@ -1380,8 +1550,8 @@ void GBAPatch8(struct ARMCore* cpu, uint32_t address, int8_t value, int8_t* old)
  
  	switch (address >> BASE_OFFSET) {
  	case GBA_REGION_EWRAM:
@@ -978,7 +1015,7 @@ index 45cf666..34ce81d 100644
  		break;
  	case GBA_REGION_IWRAM:
  		oldValue = ((int8_t*) memory->iwram)[address & (GBA_SIZE_IWRAM - 1)];
-@@ -1508,6 +1666,9 @@ uint32_t GBALoadMultiple(struct ARMCore* cpu, uint32_t address, int mask, enum L
+@@ -1508,6 +1678,9 @@ uint32_t GBALoadMultiple(struct ARMCore* cpu, uint32_t address, int mask, enum L
  	int wait = memory->waitstatesSeq32[region] - memory->waitstatesNonseq32[region];
  
  	switch (region) {
@@ -988,7 +1025,7 @@ index 45cf666..34ce81d 100644
  	case GBA_REGION_BIOS:
  		LDM_LOOP(LOAD_BIOS);
  		break;
-@@ -1630,6 +1791,9 @@ uint32_t GBAStoreMultiple(struct ARMCore* cpu, uint32_t address, int mask, enum
+@@ -1630,6 +1803,9 @@ uint32_t GBAStoreMultiple(struct ARMCore* cpu, uint32_t address, int mask, enum
  	int wait = memory->waitstatesSeq32[region] - memory->waitstatesNonseq32[region];
  
  	switch (region) {
@@ -1026,11 +1063,44 @@ index e801892..7e24db1 100644
  			++oamMax;
  		}
  	}
+diff --git a/src/gba/renderers/software-mode0.c b/src/gba/renderers/software-mode0.c
+index 4aada17..5e316b8 100644
+--- a/src/gba/renderers/software-mode0.c
++++ b/src/gba/renderers/software-mode0.c
+@@ -523,6 +523,16 @@ void GBAVideoSoftwareRendererDrawBackgroundMode0(struct GBAVideoSoftwareRenderer
+ 		}
+ 	}
+ 	PREPARE_OBJWIN;
++	if (renderer->d.pkx) {
++		// Pokimon v5: this layer may use an extended background palette bank
++		unsigned bank = (renderer->d.pkx->bgPaletteBanks >> (background->index * 2)) & 3;
++		if (bank) {
++			unsigned offset = GBA_PKX_EXT_BG_PALETTE_BASE + (bank - 1) * 256;
++			palette += offset;
++			objwinPalette += offset;
++			basePalette += offset;
++		}
++	}
+ 
+ 	int outX = renderer->start;
+ 
 diff --git a/src/gba/renderers/software-obj.c b/src/gba/renderers/software-obj.c
-index 186db38..4cbeaa7 100644
+index 186db38..7db9970 100644
 --- a/src/gba/renderers/software-obj.c
 +++ b/src/gba/renderers/software-obj.c
-@@ -192,15 +192,18 @@ int GBAVideoSoftwareRendererPreprocessSprite(struct GBAVideoSoftwareRenderer* re
+@@ -165,6 +165,11 @@ int GBAVideoSoftwareRendererPreprocessSprite(struct GBAVideoSoftwareRenderer* re
+ 	x >>= 23;
+ 	x += renderer->objOffsetX;
+ 	uint16_t* vramBase = &renderer->d.vram[BASE_TILE >> 1];
++	unsigned tileBank = GBAPKXObjAttrGetTileBank(renderer->currentPKXAttr);
++	if (tileBank && renderer->d.pkx) {
++		// Pokimon v5: extended sprite tile banks
++		vramBase = renderer->d.pkx->objTiles[tileBank - 1];
++	}
+ 	unsigned align = GBAObjAttributesAIs256Color(sprite->a) && !GBARegisterDISPCNTIsObjCharacterMapping(renderer->dispcnt);
+ 	unsigned charBase = (GBAObjAttributesCGetTile(sprite->c) & ~align) * 0x20;
+ 	unsigned maskLo = GBARegisterDISPCNTIsObjCharacterMapping(renderer->dispcnt) ? 0x7FFE : 0x3FE;
+@@ -192,15 +197,18 @@ int GBAVideoSoftwareRendererPreprocessSprite(struct GBAVideoSoftwareRenderer* re
  		}
  	}
  
@@ -1051,7 +1121,7 @@ index 186db38..4cbeaa7 100644
  			palette = &renderer->highlightVariantPalette[0x100];
  		}
  		if (GBAWindowControlIsBlendEnable(renderer->objwin.packed)) {
-@@ -216,6 +219,7 @@ int GBAVideoSoftwareRendererPreprocessSprite(struct GBAVideoSoftwareRenderer* re
+@@ -216,6 +224,7 @@ int GBAVideoSoftwareRendererPreprocessSprite(struct GBAVideoSoftwareRenderer* re
  		int totalWidth = width << GBAObjAttributesAGetDoubleSize(sprite->a);
  		int totalHeight = height << GBAObjAttributesAGetDoubleSize(sprite->a);
  		struct GBAOAMMatrix mat;
@@ -1059,7 +1129,7 @@ index 186db38..4cbeaa7 100644
  		LOAD_16(mat.a, 0, &renderer->d.oam->mat[GBAObjAttributesBGetMatIndex(sprite->b)].a);
  		LOAD_16(mat.b, 0, &renderer->d.oam->mat[GBAObjAttributesBGetMatIndex(sprite->b)].b);
  		LOAD_16(mat.c, 0, &renderer->d.oam->mat[GBAObjAttributesBGetMatIndex(sprite->b)].c);
-@@ -283,18 +287,18 @@ int GBAVideoSoftwareRendererPreprocessSprite(struct GBAVideoSoftwareRenderer* re
+@@ -283,18 +292,18 @@ int GBAVideoSoftwareRendererPreprocessSprite(struct GBAVideoSoftwareRenderer* re
  		}
  
  		if (!GBAObjAttributesAIs256Color(sprite->a)) {
@@ -1081,7 +1151,7 @@ index 186db38..4cbeaa7 100644
  				SPRITE_TRANSFORMED_LOOP(16, NORMAL_OBJWIN);
  			} else {
  				SPRITE_TRANSFORMED_LOOP(16, NORMAL);
-@@ -340,18 +344,18 @@ int GBAVideoSoftwareRendererPreprocessSprite(struct GBAVideoSoftwareRenderer* re
+@@ -340,18 +349,18 @@ int GBAVideoSoftwareRendererPreprocessSprite(struct GBAVideoSoftwareRenderer* re
  			xOffset = -1;
  		}
  		if (!GBAObjAttributesAIs256Color(sprite->a)) {
@@ -1103,8 +1173,57 @@ index 186db38..4cbeaa7 100644
  				SPRITE_NORMAL_LOOP(16, NORMAL_OBJWIN);
  			} else {
  				SPRITE_NORMAL_LOOP(16, NORMAL);
+diff --git a/src/gba/renderers/software-private.h b/src/gba/renderers/software-private.h
+index 4f7e9f8..dd98fc0 100644
+--- a/src/gba/renderers/software-private.h
++++ b/src/gba/renderers/software-private.h
+@@ -92,7 +92,7 @@ static inline void _compositeNoBlendNoObjwin(struct GBAVideoSoftwareRenderer* re
+ 			mergedFlags = objwinFlags; \
+ 			color = objwinPalette[paletteData | pixelData]; \
+ 		} else if ((current & (FLAG_IS_BACKGROUND | FLAG_REBLEND)) == FLAG_REBLEND) { \
+-			color = renderer->normalPalette[paletteData | pixelData]; \
++			color = basePalette[paletteData | pixelData]; \
+ 		} else { \
+ 			color = palette[paletteData | pixelData]; \
+ 		} \
+@@ -103,7 +103,7 @@ static inline void _compositeNoBlendNoObjwin(struct GBAVideoSoftwareRenderer* re
+ 	{ \
+ 		unsigned color; \
+ 		if ((current & (FLAG_IS_BACKGROUND | FLAG_REBLEND)) == FLAG_REBLEND) { \
+-			color = renderer->normalPalette[paletteData | pixelData]; \
++			color = basePalette[paletteData | pixelData]; \
+ 		} else { \
+ 			color = palette[paletteData | pixelData]; \
+ 		} \
+@@ -118,7 +118,7 @@ static inline void _compositeNoBlendNoObjwin(struct GBAVideoSoftwareRenderer* re
+ 			mergedFlags = objwinFlags; \
+ 			color = objwinPalette[pixelData]; \
+ 		} else if ((current & (FLAG_IS_BACKGROUND | FLAG_REBLEND)) == FLAG_REBLEND) { \
+-			color = renderer->normalPalette[pixelData]; \
++			color = basePalette[pixelData]; \
+ 		} else { \
+ 			color = palette[pixelData]; \
+ 		} \
+@@ -129,7 +129,7 @@ static inline void _compositeNoBlendNoObjwin(struct GBAVideoSoftwareRenderer* re
+ 	{ \
+ 		unsigned color; \
+ 		if ((current & (FLAG_IS_BACKGROUND | FLAG_REBLEND)) == FLAG_REBLEND) { \
+-			color = renderer->normalPalette[pixelData]; \
++			color = basePalette[pixelData]; \
+ 		} else { \
+ 			color = palette[pixelData]; \
+ 		} \
+@@ -156,6 +156,8 @@ static inline void _compositeNoBlendNoObjwin(struct GBAVideoSoftwareRenderer* re
+ #define PREPARE_OBJWIN                                                                            \
+ 	int objwinSlowPath = GBARegisterDISPCNTIsObjwinEnable(renderer->dispcnt);                     \
+ 	mColor* objwinPalette = renderer->normalPalette;                                             \
++	mColor* basePalette = renderer->normalPalette; /* Pokimon v5: may point at a BG palette bank */ \
++	UNUSED(basePalette);                                                                          \
+ 	if (renderer->d.highlightAmount && background->highlight) {                                   \
+ 		objwinPalette = renderer->highlightPalette;                                               \
+ 	}                                                                                             \
 diff --git a/src/gba/renderers/video-software.c b/src/gba/renderers/video-software.c
-index c5bc37b..e318503 100644
+index c5bc37b..9943832 100644
 --- a/src/gba/renderers/video-software.c
 +++ b/src/gba/renderers/video-software.c
 @@ -1016,12 +1016,53 @@ void GBAVideoSoftwareRendererPostprocessBuffer(struct GBAVideoSoftwareRenderer*
@@ -1119,9 +1238,9 @@ index c5bc37b..e318503 100644
 +	pkx->paletteDirty = false;
 +	int highlightAmount = renderer->d.highlightAmount >> 4;
 +	int i;
-+	for (i = 0; i < GBA_PKX_EXT_PALETTE_COLORS; ++i) {
++	for (i = 0; i < GBA_PKX_EXT_PALETTE_COLORS + GBA_PKX_EXT_BG_PALETTE_COLORS; ++i) {
 +		int e = 512 + i;
-+		mColor color = mColorFrom555(pkx->palette[i]);
++		mColor color = mColorFrom555(i < GBA_PKX_EXT_PALETTE_COLORS ? pkx->palette[i] : pkx->bgPalette[i - GBA_PKX_EXT_PALETTE_COLORS]);
 +		renderer->normalPalette[e] = color;
 +		if (renderer->blendEffect == BLEND_BRIGHTEN) {
 +			renderer->variantPalette[e] = _brighten(color, renderer->bldy);
@@ -1184,17 +1303,17 @@ index c5bc37b..e318503 100644
  	int i;
  	if (renderer->blendEffect == BLEND_BRIGHTEN) {
 -		for (i = 0; i < 512; ++i) {
-+		for (i = 0; i < 512 + GBA_PKX_EXT_PALETTE_COLORS; ++i) {
++		for (i = 0; i < GBA_PKX_ALL_PALETTE_COLORS; ++i) {
  			renderer->variantPalette[i] = _brighten(renderer->normalPalette[i], renderer->bldy);
  		}
  	} else if (renderer->blendEffect == BLEND_DARKEN) {
 -		for (i = 0; i < 512; ++i) {
-+		for (i = 0; i < 512 + GBA_PKX_EXT_PALETTE_COLORS; ++i) {
++		for (i = 0; i < GBA_PKX_ALL_PALETTE_COLORS; ++i) {
  			renderer->variantPalette[i] = _darken(renderer->normalPalette[i], renderer->bldy);
  		}
  	} else {
 -		for (i = 0; i < 512; ++i) {
-+		for (i = 0; i < 512 + GBA_PKX_EXT_PALETTE_COLORS; ++i) {
++		for (i = 0; i < GBA_PKX_ALL_PALETTE_COLORS; ++i) {
  			renderer->variantPalette[i] = renderer->normalPalette[i];
  		}
  	}
@@ -1202,7 +1321,7 @@ index c5bc37b..e318503 100644
  
  	if (highlightAmount) {
 -		for (i = 0; i < 512; ++i) {
-+		for (i = 0; i < 512 + GBA_PKX_EXT_PALETTE_COLORS; ++i) {
++		for (i = 0; i < GBA_PKX_ALL_PALETTE_COLORS; ++i) {
  			renderer->highlightPalette[i] = mColorMix5Bit(0x10 - highlightAmount, renderer->normalPalette[i], highlightAmount, renderer->d.highlightColor);
  			renderer->highlightVariantPalette[i] = mColorMix5Bit(0x10 - highlightAmount, renderer->variantPalette[i], highlightAmount, renderer->d.highlightColor);
  		}

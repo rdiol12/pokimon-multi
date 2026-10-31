@@ -10,7 +10,12 @@
 // Extended GBA v2: sprite palettes 16..63 follow the normal 512 colors in the palette
 // buffers, so OBJ_PLTT_ID(slot) works for every sprite palette slot.
 #define PLTT_EXT_COLORS ((PKX_OBJ_PALETTES - 16) * 16)
-#define PLTT_BUFFER_SIZE_ALL (PLTT_BUFFER_SIZE + PLTT_EXT_COLORS)
+// Extended GBA v5: 48 more background palettes (banks 1-3 of 16) come after those.
+// A background layer shows one bank (SetBgPaletteBank); bank b palette n is
+// EXT_BG_PLTT_ID(b, n) in the buffers. They fade along with normal BG palette n.
+#define PLTT_EXT_BG_COLORS (PKX_EXT_BG_PALETTES * 16)
+#define PLTT_BUFFER_SIZE_ALL (PLTT_BUFFER_SIZE + PLTT_EXT_COLORS + PLTT_EXT_BG_COLORS)
+#define EXT_BG_PLTT_ID(bank, n) (PLTT_BUFFER_SIZE + PLTT_EXT_COLORS + PLTT_ID(((bank) - 1) * 16 + (n)))
 
 #define PALETTE_FADE_STATUS_DELAY 2
 #define PALETTE_FADE_STATUS_ACTIVE 1
@@ -91,6 +96,13 @@ extern struct PaletteFadeControl gPaletteFade;
 extern u32 gPlttBufferTransferPending;
 extern u16 ALIGNED(4) gPlttBufferUnfaded[PLTT_BUFFER_SIZE_ALL];
 extern u16 ALIGNED(4) gPlttBufferFaded[PLTT_BUFFER_SIZE_ALL];
+
+bool32 HasExtBgPalettes(void);
+void LoadExtBgPalette(const void *src, u32 bank, u32 paletteNum, u32 size);
+void SetBgPaletteBank(u32 bg, u32 bank);
+u32 GetBgPaletteBank(u32 bg);
+u64 GetExtBgPalettesInUse(void);
+void ResetExtBgPalettes(void);
 
 void LoadPalette(const void *src, u32 offset, u32 size);
 void LoadPaletteFast(const void *src, u32 offset, u32 size);
