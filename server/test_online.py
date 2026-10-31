@@ -7,6 +7,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 import ext  # noqa: E402
 import netplay_server as ns  # noqa: E402
 import online  # noqa: E402
+import online_coopfish  # noqa: E402
 import online_fishing  # noqa: E402
 import online_goals  # noqa: E402
 import online_sightings  # noqa: E402
@@ -25,7 +26,7 @@ class OnlineTest(unittest.IsolatedAsyncioTestCase):
         self.league = ns.League(":memory:")
         self.server = ns.Server(self.league)
         self.online = online.Online(self.server, ext.install(self.server),
-                                    [online_goals, online_sightings, online_web, online_fishing], clock=lambda: self.now)
+                                    [online_goals, online_sightings, online_web, online_fishing, online_coopfish], clock=lambda: self.now)
         self.srv = await asyncio.start_server(self.server.handle, "127.0.0.1", 0)
         self.port = self.srv.sockets[0].getsockname()[1]
         self.clients = []
@@ -164,6 +165,42 @@ class FishingTest(OnlineTest):
         # Reports outside a tournament don't count.
         await self.ask(a, "OEV FISH 129 900")
         self.assertEqual(self.league.db.execute("SELECT COUNT(*) FROM online_fish_scores").fetchone()[0], 2)
+
+
+class CoFishTest(OnlineTest):
+    async def test_two_players_land_a_giant(self):
+        a = await self.connect("Ann", 1)
+        b = await self.connect("Ben", 2)
+        for c in (a, b):
+            await c.send("POS 0 9 5 5 1 3 0")
+            await self.ask(c, "OSTAT")
+        status, out = await self.ask(a, "COFISH WHO")
+        ben_id = rows(out)[1][1]
+        self.assertEqual(rows(out)[1][0], "Ben")
+        await self.ask(a, f"COFISH ASK {ben_id}")
+        self.assertEqual(rows((await self.ask(a, "COFISH WAIT"))[1])[0][1], "0")
+        status, out = await self.ask(b, "OSTAT")
+        invite = next(r for r in rows(out) if r[:2] == ["S", "COFISH"])
+        self.assertEqual(invite[2:4], ["1", "Ann"])
+        await self.ask(b, "COFISH JOIN")
+        self.assertEqual(rows((await self.ask(a, "COFISH WAIT"))[1])[0][1], "1")
+        await self.ask(a, "COFISH REEL 3")
+        self.assertEqual(rows((await self.ask(a, "COFISH RESULT"))[1])[0][1], "0")
+        await self.ask(b, "COFISH REEL 2")
+        for c in (a, b):
+            status, out = await self.ask(c, "COFISH RESULT")
+            self.assertEqual(rows(out)[0][1], "1")
+            self.assertEqual(rows(out)[1][0], "+MON")
+        status, out = await self.ask(a, "COFISH BOARD")
+        self.assertEqual(rows(out)[3][2], "Ann & Ben")
+        # Not enough hits: it gets away, and nobody gets anything.
+        await self.ask(b, f"COFISH ASK {rows((await self.ask(b, 'COFISH WHO'))[1])[1][1]}")
+        await self.ask(a, "COFISH JOIN")
+        await self.ask(a, "COFISH REEL 1")
+        await self.ask(b, "COFISH REEL 1")
+        status, out = await self.ask(a, "COFISH RESULT")
+        self.assertEqual(rows(out)[0][1], "2")
+        self.assertEqual(len(rows(out)), 1)
 
 
 if __name__ == "__main__":

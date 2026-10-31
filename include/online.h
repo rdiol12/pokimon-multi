@@ -17,6 +17,7 @@ void Online_OpenHubFromMenu(void);
 
 // Fishing tournaments (src/online_fishing.c).
 bool32 Online_TournamentIsOn(void);
+bool32 Online_TryCoFishInvite(void);
 void Online_TournamentBite(void);
 
 // Queues a report for the server, sent in the background as
