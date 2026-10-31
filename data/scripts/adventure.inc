@@ -4,3 +4,4 @@
 	.include "data/scripts/adventure/daily_quests.inc"
 	.include "data/scripts/adventure/crafting.inc"
 	.include "data/scripts/adventure/ranch.inc"
+	.include "data/scripts/adventure/dungeon.inc"

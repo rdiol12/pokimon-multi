@@ -34,6 +34,11 @@ struct AdventureSaveData
     u8 ranchStarted;
     u8 ranchShown[RANCH_SHOWN]; // box positions of the Pokémon in the pasture
     u8 filler;
+    // Dungeon.
+    u32 dungeonSeed;  // the current floor's layout
+    u8 dungeonFloor;  // 1 = B1F
+    u8 dungeonBest;
+    u16 dungeonRuns;
 };
 
 #endif // GUARD_ADVENTURE_SAVE_H

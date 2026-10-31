@@ -14,6 +14,7 @@
 #include "field_weather.h"
 #include "constants/weather.h"
 #include "world.h"
+#include "dungeon.h"
 
 extern const u8 World_EventScript_Menu[];
 
@@ -127,7 +128,7 @@ bool32 World_OverworldUpdate(void)
 // A pressed facing (x, y), map coordinates with MAP_OFFSET.
 bool32 World_TryInteract(s16 x, s16 y)
 {
-    return Legends_TryInteract(x, y) || House_TryInteract(x, y);
+    return Legends_TryInteract(x, y) || House_TryInteract(x, y) || Dungeon_TryInteract(x, y);
 }
 
 bool32 World_TryOpenMenu(void)
@@ -139,6 +140,7 @@ bool32 World_TryOpenMenu(void)
 enum Species World_ModifyWildSpecies(enum Species species, u8 level)
 {
     species = RoamingWeather_ModifyWildSpecies(species, level);
+    species = Dungeon_ModifyWildSpecies(species);
     ShinyChain_OnWildSpecies(species);
     return species;
 }

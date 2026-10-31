@@ -1174,6 +1174,7 @@
     "SevenIsland_SevaultCanyon_House_Frlg"
   ],
   "gMapGroup_Adventure": [
-    "AdventureRanch"
+    "AdventureRanch",
+    "AdventureDungeon"
   ]
 }

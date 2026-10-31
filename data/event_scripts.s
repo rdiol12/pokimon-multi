@@ -370,6 +370,7 @@ gStdScripts_End::
 	.include "data/maps/StarfallIsle_ExplorersHouse/scripts.inc"
 	.include "data/maps/StarfallIsle_PlayerHouse/scripts.inc"
 	.include "data/maps/AdventureRanch/scripts.inc"
+	.include "data/maps/AdventureDungeon/scripts.inc"
 	.include "data/maps/AmberwoodHollow/scripts.inc"
 	.include "data/maps/Route104_MrBrineysHouse/scripts.inc"
 	.include "data/maps/Route104_PrettyPetalFlowerShop/scripts.inc"

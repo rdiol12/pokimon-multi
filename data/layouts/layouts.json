@@ -9364,6 +9364,17 @@
       "secondary_tileset": "gTileset_Mauville",
       "border_filepath": "data/layouts/AdventureRanch/border.bin",
       "blockdata_filepath": "data/layouts/AdventureRanch/map.bin"
+    },
+    {
+      "id": "LAYOUT_ADVENTURE_DUNGEON",
+      "name": "AdventureDungeon_Layout",
+      "width": 32,
+      "height": 32,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Cave",
+      "border_filepath": "data/layouts/AdventureDungeon/border.bin",
+      "blockdata_filepath": "data/layouts/AdventureDungeon/map.bin",
+      "layout_version": "emerald"
     }
   ]
 }
