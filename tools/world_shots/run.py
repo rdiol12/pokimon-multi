@@ -25,10 +25,10 @@ here = os.path.dirname(os.path.abspath(__file__))
 root = os.path.abspath(os.path.join(here, "..", ".."))
 e2e = os.path.join(root, "tools", "netplay_bridge", "e2e")
 
-SYMBOLS = ["gNetplayMailbox", "gMain", "gParties", "gPartiesCount", "CB2_Overworld", "BattleMainCB2",
+SYMBOLS = ["gNetplayMailbox", "gMain", "gParties", "gPartiesCount", "CB2_Overworld", "BattleMainCB2", "sLockFieldControls",
            "gLink", "gLinkStatus", "gReceivedRemoteLinkPlayers", "gLinkCallback", "gReadyToCloseLink",
            "gBattleMons", "gSaveBlock1Ptr", "gSaveBlock2Ptr", "gWorldShowcase", "gObjectEvents",
-           "gSpecialVar_Result", "gWorldMailbox", "gWorldTimingMeter", "sLockFieldControls"]
+           "gSpecialVar_Result", "gWorldMailbox", "gWorldTimingMeter"]
 
 HELPERS = """
 function Driver.read8(addr) return E.read8(addr) end
@@ -155,12 +155,10 @@ def main():
         prev = m.group(2)
         if m.group(2) in SYMBOLS:
             syms[m.group(2)] = int(m.group(1), 16)
-    missing = set(SYMBOLS) - set(syms)
+    # Static symbols (driver_lib.lua reads sLockFieldControls) aren't in the map file.
+    missing = [s for s in SYMBOLS if s not in syms]
     if missing:
-        # File-local (static) symbols, like sLockFieldControls, which
-        # Driver.boot waits on, aren't in the map; the ELF has them.
-        nm = subprocess.run(["arm-none-eabi-nm", os.path.join(root, "pokeemerald.elf")],
-                            capture_output=True, text=True).stdout
+        nm = subprocess.check_output(["arm-none-eabi-nm", os.path.join(root, "pokeemerald.elf")], text=True)
         for line in nm.splitlines():
             parts = line.split()
             if len(parts) == 3 and parts[2] in missing:

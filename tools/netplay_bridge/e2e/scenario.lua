@@ -1,5 +1,5 @@
--- Two players meet in Oldale Town. Player 1 changes into Red in the Style
--- menu and player 2 sees it; player 1 sends an emote and a quick phrase. They battle (player 1 forfeits), trade their
+-- Two players meet in Oldale Town. Player 1 changes into Red on the Look
+-- screen (START > STYLE) and player 2 sees it; player 1 sends an emote and a quick phrase. They battle (player 1 forfeits), trade their
 -- lead Pokémon, then make a deal: player 2 gives both its Pokémon for player
 -- 1's lead Pokémon and ¥1,000. Player 2 opens the PvP ladder and finds
 -- itself in first place, then adds player 1 as a friend, and after player 1
@@ -138,11 +138,16 @@ D.run(function()
         D.press(K.START, 40)
         D.shot("start-menu")
         for _ = 1, 3 do D.press(K.DOWN, 10) end
-        D.press(K.A, 40) -- STYLE
-        D.press(K.DOWN, 15) -- MAY
-        D.press(K.DOWN, 30) -- RED
+        D.press(K.A, 40) -- STYLE: the Look screen, cursor on BODY
+        D.waitFor("the Look screen", 600, function() return D.callback2() ~= D.SYM.CB2_Overworld end)
+        D.wait(60)
+        D.press(K.RIGHT, 15) -- MAY
+        D.press(K.RIGHT, 30) -- RED
         D.shot("style-menu")
-        D.press(K.A, 40)
+        D.press(K.START, 0) -- save and go back to the start menu
+        D.waitFor("the overworld", 600, D.inOverworld)
+        D.wait(40)
+        D.press(K.B, 20) -- close the start menu
         if D.mb16(0x01E) == gfx then D.fail("the style didn't change") end
         D.wait(30)
         D.shot("style-red")

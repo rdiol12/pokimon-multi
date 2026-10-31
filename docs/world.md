@@ -200,7 +200,7 @@ netplay_world.lua` copies it to and from the server's world commands
 | Bridge sends | Server sends | |
 | --- | --- | --- |
 | `WORLD` | `LOOK`/`HOUSE` of everyone, then `HUNT id minutesLeft` | on connecting |
-| `LOOK follower mount [accessory]` | `LOOK id follower mount accessory` | to everyone else (accessory: what the follower wears, see Pokémon fashion in `docs/pastimes.md`) |
+| `LOOK follower mount [accessory [trainer]]` | `LOOK id follower mount accessory trainer` | to everyone else (accessory: what the follower wears, see Pokémon fashion in `docs/pastimes.md`; trainer: the player's colours and accessories, see `docs/trainer_look.md`) |
 | `HOUSE open decorHex` | `HOUSE id open decorHex` | to everyone else |
 | `SCORE board key value extra` | | best per player; hunt scores need the current hunt id as key |
 | `WBOARD board key` | `WROW board rank name value extra` ..., `WBOARDEND board myRank` | top 10 |
