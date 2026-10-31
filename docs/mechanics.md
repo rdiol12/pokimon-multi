@@ -30,12 +30,47 @@ in `data/scripts/move_relearner.inc`), free of charge:
 `P_ENABLE_MOVE_RELEARNERS` is on, so the summary screen's relearn option
 also offers all four kinds.
 
+## Rule sets (inverse battles and more)
+
+![The rules referee, the rule list, an INVERSE battle where Fire is super effective on Water, Trick Room, and rule sets marked WON](images/mechanics-rule-sets.png)
+
+A referee in the Slateport Battle Tent lobby runs battles under special
+rules (`src/mechanics_battle.c`, `data/scripts/mechanics/rules.inc`):
+
+| Rule set | What changes |
+| --- | --- |
+| INVERSE | The type chart is turned around (`B_FLAG_INVERSE_BATTLE`). |
+| TRICK ROOM | Trick Room for the whole battle. |
+| NO ITEMS | Magic Room for the whole battle, and the Bag can't be used. |
+| WONDER ROOM | Wonder Room (Defense and Sp. Def swapped) for the whole battle. |
+| MISTY FIELD | Misty Terrain for the whole battle. |
+
+The opponent is a Battle Frontier trainer with three of their Pokémon, at
+the average level of the player's three strongest. Battles play like the
+Battle Tower: no EXP, no prize money, no whiting out, and the party is
+healed before and after. Rule sets won are marked WON
+(`gSaveBlock3Ptr->mechanics.rulesWon`); winning all five gives an Ability
+Patch.
+
+**Online PvP.** `Mechanics_SetBattleRules(RULESET_*)` (include/mechanics.h)
+sets a rule set up for the next battle, and `Mechanics_ClearBattleRules()`
+undoes it. For a link battle both games must set the same rule set before
+the battle starts.
+
+`Mechanics_StartFacilityBattle()` starts a battle against any Battle
+Frontier trainer whose party is already in `gParties[B_TRAINER_OPPONENT_A]`
+(`Mechanics_FillFacilityParty` makes one); the script gets the outcome in
+`VAR_RESULT`. No trainer ids are used, so `TRAINERS_MAX` stays as it is.
+
 ## Screenshots
 
 ```sh
 python3 tools/mechanics_shots/run.py tools/mechanics_shots/move_tutor.lua out/
+python3 tools/mechanics_shots/run.py tools/mechanics_shots/rules.lua out/ 120000
 ```
 
 The runner is `tools/world_shots/run.py` plus `Driver.fastText()` and
-`Driver.step(key, name)`. It needs a built `pokeemerald.gba` and
+`Driver.step(key, name)`, `Driver.fight(name, shotEvery)` (battles with the
+first move) and `Driver.mech{...}` (gMechanicsShowcase in src/mechanics.c:
+fix moveless party Pokémon, set the lead's moves). It needs a built `pokeemerald.gba` and
 `libmgba-dev`.
