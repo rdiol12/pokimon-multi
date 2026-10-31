@@ -1,4 +1,5 @@
 #include "global.h"
+#include "trainer_look.h"
 #include "trainer_pokemon_sprites.h"
 #include "bg.h"
 #include "constants/rgb.h"
@@ -228,6 +229,9 @@ static void Task_NewGameBirchSpeech_WaitForWhatsYourNameToPrint(u8);
 static void Task_NewGameBirchSpeech_WaitPressBeforeNameChoice(u8);
 static void Task_NewGameBirchSpeech_StartNamingScreen(u8);
 static void CB2_NewGameBirchSpeech_ReturnFromNamingScreen(void);
+static void Task_NewGameBirchSpeech_StartLookScreen(u8);
+static void Task_NewGameBirchSpeech_ReturnFromLookScreen(u8);
+static void CB2_NewGameBirchSpeech_ReturnFromLookScreen(void);
 static void Task_NewGameBirchSpeech_CreateNameYesNo(u8);
 static void Task_NewGameBirchSpeech_ProcessNameYesNoMenu(u8);
 void CreateYesNoMenuParameterized(u8, u8, u16, u16, u8, u8);
@@ -1646,11 +1650,10 @@ static void Task_NewGameBirchSpeech_ProcessNameYesNoMenu(u8 taskId)
     switch (Menu_ProcessInputNoWrapClearOnChoose())
     {
     case 0:
+        // Next, how they look (src/trainer_look.c).
         PlaySE(SE_SELECT);
-        gSprites[gTasks[taskId].tPlayerSpriteId].oam.objMode = ST_OAM_OBJ_BLEND;
-        NewGameBirchSpeech_StartFadeOutTarget1InTarget2(taskId, 2);
-        NewGameBirchSpeech_StartFadePlatformIn(taskId, 1);
-        gTasks[taskId].func = Task_NewGameBirchSpeech_SlidePlatformAway2;
+        BeginNormalPaletteFade(PALETTES_ALL, 0, 0, 16, RGB_BLACK);
+        gTasks[taskId].func = Task_NewGameBirchSpeech_StartLookScreen;
         break;
     case MENU_B_PRESSED:
     case 1:
@@ -1801,6 +1804,37 @@ static void Task_NewGameBirchSpeech_Cleanup(u8 taskId)
         SetMainCallback2(CB2_NewGame);
         DestroyTask(taskId);
     }
+}
+
+static void Task_NewGameBirchSpeech_StartLookScreen(u8 taskId)
+{
+    if (!gPaletteFade.active)
+    {
+        FreeAllWindowBuffers();
+        FreeAndDestroyMonPicSprite(gTasks[taskId].tLotadSpriteId);
+        DestroyTask(taskId);
+        TrainerLook_OpenScreen(CB2_NewGameBirchSpeech_ReturnFromLookScreen, TRUE);
+    }
+}
+
+// Back from the Look screen: the scene as it was after the name, then on
+// with the speech as if YES had just been picked.
+static void Task_NewGameBirchSpeech_ReturnFromLookScreen(u8 taskId)
+{
+    if (gTasks[taskId].tTimer-- <= 0 && !gPaletteFade.active)
+    {
+        DrawDialogFrameWithCustomTile(0, TRUE, BIRCH_DLG_BASE_TILE_NUM);
+        gSprites[gTasks[taskId].tPlayerSpriteId].oam.objMode = ST_OAM_OBJ_BLEND;
+        NewGameBirchSpeech_StartFadeOutTarget1InTarget2(taskId, 2);
+        NewGameBirchSpeech_StartFadePlatformIn(taskId, 1);
+        gTasks[taskId].func = Task_NewGameBirchSpeech_SlidePlatformAway2;
+    }
+}
+
+static void CB2_NewGameBirchSpeech_ReturnFromLookScreen(void)
+{
+    CB2_NewGameBirchSpeech_ReturnFromNamingScreen();
+    gTasks[FindTaskIdByFunc(Task_NewGameBirchSpeech_ReturnFromNamingScreenShowTextbox)].func = Task_NewGameBirchSpeech_ReturnFromLookScreen;
 }
 
 static void CB2_NewGameBirchSpeech_ReturnFromNamingScreen(void)
