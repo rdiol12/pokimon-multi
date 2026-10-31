@@ -4,6 +4,7 @@
 #include "netplay.h"
 #include "netplay_ext.h"
 #include "netplay_menu.h"
+#include "online.h"
 #include "script.h"
 #include "sound.h"
 #include "task.h"
@@ -18,6 +19,7 @@ const struct NetplayMenuEntry gNetplayOnlineMenu[] =
     {COMPOUND_STRING("FRIENDS"), ShowNetplayFriends},
     {COMPOUND_STRING("WATCH"),   ShowNetplayWatch},
     {COMPOUND_STRING("PLAZA"),   NetplayExt_OpenPlazaFromMenu},
+    {COMPOUND_STRING("HUB"),     Online_OpenHubFromMenu},
     {NULL, NULL},
 };
 

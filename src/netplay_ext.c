@@ -291,6 +291,13 @@ static void ParseAnswer(struct NpxAnswer *answer)
     answer->rowCount = row + 1;
 }
 
+// Takes the answer that just came in (after NpxRpc_Poll said DONE) for
+// Npx_Field and friends. Other request layers (src/online.c) use this.
+void Npx_TakeAnswer(void)
+{
+    ParseAnswer(&sAnswer);
+}
+
 u32 Npx_RowCount(void)
 {
     return sAnswer.rowCount;

@@ -15,6 +15,7 @@
 #include "field_weather.h"
 #include "constants/weather.h"
 #include "world.h"
+#include "online.h"
 
 extern const u8 World_EventScript_Menu[];
 
@@ -123,6 +124,8 @@ bool32 World_OverworldUpdate(void)
     Achievements_Update();
     Adventure_Update();
     Mechanics_Update();
+    if (Online_OverworldUpdate())
+        return TRUE;
     return Hardcore_Update();
 }
 
@@ -155,6 +158,7 @@ void World_OnWildBattleEnd(void)
         Achievements_OnCatch(gBattleResults.caughtMonSpecies, gBattleResults.shinyWildMon);
         WorldOnline_OnCatch();
         Adventure_OnCatch(gBattleResults.caughtMonSpecies);
+        Online_OnCatch();
     }
     ShinyChain_OnWildBattleEnd();
     Records_OnWildBattleEnd();
