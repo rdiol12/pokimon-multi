@@ -39,5 +39,6 @@ extern const struct PastimeSpot gRangerSpots[];
 extern const struct PastimeSpot gSchoolSpots[];
 extern const struct PastimeSpot gGardenSpots[];
 extern const struct PastimeSpot gWeatherSpots[];
+extern const struct PastimeSpot gStarSpots[];
 
 #endif // GUARD_PASTIME_SPOTS_H

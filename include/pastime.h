@@ -144,4 +144,14 @@ void Weather_ShowForecast(void);
 void Weather_Report(void);
 void Weather_ShowList(void);
 
+// Star map and meteor showers (pastime_stars.c).
+void Star_Update(void);
+u16 Star_ModifyWildSpecies(u16 species);
+void Star_ShowChart(void);
+void Star_HideChart(void);
+void Star_Look(void);
+void Star_PickMeteorite(void);
+void Star_TalkToAstronomer(void);
+void Star_ShowList(void);
+
 #endif // GUARD_PASTIME_H

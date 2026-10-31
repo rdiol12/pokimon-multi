@@ -22,6 +22,7 @@
 #define PASTIME_MENU_SCHOOL     12
 #define PASTIME_MENU_GARDEN     13
 #define PASTIME_MENU_WEATHER    14
+#define PASTIME_MENU_STARS      15
 #define PASTIME_MENU_CLOSE      31
 
 // NPCs and objects the activities place on maps from code (src/pastime.c)
@@ -172,5 +173,14 @@
 #define WEATHER_MENU_FORECAST  0
 #define WEATHER_MENU_REPORT    1
 #define WEATHER_MENU_CANCEL    2
+
+// Star map and meteor shower nights (src/pastime_stars.c).
+#define STAR_CONSTELLATIONS    8
+#define STAR_METEORITES        5
+#define STAR_NIGHT_START       20 // hours
+#define STAR_NIGHT_END         5
+#define STAR_METEOR_EVERY      5  // nights
+#define STAR_METEOR_MON_PERCENT 25
+#define STAR_METEOR_RATE       6  // a shooting star every this many updates, on average
 
 #endif // GUARD_CONSTANTS_PASTIME_H
