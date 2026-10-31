@@ -361,8 +361,8 @@ sections all year (IsSnowboundMap() in src/life_seasons.c).
 
 An underground line under Mauville, Slateport and Verdanturf, for after the
 third badge (trainers Lv23–27, wild Pokémon Lv22–26 on the old line). A
-Metro attendant in each of the three cities (beside the Pokémon Center)
-takes you down once you have Wattson's badge; each station's stairs bring
+Metro attendant in each of the three cities (by the Pokémon Center in
+Mauville and Verdanturf, at Slateport's north gate) takes you down once you have Wattson's badge; each station's stairs bring
 you back up beside them. Talk to the train's doors to ride to either of
 the other stations (a dynamic multichoice). The halls are learned from New
 Mauville (styles.plant()); the track, the trains (silver, and an old
@@ -383,6 +383,32 @@ drawn by tools/areas/subway_art.py into gTileset_Subway.
   Spell Tag, Hyper Potion and hidden items.
 - Map ids: MAP_METRO_MAUVILLE, MAP_METRO_SLATEPORT, MAP_METRO_VERDANTURF,
   MAP_METRO_OLD_LINE. Done flag FLAG_METRO_RALLY_DONE.
+
+## Wonderwild Park
+
+A theme park for after the second badge (trainers Lv17–20). A guide at
+Slateport's north gate takes you there by tram once you have Brawly's
+badge; the gatekeeper at the park's entrance takes you back. The ground is
+Petalburg's town style with General's plaza set for the avenues; the
+coaster, its car, station and decks, the teacup floor, hedges, the castle,
+a carousel, ticket booths, a star statue, flower beds and popcorn carts are
+drawn by tools/areas/park_art.py into gTileset_Park.
+
+- The mascots: Clefairy, Jigglypuff and Togepi ran off before the parade.
+  Clefairy is at the far end of the hedge maze (a fixed-seed maze, so it
+  never changes). Jigglypuff is on an island in the teacup ride, whose
+  plates spin you across the floor (MB_SPIN_*) until you land on a gold
+  plate: drop onto the far-left cup from the top row and it carries you
+  round to it. Togepi is on the coaster's photo deck, which only the ride
+  reaches (the track and deck sit at elevation 4); its steps take you back
+  down to the station. With all three home, the director gives you a Lv18
+  Tandemaus and the mascots parade outside the castle.
+- The Rapidash Racer: its host puts you on the track, and slide tiles with
+  banked curves carry you round the park's south-east corner.
+- Also: Youngster Timmy, Lass Poppy, School Kid Remy, Pokéfan Gloria, a
+  carousel, a Moon Stone, Lemonade, Great Ball, Super Potion and hidden
+  items.
+- Map id: MAP_WONDERWILD_PARK. Done flag FLAG_PARK_PARADE.
 
 ## How the maps are made
 

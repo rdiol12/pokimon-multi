@@ -379,6 +379,8 @@ gStdScripts_End::
 	.include "data/maps/AdventureDungeon/scripts.inc"
 	.include "data/maps/StarfallIsle_Hotel/scripts.inc"
 	.include "data/maps/AmberwoodHollow/scripts.inc"
+	.include "data/scripts/areas/park.inc"
+	.include "data/maps/WonderwildPark/scripts.inc"
 	.include "data/scripts/areas/metro_entrances.inc"
 	.include "data/maps/MetroOldLine/scripts.inc"
 	.include "data/scripts/areas/metro.inc"
