@@ -202,4 +202,18 @@ void NewGamePlus_GetState(void);
 void NewGamePlus_Start(void);
 void NewGamePlus_AfterInit(void);
 
+// Seasonal festivals (pastime_festival.c).
+void Festival_Update(void);
+void Festival_TalkToHost(void);
+void Festival_VisitStall(void);
+void Festival_ShowList(void);
+
+// Archaeology digs (pastime_dig.c).
+void Dig_CheckSite(void);
+void Dig_Start(void);
+void Dig_Finish(void);
+void Dig_GetNextReward(void);
+void Dig_TalkToArchaeologist(void);
+void Dig_ShowList(void);
+
 #endif // GUARD_PASTIME_H

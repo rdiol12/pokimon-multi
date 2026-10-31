@@ -466,3 +466,38 @@ stays until then. The carry-over is put back by `NewGamePlus_AfterInit`,
 called in `CB2_NewGame` just after `NewGameInitData`. Screenshots:
 `tools/pastime_shots/new_game_plus.lua` (its `checks.txt` shows the party,
 the PC and the records before and after).
+
+## Seasonal festivals
+
+![Seasonal festivals](images/pastime-festivals.png)
+
+Each season (the seasons of `src/life_seasons.c`) has its festival in
+Lilycove City, held on the last two days of every 7-day week of the game
+clock: the BLOSSOM FESTIVAL in spring, the FIREWORKS FESTIVAL in summer, the
+HARVEST FESTIVAL in autumn and the LIGHTS FESTIVAL in winter. While one is
+on, a host stands by the Pokémon Center and three stalls around town each
+hand out something seasonal and stamp the player's card. A full card earns the
+host's prize, once per festival: a Leaf Stone, a Fire Stone, a Sitrus Berry
+or an Ice Stone. Petals drift over Lilycove in spring and leaves in autumn,
+and on summer festival nights (19:00 to 2:00) fireworks burst in three
+colors. **R > PASTIMES > FESTIVALS** lists the festivals, the days until the
+next one and the festivals enjoyed. Screenshots:
+`tools/pastime_shots/festival.lua`.
+
+## Archaeology digs
+
+![Archaeology digs](images/pastime-archaeology.png)
+
+An archaeologist in Fallarbor Town has four dig sites around Mt. Chimney
+(Routes 114, 113, 112 and 111), each marked by a bone poking out of the
+ground. Each site can be dug once a day: three finds are buried in an 8x6
+patch and the player gets 14 digs (the + Control Pad moves the shovel, A
+digs, B stops). An empty square glows red next to a buried find, orange
+two squares away and yellow three away; a find comes out once all its
+squares are dug. The biggest find is a fossil (any of the eleven the
+expansion has, 2x2 squares) or a Rare Bone (2x1); the others are one-square
+treasures like evolution stones, Star Pieces, Heart Scales and Light Clay.
+Fossils can go to the Lilycove Museum's curator. The archaeologist rewards
+3, 10, 20 and 35 finds (Rare Bone, Old Amber, Comet Shard, Ability Patch).
+**R > PASTIMES > DIG SITES** shows which sites are ready today and the
+finds and fossils so far. Screenshots: `tools/pastime_shots/dig.lua`.

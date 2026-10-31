@@ -22,3 +22,5 @@
 	.include "data/scripts/pastime/art.inc"
 	.include "data/scripts/pastime/detective.inc"
 	.include "data/scripts/pastime/new_game_plus.inc"
+	.include "data/scripts/pastime/festival.inc"
+	.include "data/scripts/pastime/dig.inc"
