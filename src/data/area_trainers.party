@@ -440,3 +440,65 @@ Level: 41
 Gengar
 Level: 42
 /* end Hollowmere */
+
+/* begin MireboughMarsh */
+=== AREA_TRAINER_MIRE_FINN ===
+Name: FINN
+Class: Fisherman
+Pic: Fisherman
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Basic Trainer
+
+Whiscash
+Level: 37
+
+Quagsire
+Level: 37
+
+=== AREA_TRAINER_MIRE_MARSHA ===
+Name: MARSHA
+Class: Aroma Lady
+Pic: Aroma Lady
+Gender: Female
+Music: Girl
+Double Battle: No
+AI: Basic Trainer
+
+Lombre
+Level: 36
+
+Amoonguss
+Level: 38
+
+=== AREA_TRAINER_MIRE_OTTO ===
+Name: OTTO
+Class: Bug Maniac
+Pic: Bug Maniac
+Gender: Male
+Music: Suspicious
+Double Battle: No
+AI: Basic Trainer
+
+Yanmega
+Level: 38
+
+Skorupi
+Level: 36
+
+=== AREA_TRAINER_MIRE_IVY ===
+Name: IVY
+Class: Pkmn Ranger
+Pic: Pokemon Ranger F
+Gender: Female
+Music: Cool
+Double Battle: No
+AI: Basic Trainer
+
+Toxicroak
+Level: 39
+
+Sliggoo
+Level: 38
+/* end MireboughMarsh */

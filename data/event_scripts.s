@@ -379,6 +379,8 @@ gStdScripts_End::
 	.include "data/maps/AdventureDungeon/scripts.inc"
 	.include "data/maps/StarfallIsle_Hotel/scripts.inc"
 	.include "data/maps/AmberwoodHollow/scripts.inc"
+	.include "data/scripts/areas/mirebough.inc"
+	.include "data/maps/MireboughMarsh/scripts.inc"
 	.include "data/scripts/areas/hollowmere.inc"
 	.include "data/maps/Hollowmere_Manor_2F/scripts.inc"
 	.include "data/maps/Hollowmere_Manor_1F/scripts.inc"

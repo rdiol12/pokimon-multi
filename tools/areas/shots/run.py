@@ -5,7 +5,8 @@ Usage: run.py <scenario.lua> <out dir> [frames]
 
 Same as tools/world_shots/run.py (Driver.scene warps anywhere), plus
 Driver.flag(name, on) to set any flag (FLAG_* names, including the area
-flags that live in SaveBlock3) before warping.
+flags that live in SaveBlock3) before warping, Driver.where() for the
+player's position and Driver.season(s) to force a season.
 """
 import os, re, subprocess, sys
 
@@ -32,7 +33,7 @@ def main():
     scenario = sys.argv[1]
     names = sorted(set(re.findall(r'\b(FLAG_\w+)', open(scenario).read())))
     c = constants(names)
-    world.SYMBOLS += ['gSaveBlock3Ptr', 'gObjectEvents', 'gPlayerAvatar']
+    world.SYMBOLS += ['gSaveBlock3Ptr', 'gObjectEvents', 'gPlayerAvatar', 'gLifeShowcase']
     world.HELPERS += '\nFLAG = {\n' + ''.join(f'    {n} = {c[n]},\n' for n in names) + '}\n' + f'''
 -- Sets or clears a flag (area flags live in SaveBlock3).
 function Driver.flag(name, on)
@@ -47,6 +48,12 @@ function Driver.flag(name, on)
     local bit = 1 << (id % 8)
     if on == false then v = v & ~bit else v = v | bit end
     E.write8(addr, v)
+end
+
+-- Forces a season (SEASON_SPRING .. SEASON_WINTER = 0 .. 3; nil uses the clock).
+-- Takes effect on the next warp.
+function Driver.season(s)
+    E.write8(Driver.SYM.gLifeShowcase + {c['LifeShowcaseSeason']}, s and s + 1 or 0)
 end
 
 -- The player's map position (x, y).
