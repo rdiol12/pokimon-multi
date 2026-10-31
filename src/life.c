@@ -17,6 +17,11 @@ static void RunShowcase(void)
         u32 friendship = gLifeShowcase.friendship;
         SetMonData(&gParties[B_TRAINER_PLAYER][0], MON_DATA_FRIENDSHIP, &friendship);
     }
+    if (gLifeShowcase.eclipseStep != 0)
+    {
+        LifeEclipse_ApplyShowcase(gLifeShowcase.eclipseStep - 1);
+        gLifeShowcase.eclipseStep = 0;
+    }
     if (gLifeShowcase.finishJobs)
     {
         LifeJobs_FinishAll();
@@ -37,6 +42,7 @@ void Life_OnMapTransition(void)
 {
     Seasons_OnMapTransition();
     LifePhoto_OnMapTransition();
+    LifeEclipse_UpdateObjects();
 }
 
 enum Species Life_ModifyWildSpecies(enum Species species, u8 level)

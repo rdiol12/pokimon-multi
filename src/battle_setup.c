@@ -1537,6 +1537,37 @@ static void CB2_EndDebugBattle(void)
     SetMainCallback2(CB2_EndTrainerBattle);
 }
 
+// A battle against gLifeTrainer (src/life_battle.c), from a script (call
+// it with waitstate). No
+// trainer flags are set; VAR_RESULT is TRUE if the player won, and a loss
+// whites out as usual.
+static void CB2_EndLifeTrainerBattle(void)
+{
+    World_OnTrainerBattleEnd();
+    gLifeTrainer = NULL;
+    if (IsPlayerDefeated(gBattleOutcome) == TRUE)
+    {
+        gSpecialVar_Result = FALSE;
+        SetMainCallback2(CB2_WhiteOut);
+    }
+    else
+    {
+        gSpecialVar_Result = TRUE;
+        SetMainCallback2(CB2_ReturnToFieldContinueScriptPlayMapMusic);
+    }
+}
+
+void BattleSetup_StartLifeTrainerBattle(void)
+{
+    LockPlayerFieldControls();
+    FreezeObjectEvents();
+    StopPlayerAvatar();
+    gMain.savedCallback = CB2_EndLifeTrainerBattle;
+    CreateBattleStartTask(GetTrainerBattleTransition(), 0);
+    IncrementGameStat(GAME_STAT_TOTAL_BATTLES);
+    IncrementGameStat(GAME_STAT_TRAINER_BATTLES);
+}
+
 void BattleSetup_StartTrainerBattle_Debug(void)
 {
     sNoOfPossibleTrainerRetScripts = gNoOfApproachingTrainers;

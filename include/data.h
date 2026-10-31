@@ -276,9 +276,14 @@ static inline u16 GetPartnerIdFromTrainerId(u16 trainerId)
     return (trainerId - TRAINER_PARTNER(PARTNER_NONE));
 }
 
+// A trainer that isn't in gTrainers, for the battle in progress
+// (src/life_battle.c).
+extern const struct Trainer *gLifeTrainer;
+
 static inline const struct Trainer *GetTrainerStructFromId(u16 trainerId)
 {
     if (gIsDebugBattle) return GetDebugAiTrainer();
+    if (gLifeTrainer != NULL) return gLifeTrainer;
     enum DifficultyLevel difficulty;
 
     if (IsPartnerTrainerId(trainerId))

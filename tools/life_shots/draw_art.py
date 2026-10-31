@@ -221,3 +221,72 @@ FINDER = [
     "................",
 ]
 png("photo_finder", FINDER_PAL, FINDER, FINDER_KEYS)
+
+
+# --- Team Eclipse (src/life_eclipse.c) ---------------------------------------
+# The postgame villains. Their battle pictures are Emerald's Team Aqua
+# grunts, a Magma Admin's hooded outfit and the Hex Maniac redressed in
+# Eclipse colours: midnight violet with gold, and the Aqua "A" on the
+# bandanas replaced with a gold crescent moon.
+TRAINERS = os.path.join(here, "..", "..", "graphics", "trainers", "front_pics")
+GOLD, GOLD_LIGHT, GOLD_DARK = (230, 189, 74), (255, 230, 139), (172, 123, 41)
+
+# A crescent moon, 4x5, opening to the right.
+CRESCENT = [
+    ".GH.",
+    "GH..",
+    "G...",
+    "GD..",
+    ".GD.",
+]
+
+
+def recolor(base, name, colors, logo=None, crescent_at=None, keys=None):
+    img = Image.open(os.path.join(TRAINERS, base + ".png"))
+    pal = img.getpalette()[:48]
+    for index, rgb in colors.items():
+        pal[index * 3:index * 3 + 3] = list(rgb)
+    img.putpalette(pal)
+    px = img.load()
+    if logo:
+        # Paint the old emblem over with the cloth around it.
+        (x0, y0, x1, y1), old, cloth = logo
+        for y in range(y0, y1 + 1):
+            for x in range(x0, x1 + 1):
+                if px[x, y] in old:
+                    px[x, y] = cloth
+    if crescent_at:
+        cx, cy = crescent_at
+        for dy, row in enumerate(CRESCENT):
+            for dx, ch in enumerate(row):
+                if ch != ".":
+                    px[cx + dx, cy + dy] = keys[ch]
+    img.save(os.path.join(out, name + ".png"))
+
+
+VIOLET = {5: (164, 139, 222), 6: (115, 90, 189), 7: (65, 49, 123), 8: (41, 33, 57)}
+# Grunts: index 11 is free for the gold, 9 (light grey) is its highlight.
+recolor("aqua_grunt_m", "eclipse_grunt_m", {**VIOLET, 11: GOLD},
+        logo=((28, 8, 33, 14), (14, 5), 6), crescent_at=(29, 9), keys={"G": 11, "H": 9, "D": 7})
+recolor("aqua_grunt_f", "eclipse_grunt_f", {**VIOLET, 11: GOLD, 10: (90, 74, 131), 12: (148, 131, 197), 13: (115, 98, 164)},
+        logo=((34, 5, 39, 11), (14, 5), 6), crescent_at=(35, 6), keys={"G": 11, "H": 9, "D": 7})
+# The admin: a violet hood, the Magma emblem on the chest swapped for the
+# crescent (indices 7 and 9 are free for the gold).
+recolor("magma_admin", "eclipse_admin", {10: (57, 41, 98), 12: (139, 106, 205), 13: (98, 74, 156),
+                                         5: (98, 90, 123), 6: (65, 57, 90), 8: (41, 33, 57), 7: GOLD, 9: GOLD_LIGHT},
+        logo=((32, 22, 38, 27), (15,), 10), crescent_at=(34, 23), keys={"G": 7, "H": 9, "D": 8})
+# The leader: a midnight robe and hat with a gold crescent on it.
+recolor("hex_maniac", "eclipse_leader", {5: (90, 98, 164), 6: (57, 65, 131), 7: (41, 41, 90), 8: (24, 24, 49),
+                                         12: (164, 156, 197), 13: (213, 205, 238), 11: GOLD},
+        crescent_at=(34, 8), keys={"G": 11, "H": 14, "D": 7})
+
+# Overworld: one palette for every Eclipse member (graphics/object_events'
+# npc_4 with the blues and pinks turned violet and the shirt stripes gold).
+with open(os.path.join(here, "..", "..", "graphics", "object_events", "palettes", "npc_4.pal")) as f:
+    lines = f.read().split("\n")
+ow = [tuple(int(v) for v in line.split()) for line in lines[3:19]]
+ow[5], ow[6] = (148, 115, 205), (74, 57, 131)
+ow[8], ow[9], ow[10] = (205, 164, 238), (139, 82, 197), (65, 32, 106)
+ow[11] = GOLD
+with open(os.path.join(out, "eclipse_ow.pal"), "w") as f:
+    f.write("JASC-PAL\r\n0100\r\n16\r\n" + "".join("%d %d %d\r\n" % c for c in ow))
