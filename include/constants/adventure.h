@@ -58,4 +58,7 @@
 #define RANCH_TALK_NOTHING_YET 2
 #define RANCH_TALK_HAUL        3
 
+// Dungeon, the Rift Below (src/dungeon.c).
+#define DUNGEON_MAX_FLOOR 99
+
 #endif // GUARD_CONSTANTS_ADVENTURE_H

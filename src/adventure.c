@@ -4,6 +4,7 @@
 #include "item.h"
 #include "script.h"
 #include "daily_quest.h"
+#include "dungeon.h"
 #include "ranch.h"
 #include "trainer_level.h"
 
@@ -21,6 +22,8 @@ struct AdventureShowcase
     u16 items[8]; // 10 of each go in the bag
     u16 ranchSpecies[RANCH_SHOWN]; // put in the RANCH box
     u8 ranchHoursAgo;              // the last ranch visit, hours ago
+    u8 dungeonFloor;               // the dungeon floor the next dive shows
+    u8 dungeonLadderX, dungeonLadderY; // out: where that floor's ladder is
 };
 
 EWRAM_DATA struct AdventureShowcase gAdventureShowcase = {0};
@@ -40,6 +43,9 @@ static void RunShowcase(void)
         Ranch_Showcase(gAdventureShowcase.ranchSpecies, RANCH_SHOWN, gAdventureShowcase.ranchHoursAgo);
     memset(gAdventureShowcase.ranchSpecies, 0, sizeof(gAdventureShowcase.ranchSpecies));
     gAdventureShowcase.ranchHoursAgo = 0;
+    if (gAdventureShowcase.dungeonFloor != 0)
+        Dungeon_Showcase(gAdventureShowcase.dungeonFloor, &gAdventureShowcase.dungeonLadderX, &gAdventureShowcase.dungeonLadderY);
+    gAdventureShowcase.dungeonFloor = 0;
     if (gAdventureShowcase.setXp != 0)
         TrainerLevel_SetXp(gAdventureShowcase.setXp - 1);
     if (gAdventureShowcase.outfit != 0)

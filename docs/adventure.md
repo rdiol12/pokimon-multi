@@ -150,6 +150,45 @@ What a Pokémon finds:
   Heart Scales, Stardust, and a rare one per type (Pearl, Hard Stone,
   Charcoal, Star Piece, Dragon Scale...).
 
+## Dungeons
+
+![Dungeons: the spelunker by Meteor Falls, a ladder down, B2F, B12F, B20F, and the DEEPEST DIVERS board](images/adventure-dungeons.png)
+
+The **Rift Below** (`MAP_ADVENTURE_DUNGEON`) is a cave under Route 114.
+The spelunker outside Meteor Falls (Route 114, 10,64) lets the player
+down and shows the DEEPEST DIVERS board. Every dive starts at B1F, and
+every floor is dug out anew from a seed when the player climbs down
+(`src/dungeon.c`): a few rooms joined by tunnels on a 16x16 grid of
+2x2-metatile cells, with the wall pieces picked from the open cave around
+them (Altering Cave's metatiles), some boulders, item balls, and a ladder
+in the room farthest from the start. The way in at the bottom of the
+start room always leads back up to Route 114. The seed is saved, so
+battles and Continue give back the same floor
+(`ON_TRANSITION` places the item balls, `ON_LOAD`/`ON_RESUME` draw it).
+
+Going deeper:
+
+- more rooms: 4 on B1F, one more every third floor, up to 8;
+- more item balls: 2, one more every third floor, up to 4; from B4F and
+  B8F the loot gets better (evolution stones, Star Pieces, then Full
+  Restores, Max Revives, Rare Candies, PP Ups, Nuggets), and every fifth
+  floor one ball holds a prize (Rare Candy, PP Up, Big Nugget, PP Max, and
+  from B25F a Master Ball);
+- wild Pokémon: Hoenn cave Pokémon on B1F–B3F (Zubat, Geodude, Aron,
+  Whismur, Makuhita, Nosepass, Sableye, Mawile), then evolved and rarer
+  ones from B4F and B8F (Lunatone, Solrock, Baltoy, Snorunt, Bagon,
+  Beldum, Gible...), and from B15F fully grown ones (Crobat, Golem,
+  Aggron, Steelix, Metang, Flygon, Dusclops...); two levels more per floor
+  from level 12–16 on B1F, up to 75.
+
+Each floor climbed gives 15 trainer XP online, and a new deepest floor
+goes on the server's **DEEPEST DIVERS** board (world board 8: value the
+floor, extra the number of dives). `tools/adventure/make_dungeon.py`
+writes the base layout (solid rock), and `render_map.py --dump` draws a
+floor as the game dug it out (`Driver.dumpMap` in the screenshot runner):
+
+![Three floors as the game dug them out: B5F, B12F and B20F](images/adventure-dungeon-floors.png)
+
 ## Screenshots
 
 ```sh
@@ -157,9 +196,12 @@ python3 tools/adventure_shots/run.py tools/adventure_shots/trainer_level.lua out
 python3 tools/adventure_shots/run.py tools/adventure_shots/daily_quests.lua out/daily_quests 40000
 python3 tools/adventure_shots/run.py tools/adventure_shots/crafting.lua out/crafting 20000
 python3 tools/adventure_shots/run.py tools/adventure_shots/ranch.lua out/ranch 20000
+python3 tools/adventure_shots/run.py tools/adventure_shots/dungeon.lua out/dungeon 9000
+python3 tools/adventure_shots/run.py tools/adventure_shots/dungeon_online.lua out/dungeon_online 6000 2
 ```
 
 `run.py` is `tools/world_shots/run.py` (headless libmgba, `Driver.scene`,
 two players with a server when the last argument is 2) plus
-`Driver.adventure{xp = ..., outfit = ..., items = {...}}`, which sets up a scene through
+`Driver.adventure{xp = ..., outfit = ..., items = {...}, ranch = {...},
+dungeonFloor = ...}`, which sets up a scene through
 `gAdventureShowcase` (`src/adventure.c`).

@@ -2,7 +2,11 @@
 """Renders a map layout to a PNG from its tilesets (both metatile layers,
 no objects), for designing maps and for full-map pictures.
 
-Usage: render_map.py LAYOUT_ID out.png [--grid]
+Usage: render_map.py LAYOUT_ID out.png [--grid] [--dump file.map]
+
+With --dump, draws the metatiles in a dump written by Driver.dumpMap
+(tools/adventure_shots/run.py) with the layout's tilesets instead of the
+layout's own blocks, e.g. a dungeon floor as the game dug it out.
 """
 import json
 import os
@@ -45,13 +49,23 @@ def load(d):
     return tiles, meta, load_pals(d)
 
 
-def render(layout_id, grid=False):
+def read_dump(path):
+    lines = open(path).read().split("\n")
+    w, h = (int(v) for v in lines[0].split())
+    words = [int(v, 16) for line in lines[1:h + 1] for v in line.split()]
+    return w, h, struct.pack("<%dH" % len(words), *words)
+
+
+def render(layout_id, grid=False, dump=None):
     layouts = json.load(open(os.path.join(ROOT, "data", "layouts", "layouts.json")))["layouts"]
     lay = [l for l in layouts if l["id"] == layout_id][0]
-    w, h = lay["width"], lay["height"]
     prim, sec = load(tileset_dir(lay["primary_tileset"])), load(tileset_dir(lay["secondary_tileset"]))
     pals = prim[2][:NUM_PRIMARY_PALS] + sec[2][NUM_PRIMARY_PALS:]
-    raw = open(os.path.join(ROOT, lay["blockdata_filepath"]), "rb").read()
+    if dump:
+        w, h, raw = read_dump(dump)
+    else:
+        w, h = lay["width"], lay["height"]
+        raw = open(os.path.join(ROOT, lay["blockdata_filepath"]), "rb").read()
     out = Image.new("RGB", (w * 16, h * 16))
     cache = {}
 
@@ -94,4 +108,5 @@ def render(layout_id, grid=False):
 
 
 if __name__ == "__main__":
-    render(sys.argv[1], "--grid" in sys.argv).save(sys.argv[2])
+    dump = sys.argv[sys.argv.index("--dump") + 1] if "--dump" in sys.argv else None
+    render(sys.argv[1], "--grid" in sys.argv, dump).save(sys.argv[2])
