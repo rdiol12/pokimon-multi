@@ -2,6 +2,7 @@
 // game with touch controls, saves kept on the phone, and the netplay bridge.
 
 import { applyBps, crc32, patchInfo, PatchError } from './bps.js';
+import { describeWrongRom, isZip, unzipRom } from './rom.js';
 import { storage, keepData } from './storage.js';
 import { Emulator, loadCore } from './emulator.js';
 import { attachControls } from './controls.js';
@@ -72,7 +73,8 @@ async function onRomPicked(file) {
     msg.classList.remove('error');
     msg.textContent = 'Checking your ROM…';
     try {
-        const rom = await readFile(file);
+        let rom = await readFile(file);
+        if (isZip(rom)) rom = await unzipRom(rom);
         const patch = (await bundledPatch()) || (await storage.get('patch'));
         if (!patch) {
             await storage.set('rom', rom);
@@ -102,7 +104,15 @@ async function installRom(rom, patch) {
     $('#setup-msg').textContent = 'Patching… (this takes a few seconds)';
     await new Promise((r) => setTimeout(r, 30)); // let the message paint
     const target = patchInfo(patch).target;
-    const game = crc32(rom) === target ? rom : applyBps(rom, patch);
+    let game = rom;
+    if (crc32(rom) !== target) {
+        try {
+            game = applyBps(rom, patch);
+        } catch (e) {
+            if (e.code === 'wrong-rom') throw new PatchError('wrong-rom', describeWrongRom(rom));
+            throw e;
+        }
+    }
     await storage.set('rom', rom);
     await storage.set('game', game);
     await storage.set('gameCrc', target);
@@ -174,8 +184,13 @@ async function startGame(game) {
     }
     emu.attachCanvas($('#screen'));
     await emu.startAudio('audio-worklet.js');
+    // Browsers start sound only from a tap; iOS wants it from the end of
+    // one, so try on every kind of touch until the audio is running.
+    for (const type of ['pointerdown', 'touchend', 'click', 'keydown']) {
+        document.addEventListener(type, () => { if (!muted) emu.resumeAudio(); }, { capture: true, passive: true });
+    }
     const release = attachControls($('#pad'), emu, {
-        onPress: () => { emu.resumeAudio(); globalThis.navigator.vibrate?.(8); },
+        onPress: () => { if (!muted) emu.resumeAudio(); globalThis.navigator.vibrate?.(8); },
     });
     try {
         bridge = await startBridge(emu, { log: (m) => console.log(m) });
@@ -200,9 +215,27 @@ async function startGame(game) {
     const pause = () => { release(); persistSave(true); emu.stop(); emu.audio?.ctx.suspend(); };
     document.addEventListener('visibilitychange', () => {
         if (document.hidden) pause();
-        else emu.start();
+        else { emu.start(); if (!muted) emu.resumeAudio(); }
     });
     window.addEventListener('pagehide', pause);
+
+    // Shows whether sound is playing; a tap starts it (a sure user gesture
+    // for iOS) or mutes it.
+    const sound = $('#sound');
+    let muted = false;
+    sound.addEventListener('click', () => {
+        const ctx = emu.audio?.ctx;
+        if (!ctx) return toast('Sound is not available on this device');
+        muted = ctx.state === 'running';
+        if (muted) ctx.suspend();
+        else emu.resumeAudio();
+    });
+    setInterval(() => {
+        const on = emu.audio?.ctx.state === 'running';
+        sound.textContent = on ? '🔊' : '🔇';
+        // Keep it going unless the player muted it.
+        if (!on && !muted && !document.hidden) emu.resumeAudio();
+    }, 500);
 
     const ff = $('#ff');
     ff.addEventListener('click', () => {
