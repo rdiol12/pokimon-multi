@@ -125,6 +125,43 @@ HavenReserve_EventScript_Roamer7::
 	goto HavenReserve_EventScript_Roamer
 HavenReserve_EventScript_Roamer8::
 	setvar VAR_0x8004, 7
+	goto HavenReserve_EventScript_Roamer
+HavenReserve_EventScript_Roamer9::
+	setvar VAR_0x8004, 8
+	goto HavenReserve_EventScript_Roamer
+HavenReserve_EventScript_Roamer10::
+	setvar VAR_0x8004, 9
+	goto HavenReserve_EventScript_Roamer
+HavenReserve_EventScript_Roamer11::
+	setvar VAR_0x8004, 10
+	goto HavenReserve_EventScript_Roamer
+HavenReserve_EventScript_Roamer12::
+	setvar VAR_0x8004, 11
+	goto HavenReserve_EventScript_Roamer
+HavenReserve_EventScript_Roamer13::
+	setvar VAR_0x8004, 12
+	goto HavenReserve_EventScript_Roamer
+HavenReserve_EventScript_Roamer14::
+	setvar VAR_0x8004, 13
+	goto HavenReserve_EventScript_Roamer
+HavenReserve_EventScript_Roamer15::
+	setvar VAR_0x8004, 14
+	goto HavenReserve_EventScript_Roamer
+HavenReserve_EventScript_Roamer16::
+	setvar VAR_0x8004, 15
+	goto HavenReserve_EventScript_Roamer
+HavenReserve_EventScript_Roamer17::
+	setvar VAR_0x8004, 16
+	goto HavenReserve_EventScript_Roamer
+HavenReserve_EventScript_Roamer18::
+	setvar VAR_0x8004, 17
+	goto HavenReserve_EventScript_Roamer
+HavenReserve_EventScript_Roamer19::
+	setvar VAR_0x8004, 18
+	goto HavenReserve_EventScript_Roamer
+HavenReserve_EventScript_Roamer20::
+	setvar VAR_0x8004, 19
+	goto HavenReserve_EventScript_Roamer
 HavenReserve_EventScript_Roamer:
 	lock
 	faceplayer

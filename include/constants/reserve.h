@@ -7,11 +7,19 @@
 // (server/community_reserve.py), and anyone can walk in and battle or
 // catch them.
 
-// Pokémon roaming the reserve at once: objects 1-8 of MAP_HAVEN_RESERVE,
-// drawn with VAR_OBJ_GFX_ID_0..7 and hidden with FLAG_TEMP_11..18.
-#define RESERVE_SHOWN        8
+// Pokémon roaming the reserve at once (8 on the GBA's 16 objects): spots
+// 0-7 are objects 1-8 of MAP_HAVEN_RESERVE, hidden with FLAG_TEMP_11..18;
+// spots 8-19 are objects 14-25, hidden with FLAG_TEMP_1..C. src/reserve.c
+// sets each one's look in the map's object templates.
+#define RESERVE_SHOWN        20
+#define RESERVE_SHOWN_FIRST  8
 #define RESERVE_FIRST_LOCALID 1
+#define RESERVE_MORE_LOCALID 14
 #define FLAG_RESERVE_HIDE_1  FLAG_TEMP_11
+#define FLAG_RESERVE_HIDE_9  FLAG_TEMP_1
+// Shared Pokémon from the server: one owner name per community mailbox row
+// after the first (server/community_reserve.py SHOWN).
+#define RESERVE_SERVER_SHOWN 11
 
 // Pokémon left while offline (kept in the save, SaveBlock3 reserve).
 #define RESERVE_LOCAL_MAX    6

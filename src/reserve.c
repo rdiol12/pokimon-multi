@@ -109,6 +109,32 @@ static void ResetStraysIfNewDay(void)
     }
 }
 
+static u32 RoamerLocalId(u32 i)
+{
+    return i < RESERVE_SHOWN_FIRST ? RESERVE_FIRST_LOCALID + i : RESERVE_MORE_LOCALID + i - RESERVE_SHOWN_FIRST;
+}
+
+static u32 RoamerHideFlag(u32 i)
+{
+    return i < RESERVE_SHOWN_FIRST ? FLAG_RESERVE_HIDE_1 + i : FLAG_RESERVE_HIDE_9 + i - RESERVE_SHOWN_FIRST;
+}
+
+// Gives spot i's object the look of its Pokémon, in the map's object
+// templates (the GBA only had 16 VAR_OBJ_GFX_ID vars for this).
+static void SetRoamerGfx(u32 i, u32 gfx)
+{
+    u32 j, localId = RoamerLocalId(i);
+
+    for (j = 0; j < OBJECT_EVENT_TEMPLATES_COUNT; j++)
+    {
+        if (gSaveBlock1Ptr->objectEventTemplates[j].localId == localId)
+        {
+            gSaveBlock1Ptr->objectEventTemplates[j].graphicsId = gfx;
+            return;
+        }
+    }
+}
+
 // Puts a Pokémon in the first free spot (a new one, or one whose Pokémon
 // left). Returns the spot, or RESERVE_SHOWN if there's no room.
 static u32 AddShown(u32 id, u16 species, u8 level, u32 personality, u8 flags, const u8 *owner)
@@ -194,7 +220,7 @@ void Reserve_BuildList(void)
     sShownCount = 0;
     if (gSpecialVar_Result == COMMUNITY_OK)
         count = min(gCommunityMailbox.respArgs[0], gCommunityMailbox.respLen / LIST_RECORD_SIZE);
-    for (i = 0; i < count && i < RESERVE_SHOWN; i++)
+    for (i = 0; i < count && i < RESERVE_SERVER_SHOWN; i++)
     {
         const u8 *r = gCommunityMailbox.respData + i * LIST_RECORD_SIZE;
         u32 id = r[0] | (r[1] << 8) | (r[2] << 16) | ((u32)r[3] << 24);
@@ -232,12 +258,12 @@ void Reserve_SetupMap(void)
     {
         if (i < sShownCount && sShown[i].id != 0xFFFFFFFF)
         {
-            VarSet(VAR_OBJ_GFX_ID_0 + i, GfxFor(&sShown[i]));
-            FlagClear(FLAG_RESERVE_HIDE_1 + i);
+            SetRoamerGfx(i, GfxFor(&sShown[i]));
+            FlagClear(RoamerHideFlag(i));
         }
         else
         {
-            FlagSet(FLAG_RESERVE_HIDE_1 + i);
+            FlagSet(RoamerHideFlag(i));
         }
     }
 }
@@ -249,9 +275,9 @@ static void ShowNew(u32 i)
     gSpecialVar_0x8006 = 0;
     if (i >= RESERVE_SHOWN)
         return;
-    VarSet(VAR_OBJ_GFX_ID_0 + i, GfxFor(&sShown[i]));
-    FlagClear(FLAG_RESERVE_HIDE_1 + i);
-    gSpecialVar_0x8006 = RESERVE_FIRST_LOCALID + i;
+    SetRoamerGfx(i, GfxFor(&sShown[i]));
+    FlagClear(RoamerHideFlag(i));
+    gSpecialVar_0x8006 = RoamerLocalId(i);
 }
 
 static enum Species ShownSpecies(u32 i)
@@ -259,7 +285,7 @@ static enum Species ShownSpecies(u32 i)
     return sShown[i].species;
 }
 
-// Script: VAR_0x8004 = which roaming Pokémon (0-7). Its cry; STR_VAR_1 =
+// Script: VAR_0x8004 = which roaming Pokémon (0-19). Its cry; STR_VAR_1 =
 // species, STR_VAR_2 = level, STR_VAR_3 = who left it. VAR_RESULT =
 // RESERVE_KIND_*, VAR_0x8006 = its object's local id.
 void Reserve_DescribeRoamer(void)
@@ -267,7 +293,7 @@ void Reserve_DescribeRoamer(void)
     u32 i = gSpecialVar_0x8004;
     struct ReserveShown *s;
 
-    gSpecialVar_0x8006 = RESERVE_FIRST_LOCALID + i;
+    gSpecialVar_0x8006 = RoamerLocalId(i);
     if (i >= sShownCount || sShown[i].id == 0xFFFFFFFF)
     {
         gSpecialVar_Result = RESERVE_KIND_NONE;
@@ -391,7 +417,7 @@ void Reserve_AfterBattle(void)
     }
     gSpecialVar_Result = end;
     gSpecialVar_0x8005 = end;
-    gSpecialVar_0x8006 = RESERVE_FIRST_LOCALID + sBattling;
+    gSpecialVar_0x8006 = RoamerLocalId(sBattling);
     StringCopy(gStringVar1, GetSpeciesName(s->species));
     if (end == RESERVE_END_STILL_HERE || s->id != sBattlingId)
         return;
@@ -405,7 +431,7 @@ void Reserve_AfterBattle(void)
         RemoveLocal(s->id - ID_LOCAL);
     }
     s->id = 0xFFFFFFFF;
-    FlagSet(FLAG_RESERVE_HIDE_1 + sBattling);
+    FlagSet(RoamerHideFlag(sBattling));
 }
 
 // Script: VAR_RESULT = TRUE if the one just battled is on the server.
@@ -426,7 +452,7 @@ void Reserve_ForgetRoamer(void)
 {
     if (sBattling < sShownCount)
         sShown[sBattling].id = 0xFFFFFFFF;
-    FlagSet(FLAG_RESERVE_HIDE_1 + sBattling);
+    FlagSet(RoamerHideFlag(sBattling));
 }
 
 // --- Leaving a Pokémon --------------------------------------------------------
