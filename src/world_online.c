@@ -266,16 +266,29 @@ static void SyncFollower(u32 slot, struct ObjectEvent *avatar, u16 gfx)
 static void SyncRemote(u32 slot)
 {
     const struct NetplayRemotePlayer *remote = Netplay_GetRemoteSlot(slot);
-    const struct WorldRemoteLook *look = FindLook(remote->id);
-    u8 avatarId = FindObject(LOCALID_NETPLAY_PLAYER_START + slot);
+    const struct WorldRemoteLook *look;
+    u8 avatarId;
     struct ObjectEvent *avatar;
+
+    // An empty slot that was already cleaned up: recheck it only every 16 frames,
+    // since searching the object events for all 24 slots each frame is slow.
+    if (remote->id == 0 && sFollow[slot].playerId == 0 && (gMain.vblankCounter1 & 15) != (slot & 15))
+        return;
+    look = FindLook(remote->id);
+    avatarId = FindObject(LOCALID_NETPLAY_PLAYER_START + slot);
 
     if (avatarId == OBJECT_EVENTS_COUNT || look == NULL || sFollow[slot].playerId != remote->id)
     {
+        u16 playerId = (avatarId != OBJECT_EVENTS_COUNT) ? remote->id : 0;
+
+        // Nothing changed since the last cleanup: skip the object search too.
+        if (look == NULL && sFollow[slot].playerId == playerId && sFollow[slot].mountGfx == 0
+         && (gMain.vblankCounter1 & 15) != (slot & 15))
+            return;
         RemoveFollower(slot);
         DropMount(slot);
         Fashion_ShowRemote(slot, OBJECT_EVENTS_COUNT, 0);
-        sFollow[slot].playerId = (avatarId != OBJECT_EVENTS_COUNT) ? remote->id : 0;
+        sFollow[slot].playerId = playerId;
         return;
     }
     avatar = &gObjectEvents[avatarId];

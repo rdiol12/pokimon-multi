@@ -351,10 +351,16 @@ static void SyncAvatar(u32 slot)
 {
     const struct NetplayRemotePlayer *remote = Netplay_GetRemoteSlot(slot);
     u8 localId = LOCALID_NETPLAY_PLAYER_START + slot;
-    u8 objId = GetObjectEventIdByLocalIdAndMap(localId, gSaveBlock1Ptr->location.mapNum, gSaveBlock1Ptr->location.mapGroup);
+    u8 objId;
     struct ObjectEvent *obj;
     s16 x, y, dx, dy;
 
+    // Most slots are empty. Searching the 64 object events for each of them every
+    // frame halved the frame rate, so an empty slot is only rechecked (for an avatar
+    // left over from a save, say) every 16 frames.
+    if (!IsRemoteHere(remote) && sAvatarIds[slot] == 0 && (gMain.vblankCounter1 & 15) != (slot & 15))
+        return;
+    objId = GetObjectEventIdByLocalIdAndMap(localId, gSaveBlock1Ptr->location.mapNum, gSaveBlock1Ptr->location.mapGroup);
     if (!IsRemoteHere(remote))
     {
         if (objId != OBJECT_EVENTS_COUNT)

@@ -552,6 +552,8 @@ static struct ObjectEvent *OverlayWearer(u32 slot)
 
     if (slot == 0)
         return &gObjectEvents[gPlayerAvatar.objectEventId];
+    if (Netplay_GetRemoteSlot(slot - 1)->id == 0)
+        return NULL; // nobody in that slot: skip the object search
     objId = GetObjectEventIdByLocalIdAndMap(LOCALID_NETPLAY_PLAYER_START + slot - 1,
                                             gSaveBlock1Ptr->location.mapNum, gSaveBlock1Ptr->location.mapGroup);
     return objId < OBJECT_EVENTS_COUNT ? &gObjectEvents[objId] : NULL;
