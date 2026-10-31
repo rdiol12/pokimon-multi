@@ -154,3 +154,16 @@ def mine():
         st.exclude = {0x23F, 0x23E, 0x23D, 0x23C, 0x207, 0x22F, 0x0E8, 0x209, 0x252, 0x246, 0x23B, 0x23A, 0x242}
         _cache['mine'] = st
     return _cache['mine']
+
+
+def plant():
+    """New Mauville's halls: cream walls and grey floors, drawn with
+    gTileset_Plant (the same tiles plus the breakers and appliances of
+    tools/areas/plant_art.py)."""
+    if 'plant' not in _cache:
+        st = Style('gTileset_General', 'gTileset_BikeShop', ['LAYOUT_NEW_MAUVILLE_INSIDE'])
+        st.min_count = 4
+        st.secondary = 'gTileset_Plant'
+        st.exclude = set(range(0x2B0, 0x2F8)) | {0x22E, 0x236, 0x24F, 0x23E, 0x269, 0x271}
+        _cache['plant'] = st
+    return _cache['plant']

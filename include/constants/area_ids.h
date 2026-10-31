@@ -4,7 +4,7 @@
 // Flags, vars and trainers of each new area. AREA_TRAINER_* index the area
 // trainer table; TRAINER_* are the ids scripts battle.
 
-#define AREA_TRAINERS_COUNT 100
+#define AREA_TRAINERS_COUNT 107
 
 /* begin ElderwoodForest */
 #define FLAG_ELDERWOOD_BOUNSWEET_HOME         AREA_FLAG(0)
@@ -350,5 +350,28 @@
 #define AREA_TRAINER_COBBLE_TODD              99
 #define TRAINER_COBBLE_TODD                   AREA_TRAINER(AREA_TRAINER_COBBLE_TODD)
 /* end Cobblerock */
+
+/* begin VoltspirePlant */
+#define FLAG_VOLT_BREAKER_A                   AREA_FLAG(312)
+#define FLAG_VOLT_BREAKER_B                   AREA_FLAG(313)
+#define FLAG_VOLT_BREAKER_C                   AREA_FLAG(314)
+#define FLAG_VOLT_POWER_ON                    AREA_FLAG(315)
+#define FLAG_VOLT_REWARD                      AREA_FLAG(316)
+#define FLAG_VOLT_ROTOM_DONE                  AREA_FLAG(317)
+#define FLAG_ITEM_VOLT_MAGNET                 AREA_FLAG(318)
+#define FLAG_ITEM_VOLT_ELECTIRIZER            AREA_FLAG(319)
+#define FLAG_ITEM_VOLT_THUNDER_STONE          AREA_FLAG(320)
+#define FLAG_ITEM_VOLT_SUPER_REPEL            AREA_FLAG(321)
+#define FLAG_ITEM_VOLT_HYPER_POTION           AREA_FLAG(322)
+#define FLAG_HIDDEN_ITEM_VOLT_CELL_BATTERY    AREA_FLAG(323)
+#define FLAG_HIDDEN_ITEM_VOLT_PP_UP           AREA_FLAG(324)
+#define FLAG_VOLT_CHIEF_TALKED                AREA_FLAG(325)
+#define AREA_TRAINER_VOLT_ZAPP                104
+#define TRAINER_VOLT_ZAPP                     AREA_TRAINER(AREA_TRAINER_VOLT_ZAPP)
+#define AREA_TRAINER_VOLT_OHM                 105
+#define TRAINER_VOLT_OHM                      AREA_TRAINER(AREA_TRAINER_VOLT_OHM)
+#define AREA_TRAINER_VOLT_AMPERE              106
+#define TRAINER_VOLT_AMPERE                   AREA_TRAINER(AREA_TRAINER_VOLT_AMPERE)
+/* end VoltspirePlant */
 
 #endif // GUARD_CONSTANTS_AREA_IDS_H

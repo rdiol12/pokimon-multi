@@ -866,3 +866,59 @@ Level: 15
 Onix
 Level: 16
 /* end Cobblerock */
+
+/* begin VoltspirePlant */
+=== AREA_TRAINER_VOLT_ZAPP ===
+Name: ZAPP
+Class: Guitarist
+Pic: Guitarist
+Gender: Male
+Music: Intense
+Double Battle: No
+AI: Basic Trainer
+
+Electrike
+Level: 23
+
+Voltorb
+Level: 23
+
+Pikachu
+Level: 24
+
+=== AREA_TRAINER_VOLT_OHM ===
+Name: OHM
+Class: Pokemaniac
+Pic: Pokemaniac
+Gender: Male
+Music: Suspicious
+Double Battle: No
+AI: Basic Trainer
+
+Magnemite
+Level: 24
+
+Joltik
+Level: 24
+
+Tynamo
+Level: 25
+
+=== AREA_TRAINER_VOLT_AMPERE ===
+Name: AMPERE
+Class: Expert
+Pic: Expert M
+Gender: Male
+Music: Intense
+Double Battle: No
+AI: Smart Trainer
+
+Elekid
+Level: 25
+
+Blitzle
+Level: 25
+
+Magneton
+Level: 27
+/* end VoltspirePlant */

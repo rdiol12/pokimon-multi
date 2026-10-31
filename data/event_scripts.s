@@ -381,6 +381,8 @@ gStdScripts_End::
 	.include "data/maps/StarfallIsle_Hotel/scripts.inc"
 	.include "data/maps/OnlineGuildHall/scripts.inc"
 	.include "data/maps/AmberwoodHollow/scripts.inc"
+	.include "data/scripts/areas/voltspire.inc"
+	.include "data/maps/VoltspirePlant/scripts.inc"
 	.include "data/scripts/areas/cobblerock.inc"
 	.include "data/maps/Cobblerock_MinersRest/scripts.inc"
 	.include "data/maps/Cobblerock_AssayOffice/scripts.inc"

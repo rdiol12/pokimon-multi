@@ -9615,6 +9615,16 @@
       "secondary_tileset": "gTileset_Mine",
       "border_filepath": "data/layouts/CobblerockMine_OldShaft/border.bin",
       "blockdata_filepath": "data/layouts/CobblerockMine_OldShaft/map.bin"
+    },
+    {
+      "id": "LAYOUT_VOLTSPIRE_PLANT",
+      "name": "VoltspirePlant_Layout",
+      "width": 44,
+      "height": 34,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Plant",
+      "border_filepath": "data/layouts/VoltspirePlant/border.bin",
+      "blockdata_filepath": "data/layouts/VoltspirePlant/map.bin"
     }
   ]
 }

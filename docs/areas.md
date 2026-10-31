@@ -276,6 +276,32 @@ style learned from Granite Cave.
   MAP_COBBLEROCK_MINE_OLD_SHAFT, MAP_COBBLEROCK_ASSAY_OFFICE,
   MAP_COBBLEROCK_MINERS_REST. Done flag FLAG_COBBLE_ASSAY_DONE.
 
+## Voltspire Power Plant
+
+Mauville's power plant, for after the third badge (trainers Lv23–27, wild
+Pokémon Lv22–26). A plant worker on Mauville City's main road takes you
+there once you have Wattson's badge; the exit mat drops you back beside
+him (a warp added to MauvilleCity/map.json). The halls are learned from New
+Mauville (styles.plant()), and the new art (breaker panels in three colours,
+lever up or down; a TV, fridge, washing machine, fan and lawn mower; Tesla
+coils) is drawn by tools/areas/plant_art.py into gTileset_Plant.
+
+- The breakers: a Rotom tripped the main generator, and the barriers
+  between the four halls are stuck. Three breakers each move some of them
+  (New Mauville's barrier tiles, set by `setmetatile` on load and after
+  every flip): yellow swaps the two lobby doors; the coil hall's door to the
+  generator opens only with red on and blue off, the break room wing's only
+  with blue on and red off. Flip red in the east wing, then yellow in the
+  lobby, and walk round through the coil hall.
+- The generator: New Mauville's, shown switched off until you plug it back
+  in. The chief engineer then gives you TM Shock Wave.
+- The Rotom: it hides in one of the five break room appliances (picked at
+  random on entering) and hops to another each time you look in the wrong
+  one. Find it for a Lv25 battle.
+- Also: Guitarist Zapp, Pokémaniac Ohm, Expert Ampere, a Magnet,
+  Electirizer, Thunder Stone, Super Repel, Hyper Potion and hidden items.
+- Map id: MAP_VOLTSPIRE_PLANT. Done flag FLAG_VOLT_POWER_ON.
+
 ## How the maps are made
 
 - `tools/areas/tiles.py` renders any tileset or layout to PNG.
