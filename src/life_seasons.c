@@ -11,6 +11,7 @@
 #include "rtc.h"
 #include "tilesets.h"
 #include "world.h"
+#include "constants/region_map_sections.h"
 #include "constants/rgb.h"
 #include "constants/weather.h"
 
@@ -133,6 +134,13 @@ static bool32 IsSeasonalMap(void)
         && gMapHeader.mapLayout->primaryTileset == &gTileset_General;
 }
 
+// Mountain maps that stay snowy all year (tools/areas/frostcrown.py).
+static bool32 IsSnowboundMap(void)
+{
+    return gMapHeader.regionMapSectionId == MAPSEC_MT_FROSTCROWN
+        || gMapHeader.regionMapSectionId == MAPSEC_SNOWDRIFT_VILLAGE;
+}
+
 // After the primary tileset's palettes are loaded (fieldmap.c).
 void Seasons_TintPrimaryPalettes(bool32 skipFaded)
 {
@@ -141,7 +149,7 @@ void Seasons_TintPrimaryPalettes(bool32 skipFaded)
 
     if (!IsSeasonalMap())
         return;
-    season = Seasons_Get();
+    season = IsSnowboundMap() ? SEASON_WINTER : Seasons_Get();
     if (season == SEASON_SUMMER)
         return;
     for (i = 0; i < 4; i++)

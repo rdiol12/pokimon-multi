@@ -4,7 +4,7 @@
 // Flags, vars and trainers of each new area. AREA_TRAINER_* index the area
 // trainer table; TRAINER_* are the ids scripts battle.
 
-#define AREA_TRAINERS_COUNT 116
+#define AREA_TRAINERS_COUNT 124
 
 /* begin ElderwoodForest */
 #define FLAG_ELDERWOOD_BOUNSWEET_HOME         AREA_FLAG(0)
@@ -399,5 +399,32 @@
 #define AREA_TRAINER_NIMBUS_ZEPHYR            115
 #define TRAINER_NIMBUS_ZEPHYR                 AREA_TRAINER(AREA_TRAINER_NIMBUS_ZEPHYR)
 /* end NimbusCity */
+
+/* begin MtFrostcrown */
+#define FLAG_FROST_CLIMBER_1                  AREA_FLAG(360)
+#define FLAG_FROST_CLIMBER_2                  AREA_FLAG(361)
+#define FLAG_FROST_CLIMBER_3                  AREA_FLAG(362)
+#define FLAG_FROST_RESCUE_DONE                AREA_FLAG(363)
+#define FLAG_FROST_ARTICUNO_DONE              AREA_FLAG(364)
+#define FLAG_FROST_SCULPTOR_GIFT              AREA_FLAG(365)
+#define FLAG_ITEM_FROST_NEVER_MELT_ICE        AREA_FLAG(366)
+#define FLAG_ITEM_FROST_MAX_REPEL             AREA_FLAG(367)
+#define FLAG_ITEM_FROST_ULTRA_BALL            AREA_FLAG(368)
+#define FLAG_ITEM_FROST_TM_HAIL               AREA_FLAG(369)
+#define FLAG_ITEM_FROST_MAX_POTION            AREA_FLAG(370)
+#define FLAG_ITEM_FROST_ICE_STONE             AREA_FLAG(371)
+#define FLAG_HIDDEN_ITEM_FROST_NUGGET         AREA_FLAG(372)
+#define FLAG_HIDDEN_ITEM_FROST_RARE_CANDY     AREA_FLAG(373)
+#define FLAG_HIDDEN_ITEM_FROST_HEART_SCALE    AREA_FLAG(374)
+#define FLAG_HIDDEN_ITEM_FROST_PP_UP          AREA_FLAG(375)
+#define AREA_TRAINER_FROST_BRAM               120
+#define TRAINER_FROST_BRAM                    AREA_TRAINER(AREA_TRAINER_FROST_BRAM)
+#define AREA_TRAINER_FROST_MAREN              121
+#define TRAINER_FROST_MAREN                   AREA_TRAINER(AREA_TRAINER_FROST_MAREN)
+#define AREA_TRAINER_FROST_ROALD              122
+#define TRAINER_FROST_ROALD                   AREA_TRAINER(AREA_TRAINER_FROST_ROALD)
+#define AREA_TRAINER_FROST_ELSA               123
+#define TRAINER_FROST_ELSA                    AREA_TRAINER(AREA_TRAINER_FROST_ELSA)
+/* end MtFrostcrown */
 
 #endif // GUARD_CONSTANTS_AREA_IDS_H

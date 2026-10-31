@@ -329,6 +329,34 @@ gTileset_Sky (Petalburg's tiles plus the art).
   TM Steel Wing and hidden items.
 - Map ids: MAP_NIMBUS_CITY, MAP_NIMBUS_ISLE. Done flag FLAG_NIMBUS_CHIMES_DONE.
 
+## Mt. Frostcrown and Snowdrift Village
+
+A snowy mountain north of Lilycove, for after the sixth badge (trainers
+Lv38–42, wild Pokémon Lv36–40). A ranger beside Lilycove's Pokémon Center
+takes you up once you have Winona's badge; the ranger at the base camp
+takes you back. The trail climbs four shelves of rock and snowy pines to
+Snowdrift Village (a map connection, so you walk straight in): log cabins,
+a lodge where you can rest, and the top of the sled run. The rock is
+Routes 114 and 115's (styles.canyon()) with its palettes turned to snow;
+the sled run, cabins, lodge, snowmen, campfires, lanterns, sleds, the cairn
+and snowdrifts are drawn by tools/areas/frost_art.py into gTileset_Frost.
+General's trees and grass show their winter colours on these two map
+sections all year (IsSnowboundMap() in src/life_seasons.c).
+
+- The rescue: three climbers are stranded on the trail (in the tall grass
+  on the second shelf, behind a fallen rock on the first, under the pines).
+  Find them and they head down. The Mountain Rescue chief in the lodge then
+  gives you a Lv35 Frigibax, and the snowdrift on the summit path is dug
+  out (`setmetatile` on load).
+- The summit: Articuno (Lv45) roosts by the cairn. Meet it and the ice
+  sculptor in the east cabin gives you an Icy Rock.
+- The sled run: slide tiles (MB_SLIDE_*) with banked turns, from the
+  village across the map edge all the way down to the base camp.
+- Also: Hiker Bram, Expert Maren, Cooltrainers Roald and Elsa, the hermit
+  on his ledge, a Never-Melt Ice, TM Hail, Max Potion, Max Repel, Ultra
+  Ball, Ice Stone and hidden items.
+- Map ids: MAP_MT_FROSTCROWN, MAP_SNOWDRIFT_VILLAGE. Done flag FLAG_FROST_RESCUE_DONE.
+
 ## How the maps are made
 
 - `tools/areas/tiles.py` renders any tileset or layout to PNG.

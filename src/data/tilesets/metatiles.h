@@ -429,3 +429,5 @@ const u16 gMetatileAttributes_Plant[] = INCBIN_U16("data/tilesets/secondary/plan
 
 const u16 gMetatiles_Sky[] = INCBIN_U16("data/tilesets/secondary/sky/metatiles.bin");
 const u16 gMetatileAttributes_Sky[] = INCBIN_U16("data/tilesets/secondary/sky/metatile_attributes.bin");
+const u16 gMetatiles_Frost[] = INCBIN_U16("data/tilesets/secondary/frost/metatiles.bin");
+const u16 gMetatileAttributes_Frost[] = INCBIN_U16("data/tilesets/secondary/frost/metatile_attributes.bin");
