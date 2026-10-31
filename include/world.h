@@ -21,6 +21,7 @@ void RoamingWeather_ApplyToCurrentMap(void);
 void RoamingWeather_Update(void);
 enum Species RoamingWeather_ModifyWildSpecies(enum Species species, u8 level);
 void RoamingWeather_GetForecast(void);
+u16 RoamingWeather_GetFrontMap(u32 front, u32 hoursAhead);
 
 // Day/night (world_daynight.c).
 void DayNight_UpdateFlags(void);

@@ -130,5 +130,18 @@ void School_PushAnswers(void);
 void School_Answer(void);
 void School_Finish(void);
 void School_ShowList(void);
+void Garden_GetShow(void);
+void Garden_CheckShow(void);
+void Garden_GiveStarterBerries(void);
+void Garden_ShowList(void);
+void Garden_Update(void);
+
+// Weather lab (pastime_weather.c).
+void Weather_Update(void);
+void Weather_GetState(void);
+void Weather_Join(void);
+void Weather_ShowForecast(void);
+void Weather_Report(void);
+void Weather_ShowList(void);
 
 #endif // GUARD_PASTIME_H

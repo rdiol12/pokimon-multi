@@ -294,3 +294,46 @@ right one. Four right passes. The first pass of each lesson wins a prize
 five graduates you, for an Amulet Coin. Tests can be retaken any time.
 **R > PASTIMES > TRAINER SCHOOL** shows the lessons passed and tests taken.
 Screenshots: `tools/pastime_shots/school.lua`.
+
+## Community garden and berry mutations
+
+![Community garden](images/pastime-garden.png)
+
+Eight Berry plots at the north end of Route 104 (just south of Rustboro),
+tended by the GARDENER, who gives 5 Oran and 5 Pecha Berries to start. The
+plots are berry trees 112 to 119 (`GARDEN_TREE_FIRST`), spawned from code
+like the other pastime NPCs (a new `onSpawn` hook in `struct PastimeSpot`
+sets each one's tree id) with soft soil laid under them at runtime.
+
+Berry mutations are on (`OW_BERRY_MUTATIONS` in `include/config/overworld.h`):
+two different Berries growing side by side can give a new one when picked,
+e.g. Oran + Pecha = Qualot, Aspear + Leppa = Hondew, Lum + Sitrus = Tamato,
+Chesto + Persim = Kelpsy (the expansion's table in `src/berry.c`; its
+"and 1 <mutation>" text named the wrong Berry, fixed here). Picking uses the
+world's berry-picking meter as usual.
+
+Each day the **GARDEN SHOW** asks for some Berries, often a mutated kind
+(1 Qualot, 10 Oran, 1 Tamato, 3 Sitrus...). Bringing them earns 2 to 6
+Garden Points; ranks: SPROUT, BLOOM at 10 (Miracle Seed), GREEN THUMB at 30
+(Big Root), MASTER GARDENER at 60 (Leaf Stone). **R > PASTIMES > GARDEN**
+shows each plot's Berry and stage, the rank and today's show.
+Screenshots: `tools/pastime_shots/garden.lua`.
+
+## Weather lab
+
+![Weather lab](images/pastime-weather.png)
+
+A researcher at the Route 119 Weather Institute (1F) tracks the three
+roaming weather fronts (the rainstorm, sandstorm and snow squall of
+`src/world_weather.c`). **FORECAST** shows where each front is now and in
+2 and 4 hours (`RoamingWeather_GetFrontMap`, a small addition to
+`world_weather.c`). After signing up, standing a few seconds in a front's
+weather takes a reading, one an hour, up to 10 waiting; story weather (the
+Route 119 cycle, Groudon/Kyogre) doesn't count. A toast says so.
+
+**REPORT READINGS** turns them into Research Points: 1 for light rain, 3 for
+a thunderstorm, sandstorm or snow, plus a one-off 10 for logging all four
+kinds. Ranks: TRAINEE, ASSISTANT at 10 (Heat Rock), RESEARCHER at 30
+(Smooth Rock), METEOROLOGIST at 60 (Icy Rock). **R > PASTIMES > WEATHER
+LAB** shows the rank, readings waiting, the kinds logged and where the
+fronts are now. Screenshots: `tools/pastime_shots/weather.lua`.

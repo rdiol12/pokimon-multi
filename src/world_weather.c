@@ -270,3 +270,10 @@ void RoamingWeather_GetForecast(void)
         GetMapName(vars[i], header->regionMapSectionId, 0);
     }
 }
+
+// The map the front (0 rainstorm, 1 sandstorm, 2 snow squall) is over
+// hoursAhead hours from now, as MAP_GROUP << 8 | MAP_NUM.
+u16 RoamingWeather_GetFrontMap(u32 front, u32 hoursAhead)
+{
+    return sFronts[front].path[FrontPosition(&sFronts[front], HoursNow() + hoursAhead)];
+}

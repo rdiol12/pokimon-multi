@@ -15,6 +15,7 @@ struct PastimeSpot
     const u8 *script;
     bool32 (*isShown)(u32 arg);
     u16 (*getGraphicsId)(u32 arg); // NULL = graphicsId
+    void (*onSpawn)(u32 arg, u8 objectEventId); // NULL = nothing to set up
 };
 
 struct PastimeSpotList
@@ -36,5 +37,7 @@ extern const struct PastimeSpot gTradingSpots[];
 extern const struct PastimeSpot gDojoSpots[];
 extern const struct PastimeSpot gRangerSpots[];
 extern const struct PastimeSpot gSchoolSpots[];
+extern const struct PastimeSpot gGardenSpots[];
+extern const struct PastimeSpot gWeatherSpots[];
 
 #endif // GUARD_PASTIME_SPOTS_H

@@ -20,6 +20,8 @@
 #define PASTIME_MENU_DOJO       10
 #define PASTIME_MENU_RANGER     11
 #define PASTIME_MENU_SCHOOL     12
+#define PASTIME_MENU_GARDEN     13
+#define PASTIME_MENU_WEATHER    14
 #define PASTIME_MENU_CLOSE      31
 
 // NPCs and objects the activities place on maps from code (src/pastime.c)
@@ -147,5 +149,28 @@
 #define SCHOOL_FAILED       0 // VAR_RESULT of School_Finish
 #define SCHOOL_PASSED       1
 #define SCHOOL_PASSED_FIRST 2
+
+// Community garden on Route 104 (src/pastime_garden.c).
+#define GARDEN_PLOTS          8
+#define GARDEN_TREE_FIRST     112 // berry tree ids GARDEN_TREE_FIRST to + GARDEN_PLOTS - 1
+#define GARDEN_RANK_COUNT     4
+#define GARDEN_SHOW_OK        0 // VAR_RESULT of Garden_CheckShow
+#define GARDEN_SHOW_DONE      1
+#define GARDEN_SHOW_MISSING   2
+
+// Weather lab at the Weather Institute (src/pastime_weather.c).
+#define WEATHER_KIND_RAIN      0
+#define WEATHER_KIND_STORM     1
+#define WEATHER_KIND_SAND      2
+#define WEATHER_KIND_SNOW      3
+#define WEATHER_KIND_COUNT     4
+#define WEATHER_LAB_JOINED     (1 << 6) // bits of weatherSeen
+#define WEATHER_LAB_BONUS      (1 << 7)
+#define WEATHER_LAB_MAX_READINGS 10
+#define WEATHER_LAB_FULL_SET_POINTS 10
+#define WEATHER_RANK_COUNT     4
+#define WEATHER_MENU_FORECAST  0
+#define WEATHER_MENU_REPORT    1
+#define WEATHER_MENU_CANCEL    2
 
 #endif // GUARD_CONSTANTS_PASTIME_H
