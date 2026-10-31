@@ -1,4 +1,5 @@
 #include "global.h"
+#include "malloc.h"
 #include "netplay.h"
 #include "netplay_ext.h"
 #include "battle.h"
@@ -55,8 +56,13 @@ static EWRAM_DATA u8 sGuildTag[8] = {0};
 static EWRAM_DATA u8 sGuildName[16] = {0};
 static EWRAM_DATA struct SecretBase sStoredBase = {0}; // a base or tower team from the server
 static EWRAM_DATA bool8 sBattleWithStoredBase = FALSE;
-static EWRAM_DATA struct RecordedBattleSave sReplay = {0};
+// The replay itself is recorded_battle.c's (RecordedBattle_BuildLinkReplay);
+// sReplayStamp tells if it has changed since.
+static EWRAM_DATA const struct RecordedBattleSave *sReplay = NULL;
+static EWRAM_DATA u8 sReplayStamp = 0;
 static EWRAM_DATA u16 sReplaySize = 0;
+// A downloaded replay, on the heap from the download until it plays.
+static EWRAM_DATA struct RecordedBattleSave *sDownload = NULL;
 static EWRAM_DATA bool8 sReplayPending = FALSE;
 static EWRAM_DATA u8 sReplayPart = 0;
 static EWRAM_DATA u8 sReplayTries = 0;
@@ -760,8 +766,9 @@ void NetplayExt_OnLinkBattleEnd(u8 battleOutcome)
 {
     if (!Netplay_InSession())
         return;
-    RecordedBattle_BuildLinkReplay(&sReplay);
-    sReplaySize = sizeof(sReplay);
+    sReplay = RecordedBattle_BuildLinkReplay();
+    sReplayStamp = RecordedBattle_LinkReplayStamp();
+    sReplaySize = sizeof(*sReplay);
     StringCopyN(sReplayOpponent, gLinkPlayers[GetMultiplayerId() ^ 1].name, PLAYER_NAME_LENGTH);
     sReplayOpponent[PLAYER_NAME_LENGTH] = EOS;
     switch (battleOutcome & ~B_OUTCOME_LINK_BATTLE_RAN)
@@ -783,6 +790,16 @@ static void PumpReplayUpload(void)
 
     if (!sReplayPending)
         return;
+    if (sReplayStamp != RecordedBattle_LinkReplayStamp())
+    {
+        // Another link battle began, or a recording played back, before the
+        // whole replay went up: what's left of it is gone.
+        if (sReplayUploading)
+            NpxRpc_Release();
+        sReplayUploading = FALSE;
+        sReplayPending = FALSE;
+        return;
+    }
     if (sReplayUploading)
     {
         switch (NpxRpc_Poll())
@@ -821,7 +838,7 @@ static void PumpReplayUpload(void)
     NpxRpc_Num(ReplayParts());
     NpxRpc_Name(sReplayOpponent);
     NpxRpc_Word(results[sReplayResult]);
-    NpxRpc_Data((const u8 *)&sReplay + sReplayPart * REPLAY_UP_PART,
+    NpxRpc_Data((const u8 *)sReplay + sReplayPart * REPLAY_UP_PART,
                 min(REPLAY_UP_PART, sReplaySize - sReplayPart * REPLAY_UP_PART));
     NpxRpc_Send();
     sReplayUploading = TRUE;
@@ -833,6 +850,15 @@ static void BuildReplayList(void) { NpxRpc_Word("LIST"); }
 #define tPart  data[1]
 #define tParts data[2]
 
+static void FinishDownload(u8 taskId, bool32 ok)
+{
+    if (!ok && sDownload != NULL)
+        FREE_AND_SET_NULL(sDownload);
+    gSpecialVar_Result = ok;
+    DestroyTask(taskId);
+    ScriptContext_Enable();
+}
+
 static void Task_DownloadReplay(u8 taskId)
 {
     s16 *data = gTasks[taskId].data;
@@ -840,6 +866,27 @@ static void Task_DownloadReplay(u8 taskId)
     switch (tState)
     {
     case 0:
+        // Our own last battle may still be going up. Playing a replay back
+        // keeps the player's parties where that one's are, so let it finish.
+        if (sReplayPending && Npx_IsOnline())
+            return;
+        if (tParts == 0)
+        {
+            // Recorded by a different version of the game.
+            FinishDownload(taskId, FALSE);
+            return;
+        }
+        // The heap is free in the overworld, and nothing resets it before
+        // NetplayExt_PlayReplay starts the battle.
+        sDownload = AllocZeroedUnchecked(sizeof(*sDownload));
+        if (sDownload == NULL)
+        {
+            FinishDownload(taskId, FALSE);
+            return;
+        }
+        tState++;
+        // fallthrough
+    case 1:
         if (!NpxRpc_Begin("REPLAY"))
             return;
         NpxRpc_Word("GET");
@@ -848,7 +895,7 @@ static void Task_DownloadReplay(u8 taskId)
         NpxRpc_Send();
         tState++;
         break;
-    case 1:
+    case 2:
         switch (NpxRpc_Poll())
         {
         case NPX_RPC_WAITING:
@@ -857,25 +904,23 @@ static void Task_DownloadReplay(u8 taskId)
             if (gNetplayExtMailbox.status == 0)
             {
                 u32 offset = tPart * REPLAY_DOWN_PART;
-                u32 len = min(gNetplayExtMailbox.respLen, sizeof(sReplay) - offset);
-                memcpy((u8 *)&sReplay + offset, gNetplayExtMailbox.resp, len);
+                u32 len = min(gNetplayExtMailbox.respLen, sizeof(*sDownload) - offset);
+                memcpy((u8 *)sDownload + offset, gNetplayExtMailbox.resp, len);
                 NpxRpc_Release();
                 if (++tPart < tParts)
                 {
-                    tState = 0;
+                    tState = 1;
                     return;
                 }
-                gSpecialVar_Result = TRUE;
-                break;
+                FinishDownload(taskId, TRUE);
+                return;
             }
             // fallthrough
         default:
             NpxRpc_Release();
-            gSpecialVar_Result = FALSE;
-            break;
+            FinishDownload(taskId, FALSE);
+            return;
         }
-        DestroyTask(taskId);
-        ScriptContext_Enable();
         break;
     }
 }
@@ -886,15 +931,13 @@ void NetplayExt_DownloadReplay(void)
     u8 taskId = CreateTask(Task_DownloadReplay, 80);
     u32 size = Npx_ChosenNum(4);
 
+    // A pointer left from before is stale: the heap has been reset since.
+    sDownload = NULL;
     gTasks[taskId].tState = 0;
     gTasks[taskId].tPart = 0;
-    gTasks[taskId].tParts = (min(size, sizeof(sReplay)) + REPLAY_DOWN_PART - 1) / REPLAY_DOWN_PART;
-    if (size != sizeof(sReplay))
-    {
-        // Recorded by a different version of the game.
-        DestroyTask(taskId);
-        gSpecialVar_Result = FALSE;
-    }
+    gTasks[taskId].tParts = 0;
+    if (size == sizeof(*sDownload))
+        gTasks[taskId].tParts = (size + REPLAY_DOWN_PART - 1) / REPLAY_DOWN_PART;
 }
 
 #undef tState
@@ -908,7 +951,11 @@ static void Task_PlayReplay(u8 taskId)
     if (!gPaletteFade.active)
     {
         DestroyTask(taskId);
-        PlayRecordedBattleFromSave(&sReplay, CB2_ReturnToFieldContinueScriptPlayMapMusic);
+        if (sDownload == NULL)
+            return;
+        // It copies what it needs before the battle resets the heap.
+        PlayRecordedBattleFromSave(sDownload, CB2_ReturnToFieldContinueScriptPlayMapMusic);
+        FREE_AND_SET_NULL(sDownload);
     }
 }
 
