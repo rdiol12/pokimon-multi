@@ -181,3 +181,12 @@ LilycoveCity_DepartmentStore_1F_Text_SpreadWordAboutWirelessComm:
 	.string "I want to spread the word about how\n"
 	.string "fun Wireless Communication can be.$"
 
+LilycoveCity_DepartmentStore_1F_EventScript_AuctionMoved::
+	msgbox LilycoveCity_DepartmentStore_1F_Text_AuctionMoved, MSGBOX_NPC
+	end
+
+LilycoveCity_DepartmentStore_1F_Text_AuctionMoved:
+	.string "The auctions have moved to their own\n"
+	.string "AUCTION HOUSE, east of the CONTEST HALL.\p"
+	.string "Look for the purple roof and the\n"
+	.string "golden gavel!$"

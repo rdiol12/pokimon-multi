@@ -9825,6 +9825,26 @@
       "secondary_tileset": "gTileset_Petalburg",
       "border_filepath": "data/layouts/HavenReserve/border.bin",
       "blockdata_filepath": "data/layouts/HavenReserve/map.bin"
+    },
+    {
+      "id": "LAYOUT_SLATEPORT_CITY_MARKET_HALL",
+      "name": "SlateportCity_MarketHall_Layout",
+      "width": 17,
+      "height": 12,
+      "primary_tileset": "gTileset_Building",
+      "secondary_tileset": "gTileset_Shop",
+      "border_filepath": "data/layouts/SlateportCity_MarketHall/border.bin",
+      "blockdata_filepath": "data/layouts/SlateportCity_MarketHall/map.bin"
+    },
+    {
+      "id": "LAYOUT_LILYCOVE_CITY_AUCTION_HOUSE",
+      "name": "LilycoveCity_AuctionHouse_Layout",
+      "width": 21,
+      "height": 18,
+      "primary_tileset": "gTileset_Building",
+      "secondary_tileset": "gTileset_Contest",
+      "border_filepath": "data/layouts/LilycoveCity_AuctionHouse/border.bin",
+      "blockdata_filepath": "data/layouts/LilycoveCity_AuctionHouse/map.bin"
     }
   ]
 }

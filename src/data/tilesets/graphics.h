@@ -386,7 +386,7 @@ const u16 gTilesetPalettes_Dewford[][16] =
     INCGFX_U16("data/tilesets/secondary/dewford/palettes/15.pal", ".gbapal"),
 };
 
-const u32 gTilesetTiles_Slateport[] = INCGFX_U32("data/tilesets/secondary/slateport/tiles.png", ".4bpp.fastSmol", "-num_tiles 504 -Wnum_tiles");
+const u32 gTilesetTiles_Slateport[] = INCGFX_U32("data/tilesets/secondary/slateport/tiles.png", ".4bpp.fastSmol", "-num_tiles 512 -Wnum_tiles");
 
 const u16 gTilesetPalettes_Slateport[][16] =
 {
@@ -672,7 +672,7 @@ const u16 gTilesetPalettes_InsideBuilding[][16] =
     INCGFX_U16("data/tilesets/primary/building/palettes/15.pal", ".gbapal"),
 };
 
-const u32 gTilesetTiles_Shop[] = INCGFX_U32("data/tilesets/secondary/shop/tiles.png", ".4bpp.fastSmol", "-num_tiles 502 -Wnum_tiles");
+const u32 gTilesetTiles_Shop[] = INCGFX_U32("data/tilesets/secondary/shop/tiles.png", ".4bpp.fastSmol", "-num_tiles 512 -Wnum_tiles");
 
 const u16 gTilesetPalettes_Shop[][16] =
 {
@@ -1131,7 +1131,7 @@ const u16 gTilesetPalettes_InsideOfTruck[][16] =
     INCGFX_U16("data/tilesets/secondary/inside_of_truck/palettes/15.pal", ".gbapal"),
 };
 
-const u32 gTilesetTiles_Contest[] = INCGFX_U32("data/tilesets/secondary/contest/tiles.png", ".4bpp.fastSmol", "-num_tiles 430 -Wnum_tiles");
+const u32 gTilesetTiles_Contest[] = INCGFX_U32("data/tilesets/secondary/contest/tiles.png", ".4bpp.fastSmol", "-num_tiles 432 -Wnum_tiles");
 
 const u16 gTilesetPalettes_Contest[][16] =
 {

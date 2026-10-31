@@ -427,6 +427,9 @@ enum
     OBJ_EVENT_GFX_FIELD_GENERATOR,
     OBJ_EVENT_GFX_FIELD_GENERATOR_ON,
     OBJ_EVENT_GFX_FIELD_DIG_SPOT,
+    // The Market Hall and Auction House keepers (tools/markets/)
+    OBJ_EVENT_GFX_MARKET_MASTER,
+    OBJ_EVENT_GFX_AUCTIONEER,
     NUM_OBJ_EVENT_GFX,
 };
 
@@ -637,6 +640,8 @@ enum
 #define OBJ_EVENT_PAL_TAG_NEON_LIGHT              0x8004
 #define OBJ_EVENT_PAL_TAG_ECLIPSE                 0x8005 // Team Eclipse (src/life_eclipse.c)
 #define OBJ_EVENT_PAL_TAG_FIELD_ABILITY           0x8010 // ice blocks, generators, dig spots (src/field_ability.c)
+#define OBJ_EVENT_PAL_TAG_MARKET_MASTER           0x8020 // Slateport's Market Hall (tools/markets/)
+#define OBJ_EVENT_PAL_TAG_AUCTIONEER              0x8021 // Lilycove's Auction House (tools/markets/)
 // Not a real OW palette tag; used for the white flash applied to followers
 #define OBJ_EVENT_PAL_TAG_WHITE                   (OBJ_EVENT_PAL_TAG_NONE - 1)
 #define OBJ_EVENT_PAL_TAG_NONE                    0x11FF
