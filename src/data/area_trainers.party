@@ -739,3 +739,68 @@ Level: 21
 Carvanha
 Level: 22
 /* end GullwingPoint */
+
+/* begin WhisperstemValley */
+=== AREA_TRAINER_BAMBOO_JUN ===
+Name: JUN
+Class: Bug Catcher
+Pic: Bug Catcher
+Gender: Male
+Music: Male
+Double Battle: No
+AI: Basic Trainer
+
+Nincada
+Level: 10
+
+Sewaddle
+Level: 11
+
+=== AREA_TRAINER_BAMBOO_LILA ===
+Name: LILA
+Class: Picnicker
+Pic: Picnicker
+Gender: Female
+Music: Girl
+Double Battle: No
+AI: Basic Trainer
+
+Bounsweet
+Level: 11
+
+Skiddo
+Level: 12
+
+=== AREA_TRAINER_BAMBOO_MEI ===
+Name: MEI
+Class: Battle Girl
+Pic: Battle Girl
+Gender: Female
+Music: Intense
+Double Battle: No
+AI: Basic Trainer
+
+Makuhita
+Level: 12
+
+Meditite
+Level: 12
+
+=== AREA_TRAINER_BAMBOO_KAITO ===
+Name: KAITO
+Class: Ninja Boy
+Pic: Ninja Boy
+Gender: Male
+Music: Suspicious
+Double Battle: No
+AI: Basic Trainer
+
+Shroomish
+Level: 12
+
+Nincada
+Level: 12
+
+Pancham
+Level: 13
+/* end WhisperstemValley */

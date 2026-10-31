@@ -162,7 +162,9 @@
     "GullwingPoint",
     "GullwingPoint_PirateShip",
     "CorallineReef_Wreck",
-    "GullwingPoint_PirateHold"
+    "GullwingPoint_PirateHold",
+    "WhisperstemValley",
+    "WhisperstemValley_Teahouse"
   ],
   "gMapGroup_IndoorLittleroot": [
     "LittlerootTown_BrendansHouse_1F",

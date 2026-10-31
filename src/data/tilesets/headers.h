@@ -96,6 +96,17 @@ const struct Tileset gTileset_Carnival =
     .callback = InitTilesetAnim_Petalburg,
 };
 
+const struct Tileset gTileset_Bamboo =
+{
+    .isCompressed = TRUE,
+    .isSecondary = TRUE,
+    .tiles = gTilesetTiles_Bamboo,
+    .palettes = gTilesetPalettes_Bamboo,
+    .metatiles = gMetatiles_Bamboo,
+    .metatileAttributes = gMetatileAttributes_Bamboo,
+    .callback = InitTilesetAnim_Rustboro,
+};
+
 const struct Tileset gTileset_Mauville =
 {
     .isCompressed = TRUE,
