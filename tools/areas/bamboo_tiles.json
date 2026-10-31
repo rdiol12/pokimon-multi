@@ -1,0 +1,160 @@
+{
+ "num_tiles": 512,
+ "first_new_metatile": 862,
+ "objects": {
+  "bamboo_top": [
+   [
+    862,
+    863
+   ]
+  ],
+  "bamboo_mid": [
+   [
+    864,
+    865
+   ]
+  ],
+  "bamboo_bottom": [
+   [
+    866,
+    867
+   ]
+  ],
+  "bamboo_top_parted": [
+   [
+    868,
+    869
+   ]
+  ],
+  "bamboo_mid_parted": [
+   [
+    870,
+    871
+   ]
+  ],
+  "bamboo_bottom_parted": [
+   [
+    872,
+    873
+   ]
+  ],
+  "teahouse": [
+   [
+    874,
+    875,
+    876,
+    877,
+    878
+   ],
+   [
+    879,
+    880,
+    881,
+    882,
+    883
+   ],
+   [
+    884,
+    885,
+    886,
+    887,
+    888
+   ],
+   [
+    889,
+    890,
+    891,
+    892,
+    893
+   ]
+  ],
+  "lantern": [
+   [
+    894
+   ],
+   [
+    895
+   ]
+  ],
+  "gate": [
+   [
+    896,
+    897,
+    898
+   ],
+   [
+    899,
+    900,
+    901
+   ],
+   [
+    902,
+    -1,
+    903
+   ]
+  ],
+  "stepping_stone": [
+   [
+    904
+   ]
+  ]
+ },
+ "walkable": {
+  "bamboo_top": [],
+  "bamboo_mid": [],
+  "bamboo_bottom": [],
+  "bamboo_top_parted": [
+   [
+    0,
+    0
+   ],
+   [
+    0,
+    1
+   ]
+  ],
+  "bamboo_mid_parted": [
+   [
+    0,
+    0
+   ],
+   [
+    0,
+    1
+   ]
+  ],
+  "bamboo_bottom_parted": [
+   [
+    0,
+    0
+   ],
+   [
+    0,
+    1
+   ]
+  ],
+  "teahouse": [
+   [
+    3,
+    2
+   ]
+  ],
+  "lantern": [],
+  "gate": [
+   [
+    0,
+    1
+   ],
+   [
+    1,
+    1
+   ]
+  ],
+  "stepping_stone": [
+   [
+    0,
+    0
+   ]
+  ]
+ }
+}

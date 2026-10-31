@@ -39331,6 +39331,160 @@
               }
             ]
           }
+        },
+        {
+          "map": "MAP_WHISPERSTEM_VALLEY",
+          "base_label": "gWhisperstemValley",
+          "land_mons": {
+            "encounter_rate": 20,
+            "mons": [
+              {
+                "min_level": 9,
+                "max_level": 11,
+                "species": "SPECIES_SEWADDLE"
+              },
+              {
+                "min_level": 9,
+                "max_level": 11,
+                "species": "SPECIES_NINCADA"
+              },
+              {
+                "min_level": 9,
+                "max_level": 11,
+                "species": "SPECIES_SHROOMISH"
+              },
+              {
+                "min_level": 9,
+                "max_level": 11,
+                "species": "SPECIES_SEEDOT"
+              },
+              {
+                "min_level": 9,
+                "max_level": 11,
+                "species": "SPECIES_HOOTHOOT"
+              },
+              {
+                "min_level": 9,
+                "max_level": 11,
+                "species": "SPECIES_SPINARAK"
+              },
+              {
+                "min_level": 10,
+                "max_level": 12,
+                "species": "SPECIES_BELLSPROUT"
+              },
+              {
+                "min_level": 10,
+                "max_level": 12,
+                "species": "SPECIES_SKIDDO"
+              },
+              {
+                "min_level": 10,
+                "max_level": 12,
+                "species": "SPECIES_COMBEE"
+              },
+              {
+                "min_level": 10,
+                "max_level": 12,
+                "species": "SPECIES_BOUNSWEET"
+              },
+              {
+                "min_level": 11,
+                "max_level": 12,
+                "species": "SPECIES_MEDITITE"
+              },
+              {
+                "min_level": 11,
+                "max_level": 12,
+                "species": "SPECIES_MAKUHITA"
+              }
+            ]
+          },
+          "water_mons": {
+            "encounter_rate": 4,
+            "mons": [
+              {
+                "min_level": 10,
+                "max_level": 15,
+                "species": "SPECIES_LOTAD"
+              },
+              {
+                "min_level": 10,
+                "max_level": 15,
+                "species": "SPECIES_GOLDEEN"
+              },
+              {
+                "min_level": 10,
+                "max_level": 15,
+                "species": "SPECIES_SURSKIT"
+              },
+              {
+                "min_level": 10,
+                "max_level": 15,
+                "species": "SPECIES_MARILL"
+              },
+              {
+                "min_level": 10,
+                "max_level": 15,
+                "species": "SPECIES_MARILL"
+              }
+            ]
+          },
+          "fishing_mons": {
+            "encounter_rate": 20,
+            "mons": [
+              {
+                "min_level": 5,
+                "max_level": 10,
+                "species": "SPECIES_MAGIKARP"
+              },
+              {
+                "min_level": 5,
+                "max_level": 10,
+                "species": "SPECIES_GOLDEEN"
+              },
+              {
+                "min_level": 10,
+                "max_level": 15,
+                "species": "SPECIES_MAGIKARP"
+              },
+              {
+                "min_level": 10,
+                "max_level": 15,
+                "species": "SPECIES_GOLDEEN"
+              },
+              {
+                "min_level": 10,
+                "max_level": 15,
+                "species": "SPECIES_GOLDEEN"
+              },
+              {
+                "min_level": 20,
+                "max_level": 25,
+                "species": "SPECIES_GOLDEEN"
+              },
+              {
+                "min_level": 25,
+                "max_level": 30,
+                "species": "SPECIES_SEAKING"
+              },
+              {
+                "min_level": 20,
+                "max_level": 25,
+                "species": "SPECIES_BARBOACH"
+              },
+              {
+                "min_level": 20,
+                "max_level": 25,
+                "species": "SPECIES_BARBOACH"
+              },
+              {
+                "min_level": 25,
+                "max_level": 30,
+                "species": "SPECIES_SEAKING"
+              }
+            ]
+          }
         }
       ]
     },

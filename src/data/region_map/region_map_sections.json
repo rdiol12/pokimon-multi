@@ -1686,6 +1686,10 @@
     {
       "id": "MAPSEC_GULLWING_POINT",
       "name": "GULLWING POINT"
+    },
+    {
+      "id": "MAPSEC_WHISPERSTEM_VALLEY",
+      "name": "WHISPERSTEM VALLEY"
     }
   ]
 }

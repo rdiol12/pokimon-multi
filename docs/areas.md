@@ -227,6 +227,29 @@ area (trainers Lv14–22, wild Pokémon Lv13–18).
   MAP_GULLWING_POINT_PIRATE_HOLD. Flags FLAG_GULL_MIRROR_1–4,
   FLAG_GULL_BEAM_SOLVED, FLAG_GULL_CAPTAIN_BEATEN.
 
+## Whisperstem Valley
+
+A bamboo valley reached from Petalburg City: a guide on the west path
+takes you there, no badge needed (trainers Lv10–13, wild Pokémon Lv9–12).
+Its own tileset, gTileset_Bamboo, is Rustboro's plus new art drawn by
+tools/areas/bamboo_art.py: bamboo groves built from top, middle and bottom
+pieces so they tile at any size, a teahouse, stone lanterns, a shrine gate
+and stepping stones.
+
+- The tea master's Pancham: three Pancham have run off into the bamboo and
+  hide where the paths end (in the west maze, and across the pond on the
+  north bank). Each one you find runs home to the teahouse. Bring all three
+  back and the tea master gives you one of them (Pancham Lv12).
+- The secret grove: north of the pond's north bank, one stand of bamboo has
+  its stalks parted (`bamboo_*_parted`, walkable and drawn over you). An old
+  man in the teahouse glade hints at it. Inside: a Mienfoo training alone
+  (Lv14 static battle), TM Bulk Up and a hidden Rare Candy.
+- Also: a shrine gate and sign, a koi pond crossed only by Route 104's
+  plank bridge, Bug Catcher Jun, Picnicker Lila, Battle Girl Mei, Ninja Boy
+  Kaito, a Super Potion, Great Ball, Big Pearl, Ether, and hidden items.
+- Map ids: MAP_WHISPERSTEM_VALLEY, MAP_WHISPERSTEM_VALLEY_TEAHOUSE (the
+  Lavaridge herb shop's room). Done flag FLAG_BAMBOO_TEA_DONE.
+
 ## How the maps are made
 
 - `tools/areas/tiles.py` renders any tileset or layout to PNG.

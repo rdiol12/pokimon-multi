@@ -4,7 +4,7 @@
 // Flags, vars and trainers of each new area. AREA_TRAINER_* index the area
 // trainer table; TRAINER_* are the ids scripts battle.
 
-#define AREA_TRAINERS_COUNT 86
+#define AREA_TRAINERS_COUNT 92
 
 /* begin ElderwoodForest */
 #define FLAG_ELDERWOOD_BOUNSWEET_HOME         AREA_FLAG(0)
@@ -295,5 +295,32 @@
 #define AREA_TRAINER_GULL_FINN                85
 #define TRAINER_GULL_FINN                     AREA_TRAINER(AREA_TRAINER_GULL_FINN)
 /* end GullwingPoint */
+
+/* begin WhisperstemValley */
+#define FLAG_BAMBOO_PANCHAM_1                 AREA_FLAG(264)
+#define FLAG_BAMBOO_PANCHAM_2                 AREA_FLAG(265)
+#define FLAG_BAMBOO_PANCHAM_3                 AREA_FLAG(266)
+#define FLAG_HIDE_BAMBOO_HOME_1               AREA_FLAG(267)
+#define FLAG_HIDE_BAMBOO_HOME_2               AREA_FLAG(268)
+#define FLAG_HIDE_BAMBOO_HOME_3               AREA_FLAG(269)
+#define FLAG_BAMBOO_TEA_DONE                  AREA_FLAG(270)
+#define FLAG_BAMBOO_MIENFOO_DONE              AREA_FLAG(271)
+#define FLAG_ITEM_BAMBOO_SUPER_POTION         AREA_FLAG(272)
+#define FLAG_ITEM_BAMBOO_GREAT_BALL           AREA_FLAG(273)
+#define FLAG_ITEM_BAMBOO_BIG_PEARL            AREA_FLAG(274)
+#define FLAG_ITEM_BAMBOO_TM_BULK_UP           AREA_FLAG(275)
+#define FLAG_HIDDEN_ITEM_BAMBOO_TINY_MUSHROOM AREA_FLAG(276)
+#define FLAG_HIDDEN_ITEM_BAMBOO_RARE_CANDY    AREA_FLAG(277)
+#define FLAG_HIDDEN_ITEM_BAMBOO_REVIVE        AREA_FLAG(278)
+#define FLAG_ITEM_BAMBOO_ETHER                AREA_FLAG(279)
+#define AREA_TRAINER_BAMBOO_JUN               88
+#define TRAINER_BAMBOO_JUN                    AREA_TRAINER(AREA_TRAINER_BAMBOO_JUN)
+#define AREA_TRAINER_BAMBOO_LILA              89
+#define TRAINER_BAMBOO_LILA                   AREA_TRAINER(AREA_TRAINER_BAMBOO_LILA)
+#define AREA_TRAINER_BAMBOO_MEI               90
+#define TRAINER_BAMBOO_MEI                    AREA_TRAINER(AREA_TRAINER_BAMBOO_MEI)
+#define AREA_TRAINER_BAMBOO_KAITO             91
+#define TRAINER_BAMBOO_KAITO                  AREA_TRAINER(AREA_TRAINER_BAMBOO_KAITO)
+/* end WhisperstemValley */
 
 #endif // GUARD_CONSTANTS_AREA_IDS_H
