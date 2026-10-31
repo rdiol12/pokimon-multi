@@ -4,17 +4,20 @@
 // Battle and Pokémon mechanics (src/mechanics*.c, docs/mechanics.md).
 
 // People and Pokémon the mechanics put on maps from C (190-199; other
-// threads use 200 and up). One per entry of sMechNpcs in src/mechanics.c.
+// threads use 200 and up), from sMechNpcs in src/mechanics.c. Local ids only
+// have to be unique on a map, so ones that are never on the same map share.
 #define LOCALID_MECH_FIRST 190
+#define LOCALID_MECH_LAST  199
 #define LOCALID_MECH_TUTOR 190 // the move tutor in every Pokémon Center
 #define LOCALID_MECH_REFEREE 191 // the rules referee in the Slateport Battle Tent
 #define LOCALID_MECH_CUP_HOST 192 // the tournament host in the Verdanturf Battle Tent
 #define LOCALID_MECH_STYLE_MASTER 193 // the battle style master in the Fallarbor Battle Tent
 #define LOCALID_MECH_SKILL_TEACHER 194 // the trainer skills teacher in the Rustboro Pokémon School
 #define LOCALID_MECH_LAB_AIDE 195 // Birch's aide, who starts the signature move quest
-#define LOCALID_MECH_STATUE_TREECKO 196 // the starters' old statues: Petalburg Woods,
-#define LOCALID_MECH_STATUE_TORCHIC 197 // the Fiery Path
-#define LOCALID_MECH_STATUE_MUDKIP  198 // and Route 117
+#define LOCALID_MECH_STATUE 196 // a starter's old statue (Petalburg Woods, Fiery Path, Route 117)
+#define LOCALID_MECH_BOSS 197 // a cave boss (src/mechanics_bosses.c)
+#define LOCALID_MECH_STORM_ECHO 197 // Groudon's or Kyogre's echo (Routes 114 and 118)
+#define LOCALID_MECH_STORM_RESEARCHER 198 // the storm researcher in the Weather Institute
 #define LOCALID_MECH_EVO_SAGE 199 // the evolution sage in a Mauville City house
 
 // Battle rule sets (Mechanics_SetBattleRules). The Slateport Battle Tent's
@@ -83,10 +86,27 @@
 #define EVO_QUEST_READY      3 // ready for the trial
 #define EVO_QUEST_FRIENDSHIP 160
 
+// Cave bosses (src/mechanics_bosses.c).
+#define BOSS_GRANITE  0 // Granite Cave 1F: Terastal Sableye
+#define BOSS_METEOR   1 // Meteor Falls: Dynamax Lunatone
+#define BOSS_SHOAL    2 // Shoal Cave: Terastal Glalie
+#define BOSS_SEAFLOOR 3 // Seafloor Cavern: Dynamax Sharpedo
+#define BOSS_VICTORY  4 // Victory Road: Terastal Flygon
+#define BOSS_COUNT    5
+
+// The postgame storms (src/mechanics_storms.c).
+#define STORM_GROUDON 0 // a drought on Route 114
+#define STORM_KYOGRE  1 // a thunderstorm on Route 118
+#define STORM_COUNT   2
+
+// The OT id of opponents that can't be caught (Mechanics_IsCatchBlocked).
+#define MECH_GUARDIAN_OT_ID 0x4D454348
+
 // Messages printed with STRINGID_MECH_MESSAGE; the id goes in
 // gBattleTextBuff3[0] so it reaches both games in a link battle.
 #define MECH_MSG_STYLE_AGILE  0
 #define MECH_MSG_STYLE_STRONG 1
+#define MECH_MSG_COMMENTARY   16 // + a line of src/mechanics_commentary.c
 
 // Flags (FLAG_UNUSED_0x881-0x887 and 0x8E5-0x8EF belong to the mechanics).
 #define FLAG_MECH_MET_TUTOR    FLAG_UNUSED_0x881
@@ -99,5 +119,13 @@
 #define FLAG_MECH_SIG_BEATEN   FLAG_UNUSED_0x8E5 // the statue's guardian was beaten
 #define FLAG_MECH_SIG_TAUGHT   FLAG_UNUSED_0x8E6 // the signature move was taught
 #define FLAG_MECH_MET_EVO_SAGE FLAG_UNUSED_0x8E7
+#define FLAG_MECH_BOSS_GRANITE  FLAG_UNUSED_0x8E8 // cave bosses beaten or caught
+#define FLAG_MECH_BOSS_METEOR   FLAG_UNUSED_0x8E9
+#define FLAG_MECH_BOSS_SHOAL    FLAG_UNUSED_0x8EA
+#define FLAG_MECH_BOSS_SEAFLOOR FLAG_UNUSED_0x8EB
+#define FLAG_MECH_BOSS_VICTORY  FLAG_UNUSED_0x8EC
+#define FLAG_MECH_STORM_GROUDON FLAG_UNUSED_0x8ED // the drought on Route 114 is calmed
+#define FLAG_MECH_STORM_KYOGRE  FLAG_UNUSED_0x8EE // the thunderstorm on Route 118 is calmed
+#define FLAG_MECH_STORM_REWARD  FLAG_UNUSED_0x8EF // the researcher gave the reward
 
 #endif // GUARD_CONSTANTS_MECHANICS_H

@@ -85,6 +85,12 @@ void Mechanics_ApplyLevelCap(u8 level)
         CapMonLevel(&gParties[B_TRAINER_PLAYER][i], level);
 }
 
+// TRUE while the player is in a tournament (or another capped battle).
+bool32 Mechanics_IsCupActive(void)
+{
+    return sPartySaved;
+}
+
 void Mechanics_RestoreParty(void)
 {
     if (!sPartySaved)
