@@ -22,6 +22,12 @@ opponent's Rover.
 ROVER LEAGUE RESULT <match> <won>: the player's match was played.
 ROVER LEAGUE WATCH <match>: match id|round, NUL, both Rovers.
 ROVER LEAGUE SEEN <match> <a won>: a watched match ended like that.
+ROVER LEAGUE HALL: the champions, newest first (Laurel City's Hall of
+Champions). First row: how many; then weeks ago (0 this week)|name.
+
+The league is played at the Rover League Stadium in Laurel City: the
+week's rovers travel there (bound(), used by rovers.Sim) and stay until
+they're knocked out; the champion stays until the week is over.
 """
 
 WEEK = 7 * 86400
@@ -232,6 +238,30 @@ class League:
         return seat
 
 
+def bound(db, t):
+    """The rovers that should be in Laurel City now: this week's seated
+    rovers not knocked out yet."""
+    week = week_of(t)
+    rows = db.execute("SELECT seat, rover FROM rover_league_seats WHERE week = ? AND rover IS NOT NULL",
+                      (week,)).fetchall()
+    if not rows:
+        return set()
+    lost = {b if w == a else a for a, b, w in db.execute(
+        "SELECT a, b, winner FROM rover_league_matches WHERE week = ? AND winner IS NOT NULL", (week,))}
+    return {rover for seat, rover in rows if seat not in lost}
+
+
+def champions(league, t, most=6):
+    """(weeks ago, name) of the latest champions, newest first."""
+    week = week_of(t)
+    out = []
+    for w, winner in league.db.execute(
+            "SELECT week, winner FROM rover_league_matches WHERE round = 2 AND winner IS NOT NULL"
+            " AND week <= ? ORDER BY week DESC LIMIT ?", (week, most)):
+        out.append((week - w, league.seat_name(w, winner)))
+    return out
+
+
 def opponent(league, week, match, seat):
     other = match[4] if match[3] == seat else match[3]
     return other, league.seat_name(week, other)
@@ -242,6 +272,9 @@ def cmd_league(ctx, args, data, R):
     t = R.now()
     week = league.advance(t)
     sub = args[1] if len(args) > 1 else "INFO"
+    if sub == "HALL":
+        rows = champions(league, t)
+        return R.text([(len(rows),)] + rows)
     if sub == "INFO":
         rnd = league.round_now(week)
         left = 0 if rnd == 3 else max(0, int((week_start(week) + ROUND_ENDS[rnd] - t) // 3600))

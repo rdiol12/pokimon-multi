@@ -528,6 +528,29 @@ the warden's desk from tools/areas/prison_art.py.
 - Map ids: MAP_IRONMOOR_ISLE, MAP_IRONMOOR_PRISON,
   MAP_IRONMOOR_PRISON_SOLITARY. Done flag FLAG_IRONMOOR_SPIRITOMB_DONE.
 
+## Laurel City
+
+The Rover League's city (docs/rovers.md), an island reached by the league
+ferry: a sailor east of Slateport City's harbor takes you there, and the
+sailor on Laurel City's dock takes you back. It uses the Battle Frontier's
+west tileset: the Battle Dome and its plaza are stamped in as the Rover
+League Stadium, with the avenue of arches, flower beds, the lounges and the
+mart around it (tools/areas/laurel.py).
+
+- The stadium (the Battle Dome's lobby): the league's front desk, where
+  players see the week's bracket, enter, play their matches and watch
+  rover-vs-rover matches; a nurse who heals your team; an announcer and
+  fans.
+- The Hall of Champions: the curator reads out the latest league
+  champions (ROVER LEAGUE HALL). The Rovers' Lodge, where the league rovers
+  stay. The League Shop: Ultra Balls, healing and X items.
+- The week's league rovers travel to Laurel City (through Slateport, the
+  ferry) and stay until they're knocked out; the champion stays until the
+  week is over. Six people around town and fans in the stadium.
+- Map ids: MAP_LAUREL_CITY, MAP_LAUREL_CITY_STADIUM,
+  MAP_LAUREL_CITY_HALL_OF_CHAMPIONS, MAP_LAUREL_CITY_ROVERS_LODGE,
+  MAP_LAUREL_CITY_LEAGUE_SHOP. No flags or trainers.
+
 ## How the maps are made
 
 - `tools/areas/tiles.py` renders any tileset or layout to PNG.

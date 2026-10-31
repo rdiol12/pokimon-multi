@@ -115,6 +115,7 @@ GYMS = [("RustboroCity", 15), ("DewfordTown", 19), ("MauvilleCity", 24), ("Lavar
         ("PetalburgCity", 31), ("FortreeCity", 33), ("MossdeepCity", 42), ("SootopolisCity", 46)]
 LEAGUE_LEVEL = 58
 START_MAP = BY_NAME.get("LittlerootTown")
+LEAGUE_CITY = BY_NAME.get("LaurelCity")  # the Rover League Stadium (tools/areas/laurel.py)
 
 now = time.time  # tests replace this
 if os.environ.get("ROVERS_TIME_OFFSET"):  # screenshot runs: another day of the week
@@ -414,6 +415,7 @@ class Sim:
     def __init__(self, db, league, server=None):
         self.db, self.league, self.server = db, league, server
         self.rivals = set()
+        self.league_bound = set()
         self.trader = rovers_trade.Trader(db, TID_BASE, news, new_mon, pack_mon, species_name, self.keep)
 
     def keep(self, r, m):
@@ -475,6 +477,15 @@ class Sim:
         # Pokémon Center); night owls carry on.
         if night and r.id % NIGHT_OWL != 0:
             return
+        # In the Rover League this week: off to Laurel City, and staying.
+        at_league = r.id in self.league_bound
+        if at_league and r.map != LEAGUE_CITY:
+            dest = next_hop(r.map, lambda k: k == LEAGUE_CITY)
+            if dest is not None:
+                if dest == LEAGUE_CITY:
+                    news(self.db, f"{r.name} arrived in Laurel City for the Rover League.")
+                r.map = dest
+                return
         # Gyms.
         g = gym_index(r.map)
         target = gym_target(r)
@@ -521,6 +532,8 @@ class Sim:
                 news(self.db, f"{r.name} got an egg at the Day Care.")
                 return
         # Moving on.
+        if at_league and r.map == LEAGUE_CITY:
+            return
         dest = None
         if r.hurt >= 2:
             dest = next_hop(r.map, lambda k: WORLD[k]["center"])
@@ -634,8 +647,11 @@ class Sim:
         """Brings every rover up to now."""
         ensure_rovers(self.db)
         self.rivals = rivals(self.db)
-        rovers = load_all(self.db)
         t = now()
+        # This week's league rovers head for Laurel City.
+        rovers_league.League(self.db, sys.modules[__name__]).advance(t)
+        self.league_bound = rovers_league.bound(self.db, t) if LEAGUE_CITY else set()
+        rovers = load_all(self.db)
         for r in rovers:
             steps = int((t - r.tick) // STEP)
             if steps <= 0:

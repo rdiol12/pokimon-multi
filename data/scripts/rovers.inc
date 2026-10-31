@@ -192,13 +192,28 @@ Rovers_EventScript_BoardJobs:
 	callnative Rovers_LeagueShow
 	goto_if_eq VAR_RESULT, FALSE, Rovers_EventScript_BoardOffline
 	msgbox gStringVar4, MSGBOX_DEFAULT
+	msgbox Rovers_Text_LeagueAtStadium, MSGBOX_DEFAULT
+	releaseall
+	end
+
+@ The Rover League Stadium's front desk in Laurel City (tools/areas/laurel.py):
+@ the bracket, entering, playing and watching.
+Rovers_EventScript_LeagueDesk::
+	lock
+	faceplayer
+	msgbox Rovers_Text_LeagueDeskHello, MSGBOX_DEFAULT
+	closemessage
+	callnative Rovers_LeagueInfoFetch, waitstate=1
+	callnative Rovers_LeagueShow
+	goto_if_eq VAR_RESULT, FALSE, Rovers_EventScript_LeagueDeskOffline
+	msgbox gStringVar4, MSGBOX_DEFAULT
 	goto_if_eq VAR_0x8004, 0, Rovers_EventScript_LeagueFight
 	msgbox Rovers_Text_LeagueEnterAsk, MSGBOX_YESNO
 	goto_if_eq VAR_RESULT, NO, Rovers_EventScript_LeagueWatch
 	closemessage
 	callnative Rovers_LeagueEnterFetch, waitstate=1
 	callnative Rovers_LeagueEntered
-	goto_if_eq VAR_RESULT, FALSE, Rovers_EventScript_BoardOffline
+	goto_if_eq VAR_RESULT, FALSE, Rovers_EventScript_LeagueDeskOffline
 	msgbox Rovers_Text_LeagueEntered, MSGBOX_DEFAULT
 	setvar VAR_0x8005, 1
 Rovers_EventScript_LeagueFight:
@@ -208,38 +223,61 @@ Rovers_EventScript_LeagueFight:
 	closemessage
 	callnative Rovers_LeagueFightFetch, waitstate=1
 	callnative Rovers_LeagueLoadFight
-	goto_if_eq VAR_RESULT, FALSE, Rovers_EventScript_BoardOffline
+	goto_if_eq VAR_RESULT, FALSE, Rovers_EventScript_LeagueDeskOffline
 	callnative Rovers_StartChallenge, waitstate=1
 	callnative Rovers_LeagueAfterFight
 	goto_if_eq VAR_RESULT, FALSE, Rovers_EventScript_LeagueLost
 	goto_if_eq VAR_0x8004, TRUE, Rovers_EventScript_LeagueChampion
 	msgbox Rovers_Text_LeagueWon, MSGBOX_DEFAULT
-	releaseall
+	release
 	end
 
 Rovers_EventScript_LeagueChampion:
 	playfanfare MUS_OBTAIN_BADGE
 	msgbox Rovers_Text_LeagueChampion, MSGBOX_DEFAULT
 	waitfanfare
-	releaseall
+	release
 	end
 
 Rovers_EventScript_LeagueLost:
 	msgbox Rovers_Text_LeagueLost, MSGBOX_DEFAULT
-	releaseall
+	release
 	end
 
 Rovers_EventScript_LeagueWatch:
-	goto_if_eq VAR_0x8006, 0, Rovers_EventScript_BoardDone
+	goto_if_eq VAR_0x8006, 0, Rovers_EventScript_LeagueDeskBye
 	msgbox Rovers_Text_LeagueWatchAsk, MSGBOX_YESNO
-	goto_if_eq VAR_RESULT, NO, Rovers_EventScript_BoardDone
+	goto_if_eq VAR_RESULT, NO, Rovers_EventScript_LeagueDeskBye
 	closemessage
 	callnative Rovers_LeagueWatchFetch, waitstate=1
 	callnative Rovers_LeagueLoadWatch
-	goto_if_eq VAR_RESULT, FALSE, Rovers_EventScript_BoardOffline
+	goto_if_eq VAR_RESULT, FALSE, Rovers_EventScript_LeagueDeskOffline
 	callnative Rovers_StartWatch, waitstate=1
 	callnative Rovers_LeagueAfterWatch
 	msgbox Rovers_Text_LeagueWatched, MSGBOX_DEFAULT
+Rovers_EventScript_LeagueDeskBye:
+	msgbox Rovers_Text_LeagueDeskBye, MSGBOX_DEFAULT
+	release
+	end
+
+Rovers_EventScript_LeagueDeskOffline:
+	msgbox Rovers_Text_LeagueDeskOffline, MSGBOX_DEFAULT
+	release
+	end
+
+@ The Hall of Champions' curator: this and past weeks' champions.
+Rovers_EventScript_LeagueHall::
+	lock
+	faceplayer
+	msgbox Rovers_Text_LeagueHallHello, MSGBOX_DEFAULT
+	closemessage
+	callnative Rovers_LeagueHallFetch, waitstate=1
+	callnative Rovers_LeagueHallShow
+	goto_if_eq VAR_RESULT, FALSE, Rovers_EventScript_LeagueDeskOffline
+	msgbox gStringVar4, MSGBOX_DEFAULT
+	release
+	end
+
 Rovers_EventScript_BoardDone:
 	releaseall
 	end
@@ -251,6 +289,27 @@ Rovers_EventScript_BoardOffline:
 
 Rovers_Text_LeagueAsk:
 	.string "Look at this week's ROVER LEAGUE?$"
+
+Rovers_Text_LeagueAtStadium:
+	.string "Enter, play and watch the league at\n"
+	.string "the ROVER LEAGUE STADIUM in LAUREL\l"
+	.string "CITY. The league ferry leaves from\l"
+	.string "SLATEPORT's harbor.$"
+
+Rovers_Text_LeagueDeskHello:
+	.string "Welcome to the ROVER LEAGUE\n"
+	.string "STADIUM! Here's this week's bracket.$"
+
+Rovers_Text_LeagueDeskBye:
+	.string "Come back for the next round!$"
+
+Rovers_Text_LeagueDeskOffline:
+	.string "The league is played online.\n"
+	.string "Connect, then come back!$"
+
+Rovers_Text_LeagueHallHello:
+	.string "This is the HALL OF CHAMPIONS. Every\n"
+	.string "ROVER LEAGUE winner is honored here.$"
 
 Rovers_Text_LeagueEnterAsk:
 	.string "The quarterfinals are still on.\n"
