@@ -27,6 +27,10 @@ SKIP = ("MagmaHideout", "AquaHideout", "SkyPillar", "MirageTower", "TerraCave", 
         "SafariZone", "AncientTomb", "DesertRuins", "IslandCave", "SealedChamber", "GraniteCave_StevensRoom",
         "MeteorFalls_StevensCave", "Underwater", "SouthernIsland", "FarawayIsland", "BirthIsland", "NavelRock",
         "HavenReserve")
+# Laurel City (the Rover League, tools/areas/laurel.py): the league ferry from Slateport.
+EXTRA_LINKS = [("MAP_LAUREL_CITY", "MAP_SLATEPORT_CITY")]
+# Healing without a Pokémon Center building: the stadium's nurse.
+EXTRA_CENTERS = {"MAP_LAUREL_CITY"}
 KINDS = {"MAP_TYPE_ROUTE": "route", "MAP_TYPE_TOWN": "town", "MAP_TYPE_CITY": "town",
          "MAP_TYPE_UNDERGROUND": "cave", "MAP_TYPE_OCEAN_ROUTE": "sea"}
 
@@ -88,6 +92,11 @@ def main():
                 for far in warps(dest):
                     if far in links and far != mid:
                         links[mid].add(far)
+    # Places reached by boat or a guide's script, not a warp.
+    for x, y in EXTRA_LINKS:
+        if x in links and y in links:
+            links[x].add(y)
+            links[y].add(x)
     for mid in nodes:
         links[mid].discard(mid)
 
@@ -97,7 +106,7 @@ def main():
     world = {}
     for mid in nodes:
         folder = maps[mid]["folder"]
-        has_center = any(maps[d]["folder"].endswith("PokemonCenter_1F") for d in warps(mid))
+        has_center = any(maps[d]["folder"].endswith("PokemonCenter_1F") for d in warps(mid)) or mid in EXTRA_CENTERS
         world[key(mid)] = {
             "id": mid,
             "name": maps[mid]["json"]["name"],

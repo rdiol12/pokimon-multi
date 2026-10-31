@@ -242,6 +242,22 @@ class RoverTest(unittest.IsolatedAsyncioTestCase):
         self.t += 86400
         rows = [r.split("|") for r in (await self.ask(a, "ROVER LEAGUE INFO"))[1].decode().split("\n")]
         self.assertEqual((rows[0][0], rows[0][1], rows[0][3]), ("3001", "0", "0"))
+        # Laurel City's Hall of Champions remembers last week's winner.
+        rows = [r.split("|") for r in (await self.ask(a, "ROVER LEAGUE HALL"))[1].decode().split("\n")]
+        self.assertEqual(rows[0], ["1"])
+        self.assertEqual(rows[1][0], "1")
+        # This week's rovers travel to Laurel City (by the Slateport ferry) and stay.
+        bound = rovers_league.bound(self.league.db, self.t)
+        self.assertEqual(len(bound), 8)
+        sim = rovers.Sim(self.league.db, self.league)
+        sim.league_bound = bound
+        r = rovers.load(self.league.db, next(iter(bound)))
+        r.map = rovers.BY_NAME["SlateportCity"]
+        sim.step(r, [r], rovers_league.week_start(3001) + 12 * 3600)
+        self.assertEqual(r.map, rovers.LEAGUE_CITY)
+        for _ in range(5):
+            sim.step(r, [r], rovers_league.week_start(3001) + 12 * 3600)
+        self.assertEqual(r.map, rovers.LEAGUE_CITY)
 
     async def test_rift_divers(self):
         a = await self.connect("Ash", 1)

@@ -3016,8 +3016,8 @@ void Rovers_BoardShowRankings(void)
 #define LEAGUE_A (ROVERS_MAX_HERE - 2)
 #define LEAGUE_B (ROVERS_MAX_HERE - 1)
 
-static const char *const sLeagueWords[] = {"INFO", "ENTER", "FIGHT", "WATCH"};
-enum { LEAGUE_INFO, LEAGUE_ENTER, LEAGUE_FIGHT, LEAGUE_WATCH };
+static const char *const sLeagueWords[] = {"INFO", "ENTER", "FIGHT", "WATCH", "HALL"};
+enum { LEAGUE_INFO, LEAGUE_ENTER, LEAGUE_FIGHT, LEAGUE_WATCH, LEAGUE_HALL };
 
 // The request goes out when the channel is free (other features share it);
 // the script waits for the answer.
@@ -3062,6 +3062,41 @@ void Rovers_LeagueInfoFetch(void)  { LeagueAsk(LEAGUE_INFO, 0); }
 void Rovers_LeagueEnterFetch(void) { LeagueAsk(LEAGUE_ENTER, 0); }
 void Rovers_LeagueFightFetch(void) { LeagueAsk(LEAGUE_FIGHT, 0); }
 void Rovers_LeagueWatchFetch(void) { LeagueAsk(LEAGUE_WATCH, sRovers.leagueWatch); }
+void Rovers_LeagueHallFetch(void)  { LeagueAsk(LEAGUE_HALL, 0); }
+
+// After Rovers_LeagueHallFetch: the champions, newest first, in gStringVar4.
+// First row: how many; then each: weeks ago (0 this week)|name.
+void Rovers_LeagueHallShow(void)
+{
+    u8 *s = gStringVar4;
+    u8 name[16];
+    u32 rows, r;
+
+    gSpecialVar_Result = sRovers.boardOk;
+    if (!sRovers.boardOk)
+        return;
+    rows = min(AnswerNum(0, 0) + 1, AnswerRows());
+    if (rows <= 1)
+        s = StringCopy(s, COMPOUND_STRING("No champions yet. This week's\nwinner will be the first!"));
+    for (r = 1; r < rows; r++)
+    {
+        u32 ago = AnswerNum(r, 0);
+        AnswerText(name, r, 1, PLAYER_NAME_LENGTH);
+        if (r != 1)
+            s = StringCopy(s, r % 2 ? COMPOUND_STRING("\p") : COMPOUND_STRING("\n"));
+        if (ago == 0)
+            s = StringCopy(s, COMPOUND_STRING("This week: "));
+        else if (ago == 1)
+            s = StringCopy(s, COMPOUND_STRING("Last week: "));
+        else
+        {
+            s = ConvertIntToDecimalStringN(s, ago, STR_CONV_MODE_LEFT_ALIGN, 3);
+            s = StringCopy(s, COMPOUND_STRING(" weeks ago: "));
+        }
+        s = StringCopy(s, name);
+    }
+    FinishBoardRead();
+}
 
 static const u8 *const sRoundNames[] = {
     COMPOUND_STRING("QUARTERFINALS"), COMPOUND_STRING("SEMIFINALS"), COMPOUND_STRING("FINAL"),

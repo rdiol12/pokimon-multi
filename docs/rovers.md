@@ -42,8 +42,11 @@ heal at Pokémon Centers. The player meets them anywhere and can:
   auctions when the price is fair, and gets its money back when outbid.
   Rovers don't buy from each other, and at most 8 of their listings and 4
   of their auctions are up at once, so the boards stay the players'.
-- follow, enter or watch the **weekly Rover League** on any quest board
-  (online). Every week (from Monday 00:00 UTC) the eight strongest rovers
+- follow the **weekly Rover League** on any quest board, and enter, play
+  or watch it at the Rover League Stadium in **Laurel City** (online; the
+  league ferry leaves from Slateport, docs/areas.md). The week's league
+  rovers travel there and stay until they're knocked out (the champion
+  until the week ends), and the Hall of Champions lists past winners. Every week (from Monday 00:00 UTC) the eight strongest rovers
   play a knockout bracket on the shared clock: quarterfinals until
   Wednesday, semifinals until Friday, the final until Sunday. Until the
   quarterfinals end a player can enter in place of one of the lowest
@@ -182,5 +185,5 @@ rover as its trainer, when it arrives (`Rovers_FromListing`, called from
 
 `tools/rovers/shots/run.py` with the scenarios in `tools/rovers/shots/`
 (run from `tools/netplay_bridge`). `gRoverShowcase` puts chosen rovers in a
-chosen scene on the current map. `league.lua` needs the server's clock on
+chosen scene on the current map. `league.lua` and `laurel.lua` need the server's clock on
 a Monday: `ROVERS_TIME_OFFSET` (seconds added to the server's time).
