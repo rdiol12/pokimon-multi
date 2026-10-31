@@ -126,6 +126,32 @@ Hooks: `GetFollowerAction` and `ObjectEventEmote` (made public) in
 src/event_object_movement.c; `Mechanics_UpdatePersonaFollower` runs from
 the overworld update.
 
+## Battle styles (AGILE and STRONG)
+
+![The style master, the AGILE and STRONG move menu, the turn announcements and learning styles](images/mechanics-battle-styles.png)
+
+The style master in the Fallarbor Battle Tent lobby explains styles and
+gives a practice battle (two Pokémon each, her student uses styles too).
+Win it and the player can use styles in every battle
+(`FLAG_MECH_BATTLE_STYLES`, `src/mechanics_styles.c`).
+
+On the move menu, SELECT switches the move between normal, AGILE and
+STRONG; the type box shows `AGILE/Grass`. A style costs 1 extra PP and is
+announced at the start of the turn ("Sceptile moves in AGILE style!").
+
+| Style | Power | Order |
+| --- | --- | --- |
+| AGILE | 0.75x | first among moves of the same priority |
+| STRONG | 1.33x | last among moves of the same priority |
+
+The choice travels with the move in the controller's return value
+(`STYLE_RET_MASK`, bits 5-6), so it would survive a link battle, but styles
+are off in link battles so online PvP stays fair. Hooks in shared files:
+the move menu (battle_controller_player.c), turn order, the announcement and
+clearing (battle_main.c), base power (battle_util.c), PP (battle_move_resolution.c).
+`STRINGID_MECH_MESSAGE` prints `Mechanics_GetBattleMessage(gBattleTextBuff3[0])`
+through `BattleScript_MechanicsMessage`; later mechanics reuse it.
+
 ## Screenshots
 
 ```sh
@@ -134,6 +160,7 @@ python3 tools/mechanics_shots/run.py tools/mechanics_shots/rules.lua out/ 120000
 python3 tools/mechanics_shots/run.py tools/mechanics_shots/cups.lua out/ 300000
 python3 tools/mechanics_shots/run.py tools/mechanics_shots/colors.lua out/
 python3 tools/mechanics_shots/run.py tools/mechanics_shots/personality.lua out/ 100000
+python3 tools/mechanics_shots/run.py tools/mechanics_shots/styles.lua out/ 200000
 ```
 
 The runner is `tools/world_shots/run.py` plus `Driver.fastText()` and

@@ -1,5 +1,6 @@
 #include "global.h"
 #include "battle.h"
+#include "mechanics.h"
 #include "battle_anim.h"
 #include "battle_ai_main.h"
 #include "battle_ai_record.h"
@@ -4118,8 +4119,9 @@ static void HandleTurnActionSelectionState(void)
                             }
 
                             // Get the chosen move position (and thus the chosen move) and target from the returned buffer.
-                            gBattleStruct->chosenMovePositions[battler] = gBattleResources->bufferB[battler][2] & ~RET_GIMMICK;
+                            gBattleStruct->chosenMovePositions[battler] = gBattleResources->bufferB[battler][2] & ~(RET_GIMMICK | STYLE_RET_MASK);
                             gChosenMoveByBattler[battler] = GetBattlerChosenMove(battler);
+                            Mechanics_SetBattlerStyle(battler, gBattleResources->bufferB[battler][2]);
                             gBattleStruct->moveTarget[battler] = gBattleResources->bufferB[battler][3];
                             if (IsBattleMoveStatus(gChosenMoveByBattler[battler]) && GetBattlerAbility(battler) == ABILITY_MYCELIUM_MIGHT)
                                 gProtectStructs[battler].myceliumMight = TRUE;
@@ -4520,6 +4522,8 @@ s32 GetWhichBattlerFasterArgs(struct BattleCalcValues *calcValues, bool32 ignore
             strikesFirst = -1;
         else if (battler2HasSlowEffect && !battler1HasSlowEffect)
             strikesFirst = 1;
+        else if (!ignoreChosenMoves && Mechanics_GetStyleOrder(calcValues->battlerAtk) != Mechanics_GetStyleOrder(calcValues->battlerDef))
+            strikesFirst = Mechanics_GetStyleOrder(calcValues->battlerAtk) > Mechanics_GetStyleOrder(calcValues->battlerDef) ? 1 : -1;
         else
         {
             if (speedBattler1 == speedBattler2)
@@ -4755,6 +4759,7 @@ static void TurnValuesCleanUp(bool32 endTurn)
         else
         {
             memset(&gProtectStructs[i], 0, sizeof(struct ProtectStruct));
+            Mechanics_ClearBattlerStyle(i);
 
             if (gBattleStruct->battlerState[i].isFirstTurn)
                 gBattleStruct->battlerState[i].isFirstTurn--;
@@ -4994,6 +4999,8 @@ static void CheckChangingTurnOrderEffects(void)
                 }
                 return;
             }
+            if (gChosenActionByBattler[battler] == B_ACTION_USE_MOVE && Mechanics_TryAnnounceBattleStyle(battler))
+                return;
         }
     }
 

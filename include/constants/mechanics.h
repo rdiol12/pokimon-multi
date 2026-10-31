@@ -9,6 +9,7 @@
 #define LOCALID_MECH_TUTOR 190 // the move tutor in every Pokémon Center
 #define LOCALID_MECH_REFEREE 191 // the rules referee in the Slateport Battle Tent
 #define LOCALID_MECH_CUP_HOST 192 // the tournament host in the Verdanturf Battle Tent
+#define LOCALID_MECH_STYLE_MASTER 193 // the battle style master in the Fallarbor Battle Tent
 
 // Battle rule sets (Mechanics_SetBattleRules). The Slateport Battle Tent's
 // referee offers them against Battle Frontier trainers; online PvP can use
@@ -45,10 +46,25 @@
 #define PERSONA_GRUMPY  7
 #define PERSONA_COUNT   8
 
+// Battle styles (src/mechanics_styles.c). The player's choice travels with
+// the chosen move in the controller's return value, in these bits (move
+// index is bits 0-1, RET_GIMMICK bit 7).
+#define STYLE_NONE   0
+#define STYLE_AGILE  1 // weaker, but goes first among moves of its priority
+#define STYLE_STRONG 2 // stronger, but goes last among moves of its priority
+#define STYLE_RET_SHIFT 5
+#define STYLE_RET_MASK  (3 << STYLE_RET_SHIFT)
+
+// Messages printed with STRINGID_MECH_MESSAGE; the id goes in
+// gBattleTextBuff3[0] so it reaches both games in a link battle.
+#define MECH_MSG_STYLE_AGILE  0
+#define MECH_MSG_STYLE_STRONG 1
+
 // Flags (FLAG_UNUSED_0x881-0x887 and 0x8E5-0x8EF belong to the mechanics).
 #define FLAG_MECH_MET_TUTOR    FLAG_UNUSED_0x881
 #define FLAG_MECH_RULE_INVERSE FLAG_UNUSED_0x882 // B_FLAG_INVERSE_BATTLE
 #define FLAG_MECH_MET_REFEREE  FLAG_UNUSED_0x883
 #define FLAG_MECH_MET_CUP_HOST FLAG_UNUSED_0x884
+#define FLAG_MECH_BATTLE_STYLES FLAG_UNUSED_0x885 // learned from the style master
 
 #endif // GUARD_CONSTANTS_MECHANICS_H

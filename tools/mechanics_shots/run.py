@@ -15,7 +15,7 @@ here = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(here, "..", "world_shots"))
 import run as world_run  # noqa: E402
 
-world_run.SYMBOLS += ["gMechanicsShowcase"]
+world_run.SYMBOLS += ["gMechanicsShowcase", "gBattlerControllerFuncs"]
 world_run.HELPERS += """
 -- Runs a request through gMechanicsShowcase (src/mechanics.c):
 -- moves = {"FLAMETHROWER", ...} sets the lead's moves;
@@ -66,6 +66,43 @@ function Driver.fight(name, shotEvery, maxShots)
     Driver.wait(30)
 end
 
+-- Battles choosing the first move with a battle style each turn: styles
+-- is a list of how many SELECT presses per turn (1 AGILE, 2 STRONG), used
+-- in turn. Takes a shot of the move menu and every shotEvery frames.
+function Driver.styleFight(name, styles, shotEvery, maxShots)
+    local n, turn, cooldown = 0, 0, 0
+    local function controller()
+        return E.read32(Driver.SYM.gBattlerControllerFuncs) & ~1
+    end
+    Driver.waitFor("the battle", 1200, Driver.inBattle, function(i)
+        if i % 60 == 0 then Driver.press(Driver.KEY.A, 0) end
+    end)
+    Driver.waitFor("the end of the battle", 40000, Driver.inOverworld, function(i)
+        if cooldown > 0 then
+            cooldown = cooldown - 1
+        elseif controller() == STATIC_HandleInputChooseMove then
+            turn = turn + 1
+            Driver.wait(20)
+            for _ = 1, styles[(turn - 1) % #styles + 1] do
+                Driver.press(Driver.KEY.SELECT, 20)
+            end
+            Driver.shot(name .. "-menu")
+            Driver.press(Driver.KEY.A, 0)
+            cooldown = 30
+        elseif controller() == STATIC_HandleInputChooseAction then
+            Driver.press(Driver.KEY.A, 0)
+            cooldown = 30
+        elseif i % 30 == 0 then
+            Driver.press(Driver.KEY.A, 0)
+        end
+        if shotEvery and i % shotEvery == shotEvery // 2 and n < (maxShots or 8) then
+            n = n + 1
+            Driver.shot(name)
+        end
+    end)
+    Driver.wait(30)
+end
+
 -- Sets the text speed to FAST, so each A press turns one page.
 function Driver.fastText()
     local sb2 = E.read32(Driver.SYM.gSaveBlock2Ptr)
@@ -83,7 +120,7 @@ _moves = re.findall(r"^\s+MOVE_(\w+) = (\d+),", open(os.path.join(here, "..", ".
 world_run.HELPERS += "MOVE_ID = {\n" + "".join(f"    {n} = {v},\n" for n, v in _moves) + "}\n"
 
 # Static functions aren't in pokeemerald.map; take them from the ELF.
-_statics = {"CB2_UpdatePartyMenu": 0}
+_statics = {"CB2_UpdatePartyMenu": 0, "HandleInputChooseAction": 0, "HandleInputChooseMove": 0}
 for _line in os.popen("arm-none-eabi-nm " + os.path.join(here, "..", "..", "pokeemerald.elf")):
     _parts = _line.split()
     if len(_parts) == 3 and _parts[2] in _statics:

@@ -3,3 +3,4 @@
 	.include "data/scripts/mechanics/move_tutor.inc"
 	.include "data/scripts/mechanics/rules.inc"
 	.include "data/scripts/mechanics/cups.inc"
+	.include "data/scripts/mechanics/styles.inc"

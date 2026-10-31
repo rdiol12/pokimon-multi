@@ -20,6 +20,7 @@
 extern const u8 Mechanics_EventScript_MoveTutor[];
 extern const u8 Mechanics_EventScript_Referee[];
 extern const u8 Mechanics_EventScript_CupHost[];
+extern const u8 Mechanics_EventScript_StyleMaster[];
 
 struct MechNpc
 {
@@ -51,12 +52,18 @@ static bool32 InVerdanturfTent(void)
     return IsMap(MAP_VERDANTURF_TOWN_BATTLE_TENT_LOBBY);
 }
 
+static bool32 InFallarborTent(void)
+{
+    return IsMap(MAP_FALLARBOR_TOWN_BATTLE_TENT_LOBBY);
+}
+
 // Indexed by local id - LOCALID_MECH_FIRST.
 static const struct MechNpc sMechNpcs[] =
 {
     {InPokemonCenter, 13, 5, OBJ_EVENT_GFX_EXPERT_M, MOVEMENT_TYPE_FACE_LEFT, Mechanics_EventScript_MoveTutor},
     {InSlateportTent, 9, 6, OBJ_EVENT_GFX_GENTLEMAN, MOVEMENT_TYPE_FACE_DOWN, Mechanics_EventScript_Referee},
     {InVerdanturfTent, 4, 6, OBJ_EVENT_GFX_REPORTER_M, MOVEMENT_TYPE_FACE_DOWN, Mechanics_EventScript_CupHost},
+    {InFallarborTent, 4, 6, OBJ_EVENT_GFX_EXPERT_F, MOVEMENT_TYPE_FACE_DOWN, Mechanics_EventScript_StyleMaster},
 };
 
 static EWRAM_DATA u8 sTimer = 0;
