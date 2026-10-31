@@ -23,6 +23,7 @@
 #include "tv.h"
 #include "wild_encounter.h"
 #include "world.h"
+#include "life.h"
 #include "battle_debug.h"
 #include "battle_pike.h"
 #include "battle_pyramid.h"
@@ -579,7 +580,7 @@ bool8 TryGenerateWildMon(const struct WildPokemonInfo *wildMonInfo, enum WildPok
     if (gMapHeader.mapLayoutId != LAYOUT_BATTLE_FRONTIER_BATTLE_PIKE_ROOM_WILD_MONS && flags & WILD_CHECK_KEEN_EYE && !IsAbilityAllowingEncounter(level))
         return FALSE;
 
-    CreateWildMon(World_ModifyWildSpecies(wildMonInfo->wildPokemon[wildMonIndex].species, level), level);
+    CreateWildMon(Life_ModifyWildSpecies(World_ModifyWildSpecies(wildMonInfo->wildPokemon[wildMonIndex].species, level), level), level);
     return TRUE;
 }
 

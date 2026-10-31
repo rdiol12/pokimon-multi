@@ -7,12 +7,6 @@
 // (tools/life_shots/).
 
 // The screenshot driver writes here; the next overworld frame applies it.
-struct LifeShowcase
-{
-    u8 pending;
-    u8 friendship; // the lead's friendship, if not 0
-};
-
 EWRAM_DATA struct LifeShowcase gLifeShowcase = {0};
 
 static void RunShowcase(void)
@@ -29,9 +23,16 @@ bool32 Life_OverworldUpdate(void)
 {
     if (gLifeShowcase.pending)
         RunShowcase();
+    Seasons_Update();
     return FALSE;
 }
 
 void Life_OnMapTransition(void)
 {
+    Seasons_OnMapTransition();
+}
+
+enum Species Life_ModifyWildSpecies(enum Species species, u8 level)
+{
+    return Seasons_ModifyWildSpecies(species, level);
 }

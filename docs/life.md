@@ -32,16 +32,49 @@ another party Pokémon.
 
 The counters are kept per Pokémon (by personality) and reset each day.
 
+## Seasons
+
+![Route 102 and Petalburg in spring, summer, autumn and winter](images/life-seasons.png)
+
+The real-world month (the cartridge clock) picks the season
+(`src/life_seasons.c`): spring is March to May, summer June to August,
+autumn September to November, winter December to February.
+
+- **Scenery.** On outdoor maps that use the general tileset (all of
+  Hoenn's towns and routes), the tree and grass colours of the tileset's
+  palette 2 change: cherry blossom in spring, Emerald's own greens in
+  summer, red and gold leaves on yellowed grass in autumn, snow-covered
+  trees and ground in winter (`Seasons_TintPrimaryPalettes`, called from
+  `LoadTilesetPalette` in `fieldmap.c`, before the day/night tint).
+- **Snow.** In winter, outdoor maps with clear skies get light snow. Story
+  weather, ash, sand, fog and the roaming rain fronts are left alone.
+- **Seasonal Pokémon.** 15% of wild encounters outdoors are the season's
+  Pokémon, at the map's level (evolved when the level is past the official
+  evolution level). The last two of each list are rare.
+
+  | Season | Pokémon | Rare |
+  | --- | --- | --- |
+  | Spring | Deerling (Spring), Cherubi, Flabébé, Combee, Budew | Cutiefly, Comfey |
+  | Summer | Deerling (Summer), Sunkern, Volbeat, Illumise, Dewpider | Heracross, Yanma |
+  | Autumn | Deerling (Autumn), Sewaddle, Pumpkaboo, Phantump, Foongus | Applin, Zorua |
+  | Winter | Deerling (Winter), Snover, Cubchoo, Bergmite, Snom | Delibird, Frigibax |
+- **Forms.** Deerling and Sawsbuck in the party change to the season's
+  form, as in the main series.
+- The first time the player steps outside in a new season, a notice says
+  so ("Winter: Snow is falling in Hoenn!").
+
 ## Screenshots
 
 ```sh
 python3 tools/life_shots/run.py tools/life_shots/bond.lua out/bond
+python3 tools/life_shots/run.py tools/life_shots/seasons.lua out/seasons 400000
 ```
 
 `run.py` is `tools/world_shots/run.py` with this batch's symbols added, so
 scenarios use the same Driver (`Driver.scene` and friends). They can also
 write `gLifeShowcase` (`src/life.c`): byte 1 sets the lead's friendship,
-then byte 0 = 1 applies it on the next overworld frame.
+then byte 0 = 1 applies it on the next overworld frame. Byte 2 is the
+season plus one (0 uses the clock); it applies on the next warp.
 
 Art: `tools/life_shots/draw_art.py` draws this batch's sprites into
 `graphics/life/`.

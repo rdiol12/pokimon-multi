@@ -15,4 +15,24 @@ void Life_OnMapTransition(void);
 // VAR_0x8004 (a script calls it after ChoosePartyMon).
 void LifeBond_Open(void);
 
+// Screenshot showcase settings (life.c), written by tools/life_shots/.
+struct LifeShowcase
+{
+    u8 pending;
+    u8 friendship; // the lead's friendship, if not 0
+    u8 season;     // SEASON_* + 1 overrides the clock, 0 uses it
+};
+extern struct LifeShowcase gLifeShowcase;
+
+// Lets this batch swap in another species for a wild encounter.
+enum Species Life_ModifyWildSpecies(enum Species species, u8 level);
+
+// Seasons (life_seasons.c).
+u32 Seasons_Get(void);
+const u8 *Seasons_GetName(void);
+void Seasons_TintPrimaryPalettes(bool32 skipFaded);
+void Seasons_OnMapTransition(void);
+void Seasons_Update(void);
+enum Species Seasons_ModifyWildSpecies(enum Species species, u8 level);
+
 #endif // GUARD_LIFE_H
