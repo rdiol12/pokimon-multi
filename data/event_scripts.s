@@ -382,6 +382,8 @@ gStdScripts_End::
 	.include "data/maps/StarfallIsle_Hotel/scripts.inc"
 	.include "data/maps/OnlineGuildHall/scripts.inc"
 	.include "data/maps/AmberwoodHollow/scripts.inc"
+	.include "data/maps/LilycoveCity_AuctionHouse/scripts.inc"
+	.include "data/maps/SlateportCity_MarketHall/scripts.inc"
 	.include "data/maps/HavenReserve_Lodge/scripts.inc"
 	.include "data/maps/HavenReserve/scripts.inc"
 	.include "data/scripts/reserve.inc"

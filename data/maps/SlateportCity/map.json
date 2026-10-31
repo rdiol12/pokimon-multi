@@ -644,6 +644,13 @@
       "elevation": 0,
       "dest_map": "MAP_METRO_SLATEPORT",
       "dest_warp_id": "0"
+    },
+    {
+      "x": 14,
+      "y": 19,
+      "elevation": 0,
+      "dest_map": "MAP_SLATEPORT_CITY_MARKET_HALL",
+      "dest_warp_id": "0"
     }
   ],
   "coord_events": [

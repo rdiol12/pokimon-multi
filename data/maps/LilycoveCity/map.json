@@ -465,6 +465,20 @@
       "elevation": 0,
       "dest_map": "MAP_LILYCOVE_CITY_LILYCOVE_MUSEUM_1F",
       "dest_warp_id": "1"
+    },
+    {
+      "x": 47,
+      "y": 23,
+      "elevation": 0,
+      "dest_map": "MAP_LILYCOVE_CITY_AUCTION_HOUSE",
+      "dest_warp_id": "0"
+    },
+    {
+      "x": 48,
+      "y": 23,
+      "elevation": 0,
+      "dest_map": "MAP_LILYCOVE_CITY_AUCTION_HOUSE",
+      "dest_warp_id": "1"
     }
   ],
   "coord_events": [],

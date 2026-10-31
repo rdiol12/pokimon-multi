@@ -1,0 +1,34 @@
+{
+ "num_tiles": 432,
+ "first_new_metatile": 745,
+ "objects": {
+  "podium": [
+   [
+    745
+   ],
+   [
+    746
+   ]
+  ],
+  "chair": [
+   [
+    747
+   ]
+  ],
+  "lot_board": [
+   [
+    748,
+    749
+   ],
+   [
+    750,
+    751
+   ]
+  ]
+ },
+ "walkable": {
+  "podium": [],
+  "chair": [],
+  "lot_board": []
+ }
+}

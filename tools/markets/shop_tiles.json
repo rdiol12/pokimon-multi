@@ -1,0 +1,34 @@
+{
+ "num_tiles": 512,
+ "first_new_metatile": 801,
+ "objects": {
+  "board_top": [
+   [
+    801,
+    802
+   ]
+  ],
+  "board_bottom": [
+   [
+    803,
+    804
+   ]
+  ],
+  "produce_crate": [
+   [
+    805
+   ]
+  ],
+  "scale_stand": [
+   [
+    806
+   ]
+  ]
+ },
+ "walkable": {
+  "board_top": [],
+  "board_bottom": [],
+  "produce_crate": [],
+  "scale_stand": []
+ }
+}
