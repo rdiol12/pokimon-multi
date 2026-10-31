@@ -9414,6 +9414,26 @@
       "secondary_tileset": "gTileset_Fallarbor",
       "border_filepath": "data/layouts/SkyropeCanyon/border.bin",
       "blockdata_filepath": "data/layouts/SkyropeCanyon/map.bin"
+    },
+    {
+      "id": "LAYOUT_FROSTVEIN_CAVE_1F",
+      "name": "FrostveinCave_1F_Layout",
+      "width": 40,
+      "height": 32,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Cave",
+      "border_filepath": "data/layouts/FrostveinCave_1F/border.bin",
+      "blockdata_filepath": "data/layouts/FrostveinCave_1F/map.bin"
+    },
+    {
+      "id": "LAYOUT_FROSTVEIN_CAVE_B1F",
+      "name": "FrostveinCave_B1F_Layout",
+      "width": 40,
+      "height": 34,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Cave",
+      "border_filepath": "data/layouts/FrostveinCave_B1F/border.bin",
+      "blockdata_filepath": "data/layouts/FrostveinCave_B1F/map.bin"
     }
   ]
 }

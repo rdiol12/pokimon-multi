@@ -141,7 +141,9 @@
     "CinderCaverns_1F",
     "CinderCaverns_B1F",
     "CinderCaverns_Heart",
-    "SkyropeCanyon"
+    "SkyropeCanyon",
+    "FrostveinCave_1F",
+    "FrostveinCave_B1F"
   ],
   "gMapGroup_IndoorLittleroot": [
     "LittlerootTown_BrendansHouse_1F",

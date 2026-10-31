@@ -78,6 +78,26 @@ Norman's badge.
   the rope bridge. synth.py now gives each metatile the collision it has
   in its sketch class, since Route 114 uses the same rock as floor and wall.
 
+## Frostvein Cave
+
+An ice cave on an islet north of Mossdeep. A sailor in Mossdeep City takes
+you there once you have the Mind Badge.
+
+- Sliding puzzles: each floor has an ice field walled in except for one
+  way in and one way out. On the ice you slide until something stops you,
+  so the frozen rocks are your brakes. tools/areas/icepuzzle.py places the
+  rocks and checks the field can be solved (1F takes 9 moves, B1F 11). The
+  screenshot run plays the 1F solution in the game.
+- B1F: a sleeping Avalugg (Lv44) blocks the doorway of the Frozen Shrine,
+  where the Ice Priestess gives you a Frigibax (Lv25), plus Never-Melt Ice
+  and a Max Revive.
+- Trainers: Cooltrainers Glen and Niva, Hiker Bjorn, Psychic Sora. A
+  researcher explains the ice. TM Ice Beam, Ice Stone, Icy Rock and three
+  hidden items. Wild Pokémon Lv38–43 (Snorunt, Spheal, Bergmite, Sneasel,
+  Cubchoo, Snom, Glalie, Froslass, Cryogonal…).
+- The style learns from Shoal Cave's ice room. Map ids:
+  MAP_FROSTVEIN_CAVE_1F, MAP_FROSTVEIN_CAVE_B1F.
+
 ## How the maps are made
 
 - `tools/areas/tiles.py` renders any tileset or layout to PNG.

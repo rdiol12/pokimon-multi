@@ -257,3 +257,68 @@ Level: 33
 Hawlucha
 Level: 34
 /* end SkyropeCanyon */
+
+/* begin FrostveinCave */
+=== AREA_TRAINER_FROSTVEIN_GLEN ===
+Name: GLEN
+Class: Cooltrainer
+Pic: Cooltrainer M
+Gender: Male
+Music: Cool
+Double Battle: No
+AI: Basic Trainer
+
+Sneasel
+Level: 40
+
+Glalie
+Level: 41
+
+=== AREA_TRAINER_FROSTVEIN_BJORN ===
+Name: BJORN
+Class: Hiker
+Pic: Hiker
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Basic Trainer
+
+Bergmite
+Level: 39
+
+Piloswine
+Level: 41
+
+=== AREA_TRAINER_FROSTVEIN_NIVA ===
+Name: NIVA
+Class: Cooltrainer
+Pic: Cooltrainer F
+Gender: Female
+Music: Cool
+Double Battle: No
+AI: Basic Trainer
+
+Froslass
+Level: 42
+
+Vanillish
+Level: 41
+
+Cryogonal
+Level: 42
+
+=== AREA_TRAINER_FROSTVEIN_SORA ===
+Name: SORA
+Class: Psychic
+Pic: Psychic M
+Gender: Male
+Music: Intense
+Double Battle: No
+AI: Basic Trainer
+
+Jynx
+Level: 42
+
+Smoochum
+Level: 40
+/* end FrostveinCave */

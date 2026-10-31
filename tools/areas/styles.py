@@ -68,3 +68,18 @@ def canyon():
                                  wall_classes={'T': TREES}, colors=True)
         _cache['canyon'].exclude = {0xCF, 0xAF, 0x208, 0x350, 0x20E, 0x20F}  # stairs, holes, sand
     return _cache['canyon']
+
+
+ICE = 0x38D
+ICE_ROCKS = {0x37D, 0x37E}
+
+
+def ice():
+    """Shoal Cave's ice room: frozen walls, snow and slippery ice."""
+    if 'ice' not in _cache:
+        st = Style('gTileset_General', 'gTileset_Cave', ['LAYOUT_SHOAL_CAVE_LOW_TIDE_ICE_ROOM'],
+                   classes={'I': {ICE}, 'U': {0x381, 0x383, 0x304}}, wall_classes={'B': ICE_ROCKS})
+        st.min_count = 1
+        st.exclude = {0x28F, 0x37F, 0x38B, 0x386, 0x363, 0x377}  # cracks, ladders, the exit, strays
+        _cache['ice'] = st
+    return _cache['ice']
