@@ -125,6 +125,10 @@ enum MonData {
     MON_DATA_GIGANTAMAX_FACTOR,
     MON_DATA_TERA_TYPE,
     MON_DATA_EVOLUTION_TRACKER,
+    MON_DATA_INJURY_DAMAGE,  // damage of the injured part, in 2% units (0-50)
+    MON_DATA_INJURY_PART,    // INJURY_PART_* of the part that is currently injured
+    MON_DATA_LOST_PARTS,     // bitmask of body parts lost for good
+    MON_DATA_INJURY_FLAGS,   // INJURY_FLAG_*: scar, message pending
 };
 
 #define BLOCK_AI_DYNAMAX 15 // Used as dynamax level value by the AI to indicate this mon shouldn't dynamax
@@ -134,10 +138,10 @@ struct PokemonSubstruct0
     enum Species species:11; // 2047 species.
     enum Type teraType:5; // 30 types.
     enum Item heldItem:10; // 1023 items.
-    u16 unused_02:6;
+    u16 injuryDamage:6; // Injury damage in 2% units (see injury.c).
     u32 experience:21;
     u32 nickname11:8; // 11th character of nickname.
-    u32 unused_04:3;
+    u32 injuryFlags:3; // INJURY_FLAG_* (scar, message pending).
     u8 ppBonuses;
     u8 friendship;
     u16 pokeball:6; // 63 balls.
@@ -152,9 +156,9 @@ struct PokemonSubstruct1
     enum Move move2:11; // 2047 moves.
     u16 evolutionTracker2:5;
     enum Move move3:11; // 2047 moves.
-    u16 unused_04:5;
+    u16 lostParts:5; // Body parts lost for good (see injury.c).
     enum Move move4:11; // 2047 moves.
-    u16 unused_06:3;
+    u16 injuredPart:3; // Body part that is currently injured.
     u16 hyperTrainedHP:1;
     u16 hyperTrainedAttack:1;
     u8 pp1:7; // 127 PP.
