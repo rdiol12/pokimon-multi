@@ -39,6 +39,7 @@
 #include "event_data.h"
 #include "pokemon_storage_system.h"
 #include "task.h"
+#include "trainer_level.h"
 #include "naming_screen.h"
 #include "battle_setup.h"
 #include "overworld.h"
@@ -4057,6 +4058,7 @@ static void Cmd_getmoneyreward(void)
         money = GetTrainerMoneyToGive(TRAINER_BATTLE_PARAM.opponentA);
         if (gBattleTypeFlags & BATTLE_TYPE_TWO_OPPONENTS)
             money += GetTrainerMoneyToGive(TRAINER_BATTLE_PARAM.opponentB);
+        money = TrainerLevel_BoostPrizeMoney(money);
         AddMoney(&gSaveBlock1Ptr->money, money);
     }
     else

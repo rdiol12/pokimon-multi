@@ -10,6 +10,7 @@
 #define WORLD_MENU_CLOSE         5
 #define WORLD_MENU_QUESTS        6
 #define WORLD_MENU_BOARDS        7
+#define WORLD_MENU_ADVENTURE     8 // data/scripts/adventure/menu.inc
 
 // Mount_Toggle results.
 #define MOUNT_RODE_OFF     0
