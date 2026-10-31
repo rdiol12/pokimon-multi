@@ -85,7 +85,12 @@ jobs:
           EXE="$(find build/emulator/qt -name mGBA.exe -o -name mgba-qt.exe | head -1)"
           cp "$EXE" $P/mgba-qt.exe
           cp "$(find build/emulator/qt -name 'libmgba*.dll' | head -1)" $P/ 2>/dev/null || true
-          windeployqt-qt5 --no-translations $P/mgba-qt.exe || windeployqt --no-translations $P/mgba-qt.exe
+          # windeployqt exits non-zero over the optional ANGLE libGLESv2.dll; check what matters instead
+          windeployqt-qt5 --no-translations --no-angle $P/mgba-qt.exe || true
+          if [ ! -f $P/platforms/qwindows.dll ]; then
+            mkdir -p $P/platforms
+            cp /ucrt64/share/qt5/plugins/platforms/qwindows.dll $P/platforms/
+          fi
           for dll in $(ntldd -R $P/mgba-qt.exe $P/*.dll | grep -io '[A-Z]:\\msys64\\ucrt64\\bin\\[^ ]*\.dll' | sort -u); do
             cp "$(cygpath -u "$dll")" $P/
           done
