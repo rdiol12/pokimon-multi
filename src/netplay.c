@@ -349,7 +349,7 @@ static bool32 IsRemoteHere(const struct NetplayRemotePlayer *remote)
 
 static void SyncAvatar(u32 slot)
 {
-    const struct NetplayRemotePlayer *remote = &gNetplayMailbox.remotes[slot];
+    const struct NetplayRemotePlayer *remote = Netplay_GetRemoteSlot(slot);
     u8 localId = LOCALID_NETPLAY_PLAYER_START + slot;
     u8 objId = GetObjectEventIdByLocalIdAndMap(localId, gSaveBlock1Ptr->location.mapNum, gSaveBlock1Ptr->location.mapGroup);
     struct ObjectEvent *obj;
@@ -446,7 +446,7 @@ u32 Netplay_GetPeerTrainerLook(void)
         return 0;
     for (i = 0; i < NETPLAY_MAX_REMOTES; i++)
     {
-        if (gNetplayMailbox.remotes[i].id == sSession.peerId)
+        if (Netplay_GetRemoteSlot(i)->id == sSession.peerId)
             return WorldOnline_GetRemoteTrainerLook(i);
     }
     return 0;
@@ -471,8 +471,8 @@ static const struct NetplayRemotePlayer *FindRemote(u16 id)
 
     for (i = 0; i < NETPLAY_MAX_REMOTES; i++)
     {
-        if (gNetplayMailbox.remotes[i].id == id && id != 0)
-            return &gNetplayMailbox.remotes[i];
+        if (Netplay_GetRemoteSlot(i)->id == id && id != 0)
+            return Netplay_GetRemoteSlot(i);
     }
     return NULL;
 }
@@ -2182,7 +2182,7 @@ static void ShowRemoteEmote(u16 peerId, u8 emote)
 
     for (slot = 0; slot < NETPLAY_MAX_REMOTES; slot++)
     {
-        const struct NetplayRemotePlayer *remote = &gNetplayMailbox.remotes[slot];
+        const struct NetplayRemotePlayer *remote = Netplay_GetRemoteSlot(slot);
         u8 name[NETPLAY_NAME_LENGTH + 1];
 
         if (remote->id != peerId || !IsRemoteHere(remote) || sAvatarIds[slot] != peerId)

@@ -10,7 +10,7 @@ local EWRAM_START = 0x02000000
 local EWRAM_END = 0x02040000
 local MAGIC_LO = 0x4E4D4B50 -- "PKMN"
 local MAGIC_HI = 0x31444C57 -- "WLD1"
-local VERSION = 1
+local VERSION = 2
 
 local OFF_VERSION = 0x008
 local OFF_REQ_SEQ = 0x009
@@ -42,7 +42,10 @@ local OFF_REMOTE_TRAINER_LOOKS = 0x19C -- u32 per slot
 local ROW_SIZE = 0x10
 local BOARD_ROWS = 10
 local DECOR_SIZE = 16
-local MAX_REMOTES = 8
+local MAX_REMOTES = 24 -- slots 0-7 at OFF_REMOTES, 8-23 at OFF_MORE_REMOTES
+local MAILBOX_REMOTES = 8
+local OFF_MORE_REMOTES = 0x1BC
+local OFF_MORE_TRAINER_LOOKS = 0x33C
 local NAME_LENGTH = 8
 
 local REQ_SCORE, REQ_BOARD = 1, 2
@@ -197,7 +200,9 @@ end
 -- Other players' looks and houses, in the netplay slots the bridge gave them.
 function NetplayWorld:writeRemotes()
     for slot = 0, MAX_REMOTES - 1 do
-        local off = OFF_REMOTES + slot * REMOTE_SIZE
+        local more = slot >= MAILBOX_REMOTES
+        local off = more and OFF_MORE_REMOTES + (slot - MAILBOX_REMOTES) * REMOTE_SIZE or OFF_REMOTES + slot * REMOTE_SIZE
+        local lookOff = more and OFF_MORE_TRAINER_LOOKS + (slot - MAILBOX_REMOTES) * 4 or OFF_REMOTE_TRAINER_LOOKS + slot * 4
         local id = self.online and self.bridge.slots[slot]
         local look = id and self.looks[id]
         local house = id and self.houses[id]
@@ -206,7 +211,7 @@ function NetplayWorld:writeRemotes()
             self:w16(off + 4, look and look.mount or 0)
             self:w8(off + 6, house and house.open or 0)
             self:w8(off + 7, look and look.accessory or 0)
-            self:w32(OFF_REMOTE_TRAINER_LOOKS + slot * 4, look and look.trainer or 0)
+            self:w32(lookOff, look and look.trainer or 0)
             for i = 0, DECOR_SIZE - 1 do
                 local byte = house and tonumber(house.decor:sub(i * 2 + 1, i * 2 + 2), 16) or 0
                 self:w8(off + 8 + i, byte)
@@ -214,7 +219,7 @@ function NetplayWorld:writeRemotes()
             self:w16(off, id)
         else
             self:w16(off, 0)
-            self:w32(OFF_REMOTE_TRAINER_LOOKS + slot * 4, 0)
+            self:w32(lookOff, 0)
         end
     end
 end
