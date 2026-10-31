@@ -21,6 +21,7 @@ Feature modules (server/online_*.py) have COMMANDS like the plaza modules
 `ctx.online` is the Online object below.
 """
 
+import logging
 import time
 
 from ext import Refused, text  # noqa: F401  (Refused is re-exported for the modules)
@@ -34,9 +35,19 @@ def game_text(s):
     return str(s).replace("é", "#").replace("É", "#")
 
 
-def wrap(message, width=34):
-    """Breaks a message for the game's message box: lines of about `width`
-    characters ("~"), two lines a page ("^"). A "~" already in the message
+# Pixel widths of the game's normal font (src/fonts.c) where they aren't 6.
+NARROW = {" ": 3, "!": 4, "$": 3, ",": 3, ".": 3, ":": 3, ";": 3, "'": 3, "(": 4, ")": 4, "i": 4, "l": 4,
+          "j": 5, "r": 5, "&": 7, "=": 8}
+LINE_PIXELS = 200
+
+
+def text_width(s):
+    return sum(NARROW.get(c, 6) for c in s)
+
+
+def wrap(message, width=LINE_PIXELS):
+    """Breaks a message for the game's message box: lines of at most `width`
+    pixels ("~"), two lines a page ("^"). A "~" already in the message
     forces a line break, a "^" a page break."""
     lines = []
     for page in str(message).split("^"):
@@ -44,7 +55,7 @@ def wrap(message, width=34):
         for part in page.split("~"):
             line = ""
             for word in part.split(" "):
-                if line and len(line) + 1 + len(word) > width:
+                if line and text_width(f"{line} {word}") > width:
                     page_lines.append(line)
                     line = word
                 else:
@@ -134,23 +145,35 @@ class Online:
     def cmd_event(self, ctx, args, data):
         word, numbers = args[0], [int(a) for a in args[1:]]
         for fn in self.events.get(word, []):
-            fn(ctx, numbers)
+            try:
+                fn(ctx, numbers)
+            except Exception:  # one feature's bug mustn't cut the player off
+                logging.exception("online event %s", word)
         return answer()
 
     def cmd_status(self, ctx, args, data):
         rows = []
         for module in self.modules:
             if hasattr(module, "status"):
-                rows += [["S", *row] for row in module.status(ctx)]
+                try:
+                    rows += [["S", *row] for row in module.status(ctx)]
+                except Exception:  # as above
+                    logging.exception("online status of %s", module.__name__)
         return answer(rows=rows)
 
 
 def install(server, ext_obj):
     import online_coopfish
+    import online_duo
     import online_fishing
     import online_goals
+    import online_mentors
+    import online_pageant
+    import online_shops
     import online_sightings
     import online_web
 
     online_web.install(server)
-    return Online(server, ext_obj, [online_goals, online_sightings, online_web, online_fishing, online_coopfish])
+    return Online(server, ext_obj, [online_goals, online_sightings, online_web, online_fishing, online_coopfish,
+                                       online_shops, online_pageant, online_duo,
+                                       online_mentors])

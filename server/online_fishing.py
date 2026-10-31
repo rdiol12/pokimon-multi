@@ -23,7 +23,7 @@ BOARD_SIZE = 7
 
 RARES = ["FEEBAS", "RELICANTH", "LUVDISC", "LAPRAS", "DRATINI", "MANTINE", "LANTURN", "CORSOLA", "CLAMPERL",
          "QWILFISH", "STARYU", "HORSEA", "REMORAID", "CHINCHOU", "WAILMER", "BARBOACH", "CORPHISH", "SKRELP",
-         "CLAUNCHER", "WISHIWASHI", "DHELMISE", "ARROKUDA", "FINIZEN", "BRUXISH"]
+         "CLAUNCHER", "MAREANIE", "DHELMISE", "ARROKUDA", "FINIZEN", "BRUXISH"]
 
 # Place -> (item, count, money)
 PRIZES = {1: ("RARE_CANDY", 5, 20000), 2: ("RARE_CANDY", 3, 10000), 3: ("ULTRA_BALL", 10, 5000),
@@ -173,7 +173,7 @@ def cmd_fisht(ctx, args, data):
             what = what.replace("CANDYS", "CANDIES")
             said.append(f"{what}{f' and ${money}' if money else ''}"
                         f" ({PLACE_NAMES[place] + ' place' if place else 'for entering'})")
-        return answer(f"{ctx.player.name} got {'; '.join(said)}!", rows=rows)
+        return answer(f"{ctx.player.name} got {', '.join(said)}!", rows=rows)
     raise ValueError("bad FISHT")
 
 

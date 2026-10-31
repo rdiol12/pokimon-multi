@@ -8,8 +8,12 @@ import ext  # noqa: E402
 import netplay_server as ns  # noqa: E402
 import online  # noqa: E402
 import online_coopfish  # noqa: E402
+import online_duo  # noqa: E402
 import online_fishing  # noqa: E402
 import online_goals  # noqa: E402
+import online_mentors  # noqa: E402
+import online_pageant  # noqa: E402
+import online_shops  # noqa: E402
 import online_sightings  # noqa: E402
 import online_web  # noqa: E402
 from online_ids import ITEMS, MAPS, SPECIES  # noqa: E402
@@ -26,7 +30,8 @@ class OnlineTest(unittest.IsolatedAsyncioTestCase):
         self.league = ns.League(":memory:")
         self.server = ns.Server(self.league)
         self.online = online.Online(self.server, ext.install(self.server),
-                                    [online_goals, online_sightings, online_web, online_fishing, online_coopfish], clock=lambda: self.now)
+                                    [online_goals, online_sightings, online_web, online_fishing, online_coopfish, online_shops,
+                                     online_pageant, online_duo, online_mentors], clock=lambda: self.now)
         self.srv = await asyncio.start_server(self.server.handle, "127.0.0.1", 0)
         self.port = self.srv.sockets[0].getsockname()[1]
         self.clients = []
@@ -167,6 +172,12 @@ class FishingTest(OnlineTest):
         self.assertEqual(self.league.db.execute("SELECT COUNT(*) FROM online_fish_scores").fetchone()[0], 2)
 
 
+class SpeciesNamesTest(unittest.TestCase):
+    def test_every_named_species_exists(self):
+        for name in online_fishing.RARES + online_coopfish.GIANTS:
+            self.assertIn(name, SPECIES)
+
+
 class CoFishTest(OnlineTest):
     async def test_two_players_land_a_giant(self):
         a = await self.connect("Ann", 1)
@@ -201,6 +212,175 @@ class CoFishTest(OnlineTest):
         status, out = await self.ask(a, "COFISH RESULT")
         self.assertEqual(rows(out)[0][1], "2")
         self.assertEqual(len(rows(out)), 1)
+
+
+class ShopTest(OnlineTest):
+    async def test_stock_buy_and_collect(self):
+        a = await self.connect("Ann", 1)
+        b = await self.connect("Ben", 2)
+        potion = ITEMS["POTION"]
+        status, out = await self.ask(b, "SHOP LIST")
+        self.assertEqual(status, 1)
+        status, out = await self.ask(a, f"SHOP PRICES {potion} 5 300")
+        self.assertEqual([r[1] for r in rows(out)[1:]], ["150", "300", "450", "600"])
+        status, out = await self.ask(a, f"SHOP STOCK {potion} 5 450")
+        self.assertEqual(rows(out)[1], ["-ITEM", str(potion), "5"])
+        await self.ask(a, f"SHOP STOCK {potion} 2 450")  # same price: same shelf
+        status, out = await self.ask(b, "SHOP LIST")
+        self.assertEqual(rows(out)[1][0], "Ann's Shop")
+        shop = rows(out)[1][1]
+        status, out = await self.ask(b, f"SHOP OPEN {shop}")
+        self.assertEqual(rows(out)[3], ["Potion", "7", "$450"])
+        status, out = await self.ask(b, "SHOP ITEMS")
+        shelf = rows(out)[1][1]
+        # Not enough money, then 3 of them.
+        self.assertEqual((await self.ask(b, f"SHOP BUY {potion} 3 {shelf} 1000"))[0], 1)
+        status, out = await self.ask(b, f"SHOP BUY {potion} 3 {shelf} 5000")
+        self.assertEqual(rows(out)[1:3], [["-MONEY", "1350"], ["+ITEM", str(potion), "3"]])
+        # Asking for more than is left buys what's left.
+        status, out = await self.ask(b, f"SHOP BUY {potion} 99 {shelf} 5000")
+        self.assertEqual(rows(out)[2], ["+ITEM", str(potion), "4"])
+        self.assertEqual((await self.ask(b, "SHOP LIST"))[0], 1)
+        # Ann hears of the sales and collects.
+        status, out = await self.ask(a, "SHOP MINE")
+        self.assertEqual(rows(out)[0][1], "3150")
+        self.assertIn("N", [r[0] for r in rows(out)])
+        status, out = await self.ask(a, "SHOP COLLECT")
+        self.assertEqual(rows(out)[1], ["+MONEY", "3150"])
+        self.assertEqual((await self.ask(a, "SHOP COLLECT"))[0], 1)
+
+    async def test_shelves_and_take_back(self):
+        a = await self.connect("Ann", 1)
+        for i, item in enumerate(["POTION", "ANTIDOTE", "POKE_BALL", "GREAT_BALL", "REPEL", "ESCAPE_ROPE"]):
+            await self.ask(a, f"SHOP STOCK {ITEMS[item]} 1 100")
+        status, out = await self.ask(a, f"SHOP STOCK {ITEMS['ETHER']} 1 100")
+        self.assertEqual(status, 1)
+        status, out = await self.ask(a, "SHOP MINE")
+        self.assertEqual(rows(out)[3][0], "Pok# Ball x1 $100")
+        status, out = await self.ask(a, f"SHOP TAKE {rows(out)[1][1]}")
+        self.assertEqual(rows(out)[1], ["+ITEM", str(ITEMS["POTION"]), "1"])
+
+
+class PageantTest(OnlineTest):
+    async def test_enter_vote_and_win(self):
+        a = await self.connect("Ann", 1)
+        b = await self.connect("Ben", 2)
+        c = await self.connect("Cy", 3)
+        self.assertEqual((await self.ask(a, "PAGEANT SHOW 0"))[0], 1)
+        milotic, eevee = SPECIES["MILOTIC"], SPECIES["EEVEE"]
+        await self.ask(a, f"PAGEANT ENTER {milotic} 40 1 1234 Lady")
+        await self.ask(b, f"PAGEANT ENTER {eevee} 12 0 99 MR. FLUFF")
+        # Ann only sees Ben's entry, and can't vote for her own.
+        status, out = await self.ask(a, "PAGEANT SHOW 5")
+        self.assertEqual(rows(out)[1], [str(eevee), "0", "99", rows(out)[1][3], "0"])
+        self.assertIn("MR. FLUFF", rows(out)[0][0])
+        ben_entry = rows(out)[1][3]
+        status, out = await self.ask(b, "PAGEANT SHOW 0")
+        ann_entry = rows(out)[1][3]
+        self.assertEqual((await self.ask(a, f"PAGEANT VOTE 0 {ann_entry}"))[0], 1)
+        self.assertEqual((await self.ask(a, f"PAGEANT VOTE 0 {ben_entry}"))[0], 0)
+        self.assertEqual((await self.ask(a, f"PAGEANT VOTE 0 {ben_entry}"))[0], 1)  # once each
+        status, out = await self.ask(c, "PAGEANT SHOW 0")
+        self.assertEqual(rows(out)[0][1], "3")  # votes left
+        for entry in (ann_entry, ben_entry):
+            await self.ask(c, f"PAGEANT VOTE 0 {entry}")
+        status, out = await self.ask(b, "PAGEANT BOARD")
+        self.assertEqual(rows(out)[3], ["*1", "MR. FLUFF", "Ben", "2"])
+        self.assertEqual(rows(out)[4], ["2", "Lady", "Ann", "1"])
+        # Next week Ben collects 1st place, Ann 2nd; only once.
+        self.now += online.WEEK
+        status, out = await self.ask(b, "PAGEANT BOARD")
+        self.assertEqual(rows(out)[0][1], "1")
+        status, out = await self.ask(b, "PAGEANT CLAIM")
+        self.assertEqual(rows(out)[2], ["+MONEY", "15000"])
+        self.assertEqual((await self.ask(b, "PAGEANT CLAIM"))[0], 1)
+        status, out = await self.ask(a, "PAGEANT CLAIM")
+        self.assertEqual(rows(out)[1], ["+ITEM", str(ITEMS["RARE_CANDY"]), "2"])
+
+
+class DuoTest(OnlineTest):
+    async def test_team_up_and_finish_quests(self):
+        a = await self.connect("Ann", 1)
+        b = await self.connect("Ben", 2)
+        await self.ask(c := await self.connect("Cy", 3), "OSTAT")
+        self.assertEqual(rows((await self.ask(a, "DUO VIEW"))[1])[0][1], "0")
+        status, out = await self.ask(a, "DUO WHO")
+        ben = next(r for r in rows(out)[1:] if r[0] == "Ben")
+        await self.ask(a, f"DUO ASK {ben[1]}")
+        self.assertEqual(rows((await self.ask(a, "DUO VIEW"))[1])[0][1], "2")
+        status, out = await self.ask(b, "DUO VIEW")
+        self.assertEqual(rows(out)[0][1:3], ["1", "Ann"])
+        self.assertIn("N", [r[0] for r in rows(out)])  # the invitation notice
+        await self.ask(b, "DUO YES")
+        # Ben is busy now: Cy can't ask him.
+        self.assertNotIn("Ben", [r[0] for r in rows((await self.ask(c, "DUO WHO"))[1])[1:]])
+        kind, n, *_ = online_duo.quest(0)
+        self.assertEqual(kind, "catch")
+        for i in range(n):
+            await self.ask(a if i % 2 else b, f"OEV CATCH {i + 1} 0 0 9 0")
+        status, out = await self.ask(a, "DUO VIEW")
+        self.assertEqual(rows(out)[0][1], "4")  # a reward waiting
+        self.assertEqual(rows(out)[0][3], "1")
+        self.assertEqual(rows(out)[3][:2], ["%", "0"])  # the next quest
+        status, out = await self.ask(b, "DUO CLAIM")
+        self.assertEqual(rows(out)[1], ["+ITEM", str(ITEMS["ULTRA_BALL"]), "5"])
+        self.assertEqual((await self.ask(b, "DUO CLAIM"))[0], 1)
+        # Quest 2 is fishing: catches don't count, fished ones do.
+        await self.ask(a, "OEV CATCH 5 0 0 9 1")
+        await self.ask(a, f"OEV FISH 5 400")
+        status, out = await self.ask(b, "DUO VIEW")
+        self.assertEqual(rows(out)[3][4], f"1/{online_duo.quest(1)[1]}")
+        await self.ask(b, "DUO LEAVE")
+        self.assertEqual(rows((await self.ask(a, "DUO VIEW"))[1])[0][1], "0")
+
+    async def test_species_quest_counts_each_once(self):
+        db = self.league.db
+        a = await self.connect("Ann", 1)
+        b = await self.connect("Ben", 2)
+        db.execute("INSERT INTO online_duos (a_name, a_tid, b_name, b_tid, round) VALUES ('Ann', 1, 'Ben', 2, 2)")
+        for sp in (7, 7, 8):
+            await self.ask(a, f"OEV CATCH {sp} 0 0 9 0")
+        await self.ask(b, "OEV CATCH 7 0 0 9 0")
+        status, out = await self.ask(a, "DUO VIEW")
+        self.assertEqual(rows(out)[3][4], "2/6")
+
+
+class MentorTest(OnlineTest):
+    async def test_mentor_apprentice_badges_and_graduation(self):
+        a = await self.connect("Ann", 1)  # the mentor
+        b = await self.connect("Ben", 2)
+        self.assertEqual(rows((await self.ask(a, "MENTOR VIEW 8"))[1])[0][1], "3")  # can volunteer
+        self.assertEqual((await self.ask(a, "MENTOR FIND 8"))[0], 1)
+        await self.ask(a, "MENTOR VOLUNTEER 8")
+        self.assertEqual(rows((await self.ask(a, "MENTOR VIEW 8"))[1])[0][1], "2")
+        self.assertEqual(rows((await self.ask(b, "MENTOR VIEW 1"))[1])[0][1], "0")
+        status, out = await self.ask(b, "MENTOR FIND 1")
+        self.assertEqual(rows(out)[1], ["Ann, 8 badges", "Ann:1"])
+        await self.ask(b, "MENTOR PICK Ann:1 1")
+        status, out = await self.ask(b, "MENTOR VIEW 1")
+        self.assertEqual(rows(out)[0][1:3], ["1", "Ann"])
+        # A cheer a day.
+        status, out = await self.ask(a, "MENTOR WHO 8")
+        await self.ask(a, f"MENTOR CHEER {rows(out)[1][1]} 8")
+        self.assertEqual((await self.ask(a, "MENTOR CHEER Ben:2 8"))[0], 1)
+        status, out = await self.ask(a, "MENTOR VIEW 8")
+        self.assertEqual(rows(out)[3], ["Ben", "1 badges", "yes"])
+        # Ben wins a badge (reported in the background): gifts for both.
+        await self.ask(b, "OEV BADGES 2")
+        status, out = await self.ask(b, "MENTOR GIFTS 2")
+        self.assertEqual([r for r in rows(out)[1:] if r[0] != "N"],
+                         [["+ITEM", str(ITEMS["SUPER_POTION"]), "8"], ["+MONEY", "1000"]])
+        self.assertEqual(rows(out)[0][0], "Ben got 8 SUPER POTIONS and $1000!")
+        status, out = await self.ask(a, "MENTOR GIFTS 8")
+        self.assertEqual(rows(out)[1], ["+ITEM", str(ITEMS["GREAT_BALL"]), "3"])
+        # The same count again brings nothing.
+        await self.ask(b, "OEV BADGES 2")
+        self.assertEqual((await self.ask(b, "MENTOR GIFTS 2"))[0], 1)
+        # Eight badges: Ben graduates.
+        await self.ask(b, "MENTOR VIEW 8")
+        self.assertEqual(rows((await self.ask(b, "MENTOR VIEW 8"))[1])[0][1], "3")
+        status, out = await self.ask(a, "MENTOR VIEW 8")
+        self.assertIn("1 graduated", rows(out)[0][0])
 
 
 if __name__ == "__main__":

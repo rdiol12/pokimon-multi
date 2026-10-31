@@ -20,6 +20,10 @@ bool32 Online_TournamentIsOn(void);
 bool32 Online_TryCoFishInvite(void);
 void Online_TournamentBite(void);
 
+// Mentors (src/online_mentors.c): reports a changed badge count.
+void Online_CheckBadges(void);
+void Online_AddBadgeCount(void);
+
 // Queues a report for the server, sent in the background as
 // "OEV <word> <a> <b> ...". Up to ONLINE_REPORT_ARGS numbers.
 #define ONLINE_REPORT_ARGS 6
@@ -52,5 +56,10 @@ u32 Online_DataRows(void);
 const char *Online_DataField(u32 row, u32 col);
 s32 Online_DataNum(u32 row, u32 col);
 u8 *Online_CopyText(u8 *dest, const char *src, u32 maxChars);
+
+// A scrolling list for a task of your own (src/online.c).
+struct ListMenuItem;
+u8 Online_OpenList(const struct ListMenuItem *items, u32 count, void (*func)(u8 taskId));
+void Online_CloseList(u8 taskId);
 
 #endif // GUARD_ONLINE_H

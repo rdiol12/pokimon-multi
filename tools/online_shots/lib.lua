@@ -6,7 +6,17 @@ local D, K = Driver, Driver.KEY
 -- remember their cursor, so it only moves down the first time.
 local hubOpened = false
 function Driver.openHub(row, shotName)
-    D.press(K.START, 40)
+    -- A notice may have the player: read it away first.
+    if D.fieldLocked() then print("openHub: field locked, closing what's open") end
+    D.waitFor("the field", 1200, function() return not D.fieldLocked() end, function(i)
+        if i % 30 == 0 then D.press(K.B, 0) end
+    end)
+    -- START can be missed (the map name popup is up after a warp): retry.
+    for _ = 1, 6 do
+        D.press(K.START, 40)
+        if D.fieldLocked() then break end
+        D.wait(60)
+    end
     if not hubOpened then for _ = 1, 4 do D.press(K.DOWN, 8) end end
     D.press(K.A, 30) -- ONLINE
     if not hubOpened then for _ = 1, 5 do D.press(K.DOWN, 8) end end
@@ -53,6 +63,24 @@ function Driver.waitNotice(name, timeout)
     end)
 end
 
+-- Screenshots and closes every notice that comes within `frames`
+-- (name-1, name-2...). Returns how many came.
+function Driver.notices(name, frames)
+    local n = 0
+    for _ = 1, frames // 10 do
+        if D.fieldLocked() then
+            n = n + 1
+            D.wait(110)
+            D.shot(name .. "-" .. n)
+            D.waitFor("the notice to close", 600, function() return not D.fieldLocked() end, function(i)
+                if i % 30 == 0 then D.press(K.A, 0) end
+            end)
+        end
+        D.wait(10)
+    end
+    return n
+end
+
 -- Starts a battle with a roaming Pokémon (gOnlineShowcase in src/online.c).
 function Driver.roamer(species, level)
     Driver.wildBattle(species, level, false, 1)
@@ -67,6 +95,25 @@ function Driver.wildBattle(species, level, shiny, kind)
     D.write8(s + 3, id >> 8)
     D.write8(s + 4, shiny and 1 or 0)
     D.write8(s, kind or 2)
+end
+
+-- Puts count of an item (ITEM_ID name) in the bag.
+function Driver.giveItem(item, count)
+    local s = D.SYM.gOnlineShowcase
+    local id = ITEM_ID[item]
+    D.write8(s + 1, count)
+    D.write8(s + 2, id & 0xFF)
+    D.write8(s + 3, id >> 8)
+    D.write8(s, 3)
+    D.waitFor("the item", 300, function() return D.read8(s) == 0 end)
+end
+
+-- Gives the player the first n badges (and takes the others).
+function Driver.badges(n)
+    local s = D.SYM.gOnlineShowcase
+    D.write8(s + 1, n)
+    D.write8(s, 4)
+    D.waitFor("the badges", 300, function() return D.read8(s) == 0 end)
 end
 
 -- Throws the last used Ball until the battle is over (Master Ball: once).

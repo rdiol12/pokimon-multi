@@ -28,7 +28,7 @@ bool32 Online_TournamentIsOn(void)
 // A fishing encounter's Pokémon was just made: maybe swap in a rare one.
 void Online_TournamentBite(void)
 {
-    struct Pokemon *mon = &gEnemyParty[0];
+    struct Pokemon *mon = &gParties[B_TRAINER_OPPONENT_A][0];
     u16 species;
     u8 level;
 

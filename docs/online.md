@@ -92,6 +92,78 @@ rounds of the reeling meter. With four hits or more between them the giant
 and both get one at level 45 (shiny one time in 64). The biggest giants
 landed are on HUB → CO-OP FISHING → GIANT CATCHES.
 
+## Player shops
+
+![TEST1 visits TEST2's shop and buys; TEST2 stocks a shelf, hears of the sale and collects](images/online-shops.png)
+
+Every player can run a shop with up to six shelves of items
+(`server/online_shops.py`, `src/online_shops.c`,
+`data/scripts/online/shops.inc`). HUB → PLAYER SHOPS:
+
+- **VISIT A SHOP** lists the other players' shops, best sellers first.
+  Opening one shows its shelves; pick a shelf, then 1, 5 or ALL. The money
+  is taken and the items go in the bag (if there's room).
+- **MY SHOP** → **STOCK AN ITEM** picks something from the bag's item,
+  ball or berry pockets, how many, and a price: half, the same as, one and
+  a half or twice the mart price. The items leave the bag. **TAKE BACK**
+  empties a shelf, **COLLECT MONEY** pays out what has sold.
+
+Shops stay open while their owner is offline; the money waits on the
+server. An owner who is online hears of each sale. The market board and
+the auction house sell Pokémon; shops sell items.
+
+## Pokémon pageants
+
+![TEST1 looks through the entries and votes; TEST2 enters a shiny Gardevoir, hears of the vote, sees the standings and collects last week's prize](images/online-pageant.png)
+
+Every week there's a pageant with a theme after the contest categories
+(Cutest, Coolest, Most Beautiful, Smartest, Toughest)
+(`server/online_pageant.py`, `src/online_pageant.c`,
+`data/scripts/online/pageant.inc`). HUB → POKéMON PAGEANT:
+
+- **ENTER A POKéMON** enters one from the party (entering again swaps it,
+  and its votes start over). Everyone online hears of it.
+- **VOTE** goes through the other players' entries one at a time, each
+  with its picture (shiny colours too), and **VOTE FOR IT** gives it one of
+  your three votes for the week. Its owner hears of each vote.
+- **STANDINGS** shows the week's board. When a week is over, its top three
+  win 3, 2 or 1 Rare Candies and ¥15,000, ¥8,000 or ¥4,000, collected here.
+
+## Duo quests
+
+![TEST1 asks TEST2 to team up, both see the quest, one catch each finishes it, both collect the reward and the next quest starts](images/online-duo.png)
+
+Two players team up and work on quests together (`server/online_duo.py`,
+`data/scripts/online/duo.inc`). In HUB → DUO QUESTS a player without a
+partner picks someone online; the other gets a notice and answers in the
+same place. The pair's catches count together: catch 10 Pokémon, land 5
+with a rod, catch 6 different species, catch in 4 different places,
+catch 20, then round again with bigger targets. Both players hear when
+they're halfway and one away. When a quest is done both collect its reward
+(Ultra, Dive, Timer or Nest Balls, or Rare Candies, and money) and the next
+one starts. The board shows each partner's share; SPLIT UP ends the pair.
+
+## Mentors
+
+![TEST1 joins the mentor list, TEST2 picks TEST1, TEST1 cheers TEST2 on, TEST2 wins a badge and both collect gifts](images/online-mentors.png)
+
+Trainers with six badges or more can mentor newer ones
+(`server/online_mentors.py`, `src/online_mentors.c`,
+`data/scripts/online/mentors.inc`). In HUB → MENTORS:
+
+- A mentor joins (or leaves) the mentor list and sees their apprentices'
+  badges. Once a day they can **CHEER ON** each apprentice, which sends
+  3 Super Potions with the notice.
+- A trainer with fewer than six badges picks a mentor from the list (up to
+  four apprentices each), and can **SAY GOODBYE** later.
+- Each badge the apprentice wins brings both a gift: Super Potions, Hyper
+  Potions or Ultra Balls for the apprentice, Balls or a Rare Candy for the
+  mentor, plus money. At eight badges the apprentice graduates: 5 Rare
+  Candies for them, 3 for the mentor, and everyone online hears of it.
+
+The game sends its badge count with every MENTOR request and reports it
+(`OEV BADGES n`) whenever it changes.
+
 ## How it talks to the server
 
 These features use the Online Plaza's request channel (`NpxRpc_*` in
@@ -104,7 +176,7 @@ handles every answer the same way:
 
 | Rows of the answer | What the game does |
 | --- | --- |
-| row 0: `message\|code\|var1\|var2\|var3` | message to `gStringVar4` (`~` new line, `^` new page, `#` é), code to `VAR_0x800B`, vars to `gStringVar1`–`3` |
+| row 0: `message\|code\|var1\|var2\|var3` | message to `gStringVar4` (`~` new line, `^` new page, `#` é), code to `VAR_0x800B`, vars to `gStringVar1`–`3`; `$` is the money sign, `>` itself |
 | `+ITEM\|id\|n`, `-ITEM\|id\|n`, `+MONEY\|n`, `-MONEY\|n`, `+MON\|species\|level\|shiny` | applied right away |
 | `N\|text` | a notice, shown once the player is free |
 | `S\|key\|...` | the status of a live feature (`Online_Status`) |
