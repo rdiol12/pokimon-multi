@@ -15,6 +15,7 @@
 #include "constants/characters.h"
 #include "constants/event_objects.h"
 #include "constants/event_object_movement.h"
+#include "constants/pastime.h"
 
 // The online side of the world features, through gWorldMailbox (see
 // include/world_mailbox.h and tools/netplay_bridge/netplay_world.lua):
@@ -401,6 +402,11 @@ static void FormatBoardValue(u8 *dest, u8 board, u32 value, u32 extra)
         ConvertIntToDecimalStringN(gStringVar1, value, STR_CONV_MODE_LEFT_ALIGN, 5);
         StringExpandPlaceholders(dest, COMPOUND_STRING("{STR_VAR_1} berries"));
         break;
+    case WORLD_BOARD_QUIZ: // extra: answers right
+        ConvertIntToDecimalStringN(gStringVar1, value, STR_CONV_MODE_LEFT_ALIGN, 3);
+        ConvertIntToDecimalStringN(gStringVar2, extra, STR_CONV_MODE_LEFT_ALIGN, 2);
+        StringExpandPlaceholders(dest, COMPOUND_STRING("{STR_VAR_1} pts ({STR_VAR_2}/10)"));
+        break;
     case WORLD_BOARD_HARDCORE:
         ConvertIntToDecimalStringN(gStringVar1, min(value >> 16, 8), STR_CONV_MODE_LEFT_ALIGN, 1);
         ConvertIntToDecimalStringN(gStringVar2, extra & 0xFF, STR_CONV_MODE_LEFT_ALIGN, 3);
@@ -440,6 +446,7 @@ static const u8 *const sBoardTitles[] =
     [WORLD_BOARD_BERRIES]  = COMPOUND_STRING("BERRY PICKERS"),
     [WORLD_BOARD_HARDCORE] = COMPOUND_STRING("HARDCORE LADDER"),
     [WORLD_BOARD_HUNT]     = COMPOUND_STRING("SAFARI HUNT"),
+    [WORLD_BOARD_QUIZ]     = COMPOUND_STRING("QUIZ CHAMPS"),
 };
 
 static void Task_WaitBoard(u8 taskId)

@@ -33,6 +33,11 @@ struct PastimeSaveData
     u8 mailLetters;     // a bit per letter still to deliver, | MAIL_ACTIVE or MAIL_PAID
     u16 mailRoutes;     // routes finished
     u16 mailLettersDelivered;
+    // Battle quiz hall.
+    u16 quizBest;       // best round score
+    u16 quizPrizeDay;   // day the daily prize was won
+    u16 quizRounds;
+    u16 quizPerfect;    // rounds with every answer right
 };
 
 #endif // GUARD_PASTIME_SAVE_H

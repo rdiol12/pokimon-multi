@@ -11,6 +11,7 @@
 #define PASTIME_MENU_MUSEUM     1
 #define PASTIME_MENU_DELIVERY   2
 #define PASTIME_MENU_MAIL       3
+#define PASTIME_MENU_QUIZ       4
 #define PASTIME_MENU_CLOSE      31
 
 // NPCs and objects the activities place on maps from code (src/pastime.c)
@@ -54,5 +55,13 @@
 #define MAIL_IN_PROGRESS  2
 #define MAIL_COMPLETE     3
 #define MAIL_DONE_TODAY   4
+
+// Battle quiz hall (src/pastime_quiz.c).
+#define QUIZ_QUESTIONS   10
+#define QUIZ_SUPER       0 // answers, in menu order
+#define QUIZ_NORMAL      1
+#define QUIZ_NOT_VERY    2
+#define QUIZ_NO_EFFECT   3
+#define WORLD_BOARD_QUIZ 16 // server leaderboard (server/world.py)
 
 #endif // GUARD_CONSTANTS_PASTIME_H

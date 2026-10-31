@@ -1,6 +1,10 @@
 #include "global.h"
 #include "event_data.h"
 #include "event_object_movement.h"
+#include "field_effect.h"
+#include "menu.h"
+#include "sprite.h"
+#include "window.h"
 #include "fieldmap.h"
 #include "main.h"
 #include "pastime.h"
@@ -29,6 +33,7 @@ static const struct PastimeSpotList sSpotLists[] =
     {gMuseumSpots, MUSEUM_SPOT_COUNT},
     {gDeliverySpots, DELIVERY_TOWN_COUNT + 1},
     {gMailSpots, MAIL_TOWN_COUNT * (1 + MAIL_LETTERS)},
+    {gQuizSpots, 1},
 };
 
 #define MAX_SHOWN (LOCALID_PASTIME_LAST - LOCALID_PASTIME_FIRST + 1)
@@ -139,6 +144,41 @@ void Pastime_Update(void)
 bool32 Pastime_TryInteract(s16 x, s16 y)
 {
     return FALSE;
+}
+
+// A Pokémon picture box, like showmonpic but with its own window tiles,
+// so it can stay up next to a multichoice menu (which uses showmonpic's).
+#define PIC_BASE_BLOCK 0xD0 // after a 4-row multichoice (from 100), before YES/NO (0x125)
+
+static EWRAM_DATA bool8 sPicShown = FALSE;
+static EWRAM_DATA u8 sPicWindowId = 0;
+static EWRAM_DATA u8 sPicSpriteId = 0;
+
+// Script: VAR_0x8005 = species, VAR_0x8006 = x, VAR_0x8007 = y (tiles).
+void Pastime_ShowMonPic(void)
+{
+    u8 x = gSpecialVar_0x8006, y = gSpecialVar_0x8007;
+    struct WindowTemplate template = CreateWindowTemplate(0, x + 1, y + 1, 8, 8, 15, PIC_BASE_BLOCK);
+
+    Pastime_HideMonPic();
+    sPicWindowId = AddWindow(&template);
+    PutWindowTilemap(sPicWindowId);
+    SetStandardWindowBorderStyle(sPicWindowId, TRUE);
+    sPicSpriteId = CreateMonSprite_PicBox(gSpecialVar_0x8005, x * 8 + 40, y * 8 + 40, 0);
+    gSprites[sPicSpriteId].callback = SpriteCallbackDummy;
+    gSprites[sPicSpriteId].oam.priority = 0;
+    sPicShown = TRUE;
+    ScheduleBgCopyTilemapToVram(0);
+}
+
+void Pastime_HideMonPic(void)
+{
+    if (!sPicShown)
+        return;
+    FreeResourcesAndDestroySprite(&gSprites[sPicSpriteId], sPicSpriteId);
+    ClearStdWindowAndFrameToTransparent(sPicWindowId, TRUE);
+    RemoveWindow(sPicWindowId);
+    sPicShown = FALSE;
 }
 
 // Called when the player caught a wild Pokémon.

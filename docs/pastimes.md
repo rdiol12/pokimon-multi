@@ -103,3 +103,22 @@ Pelipper in the party, the bird flies one letter over by itself and the
 route pays a ¥200 tip on top of ¥600. Every third route also earns a stamp
 of thanks (a feather, then Rare Candy). **R > PASTIMES > MAIL ROUTE** shows
 today's letters and the totals. Screenshots: `tools/pastime_shots/mail.lua`.
+
+## Battle quiz hall
+
+![Battle quiz hall](images/pastime-quiz.png)
+
+The QUIZMASTER in Mauville City runs ten-question rounds on type matchups:
+"A FIRE move hits FERROTHORN (GRASS/STEEL)!", with the defender's picture,
+answered SUPER EFFECTIVE, NORMAL, NOT VERY or NO EFFECT. The answers come
+from the battle engine's own type chart (`GetTypeModifier`), and defenders
+are 40 well-known Pokémon with a spread of types. A right answer scores 10
+plus twice the current streak. The first round each day that scores 40, 80,
+120 or 160 wins a Great Ball, Ultra Ball, PP Up or Rare Candy.
+
+Each round's score goes to the server's **QUIZ CHAMPS** leaderboard (world
+board 16 in `server/world.py`); **R > PASTIMES > QUIZ HALL** has MY RECORDS
+(best score, rounds, perfect rounds, today's prize) and QUIZ CHAMPS.
+`Pastime_ShowMonPic` is a picture box that can share the screen with a
+multichoice menu (`showmonpic` can't). Screenshots:
+`tools/pastime_shots/quiz.lua` (two players online).

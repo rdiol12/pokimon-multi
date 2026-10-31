@@ -19,6 +19,10 @@ void Pastime_OnTrainerBattleEnd(void);
 bool32 Pastime_IsPastimeObjectEvent(const struct ObjectEvent *objectEvent);
 const u8 *Pastime_GetTalkScript(u8 objectEventId);
 
+// A Pokémon picture box that can share the screen with a multichoice menu.
+void Pastime_ShowMonPic(void);
+void Pastime_HideMonPic(void);
+
 // Lost and found (pastime_lost.c).
 bool32 LostFound_IsItemShown(u32 arg);
 bool32 LostFound_IsOwnerShown(u32 arg);
@@ -53,5 +57,12 @@ void Mail_StartRoute(void);
 void Mail_FinishRoute(void);
 void Mail_TalkToRecipient(void);
 void Mail_ShowList(void);
+
+// Battle quiz hall (pastime_quiz.c).
+void Quiz_Start(void);
+void Quiz_NextQuestion(void);
+void Quiz_Answer(void);
+void Quiz_Finish(void);
+void Quiz_ShowList(void);
 
 #endif // GUARD_PASTIME_H
