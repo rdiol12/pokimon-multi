@@ -32,8 +32,9 @@ env:
   GAME_REVISION: 0
   GAME_LANGUAGE: ENGLISH
   COMPARE: 0
-  UNUSED_ERROR: 1
-  DEPRECATED_ERROR: 1
+  # Match local builds: upstream's strict unused/deprecated checks stay warnings here.
+  UNUSED_ERROR: 0
+  DEPRECATED_ERROR: 0
 
 jobs:
   build-emerald:
