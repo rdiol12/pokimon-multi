@@ -449,3 +449,20 @@ BATTLER'S (potions, vitamins, Bottle Caps) and the COLLECTOR'S (Stardust,
 Pearls, a Gold Bottle Cap) take turns. **R > PASTIMES > REWARD TRACK**
 lists the tiers, what's been paid and the days left. Screenshots:
 `tools/pastime_shots/track.lua`.
+
+## New Game+
+
+![New Game+](images/pastime-new-game-plus.png)
+
+Once the player is CHAMPION (`FLAG_SYS_GAME_CLEAR`), **R > PASTIMES > NEW
+GAME+** starts the story over from the moving truck (after two
+confirmations). It keeps every Pokémon (the PC boxes, with the party moved
+into them), the money, the Pokédex, the Trainer ID (so the Pokémon stay the
+player's own), and the pastime and world records and achievements
+(`PastimeSaveData`, `WorldSaveData`); badges, items, the story and the other
+features' progress start fresh. The first New Game+ adds a Shiny Charm and
+an Exp. Charm. Nothing is written until the player saves, so the old save
+stays until then. The carry-over is put back by `NewGamePlus_AfterInit`,
+called in `CB2_NewGame` just after `NewGameInitData`. Screenshots:
+`tools/pastime_shots/new_game_plus.lua` (its `checks.txt` shows the party,
+the PC and the records before and after).

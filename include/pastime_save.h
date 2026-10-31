@@ -135,6 +135,9 @@ struct PastimeSaveData
     u8 trackTier;        // tiers paid out
     u8 trackFiller;
     u16 trackDay;        // day + 1 of the last daily visit points
+    // New Game+ (src/pastime_new_game_plus.c)
+    u8 newGamePlusCount;
+    u8 newGamePlusFiller[3];
 };
 
 #endif // GUARD_PASTIME_SAVE_H
