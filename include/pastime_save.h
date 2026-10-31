@@ -129,6 +129,12 @@ struct PastimeSaveData
     u8 detectiveClues;   // a bit per clue of the open case
     u8 detectiveSolved;  // a bit per case
     u8 detectiveFiller;
+    // Monthly reward track (src/pastime_track.c)
+    u16 trackMonth;      // month + 1 of trackPoints
+    u16 trackPoints;
+    u8 trackTier;        // tiers paid out
+    u8 trackFiller;
+    u16 trackDay;        // day + 1 of the last daily visit points
 };
 
 #endif // GUARD_PASTIME_SAVE_H

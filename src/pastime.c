@@ -161,6 +161,7 @@ void Pastime_Update(void)
     Garden_Update();
     Weather_Update();
     Star_Update();
+    Track_Update();
 }
 
 // A pressed facing (x, y), map coordinates with MAP_OFFSET.
@@ -216,6 +217,7 @@ void Pastime_OnCatch(void)
 {
     BugContest_OnCatch(gBattleResults.caughtMonSpecies);
     Ranger_OnCatch(gBattleResults.caughtMonSpecies);
+    Track_OnCatch();
 }
 
 // Back from a wild battle, before the field reloads.
@@ -234,4 +236,5 @@ u16 Pastime_ModifyWildSpecies(u16 species)
 // Back from a trainer battle.
 void Pastime_OnTrainerBattleEnd(void)
 {
+    Track_OnTrainerBattleEnd();
 }

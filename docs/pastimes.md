@@ -434,3 +434,18 @@ Pearl, Lucky Egg) and raises the rank (ROOKIE, SLEUTH, INSPECTOR, ACE
 DETECTIVE); wrong closes it unsolved, to be opened again from the start.
 **R > PASTIMES > CASE FILES** shows each case and the clues found.
 Screenshots: `tools/pastime_shots/detective.lua`.
+
+## Monthly reward track
+
+![Reward track](images/pastime-track.png)
+
+Everything earns Track Points: the first visit of each day (5), each
+Pokémon caught (2) and each trainer beaten (3). The month's track has ten
+tiers, from 10 to 325 points, and each one pays out as it's reached,
+straight to the bag with a toast (if the bag is full it waits for room).
+A month is 30 days of the game clock; when it turns the points start over
+on the next track: the EXPLORER'S (Poké Balls up to a Master Ball), the
+BATTLER'S (potions, vitamins, Bottle Caps) and the COLLECTOR'S (Stardust,
+Pearls, a Gold Bottle Cap) take turns. **R > PASTIMES > REWARD TRACK**
+lists the tiers, what's been paid and the days left. Screenshots:
+`tools/pastime_shots/track.lua`.

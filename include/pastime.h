@@ -191,4 +191,10 @@ void Detective_PushSuspects(void);
 void Detective_Accuse(void);
 void Detective_ShowList(void);
 
+// Monthly reward track (pastime_track.c).
+void Track_Update(void);
+void Track_OnCatch(void);
+void Track_OnTrainerBattleEnd(void);
+void Track_ShowList(void);
+
 #endif // GUARD_PASTIME_H
