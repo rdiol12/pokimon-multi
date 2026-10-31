@@ -1,0 +1,291 @@
+{
+  "id": "MAP_IRONMOOR_PRISON",
+  "name": "IronmoorPrison",
+  "layout": "LAYOUT_IRONMOOR_PRISON",
+  "music": "MUS_MT_PYRE",
+  "region": "REGION_HOENN",
+  "region_map_section": "MAPSEC_IRONMOOR_PRISON",
+  "requires_flash": false,
+  "weather": "WEATHER_NONE",
+  "map_type": "MAP_TYPE_INDOOR",
+  "allow_cycling": false,
+  "allow_escaping": false,
+  "allow_running": true,
+  "show_map_name": true,
+  "battle_scene": "MAP_BATTLE_SCENE_NORMAL",
+  "connections": null,
+  "object_events": [
+    {
+      "graphics_id": "OBJ_EVENT_GFX_PSYCHIC_M",
+      "x": 5,
+      "y": 19,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_FACE_RIGHT",
+      "movement_range_x": 0,
+      "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NORMAL",
+      "trainer_sight_or_berry_tree_id": "3",
+      "script": "IronmoorPrison_EventScript_Vesper",
+      "flag": "0"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_SPECIES(SHUPPET)",
+      "x": 20,
+      "y": 6,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_WANDER_LEFT_AND_RIGHT",
+      "movement_range_x": 4,
+      "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE",
+      "trainer_sight_or_berry_tree_id": "0",
+      "script": "IronmoorPrison_EventScript_Shuppet",
+      "flag": "0"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_ITEM_BALL",
+      "x": 23,
+      "y": 1,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_LOOK_AROUND",
+      "movement_range_x": 0,
+      "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE",
+      "trainer_sight_or_berry_tree_id": "0",
+      "script": "IronmoorPrison_EventScript_Item_RareCandy",
+      "flag": "FLAG_ITEM_IRONMOOR_RARE_CANDY"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_ITEM_BALL",
+      "x": 9,
+      "y": 1,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_LOOK_AROUND",
+      "movement_range_x": 0,
+      "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE",
+      "trainer_sight_or_berry_tree_id": "0",
+      "script": "IronmoorPrison_EventScript_Item_ReaperCloth",
+      "flag": "FLAG_ITEM_IRONMOOR_REAPER_CLOTH"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_ITEM_BALL",
+      "x": 21,
+      "y": 11,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_LOOK_AROUND",
+      "movement_range_x": 0,
+      "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE",
+      "trainer_sight_or_berry_tree_id": "0",
+      "script": "IronmoorPrison_EventScript_Item_DuskStone",
+      "flag": "FLAG_ITEM_IRONMOOR_DUSK_STONE"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_ITEM_BALL",
+      "x": 2,
+      "y": 18,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_LOOK_AROUND",
+      "movement_range_x": 0,
+      "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE",
+      "trainer_sight_or_berry_tree_id": "0",
+      "script": "IronmoorPrison_EventScript_Item_MaxEther",
+      "flag": "FLAG_ITEM_IRONMOOR_MAX_ETHER"
+    }
+  ],
+  "warp_events": [
+    {
+      "x": 14,
+      "y": 22,
+      "elevation": 0,
+      "dest_map": "MAP_IRONMOOR_ISLE",
+      "dest_warp_id": "0"
+    },
+    {
+      "x": 15,
+      "y": 22,
+      "elevation": 0,
+      "dest_map": "MAP_IRONMOOR_ISLE",
+      "dest_warp_id": "0"
+    },
+    {
+      "x": 26,
+      "y": 4,
+      "elevation": 0,
+      "dest_map": "MAP_IRONMOOR_PRISON_SOLITARY",
+      "dest_warp_id": "0"
+    }
+  ],
+  "coord_events": [],
+  "bg_events": [
+    {
+      "type": "sign",
+      "x": 10,
+      "y": 1,
+      "elevation": 0,
+      "player_facing_dir": "BG_EVENT_PLAYER_FACING_ANY",
+      "script": "IronmoorPrison_EventScript_Spirit1"
+    },
+    {
+      "type": "sign",
+      "x": 22,
+      "y": 2,
+      "elevation": 0,
+      "player_facing_dir": "BG_EVENT_PLAYER_FACING_ANY",
+      "script": "IronmoorPrison_EventScript_Spirit2"
+    },
+    {
+      "type": "sign",
+      "x": 3,
+      "y": 12,
+      "elevation": 0,
+      "player_facing_dir": "BG_EVENT_PLAYER_FACING_ANY",
+      "script": "IronmoorPrison_EventScript_Spirit3"
+    },
+    {
+      "type": "sign",
+      "x": 25,
+      "y": 11,
+      "elevation": 0,
+      "player_facing_dir": "BG_EVENT_PLAYER_FACING_ANY",
+      "script": "IronmoorPrison_EventScript_Spirit4"
+    },
+    {
+      "type": "sign",
+      "x": 6,
+      "y": 4,
+      "elevation": 0,
+      "player_facing_dir": "BG_EVENT_PLAYER_FACING_ANY",
+      "script": "IronmoorPrison_EventScript_CellGate"
+    },
+    {
+      "type": "sign",
+      "x": 10,
+      "y": 4,
+      "elevation": 0,
+      "player_facing_dir": "BG_EVENT_PLAYER_FACING_ANY",
+      "script": "IronmoorPrison_EventScript_CellGate"
+    },
+    {
+      "type": "sign",
+      "x": 14,
+      "y": 4,
+      "elevation": 0,
+      "player_facing_dir": "BG_EVENT_PLAYER_FACING_ANY",
+      "script": "IronmoorPrison_EventScript_CellGate"
+    },
+    {
+      "type": "sign",
+      "x": 18,
+      "y": 4,
+      "elevation": 0,
+      "player_facing_dir": "BG_EVENT_PLAYER_FACING_ANY",
+      "script": "IronmoorPrison_EventScript_CellGate"
+    },
+    {
+      "type": "sign",
+      "x": 22,
+      "y": 4,
+      "elevation": 0,
+      "player_facing_dir": "BG_EVENT_PLAYER_FACING_ANY",
+      "script": "IronmoorPrison_EventScript_CellGate"
+    },
+    {
+      "type": "sign",
+      "x": 3,
+      "y": 9,
+      "elevation": 0,
+      "player_facing_dir": "BG_EVENT_PLAYER_FACING_ANY",
+      "script": "IronmoorPrison_EventScript_CellGate"
+    },
+    {
+      "type": "sign",
+      "x": 8,
+      "y": 9,
+      "elevation": 0,
+      "player_facing_dir": "BG_EVENT_PLAYER_FACING_ANY",
+      "script": "IronmoorPrison_EventScript_CellGate"
+    },
+    {
+      "type": "sign",
+      "x": 20,
+      "y": 9,
+      "elevation": 0,
+      "player_facing_dir": "BG_EVENT_PLAYER_FACING_ANY",
+      "script": "IronmoorPrison_EventScript_CellGate"
+    },
+    {
+      "type": "sign",
+      "x": 25,
+      "y": 9,
+      "elevation": 0,
+      "player_facing_dir": "BG_EVENT_PLAYER_FACING_ANY",
+      "script": "IronmoorPrison_EventScript_CellGate"
+    },
+    {
+      "type": "sign",
+      "x": 14,
+      "y": 10,
+      "elevation": 0,
+      "player_facing_dir": "BG_EVENT_PLAYER_FACING_ANY",
+      "script": "IronmoorPrison_EventScript_CorridorGate"
+    },
+    {
+      "type": "sign",
+      "x": 15,
+      "y": 10,
+      "elevation": 0,
+      "player_facing_dir": "BG_EVENT_PLAYER_FACING_ANY",
+      "script": "IronmoorPrison_EventScript_CorridorGate"
+    },
+    {
+      "type": "sign",
+      "x": 2,
+      "y": 4,
+      "elevation": 0,
+      "player_facing_dir": "BG_EVENT_PLAYER_FACING_ANY",
+      "script": "IronmoorPrison_EventScript_Console"
+    },
+    {
+      "type": "sign",
+      "x": 3,
+      "y": 4,
+      "elevation": 0,
+      "player_facing_dir": "BG_EVENT_PLAYER_FACING_ANY",
+      "script": "IronmoorPrison_EventScript_Console"
+    },
+    {
+      "type": "sign",
+      "x": 23,
+      "y": 18,
+      "elevation": 0,
+      "player_facing_dir": "BG_EVENT_PLAYER_FACING_NORTH",
+      "script": "IronmoorPrison_EventScript_Desk"
+    },
+    {
+      "type": "sign",
+      "x": 26,
+      "y": 17,
+      "elevation": 0,
+      "player_facing_dir": "BG_EVENT_PLAYER_FACING_NORTH",
+      "script": "IronmoorPrison_EventScript_Rack"
+    },
+    {
+      "type": "sign",
+      "x": 27,
+      "y": 17,
+      "elevation": 0,
+      "player_facing_dir": "BG_EVENT_PLAYER_FACING_NORTH",
+      "script": "IronmoorPrison_EventScript_Rack"
+    },
+    {
+      "type": "hidden_item",
+      "x": 4,
+      "y": 11,
+      "elevation": 3,
+      "item": "ITEM_ULTRA_BALL",
+      "flag": "FLAG_HIDDEN_ITEM_IRONMOOR_ULTRA_BALL"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+-- Ironmoor Prison: the old sword on the armoury rack is a Honedge; the
+-- solitary corridor; the yard with the power off.
+dofile(INSTANCE_DIR .. "/../driver_lib.lua")
+local D, K = Driver, Driver.KEY
+local C = MAPS.MAP_IRONMOOR_PRISON
+
+D.run(function()
+    D.boot()
+    D.wait(60)
+    D.season(1)
+    D.scene(12, C, 26, 18, { give = "LUCARIO", level = 35, lead = true })
+    D.wait(300)
+    D.talk(K.UP, "01-armoury-rack", 1)
+    D.wait(60)
+    D.shot("02-sword-moves")
+    D.press(K.A, 60)
+    D.wait(60)
+    D.shot("03-sword-moves-2")
+    D.press(K.A, 60)
+    D.wait(60)
+    D.press(K.A, 60)
+    D.wait(150)
+    D.shot("04-got-honedge")
+    for _ = 1, 6 do D.press(K.B, 40) end
+    D.scene(12, MAPS.MAP_IRONMOOR_PRISON_SOLITARY, 8, 3)
+    D.wait(300)
+    D.shot("05-solitary")
+    D.flag("FLAG_IRONMOOR_POWER_OFF", true)
+    D.flag("FLAG_IRONMOOR_GATE_OPEN", true)
+    D.scene(12, MAPS.MAP_IRONMOOR_ISLE, 22, 13)
+    D.wait(500)
+    D.press(K.B, 60)
+    D.wait(60)
+    D.shot("06-yard-dark")
+    D.result("ok")
+end)

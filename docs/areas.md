@@ -498,6 +498,36 @@ tools/areas/jungle_art.py.
 - Warps to coordinates past 127 (Route 119 is 140 tall) used to wrap
   round: `SetWarpDestination` now takes s16 x and y, like `struct WarpData`.
 
+## Ironmoor Prison
+
+The ruins of an island prison for after the fourth badge (trainers
+Lv28–31). A boatman on the Route 109 beach rows you out once you have
+Flannery's badge and rows you back from the landing. The island is Mt.
+Pyre's rocky style under an overcast sky; inside are hand-built stone halls
+(the `Halls` helper in tools/areas/prison.py: carve rooms, and walls go up
+above every open cell). gTileset_Prison is the Mt. Pyre tiles of the
+Facility set (the rest are cleared, `pack(..., keep=...)`) plus the
+prison wall and breach, the portcullis, watchtowers, searchlight beams,
+the generator, the cell block front, the pier and sea, cell bars and
+gates, bunks, chains, the spirits, the Odd Keystone, the sword rack and
+the warden's desk from tools/areas/prison_art.py.
+
+- The yard: the gate is rusted shut, so you get in through the breach by
+  the graveyard. The watchtowers' searchlights throw two beams across the
+  yard; step into one (coord events on VAR_TEMP_1) and the ghost guards send
+  you back to the breach. The generator in the corner cuts the lights, and
+  from inside you can knock the gate's bolt loose for a shortcut.
+- The cell block: the warden's desk holds the key to the iron gate up to
+  the cell hall, where a console opens every cell. Four spirits are bound
+  in the cells as ghost-fire; free all four and the Odd Keystone in
+  solitary cracks, and Spiritomb (Lv32) rises from it. The armoury's old
+  sword is a Honedge (Lv25 gift).
+- Also: Ruin Maniac Garrick, Ninja Boy Kaito, Hex Maniacs Morwen and
+  Selma, Psychic Vesper, TM Shadow Ball, Reaper Cloth, Dusk Stone, Spell
+  Tag and hidden items.
+- Map ids: MAP_IRONMOOR_ISLE, MAP_IRONMOOR_PRISON,
+  MAP_IRONMOOR_PRISON_SOLITARY. Done flag FLAG_IRONMOOR_SPIRITOMB_DONE.
+
 ## How the maps are made
 
 - `tools/areas/tiles.py` renders any tileset or layout to PNG.

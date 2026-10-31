@@ -1449,3 +1449,89 @@ Level: 35
 Drednaw
 Level: 36
 /* end Verdant */
+
+/* begin Ironmoor */
+=== AREA_TRAINER_IRONMOOR_GARRICK ===
+Name: GARRICK
+Class: Ruin Maniac
+Pic: Ruin Maniac
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Basic Trainer
+
+Baltoy
+Level: 28
+
+Golett
+Level: 28
+
+Sandslash
+Level: 29
+
+=== AREA_TRAINER_IRONMOOR_KAITO ===
+Name: KAITO
+Class: Ninja Boy
+Pic: Ninja Boy
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Basic Trainer
+
+Sableye
+Level: 28
+
+Ninjask
+Level: 29
+
+=== AREA_TRAINER_IRONMOOR_MORWEN ===
+Name: MORWEN
+Class: Hex Maniac
+Pic: Hex Maniac
+Gender: Female
+Music: Suspicious
+Double Battle: No
+AI: Basic Trainer
+
+Shuppet
+Level: 29
+
+Haunter
+Level: 29
+
+Misdreavus
+Level: 30
+
+=== AREA_TRAINER_IRONMOOR_VESPER ===
+Name: VESPER
+Class: Psychic
+Pic: Psychic M
+Gender: Male
+Music: Intense
+Double Battle: No
+AI: Basic Trainer
+
+Kadabra
+Level: 29
+
+Kirlia
+Level: 30
+
+=== AREA_TRAINER_IRONMOOR_SELMA ===
+Name: SELMA
+Class: Hex Maniac
+Pic: Hex Maniac
+Gender: Female
+Music: Suspicious
+Double Battle: No
+AI: Basic Trainer
+
+Golett
+Level: 30
+
+Lampent
+Level: 31
+
+Banette
+Level: 31
+/* end Ironmoor */

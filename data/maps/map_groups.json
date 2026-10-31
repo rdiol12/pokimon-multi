@@ -193,7 +193,10 @@
     "MirageOasis_SunkenCourt",
     "VerdantRiver",
     "VerdantRiver_Temple",
-    "VerdantRiver_Hut"
+    "VerdantRiver_Hut",
+    "IronmoorIsle",
+    "IronmoorPrison",
+    "IronmoorPrison_Solitary"
   ],
   "gMapGroup_IndoorLittleroot": [
     "LittlerootTown_BrendansHouse_1F",

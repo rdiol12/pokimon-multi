@@ -296,6 +296,29 @@ const u16 gTilesetPalettes_Jungle[][16] =
     INCGFX_U16("data/tilesets/secondary/jungle/palettes/15.pal", ".gbapal"),
 };
 
+// Ironmoor Prison (tools/areas/prison_art.py): the Mt. Pyre tiles plus new art.
+const u32 gTilesetTiles_Prison[] = INCGFX_U32("data/tilesets/secondary/prison/tiles.png", ".4bpp.fastSmol", "-num_tiles 512 -Wnum_tiles");
+
+const u16 gTilesetPalettes_Prison[][16] =
+{
+    INCGFX_U16("data/tilesets/secondary/prison/palettes/00.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/prison/palettes/01.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/prison/palettes/02.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/prison/palettes/03.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/prison/palettes/04.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/prison/palettes/05.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/prison/palettes/06.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/prison/palettes/07.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/prison/palettes/08.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/prison/palettes/09.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/prison/palettes/10.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/prison/palettes/11.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/prison/palettes/12.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/prison/palettes/13.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/prison/palettes/14.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/prison/palettes/15.pal", ".gbapal"),
+};
+
 // Whisperstem Valley (tools/areas/bamboo_art.py): Rustboro's tiles plus new art.
 const u32 gTilesetTiles_Bamboo[] = INCGFX_U32("data/tilesets/secondary/bamboo/tiles.png", ".4bpp.fastSmol", "-num_tiles 512 -Wnum_tiles");
 

@@ -9785,6 +9785,36 @@
       "secondary_tileset": "gTileset_Cave",
       "border_filepath": "data/layouts/VerdantRiver_Temple/border.bin",
       "blockdata_filepath": "data/layouts/VerdantRiver_Temple/map.bin"
+    },
+    {
+      "id": "LAYOUT_IRONMOOR_ISLE",
+      "name": "IronmoorIsle_Layout",
+      "width": 46,
+      "height": 50,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Prison",
+      "border_filepath": "data/layouts/IronmoorIsle/border.bin",
+      "blockdata_filepath": "data/layouts/IronmoorIsle/map.bin"
+    },
+    {
+      "id": "LAYOUT_IRONMOOR_PRISON",
+      "name": "IronmoorPrison_Layout",
+      "width": 30,
+      "height": 24,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Prison",
+      "border_filepath": "data/layouts/IronmoorPrison/border.bin",
+      "blockdata_filepath": "data/layouts/IronmoorPrison/map.bin"
+    },
+    {
+      "id": "LAYOUT_IRONMOOR_PRISON_SOLITARY",
+      "name": "IronmoorPrison_Solitary_Layout",
+      "width": 26,
+      "height": 15,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Prison",
+      "border_filepath": "data/layouts/IronmoorPrison_Solitary/border.bin",
+      "blockdata_filepath": "data/layouts/IronmoorPrison_Solitary/map.bin"
     }
   ]
 }

@@ -40398,6 +40398,213 @@
               }
             ]
           }
+        },
+        {
+          "map": "MAP_IRONMOOR_ISLE",
+          "base_label": "gIronmoorIsle",
+          "land_mons": {
+            "encounter_rate": 15,
+            "mons": [
+              {
+                "min_level": 27,
+                "max_level": 29,
+                "species": "SPECIES_SHUPPET"
+              },
+              {
+                "min_level": 27,
+                "max_level": 29,
+                "species": "SPECIES_DUSKULL"
+              },
+              {
+                "min_level": 27,
+                "max_level": 29,
+                "species": "SPECIES_MURKROW"
+              },
+              {
+                "min_level": 27,
+                "max_level": 29,
+                "species": "SPECIES_HOUNDOUR"
+              },
+              {
+                "min_level": 28,
+                "max_level": 30,
+                "species": "SPECIES_MIGHTYENA"
+              },
+              {
+                "min_level": 28,
+                "max_level": 30,
+                "species": "SPECIES_GOLBAT"
+              },
+              {
+                "min_level": 28,
+                "max_level": 30,
+                "species": "SPECIES_GREAVARD"
+              },
+              {
+                "min_level": 28,
+                "max_level": 30,
+                "species": "SPECIES_PHANTUMP"
+              },
+              {
+                "min_level": 28,
+                "max_level": 30,
+                "species": "SPECIES_SABLEYE"
+              },
+              {
+                "min_level": 29,
+                "max_level": 30,
+                "species": "SPECIES_MISDREAVUS"
+              },
+              {
+                "min_level": 30,
+                "max_level": 31,
+                "species": "SPECIES_HAUNTER"
+              },
+              {
+                "min_level": 30,
+                "max_level": 31,
+                "species": "SPECIES_ABSOL"
+              }
+            ]
+          }
+        },
+        {
+          "map": "MAP_IRONMOOR_PRISON",
+          "base_label": "gIronmoorPrison",
+          "land_mons": {
+            "encounter_rate": 8,
+            "mons": [
+              {
+                "min_level": 27,
+                "max_level": 29,
+                "species": "SPECIES_GASTLY"
+              },
+              {
+                "min_level": 27,
+                "max_level": 29,
+                "species": "SPECIES_DUSKULL"
+              },
+              {
+                "min_level": 27,
+                "max_level": 29,
+                "species": "SPECIES_SHUPPET"
+              },
+              {
+                "min_level": 28,
+                "max_level": 30,
+                "species": "SPECIES_GOLBAT"
+              },
+              {
+                "min_level": 27,
+                "max_level": 29,
+                "species": "SPECIES_LITWICK"
+              },
+              {
+                "min_level": 28,
+                "max_level": 30,
+                "species": "SPECIES_SABLEYE"
+              },
+              {
+                "min_level": 28,
+                "max_level": 30,
+                "species": "SPECIES_SINISTEA"
+              },
+              {
+                "min_level": 28,
+                "max_level": 30,
+                "species": "SPECIES_GOLETT"
+              },
+              {
+                "min_level": 29,
+                "max_level": 31,
+                "species": "SPECIES_HAUNTER"
+              },
+              {
+                "min_level": 29,
+                "max_level": 31,
+                "species": "SPECIES_MISDREAVUS"
+              },
+              {
+                "min_level": 30,
+                "max_level": 31,
+                "species": "SPECIES_HAUNTER"
+              },
+              {
+                "min_level": 30,
+                "max_level": 31,
+                "species": "SPECIES_SPIRITOMB"
+              }
+            ]
+          }
+        },
+        {
+          "map": "MAP_IRONMOOR_PRISON_SOLITARY",
+          "base_label": "gIronmoorPrisonSolitary",
+          "land_mons": {
+            "encounter_rate": 8,
+            "mons": [
+              {
+                "min_level": 27,
+                "max_level": 29,
+                "species": "SPECIES_GASTLY"
+              },
+              {
+                "min_level": 27,
+                "max_level": 29,
+                "species": "SPECIES_DUSKULL"
+              },
+              {
+                "min_level": 27,
+                "max_level": 29,
+                "species": "SPECIES_SHUPPET"
+              },
+              {
+                "min_level": 28,
+                "max_level": 30,
+                "species": "SPECIES_GOLBAT"
+              },
+              {
+                "min_level": 27,
+                "max_level": 29,
+                "species": "SPECIES_LITWICK"
+              },
+              {
+                "min_level": 28,
+                "max_level": 30,
+                "species": "SPECIES_SABLEYE"
+              },
+              {
+                "min_level": 28,
+                "max_level": 30,
+                "species": "SPECIES_SINISTEA"
+              },
+              {
+                "min_level": 28,
+                "max_level": 30,
+                "species": "SPECIES_GOLETT"
+              },
+              {
+                "min_level": 29,
+                "max_level": 31,
+                "species": "SPECIES_HAUNTER"
+              },
+              {
+                "min_level": 29,
+                "max_level": 31,
+                "species": "SPECIES_MISDREAVUS"
+              },
+              {
+                "min_level": 30,
+                "max_level": 31,
+                "species": "SPECIES_HAUNTER"
+              },
+              {
+                "min_level": 30,
+                "max_level": 31,
+                "species": "SPECIES_SPIRITOMB"
+              }
+            ]
+          }
         }
       ]
     },
