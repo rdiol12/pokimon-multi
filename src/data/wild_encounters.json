@@ -37549,7 +37549,7 @@
               {
                 "min_level": 40,
                 "max_level": 45,
-                "species": "SPECIES_WINGULL"
+                "species": "SPECIES_WINGULL_STARFALL"
               },
               {
                 "min_level": 40,
@@ -37557,9 +37557,9 @@
                 "species": "SPECIES_MANTYKE"
               },
               {
-                "min_level": 40,
-                "max_level": 45,
-                "species": "SPECIES_WAILMER"
+                "min_level": 42,
+                "max_level": 47,
+                "species": "SPECIES_PELIPPER_STARFALL"
               },
               {
                 "min_level": 45,
@@ -37594,7 +37594,7 @@
               {
                 "min_level": 30,
                 "max_level": 40,
-                "species": "SPECIES_LUVDISC"
+                "species": "SPECIES_LUVDISC_STARFALL"
               },
               {
                 "min_level": 30,
@@ -37653,7 +37653,7 @@
               {
                 "min_level": 44,
                 "max_level": 46,
-                "species": "SPECIES_TEDDIURSA"
+                "species": "SPECIES_TEDDIURSA_AMBERWOOD"
               },
               {
                 "min_level": 45,
@@ -37671,9 +37671,9 @@
                 "species": "SPECIES_SEWADDLE"
               },
               {
-                "min_level": 45,
-                "max_level": 47,
-                "species": "SPECIES_NICKIT"
+                "min_level": 46,
+                "max_level": 48,
+                "species": "SPECIES_URSARING_AMBERWOOD"
               },
               {
                 "min_level": 45,
@@ -37779,6 +37779,75 @@
                 "min_level": 45,
                 "max_level": 50,
                 "species": "SPECIES_SEAKING"
+              }
+            ]
+          }
+        },
+        {
+          "map": "MAP_ADVENTURE_DUNGEON",
+          "base_label": "gAdventureDungeon",
+          "land_mons": {
+            "encounter_rate": 8,
+            "mons": [
+              {
+                "min_level": 12,
+                "max_level": 13,
+                "species": "SPECIES_ZUBAT"
+              },
+              {
+                "min_level": 12,
+                "max_level": 13,
+                "species": "SPECIES_GEODUDE"
+              },
+              {
+                "min_level": 13,
+                "max_level": 14,
+                "species": "SPECIES_ZUBAT"
+              },
+              {
+                "min_level": 13,
+                "max_level": 14,
+                "species": "SPECIES_GEODUDE"
+              },
+              {
+                "min_level": 12,
+                "max_level": 14,
+                "species": "SPECIES_ARON"
+              },
+              {
+                "min_level": 12,
+                "max_level": 14,
+                "species": "SPECIES_WHISMUR"
+              },
+              {
+                "min_level": 13,
+                "max_level": 15,
+                "species": "SPECIES_MAKUHITA"
+              },
+              {
+                "min_level": 13,
+                "max_level": 15,
+                "species": "SPECIES_ARON"
+              },
+              {
+                "min_level": 14,
+                "max_level": 15,
+                "species": "SPECIES_NOSEPASS"
+              },
+              {
+                "min_level": 14,
+                "max_level": 15,
+                "species": "SPECIES_WHISMUR"
+              },
+              {
+                "min_level": 14,
+                "max_level": 16,
+                "species": "SPECIES_MAKUHITA"
+              },
+              {
+                "min_level": 14,
+                "max_level": 16,
+                "species": "SPECIES_NOSEPASS"
               }
             ]
           }

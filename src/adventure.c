@@ -1,8 +1,13 @@
 #include "global.h"
 #include "adventure.h"
 #include "battle.h"
+#include "item.h"
 #include "script.h"
+#include "daily_quest.h"
+#include "dungeon.h"
+#include "ranch.h"
 #include "trainer_level.h"
+#include "treasure.h"
 
 // Entry points for the fourth-batch game features (docs/adventure.md),
 // called from the world features' overworld and battle hooks (src/world.c).
@@ -15,13 +20,38 @@ struct AdventureShowcase
     u8 outfit;   // OUTFIT_* + 1, 0 = leave as is
     u8 filler[2];
     u32 setXp;   // trainer XP + 1, 0 = leave as is
+    u16 items[8]; // 10 of each go in the bag
+    u16 ranchSpecies[RANCH_SHOWN]; // put in the RANCH box
+    u8 ranchHoursAgo;              // the last ranch visit, hours ago
+    u8 dungeonFloor;               // the dungeon floor the next dive shows
+    u8 dungeonLadderX, dungeonLadderY; // out: where that floor's ladder is
+    u16 wildSpecies;               // every wild Pokémon is this one, 0 = as usual
+    u8 treasureSpot;               // today's treasure map + 1, 0 = leave as is
 };
 
 EWRAM_DATA struct AdventureShowcase gAdventureShowcase = {0};
 
 static void RunShowcase(void)
 {
+    u32 i;
+
     gAdventureShowcase.pending = FALSE;
+    for (i = 0; i < ARRAY_COUNT(gAdventureShowcase.items); i++)
+    {
+        if (gAdventureShowcase.items[i] != ITEM_NONE)
+            AddBagItem(gAdventureShowcase.items[i], 10);
+        gAdventureShowcase.items[i] = ITEM_NONE;
+    }
+    if (gAdventureShowcase.ranchSpecies[0] != SPECIES_NONE || gAdventureShowcase.ranchHoursAgo != 0)
+        Ranch_Showcase(gAdventureShowcase.ranchSpecies, RANCH_SHOWN, gAdventureShowcase.ranchHoursAgo);
+    memset(gAdventureShowcase.ranchSpecies, 0, sizeof(gAdventureShowcase.ranchSpecies));
+    gAdventureShowcase.ranchHoursAgo = 0;
+    if (gAdventureShowcase.dungeonFloor != 0)
+        Dungeon_Showcase(gAdventureShowcase.dungeonFloor, &gAdventureShowcase.dungeonLadderX, &gAdventureShowcase.dungeonLadderY);
+    gAdventureShowcase.dungeonFloor = 0;
+    if (gAdventureShowcase.treasureSpot != 0)
+        Treasure_Showcase(gAdventureShowcase.treasureSpot - 1);
+    gAdventureShowcase.treasureSpot = 0;
     if (gAdventureShowcase.setXp != 0)
         TrainerLevel_SetXp(gAdventureShowcase.setXp - 1);
     if (gAdventureShowcase.outfit != 0)
@@ -36,17 +66,36 @@ void Adventure_Update(void)
     if (gAdventureShowcase.pending && !ArePlayerFieldControlsLocked())
         RunShowcase();
     TrainerLevel_Update();
+    DailyQuest_Update();
+}
+
+// A pressed facing (x, y), map coordinates with MAP_OFFSET.
+bool32 Adventure_TryInteract(s16 x, s16 y)
+{
+    return Dungeon_TryInteract(x, y) || Treasure_TryInteract(x, y);
+}
+
+// A wild Pokémon is about to be made.
+enum Species Adventure_ModifyWildSpecies(enum Species species)
+{
+    if (gAdventureShowcase.wildSpecies != SPECIES_NONE)
+        return gAdventureShowcase.wildSpecies;
+    return Dungeon_ModifyWildSpecies(species);
 }
 
 // Called when the player caught a wild Pokémon.
-void Adventure_OnCatch(void)
+void Adventure_OnCatch(u16 species)
 {
     TrainerLevel_OnCatch();
+    DailyQuest_OnCatch(species);
 }
 
 // Back from a trainer battle.
 void Adventure_OnTrainerBattleEnd(void)
 {
     if (gBattleOutcome == B_OUTCOME_WON)
+    {
         TrainerLevel_OnTrainerWin();
+        DailyQuest_OnTrainerWin();
+    }
 }

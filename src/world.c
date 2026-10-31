@@ -127,7 +127,7 @@ bool32 World_OverworldUpdate(void)
 // A pressed facing (x, y), map coordinates with MAP_OFFSET.
 bool32 World_TryInteract(s16 x, s16 y)
 {
-    return Legends_TryInteract(x, y) || House_TryInteract(x, y);
+    return Legends_TryInteract(x, y) || House_TryInteract(x, y) || Adventure_TryInteract(x, y);
 }
 
 bool32 World_TryOpenMenu(void)
@@ -139,6 +139,7 @@ bool32 World_TryOpenMenu(void)
 enum Species World_ModifyWildSpecies(enum Species species, u8 level)
 {
     species = RoamingWeather_ModifyWildSpecies(species, level);
+    species = Adventure_ModifyWildSpecies(species);
     ShinyChain_OnWildSpecies(species);
     return species;
 }
@@ -151,7 +152,7 @@ void World_OnWildBattleEnd(void)
     {
         Achievements_OnCatch(gBattleResults.caughtMonSpecies, gBattleResults.shinyWildMon);
         WorldOnline_OnCatch();
-        Adventure_OnCatch();
+        Adventure_OnCatch(gBattleResults.caughtMonSpecies);
     }
     ShinyChain_OnWildBattleEnd();
     Records_OnWildBattleEnd();
