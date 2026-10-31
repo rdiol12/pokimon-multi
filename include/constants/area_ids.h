@@ -4,7 +4,7 @@
 // Flags, vars and trainers of each new area. AREA_TRAINER_* index the area
 // trainer table; TRAINER_* are the ids scripts battle.
 
-#define AREA_TRAINERS_COUNT 124
+#define AREA_TRAINERS_COUNT 132
 
 /* begin ElderwoodForest */
 #define FLAG_ELDERWOOD_BOUNSWEET_HOME         AREA_FLAG(0)
@@ -426,5 +426,32 @@
 #define AREA_TRAINER_FROST_ELSA               123
 #define TRAINER_FROST_ELSA                    AREA_TRAINER(AREA_TRAINER_FROST_ELSA)
 /* end MtFrostcrown */
+
+/* begin MetroMauville */
+#define FLAG_METRO_STAMP_1                    AREA_FLAG(384)
+#define FLAG_METRO_STAMP_2                    AREA_FLAG(385)
+#define FLAG_METRO_STAMP_3                    AREA_FLAG(386)
+#define FLAG_METRO_STAMP_4                    AREA_FLAG(387)
+#define FLAG_METRO_OLD_LINE_OPEN              AREA_FLAG(388)
+#define FLAG_METRO_RALLY_DONE                 AREA_FLAG(389)
+#define FLAG_METRO_GHOST_SEEN                 AREA_FLAG(390)
+#define FLAG_ITEM_METRO_HYPER_POTION          AREA_FLAG(391)
+#define FLAG_ITEM_METRO_MAGNET                AREA_FLAG(392)
+#define FLAG_ITEM_METRO_METAL_COAT            AREA_FLAG(393)
+#define FLAG_ITEM_METRO_SPELL_TAG             AREA_FLAG(394)
+#define FLAG_ITEM_METRO_TM_THUNDERBOLT        AREA_FLAG(395)
+#define FLAG_HIDDEN_ITEM_METRO_NUGGET         AREA_FLAG(396)
+#define FLAG_HIDDEN_ITEM_METRO_RARE_CANDY     AREA_FLAG(397)
+#define FLAG_HIDDEN_ITEM_METRO_PP_UP          AREA_FLAG(398)
+#define FLAG_HIDDEN_ITEM_METRO_STARDUST       AREA_FLAG(399)
+#define AREA_TRAINER_METRO_STRUM              128
+#define TRAINER_METRO_STRUM                   AREA_TRAINER(AREA_TRAINER_METRO_STRUM)
+#define AREA_TRAINER_METRO_DIGBY              129
+#define TRAINER_METRO_DIGBY                   AREA_TRAINER(AREA_TRAINER_METRO_DIGBY)
+#define AREA_TRAINER_METRO_GEARS              130
+#define TRAINER_METRO_GEARS                   AREA_TRAINER(AREA_TRAINER_METRO_GEARS)
+#define AREA_TRAINER_METRO_ODETTE             131
+#define TRAINER_METRO_ODETTE                  AREA_TRAINER(AREA_TRAINER_METRO_ODETTE)
+/* end MetroMauville */
 
 #endif // GUARD_CONSTANTS_AREA_IDS_H

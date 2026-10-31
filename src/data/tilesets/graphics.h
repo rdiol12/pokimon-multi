@@ -158,6 +158,29 @@ const u16 gTilesetPalettes_Plant[][16] =
     INCGFX_U16("data/tilesets/secondary/plant/palettes/15.pal", ".gbapal"),
 };
 
+// The Hoenn Metro (tools/areas/subway_art.py): New Mauville's tiles plus new art.
+const u32 gTilesetTiles_Subway[] = INCGFX_U32("data/tilesets/secondary/subway/tiles.png", ".4bpp.fastSmol", "-num_tiles 512 -Wnum_tiles");
+
+const u16 gTilesetPalettes_Subway[][16] =
+{
+    INCGFX_U16("data/tilesets/secondary/subway/palettes/00.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/subway/palettes/01.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/subway/palettes/02.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/subway/palettes/03.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/subway/palettes/04.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/subway/palettes/05.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/subway/palettes/06.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/subway/palettes/07.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/subway/palettes/08.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/subway/palettes/09.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/subway/palettes/10.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/subway/palettes/11.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/subway/palettes/12.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/subway/palettes/13.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/subway/palettes/14.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/subway/palettes/15.pal", ".gbapal"),
+};
+
 // Cobblerock Mine (tools/areas/mine_art.py): the cave's tiles plus new art.
 const u32 gTilesetTiles_Mine[] = INCGFX_U32("data/tilesets/secondary/mine/tiles.png", ".4bpp.fastSmol", "-num_tiles 432 -Wnum_tiles");
 
