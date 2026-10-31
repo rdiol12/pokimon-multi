@@ -27,6 +27,7 @@
 #include "constants/moves.h"
 #include "config/save.h"
 #include "world_save.h"
+#include "life_save.h"
 
 // Prevent cross-jump optimization.
 #define BLOCK_CROSS_JUMP asm("");
@@ -274,6 +275,7 @@ struct SaveBlock3
     u8 apricornTrees[NUM_APRICORN_TREE_BYTES];
 #endif
     struct WorldSaveData world;
+    struct LifeSaveData life;
 }; /* max size 1624 bytes */
 
 extern struct SaveBlock3 *gSaveBlock3Ptr;

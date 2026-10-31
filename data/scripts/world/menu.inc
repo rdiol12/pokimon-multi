@@ -3,6 +3,7 @@
 World_EventScript_Menu::
 	lockall
 	dynmultipush World_Text_MenuRide, WORLD_MENU_RIDE
+	dynmultipush Life_Text_MenuBond, LIFE_MENU_BOND
 	dynmultipush World_Text_MenuAchievements, WORLD_MENU_ACHIEVEMENTS
 	dynmultipush World_Text_MenuRecords, WORLD_MENU_RECORDS
 	dynmultipush World_Text_MenuQuests, WORLD_MENU_QUESTS
@@ -13,6 +14,7 @@ World_EventScript_Menu::
 	dynmultistack 0, 0, FALSE, 6, FALSE, WORLD_MENU_RIDE, DYN_MULTICHOICE_CB_NONE
 	switch VAR_RESULT
 	case WORLD_MENU_RIDE, World_EventScript_Ride
+	case LIFE_MENU_BOND, Life_EventScript_Bond
 	case WORLD_MENU_ACHIEVEMENTS, World_EventScript_Achievements
 	case WORLD_MENU_RECORDS, World_EventScript_Records
 	case WORLD_MENU_QUESTS, World_EventScript_Quests
