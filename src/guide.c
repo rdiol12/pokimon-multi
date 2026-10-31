@@ -85,6 +85,10 @@ const struct GuideEntry gGuideEntries[] =
     AREA("VOLTSPIRE PLANT", "A guide in MAUVILLE CITY leads you to the\nold power plant.",
          MAPSEC_MAUVILLE_CITY, MAP_VOLTSPIRE_PLANT, 3, FLAG_VOLT_POWER_ON),
 #endif
+#ifdef FLAG_METRO_RALLY_DONE
+    AREA("HOENN METRO", "The attendant by MAUVILLE's POKéMON CENTER\nopens the underground line.",
+         MAPSEC_MAUVILLE_CITY, MAP_METRO_MAUVILLE, 3, FLAG_METRO_RALLY_DONE),
+#endif
     ACTIVITY("POKéMON JOBS", "The job agent in MAUVILLE's POKéMON CENTER\nsends your POKéMON out on errands.",
              MAPSEC_MAUVILLE_CITY, 0, 0, 0),
     ACTIVITY("BATTLE QUIZ", "The QUIZMASTER in MAUVILLE asks about type\nmatchups. Ten questions a round.",
