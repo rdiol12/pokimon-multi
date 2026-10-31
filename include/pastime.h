@@ -197,4 +197,9 @@ void Track_OnCatch(void);
 void Track_OnTrainerBattleEnd(void);
 void Track_ShowList(void);
 
+// New Game+ (pastime_new_game_plus.c).
+void NewGamePlus_GetState(void);
+void NewGamePlus_Start(void);
+void NewGamePlus_AfterInit(void);
+
 #endif // GUARD_PASTIME_H

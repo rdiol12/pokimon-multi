@@ -22,6 +22,7 @@ Pastime_EventScript_Menu::
 	dynmultipush Pastime_Text_MenuArt, PASTIME_MENU_ART
 	dynmultipush Pastime_Text_MenuDetective, PASTIME_MENU_DETECTIVE
 	dynmultipush Pastime_Text_MenuTrack, PASTIME_MENU_TRACK
+	dynmultipush Pastime_Text_MenuNewGamePlus, PASTIME_MENU_NEW_GAME_PLUS
 	dynmultipush Pastime_Text_MenuClose, PASTIME_MENU_CLOSE
 	dynmultistack 0, 0, FALSE, 6, FALSE, PASTIME_MENU_LOST_FOUND, DYN_MULTICHOICE_CB_NONE
 	switch VAR_RESULT
@@ -46,6 +47,7 @@ Pastime_EventScript_Menu::
 	case PASTIME_MENU_ART, Pastime_EventScript_Art
 	case PASTIME_MENU_DETECTIVE, Pastime_EventScript_Detective
 	case PASTIME_MENU_TRACK, Pastime_EventScript_Track
+	case PASTIME_MENU_NEW_GAME_PLUS, Pastime_EventScript_NewGamePlus
 Pastime_EventScript_MenuDone::
 	releaseall
 	end
@@ -240,5 +242,7 @@ Pastime_Text_MenuDetective:
 	.string "CASE FILES$"
 Pastime_Text_MenuTrack:
 	.string "REWARD TRACK$"
+Pastime_Text_MenuNewGamePlus:
+	.string "NEW GAME+$"
 Pastime_Text_MenuClose:
 	.string "CLOSE$"

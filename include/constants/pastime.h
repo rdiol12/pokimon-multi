@@ -28,6 +28,7 @@
 #define PASTIME_MENU_ART        18
 #define PASTIME_MENU_DETECTIVE  19
 #define PASTIME_MENU_TRACK      20
+#define PASTIME_MENU_NEW_GAME_PLUS 21
 #define PASTIME_MENU_CLOSE      31
 
 // NPCs and objects the activities place on maps from code (src/pastime.c)
