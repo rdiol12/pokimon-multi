@@ -334,10 +334,10 @@ Double Battle: No
 AI: Basic Trainer
 
 Baltoy
-Level: 35
+Level: 30
 
 Sigilyph
-Level: 37
+Level: 32
 
 === AREA_TRAINER_SUNSCAR_MILO ===
 Name: MILO
@@ -349,10 +349,10 @@ Double Battle: No
 AI: Basic Trainer
 
 Krokorok
-Level: 36
+Level: 31
 
 Vibrava
-Level: 37
+Level: 32
 
 === AREA_TRAINER_SUNSCAR_SABLE ===
 Name: SABLE
@@ -364,13 +364,13 @@ Double Battle: No
 AI: Basic Trainer
 
 Cacturne
-Level: 37
+Level: 32
 
 Hippowdon
-Level: 38
+Level: 34
 
-Garchomp
-Level: 36
+Gabite
+Level: 31
 /* end Sunscar */
 
 /* begin Hollowmere */
@@ -638,3 +638,104 @@ Level: 44
 Kingdra
 Level: 45
 /* end CorallineReef */
+
+/* begin GullwingPoint */
+=== AREA_TRAINER_GULL_SKERRY ===
+Name: SKERRY
+Class: Sailor
+Pic: Sailor
+Gender: Male
+Music: Male
+Double Battle: No
+AI: Basic Trainer
+
+Mankey
+Level: 16
+
+Murkrow
+Level: 17
+
+=== AREA_TRAINER_GULL_BILGE ===
+Name: BILGE
+Class: Sailor
+Pic: Sailor
+Gender: Male
+Music: Male
+Double Battle: No
+AI: Basic Trainer
+
+Krabby
+Level: 16
+
+Corphish
+Level: 16
+
+Wingull
+Level: 16
+
+=== AREA_TRAINER_GULL_MAREE ===
+Name: MAREE
+Class: Tuber F
+Pic: Tuber F
+Gender: Female
+Music: Girl
+Double Battle: No
+AI: Basic Trainer
+
+Marill
+Level: 14
+
+Wingull
+Level: 14
+
+=== AREA_TRAINER_GULL_PEG ===
+Name: PEG
+Class: Sailor
+Pic: Sailor
+Gender: Male
+Music: Male
+Double Battle: No
+AI: Basic Trainer
+
+Mankey
+Level: 18
+
+Chatot
+Level: 18
+
+=== AREA_TRAINER_GULL_FINN ===
+Name: FINN
+Class: Sailor
+Pic: Sailor
+Gender: Male
+Music: Male
+Double Battle: No
+AI: Basic Trainer
+
+Carvanha
+Level: 18
+
+Krabby
+Level: 19
+
+=== AREA_TRAINER_GULL_CAPTAIN ===
+Name: BARNACLE
+Class: Expert
+Pic: Expert M
+Gender: Male
+Music: Intense
+Double Battle: No
+AI: Smart Trainer
+
+Corphish
+Level: 20
+
+Cramorant
+Level: 20
+
+Murkrow
+Level: 21
+
+Carvanha
+Level: 22
+/* end GullwingPoint */

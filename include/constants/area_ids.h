@@ -4,7 +4,7 @@
 // Flags, vars and trainers of each new area. AREA_TRAINER_* index the area
 // trainer table; TRAINER_* are the ids scripts battle.
 
-#define AREA_TRAINERS_COUNT 76
+#define AREA_TRAINERS_COUNT 86
 
 /* begin ElderwoodForest */
 #define FLAG_ELDERWOOD_BOUNSWEET_HOME         AREA_FLAG(0)
@@ -263,5 +263,37 @@
 #define AREA_TRAINER_ABYSS_TRITON             75
 #define TRAINER_ABYSS_TRITON                  AREA_TRAINER(AREA_TRAINER_ABYSS_TRITON)
 /* end CorallineReef */
+
+/* begin GullwingPoint */
+#define FLAG_GULL_MIRROR_1                    AREA_FLAG(240)
+#define FLAG_GULL_MIRROR_2                    AREA_FLAG(241)
+#define FLAG_GULL_MIRROR_3                    AREA_FLAG(242)
+#define FLAG_GULL_MIRROR_4                    AREA_FLAG(243)
+#define FLAG_GULL_BEAM_SOLVED                 AREA_FLAG(244)
+#define FLAG_GULL_KEEPER_TALKED               AREA_FLAG(245)
+#define FLAG_GULL_CAPTAIN_BEATEN              AREA_FLAG(246)
+#define FLAG_GULL_TREASURE_TAKEN              AREA_FLAG(247)
+#define FLAG_ITEM_GULL_NET_BALL               AREA_FLAG(248)
+#define FLAG_ITEM_GULL_TM_RAIN_DANCE          AREA_FLAG(249)
+#define FLAG_ITEM_GULL_SHELL_BELL             AREA_FLAG(250)
+#define FLAG_ITEM_HOLD_BIG_NUGGET             AREA_FLAG(251)
+#define FLAG_ITEM_HOLD_KINGS_ROCK             AREA_FLAG(252)
+#define FLAG_ITEM_HOLD_PEARL_STRING           AREA_FLAG(253)
+#define FLAG_HIDDEN_ITEM_GULL_PEARL           AREA_FLAG(254)
+#define FLAG_HIDDEN_ITEM_GULL_HEART_SCALE     AREA_FLAG(255)
+#define FLAG_GULL_PELIPPER_TALKED             AREA_FLAG(256)
+#define AREA_TRAINER_GULL_SKERRY              80
+#define TRAINER_GULL_SKERRY                   AREA_TRAINER(AREA_TRAINER_GULL_SKERRY)
+#define AREA_TRAINER_GULL_BILGE               81
+#define TRAINER_GULL_BILGE                    AREA_TRAINER(AREA_TRAINER_GULL_BILGE)
+#define AREA_TRAINER_GULL_MAREE               82
+#define TRAINER_GULL_MAREE                    AREA_TRAINER(AREA_TRAINER_GULL_MAREE)
+#define AREA_TRAINER_GULL_CAPTAIN             83
+#define TRAINER_GULL_CAPTAIN                  AREA_TRAINER(AREA_TRAINER_GULL_CAPTAIN)
+#define AREA_TRAINER_GULL_PEG                 84
+#define TRAINER_GULL_PEG                      AREA_TRAINER(AREA_TRAINER_GULL_PEG)
+#define AREA_TRAINER_GULL_FINN                85
+#define TRAINER_GULL_FINN                     AREA_TRAINER(AREA_TRAINER_GULL_FINN)
+/* end GullwingPoint */
 
 #endif // GUARD_CONSTANTS_AREA_IDS_H

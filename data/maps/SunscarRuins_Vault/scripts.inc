@@ -14,7 +14,7 @@ SunscarRuins_Vault_EventScript_Spiritomb::
 	lock
 	faceplayer
 	msgbox SunscarRuins_Vault_Text_Spirits, MSGBOX_DEFAULT
-	setwildbattle SPECIES_SPIRITOMB, 40
+	setwildbattle SPECIES_SPIRITOMB, 34
 	playmoncry SPECIES_SPIRITOMB, CRY_MODE_ENCOUNTER
 	msgbox SunscarRuins_Vault_Text_Spiritomb, MSGBOX_DEFAULT
 	waitmoncry

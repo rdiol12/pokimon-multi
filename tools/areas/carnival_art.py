@@ -1,7 +1,8 @@
 """The carnival's tileset: Petalburg's secondary tileset plus new pixel art
 drawn here in Emerald's style (dark navy outlines, three-step shading lit
 from the top left): a Ferris wheel, a big top tent, market stalls, an
-entrance arch, lamp posts and a balloon cart.
+entrance arch, lamp posts and a balloon cart for Sunfair Carnival, and a
+lighthouse, beam mirrors, a pirate ship and its deck for Gullwing Point.
 
     python3 tools/areas/carnival_art.py
 
@@ -15,6 +16,8 @@ sys.path.insert(0, os.path.dirname(__file__))
 from art import Canvas, pack, ROOT
 
 GROUND = 0x001            # General's grass shows under see-through pixels
+WATER = 0x170             # General's sea, under the pirate ship
+MB_WEST_ARROW_WARP = 0x63
 
 OUTLINE = (41, 49, 90)
 # Palette 7: the wheel and anything metal.
@@ -250,6 +253,201 @@ def balloons():
     return c
 
 
+# ---------------------------------------------------------------- Gullwing Point: lighthouse, mirrors, pirate ship
+def lighthouse():
+    c = Canvas(48, 112)
+    # tower, narrowing towards the top, in red and white bands
+    for y in range(36, 108):
+        half = 10 + (y - 36) * 6 / 72
+        band = ((y - 36) // 12) % 2
+        for x in range(int(24 - half), 24):
+            col = T_RED if band == 0 else T_WHITE
+            if x < 24 - half + 3:
+                col = T_RED_D if band == 0 else T_WHITE_D
+            c.px(x, y, col)
+    c.rect(4, 104, 23, 111, T_WOOD_D)
+    c.rect(4, 104, 23, 104, T_WOOD_L)
+    # door
+    c.rect(19, 90, 23, 103, T_DARK)
+    c.rect(19, 89, 23, 89, T_YEL_D)
+    # gallery and lantern room
+    c.rect(8, 30, 23, 35, T_BLUE_D)
+    c.rect(8, 30, 23, 30, T_BLUE_L)
+    for x in range(9, 24, 3):
+        c.rect(x, 31, x, 34, T_BLUE)
+    c.rect(13, 14, 23, 29, T_YEL)
+    c.rect(13, 14, 15, 29, T_YEL_D)
+    c.rect(18, 16, 23, 24, T_WHITE)
+    c.rect(13, 21, 23, 21, T_BLUE_D)
+    # roof
+    for y in range(4, 14):
+        half = 2 + (y - 4) * 10 / 9
+        c.rect(int(24 - half), y, 23, y, T_RED if y > 6 else T_RED_L)
+    c.disc(24, 3, 2.5, T_YEL)
+    c.mirror()
+    c.outline()
+    return c
+
+
+def mirror(flip):
+    """A beam mirror on a stone base: '\\' (flip False) or '/' (flip True)."""
+    c = Canvas(16, 16)
+    c.rect(4, 12, 11, 15, W_STEEL_D)
+    c.rect(4, 12, 11, 12, W_LIGHT)
+    x0, x1 = (13, 2) if flip else (2, 13)
+    c.line(x0, 1, x1, 11, W_GLASS, 3)
+    c.line(x0, 1, x1, 11, W_WHITE, 1)
+    c.outline()
+    return c
+
+
+def beam(vertical):
+    c = Canvas(16, 16)
+    if vertical:
+        c.rect(5, 0, 10, 15, T_YEL)
+        c.rect(7, 0, 8, 15, T_WHITE)
+    else:
+        c.rect(0, 5, 15, 10, T_YEL)
+        c.rect(0, 7, 15, 8, T_WHITE)
+    return c
+
+
+def planks(c, x0=0, y0=0, x1=None, y1=None):
+    x1 = c.w - 1 if x1 is None else x1
+    y1 = c.h - 1 if y1 is None else y1
+    c.rect(x0, y0, x1, y1, T_WOOD)
+    for y in range(y0, y1 + 1):
+        if (y - y0) % 8 == 7:
+            c.rect(x0, y, x1, y, T_WOOD_D)
+        elif (y - y0) % 8 == 0:
+            c.rect(x0, y, x1, y, T_WOOD_L)
+    for y in range(y0, y1 + 1, 8):
+        off = 5 if (y // 8) % 2 else 13
+        for x in range(x0 + off, x1 + 1, 16):
+            c.rect(x, y + 1, x, y + 6, T_WOOD_D)
+
+
+def pirate_ship():
+    c = Canvas(176, 112)
+    yy, xx = np.mgrid[0:112, 0:176]
+    # hull: a long curved shape with a raised stern on the left
+    hull = (yy >= 62) & (yy <= 104) & (np.hypot((xx + 0.5 - 92) / 86, (yy + 0.5 - 60) / 46) < 1)
+    hull |= (xx >= 10) & (xx < 44) & (yy >= 52) & (yy < 62)
+    c.a[hull] = T_WOOD
+    c.a[hull & (yy % 8 == 0)] = T_WOOD_D
+    c.a[hull & (yy % 8 == 1)] = T_WOOD_L
+    c.a[hull & (yy >= 73) & (yy <= 74)] = T_YEL
+    for x in range(40, 160, 20):
+        c.rect(x, 78, x + 6, 83, T_DARK)
+        c.rect(x, 78, x + 6, 78, T_OUT)
+    # rails along the deck
+    c.rect(10, 50, 43, 51, T_WOOD_D)
+    c.rect(44, 60, 170, 61, T_WOOD_D)
+    # the entry hatch in the hull side, by the gangplank (block row 4, column 0)
+    c.rect(9, 67, 15, 79, T_DARK)
+    c.rect(9, 66, 15, 66, T_YEL)
+    # masts and dark sails with a pale ball emblem
+    for mx, top in ((76, 2), (128, 10)):
+        c.rect(mx - 1, top, mx + 1, 62, T_WOOD_D)
+        sail = (yy > top + 6) & (yy < 54) & (np.abs(xx + 0.5 - mx) < 22 - (54 - yy) * 0.12)
+        c.a[sail] = T_DARK
+        c.a[sail & (np.abs(xx + 0.5 - mx) > 19 - (54 - yy) * 0.12)] = T_OUT
+        c.disc(mx + 0.5, (top + 54) / 2, 8, T_WHITE)
+        c.disc(mx + 0.5, (top + 54) / 2, 8, T_WHITE_D, 6.5)
+        c.rect(mx - 8, int((top + 54) / 2), mx + 8, int((top + 54) / 2) + 1, T_DARK)
+        c.disc(mx + 0.5, (top + 54) / 2 + 0.5, 2.5, T_DARK)
+        c.disc(mx + 0.5, (top + 54) / 2 + 0.5, 1.5, T_WHITE)
+    # flag on the main mast
+    c.rect(77, 2, 92, 9, T_DARK)
+    c.rect(82, 4, 85, 7, T_WHITE)
+    c.outline()
+    return c
+
+
+def gangplank():
+    c = Canvas(16, 16)
+    planks(c, 0, 4, 15, 11)
+    c.rect(0, 3, 15, 3, T_OUT)
+    c.rect(0, 12, 15, 12, T_OUT)
+    return c
+
+
+def deck():
+    c = Canvas(16, 16)
+    planks(c)
+    return c
+
+
+def rail(side):
+    c = Canvas(16, 16)
+    planks(c)
+    if side == 'top':
+        c.rect(0, 0, 15, 5, T_WOOD_D)
+        c.rect(0, 0, 15, 1, T_WOOD_L)
+        c.rect(0, 6, 15, 6, T_OUT)
+    elif side == 'bottom':
+        c.rect(0, 10, 15, 15, T_WOOD_D)
+        c.rect(0, 10, 15, 10, T_WOOD_L)
+        c.rect(0, 9, 15, 9, T_OUT)
+    elif side == 'left':
+        c.rect(0, 0, 5, 15, T_WOOD_D)
+        c.rect(0, 0, 1, 15, T_WOOD_L)
+        c.rect(6, 0, 6, 15, T_OUT)
+    else:
+        c.rect(10, 0, 15, 15, T_WOOD_D)
+        c.rect(14, 0, 15, 15, T_WOOD_L)
+        c.rect(9, 0, 9, 15, T_OUT)
+    return c
+
+
+def deck_thing(kind):
+    c = Canvas(32 if kind in ('cannon', 'hatch', 'mast') else 16, 48 if kind == 'mast' else 32 if kind in ('hatch', 'helm') else 16)
+    planks(c)
+    if kind == 'barrel':
+        c.rect(3, 2, 12, 14, T_OUT)
+        c.rect(4, 3, 11, 13, T_WOOD)
+        c.rect(4, 3, 11, 4, T_WOOD_L)
+        c.rect(4, 6, 11, 6, T_BLUE_D)
+        c.rect(4, 11, 11, 11, T_BLUE_D)
+    elif kind == 'chest':
+        c.rect(2, 4, 13, 14, T_OUT)
+        c.rect(3, 5, 12, 13, T_WOOD_D)
+        c.rect(3, 5, 12, 8, T_WOOD)
+        c.rect(3, 9, 12, 9, T_YEL)
+        c.rect(7, 8, 8, 11, T_YEL)
+    elif kind == 'cannon':
+        c.rect(4, 4, 27, 11, T_OUT)
+        c.rect(5, 5, 26, 10, T_BLUE_D)
+        c.rect(5, 5, 26, 6, T_BLUE)
+        c.rect(24, 4, 27, 11, T_BLUE_D)
+        c.disc(10, 12, 3.5, T_OUT)
+        c.disc(10, 12, 2.5, T_WOOD_D)
+        c.disc(20, 12, 3.5, T_OUT)
+        c.disc(20, 12, 2.5, T_WOOD_D)
+    elif kind == 'helm':
+        c.rect(7, 18, 8, 31, T_WOOD_D)
+        c.disc(8, 11, 8, T_OUT)
+        c.disc(8, 11, 7, T_WOOD, 4.5)
+        c.disc(8, 11, 2.5, T_YEL)
+        for k in range(8):
+            t = k * np.pi / 4
+            c.line(8 + 2 * np.cos(t), 11 + 2 * np.sin(t), 8 + 8.5 * np.cos(t), 11 + 8.5 * np.sin(t), T_WOOD_D)
+    elif kind == 'hatch':
+        c.rect(2, 2, 29, 29, T_OUT)
+        c.rect(3, 3, 28, 28, T_WOOD_D)
+        for y in range(6, 28, 5):
+            c.rect(5, y, 26, y + 1, T_DARK)
+    elif kind == 'mast':
+        c.disc(16, 40, 9, T_OUT)
+        c.disc(16, 40, 8, T_WOOD_D)
+        c.rect(13, 0, 18, 40, T_OUT)
+        c.rect(14, 0, 17, 40, T_WOOD)
+        c.rect(14, 0, 14, 40, T_WOOD_L)
+        c.line(4, 2, 16, 26, T_WHITE_D)
+        c.line(28, 2, 16, 26, T_WHITE_D)
+    return c
+
+
 # name: (draw, palette, options). over: blocks drawn over sprites; walk: blocks
 # you can walk on; counter: blocks you can talk across.
 STALL = {'over': lambda r, c: r == 0, 'counter': lambda r, c: r == 2}
@@ -261,12 +459,32 @@ OBJECTS = {
     'arch': (arch, 11, {'over': lambda r, c: r < 2 and 1 <= c <= 4, 'walk': lambda r, c: r < 2 and 1 <= c <= 4}),
     'lamp': (lamp, 11, {'over': lambda r, c: r == 0}),
     'balloons': (balloons, 11, {'over': lambda r, c: r == 0}),
+    # Gullwing Point
+    'lighthouse': (lighthouse, 11, {'over': lambda r, c: r < 2, 'door': lambda r, c: (r, c) == (6, 1)}),
+    'mirror_a': (lambda: mirror(False), 7, {}),
+    'mirror_b': (lambda: mirror(True), 7, {}),
+    'beam_h': (lambda: beam(False), 11, {'walk': lambda r, c: True}),
+    'beam_v': (lambda: beam(True), 11, {'walk': lambda r, c: True}),
+    'pirate_ship': (pirate_ship, 11, {'ground': WATER, 'door': lambda r, c: (r, c) == (4, 0)}),
+    'gangplank': (gangplank, 11, {'ground': WATER, 'walk': lambda r, c: True}),
+    'gangplank_exit': (gangplank, 11, {'ground': WATER, 'behavior': lambda r, c: MB_WEST_ARROW_WARP}),
+    'deck': (deck, 11, {'walk': lambda r, c: True}),
+    'rail_top': (lambda: rail('top'), 11, {}),
+    'rail_bottom': (lambda: rail('bottom'), 11, {}),
+    'rail_left': (lambda: rail('left'), 11, {}),
+    'rail_right': (lambda: rail('right'), 11, {}),
+    'barrel': (lambda: deck_thing('barrel'), 11, {}),
+    'chest': (lambda: deck_thing('chest'), 11, {}),
+    'cannon': (lambda: deck_thing('cannon'), 11, {}),
+    'helm': (lambda: deck_thing('helm'), 11, {'over': lambda r, c: r == 0}),
+    'hatch': (lambda: deck_thing('hatch'), 11, {'door': lambda r, c: r == 1}),
+    'mast': (lambda: deck_thing('mast'), 11, {'over': lambda r, c: r < 2}),
 }
 
 
 def main():
     pack('data/tilesets/secondary/petalburg', 'data/tilesets/secondary/carnival', OBJECTS,
-         {7: PAL_WHEEL, 11: PAL_TENT}, GROUND, f'{ROOT}/tools/areas/carnival_tiles.json')
+         {7: PAL_WHEEL, 11: PAL_TENT}, GROUND, f'{ROOT}/tools/areas/carnival_tiles.json', fill_free=True)
 
 
 if __name__ == '__main__':
