@@ -9625,6 +9625,26 @@
       "secondary_tileset": "gTileset_Plant",
       "border_filepath": "data/layouts/VoltspirePlant/border.bin",
       "blockdata_filepath": "data/layouts/VoltspirePlant/map.bin"
+    },
+    {
+      "id": "LAYOUT_NIMBUS_CITY",
+      "name": "NimbusCity_Layout",
+      "width": 40,
+      "height": 32,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Sky",
+      "border_filepath": "data/layouts/NimbusCity/border.bin",
+      "blockdata_filepath": "data/layouts/NimbusCity/map.bin"
+    },
+    {
+      "id": "LAYOUT_NIMBUS_ISLE",
+      "name": "NimbusIsle_Layout",
+      "width": 52,
+      "height": 40,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Sky",
+      "border_filepath": "data/layouts/NimbusIsle/border.bin",
+      "blockdata_filepath": "data/layouts/NimbusIsle/map.bin"
     }
   ]
 }

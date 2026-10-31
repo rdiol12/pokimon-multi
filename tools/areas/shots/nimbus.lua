@@ -1,0 +1,51 @@
+-- Nimbus Isles: the balloon pilot in Fortree (badge check), the flight up,
+-- Nimbus City, the Chime Keeper's request, the rainbow bridge, riding a
+-- wind stream between islands and picking up a wind chime.
+dofile(INSTANCE_DIR .. "/../driver_lib.lua")
+local D, K = Driver, Driver.KEY
+local C, I = MAPS.MAP_NIMBUS_CITY, MAPS.MAP_NIMBUS_ISLE
+
+local function close(n)
+    for _ = 1, n do D.press(K.A, 30) end
+    D.press(K.B, 30)
+end
+
+D.run(function()
+    D.boot()
+    D.wait(60)
+    D.season(1)
+    D.scene(12, MAPS.MAP_FORTREE_CITY, 3, 11, { give = "ALTARIA", level = 50, lead = true })
+    D.wait(240)
+    D.talk(K.LEFT, "01-pilot-needs-badges", 3)
+    close(1)
+    D.flag("FLAG_BADGE07_GET", true)
+    D.talk(K.LEFT, "02-pilot", 2)
+    D.press(K.A, 40)
+    D.press(K.A, 40)
+    D.wait(200)
+    D.waitFor("the overworld", 1200, D.inOverworld)
+    D.wait(150)
+    D.shot("03-arrival")
+    D.scene(12, C, 19, 18); D.wait(90); D.shot("04-plaza")
+    D.scene(12, C, 19, 10); D.talk(K.UP, "05-keeper", 4); close(3)
+    D.scene(12, C, 30, 12); D.wait(60); D.shot("06-sky-mart")
+    D.scene(12, C, 36, 16)
+    D.wait(300)
+    D.hold(K.RIGHT, 80)
+    D.wait(200)
+    D.waitFor("the overworld", 1200, D.inOverworld)
+    D.wait(100)
+    D.shot("07-rainbow-bridge")
+    D.scene(12, I, 18, 18)
+    D.wait(300)
+    D.shot("08-wind-stream")
+    D.hold(K.RIGHT, 40)
+    D.wait(60)
+    D.shot("09-riding-the-wind")
+    D.wait(260)
+    D.shot("10-east-island")
+    D.scene(12, I, 46, 18); D.talk(K.RIGHT, "11-wind-chime", 1)
+    close(1)
+    D.scene(12, I, 14, 12); D.wait(60); D.shot("12-rainbow-to-north-island")
+    D.result("ok")
+end)

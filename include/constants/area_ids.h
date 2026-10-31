@@ -4,7 +4,7 @@
 // Flags, vars and trainers of each new area. AREA_TRAINER_* index the area
 // trainer table; TRAINER_* are the ids scripts battle.
 
-#define AREA_TRAINERS_COUNT 107
+#define AREA_TRAINERS_COUNT 116
 
 /* begin ElderwoodForest */
 #define FLAG_ELDERWOOD_BOUNSWEET_HOME         AREA_FLAG(0)
@@ -373,5 +373,31 @@
 #define AREA_TRAINER_VOLT_AMPERE              106
 #define TRAINER_VOLT_AMPERE                   AREA_TRAINER(AREA_TRAINER_VOLT_AMPERE)
 /* end VoltspirePlant */
+
+/* begin NimbusCity */
+#define FLAG_NIMBUS_CHIME_1                   AREA_FLAG(336)
+#define FLAG_NIMBUS_CHIME_2                   AREA_FLAG(337)
+#define FLAG_NIMBUS_CHIME_3                   AREA_FLAG(338)
+#define FLAG_NIMBUS_CHIMES_DONE               AREA_FLAG(339)
+#define FLAG_NIMBUS_TORNADUS_DONE             AREA_FLAG(340)
+#define FLAG_ITEM_NIMBUS_SHARP_BEAK           AREA_FLAG(341)
+#define FLAG_ITEM_NIMBUS_WIDE_LENS            AREA_FLAG(342)
+#define FLAG_ITEM_NIMBUS_PP_MAX               AREA_FLAG(343)
+#define FLAG_ITEM_NIMBUS_ULTRA_BALL           AREA_FLAG(344)
+#define FLAG_ITEM_NIMBUS_TM_STEEL_WING        AREA_FLAG(345)
+#define FLAG_ITEM_NIMBUS_COMET_SHARD          AREA_FLAG(346)
+#define FLAG_HIDDEN_ITEM_NIMBUS_STAR_PIECE    AREA_FLAG(347)
+#define FLAG_HIDDEN_ITEM_NIMBUS_PRETTY_FEATHER AREA_FLAG(348)
+#define FLAG_HIDDEN_ITEM_NIMBUS_RARE_CANDY    AREA_FLAG(349)
+#define FLAG_NIMBUS_KEEPER_TALKED             AREA_FLAG(350)
+#define AREA_TRAINER_NIMBUS_CORVIN            112
+#define TRAINER_NIMBUS_CORVIN                 AREA_TRAINER(AREA_TRAINER_NIMBUS_CORVIN)
+#define AREA_TRAINER_NIMBUS_DRACO             113
+#define TRAINER_NIMBUS_DRACO                  AREA_TRAINER(AREA_TRAINER_NIMBUS_DRACO)
+#define AREA_TRAINER_NIMBUS_AURORA            114
+#define TRAINER_NIMBUS_AURORA                 AREA_TRAINER(AREA_TRAINER_NIMBUS_AURORA)
+#define AREA_TRAINER_NIMBUS_ZEPHYR            115
+#define TRAINER_NIMBUS_ZEPHYR                 AREA_TRAINER(AREA_TRAINER_NIMBUS_ZEPHYR)
+/* end NimbusCity */
 
 #endif // GUARD_CONSTANTS_AREA_IDS_H

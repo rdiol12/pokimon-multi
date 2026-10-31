@@ -1698,6 +1698,10 @@
     {
       "id": "MAPSEC_VOLTSPIRE_PLANT",
       "name": "VOLTSPIRE PLANT"
+    },
+    {
+      "id": "MAPSEC_NIMBUS_ISLES",
+      "name": "NIMBUS ISLES"
     }
   ]
 }

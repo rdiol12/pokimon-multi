@@ -922,3 +922,71 @@ Level: 25
 Magneton
 Level: 27
 /* end VoltspirePlant */
+
+/* begin NimbusCity */
+=== AREA_TRAINER_NIMBUS_CORVIN ===
+Name: CORVIN
+Class: Bird Keeper
+Pic: Bird Keeper
+Gender: Male
+Music: Cool
+Double Battle: No
+AI: Smart Trainer
+
+Swellow
+Level: 41
+
+Staraptor
+Level: 42
+
+Noctowl
+Level: 41
+
+=== AREA_TRAINER_NIMBUS_DRACO ===
+Name: DRACO
+Class: Dragon Tamer
+Pic: Dragon Tamer
+Gender: Male
+Music: Intense
+Double Battle: No
+AI: Smart Trainer
+
+Altaria
+Level: 43
+
+Flygon
+Level: 44
+
+=== AREA_TRAINER_NIMBUS_AURORA ===
+Name: AURORA
+Class: Cooltrainer
+Pic: Cooltrainer F
+Gender: Female
+Music: Cool
+Double Battle: No
+AI: Smart Trainer
+
+Togekiss
+Level: 43
+
+Drifblim
+Level: 42
+
+Chimecho
+Level: 43
+
+=== AREA_TRAINER_NIMBUS_ZEPHYR ===
+Name: ZEPHYR
+Class: Psychic
+Pic: Psychic M
+Gender: Male
+Music: Intense
+Double Battle: No
+AI: Smart Trainer
+
+Sigilyph
+Level: 43
+
+Xatu
+Level: 44
+/* end NimbusCity */
