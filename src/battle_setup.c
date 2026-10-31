@@ -3,6 +3,7 @@
 #include "online.h"
 #include "pastime.h"
 #include "data.h"
+#include "life.h"
 #include "main.h"
 #include "battle.h"
 #include "battle_frontier.h"
@@ -1566,6 +1567,7 @@ static void CB2_EndDebugBattle(void)
 static void CB2_EndLifeTrainerBattle(void)
 {
     World_OnTrainerBattleEnd();
+    LifeGhost_OnBattleEnd(gLifeTrainer, IsPlayerDefeated(gBattleOutcome) != TRUE);
     gLifeTrainer = NULL;
     if (IsPlayerDefeated(gBattleOutcome) == TRUE)
     {

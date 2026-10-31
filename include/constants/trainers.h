@@ -530,6 +530,8 @@ enum TrainerClassID
     TRAINER_CLASS_TEAM_ECLIPSE,
     TRAINER_CLASS_ECLIPSE_ADMIN,
     TRAINER_CLASS_ECLIPSE_LEADER,
+    // Ghost trainers (src/life_ghosts.c)
+    TRAINER_CLASS_LIFE_GHOST,
 
     TRAINER_CLASS_COUNT,
 };

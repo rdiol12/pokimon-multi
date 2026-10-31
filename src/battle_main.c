@@ -417,6 +417,7 @@ const struct TrainerClass gTrainerClasses[TRAINER_CLASS_COUNT] =
     [TRAINER_CLASS_TEAM_ECLIPSE] =         { _("TEAM ECLIPSE"), 10 },
     [TRAINER_CLASS_ECLIPSE_ADMIN] =        { _("ADMIN"), 15 },
     [TRAINER_CLASS_ECLIPSE_LEADER] =       { _("ECLIPSE BOSS"), 25 },
+    [TRAINER_CLASS_LIFE_GHOST] =           { _("GHOST"), 15 },
 };
 
 static void (*const sTurnActionsFuncsTable[])(void) =

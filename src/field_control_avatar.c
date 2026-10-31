@@ -429,6 +429,8 @@ static const u8 *GetInteractedObjectEventScript(struct MapPosition *position, u8
         script = Life_EventScript_PhotoMon;
     else if (Pastime_IsPastimeObjectEvent(&gObjectEvents[objectEventId]))
         script = Pastime_GetTalkScript(objectEventId);
+    else if (LifeGhost_IsGhost(&gObjectEvents[objectEventId]))
+        script = Life_EventScript_Ghost;
     else if (InTrainerHill() == TRUE)
         script = GetTrainerHillTrainerScript();
     else
