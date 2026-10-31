@@ -35,6 +35,8 @@ local OFF_REMOTES = 0x034
 local REMOTE_SIZE = 0x18
 local OFF_ROWS = 0x0F4
 local OFF_ACCESSORY = 0x194
+local OFF_CLOCK_SET = 0x195
+local OFF_CLOCK_MINUTE = 0x196
 local ROW_SIZE = 0x10
 local BOARD_ROWS = 10
 local DECOR_SIZE = 16
@@ -44,6 +46,7 @@ local NAME_LENGTH = 8
 local REQ_SCORE, REQ_BOARD = 1, 2
 local SCAN_INTERVAL = 60
 local HUNT_INTERVAL = 60 * 60 -- frames between hunt checks (about a minute)
+local GBA_FPS = 59.7275       -- frames per second, for ticking the server clock
 local PHOTO_CHUNK = 120       -- bytes per PHOTO line (240 hex digits)
 
 NetplayWorld = {}
@@ -72,6 +75,7 @@ function NetplayWorld:reset()
     self.lastHouse = nil
     self.rows = nil
     self.nextHunt = 0
+    self.clock = nil -- {seconds = server seconds since midnight, frame = when we heard it}
     self.looks = {}
     self.houses = {}
 end
@@ -102,6 +106,18 @@ function NetplayWorld:attach(addr)
     self:w8(OFF_REQ_ACK, self:r8(OFF_REQ_SEQ))
 end
 
+-- Keeps the server's clock ticking in the mailbox between CLOCK lines, so
+-- the ROM's day and night follow the server (src/world_daynight.c).
+function NetplayWorld:writeClock(frame)
+    if not self.clock then
+        self:w8(OFF_CLOCK_SET, 0)
+        return
+    end
+    local seconds = self.clock.seconds + (frame - self.clock.frame) / GBA_FPS
+    self:w16(OFF_CLOCK_MINUTE, math.floor(seconds / 60) % 1440)
+    self:w8(OFF_CLOCK_SET, 1)
+end
+
 function NetplayWorld:decorHex(off)
     local hex = {}
     for i = 0, DECOR_SIZE - 1 do hex[#hex + 1] = string.format("%02x", self:r8(off + i)) end
@@ -115,6 +131,9 @@ function NetplayWorld:handleLine(cmd, args)
                                           accessory = tonumber(args[5]) or 0 }
     elseif cmd == "HOUSE" then
         self.houses[tonumber(args[2])] = { open = tonumber(args[3]), decor = args[4] }
+    elseif cmd == "CLOCK" then
+        -- CLOCK seconds: the server's time of day, in seconds since midnight.
+        self.clock = { seconds = tonumber(args[2]) or 0, frame = self.frame or 0 }
     elseif cmd == "HUNT" and self.base then
         self:w8(OFF_HUNT_LEFT, math.min(tonumber(args[3]), 255))
         self:w16(OFF_HUNT_ID, tonumber(args[2]))
@@ -221,6 +240,7 @@ end
 
 -- Called by the bridge every frame. online: connected and welcomed.
 function NetplayWorld:onFrame(online, frame)
+    self.frame = frame
     if self.base and not (self.mem.read32(self.base) == MAGIC_LO and self.mem.read32(self.base + 4) == MAGIC_HI) then
         self.base = nil
     end
@@ -237,6 +257,7 @@ function NetplayWorld:onFrame(online, frame)
     elseif not online and self.online then
         self:reset()
         self:w16(OFF_HUNT_ID, 0)
+        self:w8(OFF_CLOCK_SET, 0)
     end
     self.online = online
     self:takePhoto(net)
@@ -248,7 +269,9 @@ function NetplayWorld:onFrame(online, frame)
     if frame >= self.nextHunt then
         self.nextHunt = frame + HUNT_INTERVAL
         net.send("HUNT")
+        net.send("CLOCK")
     end
+    self:writeClock(frame)
     self:sendLook(net)
     self:handleRequest(net)
     self:writeRemotes()
