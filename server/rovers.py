@@ -50,6 +50,11 @@ BASE = {int(k): v for k, v in _WORLD["base"].items()}
 NAMES = {int(k): v for k, v in _WORLD["names"].items()}
 BY_NAME = {v["name"]: k for k, v in WORLD.items()}
 
+
+def title(mk):
+    """A map's name as players read it: "Route 101"."""
+    return WORLD[mk].get("title", WORLD[mk]["name"])
+
 MON_SIZE = 16
 ROVER_SIZE = 8 + 6 * MON_SIZE
 MAX_TEAM = 6
@@ -343,7 +348,7 @@ class Sim:
             if r.lead_level() >= ace - 2 and r.hurt < 2:
                 if rng.random() < 0.6:
                     r.badges += 1
-                    news(self.db, f"{r.name} won badge {r.badges} in {WORLD[r.map]['name']}!")
+                    news(self.db, f"{r.name} won badge {r.badges} in {title(r.map)}!")
                 else:
                     r.hurt += 1
                 return
@@ -394,7 +399,7 @@ class Sim:
             level = rng.randint(lo, hi)
             if len(r.team) < MAX_TEAM:
                 r.team.append(new_mon(sid, level))
-                news(self.db, f"{r.name} caught a {species_name(sid)} on {here['name']}.")
+                news(self.db, f"{r.name} caught a {species_name(sid)} on {title(r.map)}.")
             elif style == "COLLECTOR":
                 weakest = min(range(len(r.team)), key=lambda i: r.team[i]["level"])
                 if r.team[weakest]["level"] < level + 5:
@@ -407,7 +412,7 @@ class Sim:
         if major and r.lead_level() >= major[2] - 3 and rng.random() < 0.3:
             self.db.execute("UPDATE majors SET cleared_by = ?, cleared_tid = ?, cleared_at = ? WHERE id = ?",
                             (r.name, TID_BASE + r.id, now(), major[0]))
-            news(self.db, f"{r.name} beat the rampaging {species_name(major[1])} on {here['name']}!")
+            news(self.db, f"{r.name} beat the rampaging {species_name(major[1])} on {title(r.map)}!")
 
     def run(self):
         """Brings every rover up to now."""
@@ -499,7 +504,7 @@ def cmd_sync(ctx, args, data):
     check_team(team)
     r.team = team
     r.hurt = min(data[3], 10)
-    where = WORLD.get(r.map, {}).get("name", "the road")
+    where = title(r.map) if r.map in WORLD else "the road"
     if event == 1:
         news(ctx.db, f"{r.name} caught a {species_name(arg)} on {where}.")
     elif event == 2:
@@ -590,7 +595,7 @@ def cmd_majors(ctx, args, data):
             "SELECT id, map, species, level FROM majors WHERE cleared_by IS NULL ORDER BY id"):
         d = hops(key, mk, 4)
         if d is not None:
-            jobs.append((d, mid, sid, level, WORLD[mk]["name"]))
+            jobs.append((d, mid, sid, level, WORLD[mk].get("title", WORLD[mk]["name"])))
     jobs.sort()
     for d, mid, sid, level, name in jobs[:5]:
         rows.append((mid, sid, level, name, d))

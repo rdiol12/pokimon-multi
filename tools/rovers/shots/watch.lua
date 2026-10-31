@@ -5,7 +5,8 @@ local D, K = Driver, Driver.KEY
 
 D.run(function()
     D.boot()
-    D.scene(12, MAPS.MAP_ROUTE102, 20, 8, { give = "MUDKIP", level = 20, lead = true })
+    D.summer()
+    D.scene(12, MAPS.MAP_ROUTE101, 10, 9, { give = "MUDKIP", level = 20, lead = true })
     D.rovers(2, {12, 40}, 22, 3, true, 1)
     D.wait(60)
     D.shot("duel")
@@ -18,8 +19,8 @@ D.run(function()
     end)
     local n = 0
     D.waitFor("the overworld", 20000, D.inOverworld, function(i)
-        if i % 300 == 0 and n < 8 then n = n + 1; D.shot("battle-" .. n) end
-        if i % 60 == 0 then D.press(K.A, 0) end
+        if i % 60 == 0 and n < 200 then n = n + 1; D.shot("battle-" .. n) end
+        if i % 120 == 0 then D.press(K.A, 0) end
     end)
     D.wait(60)
     D.shot("after")

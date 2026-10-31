@@ -31,6 +31,12 @@ KINDS = {"MAP_TYPE_ROUTE": "route", "MAP_TYPE_TOWN": "town", "MAP_TYPE_CITY": "t
          "MAP_TYPE_UNDERGROUND": "cave", "MAP_TYPE_OCEAN_ROUTE": "sea"}
 
 
+def pretty(name):
+    """Route101 -> Route 101, NewMauville_Entrance -> New Mauville Entrance."""
+    name = re.sub(r"([a-z])([A-Z0-9])", r"\1 \2", name.replace("_", " "))
+    return re.sub(r"\s+", " ", name).strip()
+
+
 def main():
     groups = json.load(open(os.path.join(ROOT, "data", "maps", "map_groups.json")))
     maps = {}
@@ -95,6 +101,7 @@ def main():
         world[key(mid)] = {
             "id": mid,
             "name": maps[mid]["json"]["name"],
+            "title": pretty(maps[mid]["json"]["name"]),
             "kind": kind(mid),
             "links": sorted(key(d) for d in links[mid]),
             "wild": wild.get(mid, []),

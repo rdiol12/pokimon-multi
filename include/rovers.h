@@ -36,6 +36,7 @@ struct RoverShowcase
     u8 teamSize;
     u8 offline;   // 1: don't ask the server
     u8 talk;      // actor + 1: talk to it after a moment
+    u8 levelB;    // if not 0, the second and later rovers' level
 };
 extern struct RoverShowcase gRoverShowcase;
 
@@ -47,6 +48,8 @@ extern struct RoverShowcase gRoverShowcase;
 #define ROVER_SCENE_MAJOR    6 // the map's rampaging Pokémon
 #define ROVER_SCENE_CATCH    7 // like WILD, always throws a ball and catches it
 
+struct Trainer;
+struct ObjectEvent;
 bool32 Rovers_OverworldUpdate(void);
 void Rovers_OnMapTransition(void);
 const u8 *Rovers_GetTalkScript(struct ObjectEvent *objectEvent);

@@ -246,7 +246,8 @@ static void RemoveLocal(u8 localId)
 
 static bool32 Busy(struct ObjectEvent *obj)
 {
-    return obj != NULL && ObjectEventIsMovementOverridden(obj);
+    // A finished held movement stays "active" until the next one replaces it.
+    return obj != NULL && (obj->singleMovementActive || (obj->heldMovementActive && !obj->heldMovementFinished));
 }
 
 static void Do(struct ObjectEvent *obj, u8 action)
@@ -1180,7 +1181,8 @@ static void RunShowcase(void)
     RemoveLocal(LOCALID_ROVER_FOE_MON);
     sRovers.chargerState = CHARGER_NONE;
     for (i = 0; i < count; i++)
-        MakeOfflineRover(&sRovers.actors[i], gRoverShowcase.ids[i], gRoverShowcase.level ? gRoverShowcase.level : 20,
+        MakeOfflineRover(&sRovers.actors[i], gRoverShowcase.ids[i],
+                         (i != 0 && gRoverShowcase.levelB) ? gRoverShowcase.levelB : (gRoverShowcase.level ? gRoverShowcase.level : 20),
                          gRoverShowcase.teamSize ? gRoverShowcase.teamSize : 3);
     sRovers.spawned = TRUE;
     sRovers.nearPlayer = TRUE;
@@ -1470,7 +1472,7 @@ static void UpdateWild(u32 i)
                 u32 dir = a->wildDir;
                 RemoveLocal(LOCALID_ROVER_BALL);
                 Spawn(LOCALID_ROVER_BALL, OBJ_EVENT_GFX_POKE_BALL, t->currentCoords.x, t->currentCoords.y, dir);
-                Do(ObjByLocalId(LOCALID_ROVER_BALL), GetJumpMovementAction(dir));
+                Do(ObjByLocalId(LOCALID_ROVER_BALL), GetJumpSpecialMovementAction(dir)); // one tile, high arc
                 PlaySE(SE_BALL_THROW);
                 a->state = RS_THROW;
                 a->timer = 18;
@@ -1746,7 +1748,7 @@ static void SpawnCharger(bool32 major)
     sRovers.chargerIsMajor = major;
     sRovers.chargerSpecies = species;
     sRovers.chargerLevel = level;
-    sRovers.chargerState = (major || Random() % 3 != 0) ? CHARGER_CHASE : CHARGER_CALM;
+    sRovers.chargerState = (major || Random() % 3 != 0 || gRoverShowcase.scene == ROVER_SCENE_CHARGER) ? CHARGER_CHASE : CHARGER_CALM;
     sRovers.chargerTimer = 40;
     obj = ChargerObj();
     Do(obj, sRovers.chargerState == CHARGER_CHASE ? MOVEMENT_ACTION_EMOTE_EXCLAMATION_MARK : MOVEMENT_ACTION_EMOTE_QUESTION_MARK);
@@ -1771,7 +1773,7 @@ static bool32 ChargerTarget(struct ObjectEvent *c, s16 *tx, s16 *ty, s32 *rover)
     {
         struct ObjectEvent *t = TrainerObj(i);
         u32 d;
-        if (t == NULL || sRovers.actors[i].state != RS_WANDER)
+        if (t == NULL || sRovers.actors[i].state != RS_WANDER || gRoverShowcase.scene == ROVER_SCENE_CHARGER)
             continue;
         d = abs(t->currentCoords.x - c->currentCoords.x) + abs(t->currentCoords.y - c->currentCoords.y);
         if (d < best)
@@ -1782,7 +1784,7 @@ static bool32 ChargerTarget(struct ObjectEvent *c, s16 *tx, s16 *ty, s32 *rover)
             *rover = i;
         }
     }
-    return best <= (sRovers.chargerIsMajor ? 9u : 6u);
+    return best <= (sRovers.chargerIsMajor ? 10u : 8u) || gRoverShowcase.scene == ROVER_SCENE_CHARGER;
 }
 
 static bool32 UpdateCharger(void)
@@ -1876,6 +1878,20 @@ static bool32 UpdateCharger(void)
         if (CanStandAt(x, y, TRUE))
         {
             Do(c, GetWalkFastMovementAction(dir));
+            return FALSE;
+        }
+    }
+    // Blocked: step aside and try again.
+    dir = Random() % 4 + 1;
+    for (k = 0; k < 4; k++, dir = dir % 4 + 1)
+    {
+        x = c->currentCoords.x;
+        y = c->currentCoords.y;
+        Step(&x, &y, dir);
+        if (CanStandAt(x, y, TRUE))
+        {
+            Do(c, GetWalkNormalMovementAction(dir));
+            sRovers.chargerTimer = 4;
             return FALSE;
         }
     }
@@ -2344,11 +2360,11 @@ void Rovers_BoardShowRankings(void)
             s = ConvertIntToDecimalStringN(s, shown + 1, STR_CONV_MODE_LEFT_ALIGN, 2);
             s = StringCopy(s, COMPOUND_STRING(". "));
             s = StringCopy(s, field);
-            s = StringCopy(s, COMPOUND_STRING(" Badges "));
+            s = StringCopy(s, COMPOUND_STRING(": "));
             s = ConvertIntToDecimalStringN(s, AnswerNum(r, 1), STR_CONV_MODE_LEFT_ALIGN, 1);
-            s = StringCopy(s, COMPOUND_STRING(" W"));
+            s = StringCopy(s, AnswerNum(r, 1) == 1 ? COMPOUND_STRING(" badge, won ") : COMPOUND_STRING(" badges, won "));
             s = ConvertIntToDecimalStringN(s, AnswerNum(r, 2), STR_CONV_MODE_LEFT_ALIGN, 4);
-            s = StringCopy(s, COMPOUND_STRING(" L"));
+            s = StringCopy(s, COMPOUND_STRING(", lost "));
             s = ConvertIntToDecimalStringN(s, AnswerNum(r, 3), STR_CONV_MODE_LEFT_ALIGN, 4);
         }
         shown++;
@@ -2383,6 +2399,11 @@ static void RespawnMissing(void)
     }
 }
 
+static bool32 IsWildState(u32 state)
+{
+    return state == RS_WILD_APPEAR || state == RS_WILD_FIGHT || state == RS_THROW || state == RS_SHAKE || state == RS_KO;
+}
+
 bool32 Rovers_OverworldUpdate(void)
 {
     u32 i;
@@ -2412,7 +2433,8 @@ bool32 Rovers_OverworldUpdate(void)
             sRovers.wantHere = TRUE;
         return FALSE;
     }
-    if (sRovers.talkCountdown != 0 && --sRovers.talkCountdown == 0)
+    if (sRovers.talkCountdown != 0 && !IsWildState(sRovers.actors[(gRoverShowcase.talk - 1) % ROVERS_MAX_HERE].state)
+     && --sRovers.talkCountdown == 0)
     {
         sRovers.talk = (gRoverShowcase.talk - 1) % ROVERS_MAX_HERE;
         gRoverShowcase.talk = 0;
@@ -2462,7 +2484,8 @@ bool32 Rovers_OverworldUpdate(void)
         else
         {
             sRovers.chargeCountdown = 60 * (20 + Random() % 40);
-            if (Random() % 2 == 0 || gRoverShowcase.scene == ROVER_SCENE_CHARGER)
+            if (gRoverShowcase.scene == ROVER_SCENE_CHARGER
+             || (gRoverShowcase.scene == 0 && Random() % 2 == 0))
                 SpawnCharger(FALSE);
         }
     }

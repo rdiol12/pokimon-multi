@@ -18,16 +18,17 @@ D.run(function()
     D.rovers(1, {3, 77, 120}, 16, 4)
     film("wander", 4, 50)
     D.rovers(7, {0}, 14, 3)
-    film("catch", 14, 25)
+    film("catch", 60, 8)
     D.rovers(4, {44}, 14, 3)
-    film("wild", 10, 30)
+    film("wild", 30, 10)
     D.rovers(3, {61}, 12, 2)
     film("vs-trainer", 10, 45)
     D.rovers(5, {}, 12, 2)
-    film("charger", 8, 25)
-    D.waitFor("the charge", 1800, function() return not D.inOverworld() or E.read8(D.SYM.gSpecialVar_Result) == 99 end, function(i)
-        if i % 200 == 0 then D.shot("charging") end
-        if i % 50 == 0 then D.press(K.A, 0) end
+    film("charger", 12, 15)
+    D.waitFor("the charge", 1800, function() return not D.inOverworld() end, function(i)
+        if i % 100 == 0 then D.shot("charging") end
+        if i % 60 == 0 then D.press(K.A, 0) end
     end)
+    film("charge-battle", 4, 90)
     D.result("ok")
 end)

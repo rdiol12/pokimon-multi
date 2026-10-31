@@ -74,7 +74,10 @@ experience is given and nothing is saved.
   `CanInjureInBattle` (injury.c), `CB2_EndLifeTrainerBattle` and
   `BattleSetup_StartRoverWatch` (battle_setup.c), the AI-vs-AI player side's
   picture and party in `battle_controller_player_partner.c` (it looked at the
-  multi-battle partner's party, which crashed on the first switch).
+  multi-battle partner's party, which crashed on the first switch), the
+  left trainer's send-out and withdraw messages (`battle_message.c`; the
+  in-game partner's text read a name that isn't there and overran the stack)
+  and no white-out text when the left rover loses (`BS_JumpIfNoWhiteOut`).
 - The Haven Reserve (`server/community_reserve.py`, other branch): a rover that
   lets a Pokémon go drops it there, and rovers in Verdanturf sometimes catch
   one. Optional: rovers.py works without it.
