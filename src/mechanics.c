@@ -15,7 +15,7 @@
 
 // People the mechanics features stand on existing maps, spawned from C so
 // no map file changes: the move tutor in every Pokémon Center, and so on.
-// Each has its own local id, LOCALID_MECH_FIRST + its index.
+// Each has a local id from include/constants/mechanics.h.
 
 extern const u8 Mechanics_EventScript_MoveTutor[];
 extern const u8 Mechanics_EventScript_Referee[];
@@ -27,9 +27,15 @@ extern const u8 Mechanics_EventScript_StatueTreecko[];
 extern const u8 Mechanics_EventScript_StatueTorchic[];
 extern const u8 Mechanics_EventScript_StatueMudkip[];
 extern const u8 Mechanics_EventScript_EvoSage[];
+extern const u8 Mechanics_EventScript_BossGranite[];
+extern const u8 Mechanics_EventScript_BossMeteor[];
+extern const u8 Mechanics_EventScript_BossShoal[];
+extern const u8 Mechanics_EventScript_BossSeafloor[];
+extern const u8 Mechanics_EventScript_BossVictory[];
 
 struct MechNpc
 {
+    u8 localId;
     bool32 (*isHere)(void);
     s16 x, y;
     u16 gfx;
@@ -88,24 +94,53 @@ static bool32 InSagesHouse(void)
     return IsMap(MAP_MAUVILLE_CITY_HOUSE1);
 }
 
+static bool32 BossInGraniteCave(void)
+{
+    return IsMap(MAP_GRANITE_CAVE_1F) && Mechanics_IsBossHere(BOSS_GRANITE);
+}
+
+static bool32 BossInMeteorFalls(void)
+{
+    return IsMap(MAP_METEOR_FALLS_1F_2R) && Mechanics_IsBossHere(BOSS_METEOR);
+}
+
+static bool32 BossInShoalCave(void)
+{
+    return IsMap(MAP_SHOAL_CAVE_LOW_TIDE_INNER_ROOM) && Mechanics_IsBossHere(BOSS_SHOAL);
+}
+
+static bool32 BossInSeafloorCavern(void)
+{
+    return IsMap(MAP_SEAFLOOR_CAVERN_ROOM4) && Mechanics_IsBossHere(BOSS_SEAFLOOR);
+}
+
+static bool32 BossOnVictoryRoad(void)
+{
+    return IsMap(MAP_VICTORY_ROAD_1F) && Mechanics_IsBossHere(BOSS_VICTORY);
+}
+
 static bool32 InFallarborTent(void)
 {
     return IsMap(MAP_FALLARBOR_TOWN_BATTLE_TENT_LOBBY);
 }
 
-// Indexed by local id - LOCALID_MECH_FIRST.
 static const struct MechNpc sMechNpcs[] =
 {
-    {InPokemonCenter, 13, 5, OBJ_EVENT_GFX_EXPERT_M, MOVEMENT_TYPE_FACE_LEFT, Mechanics_EventScript_MoveTutor},
-    {InSlateportTent, 9, 6, OBJ_EVENT_GFX_GENTLEMAN, MOVEMENT_TYPE_FACE_DOWN, Mechanics_EventScript_Referee},
-    {InVerdanturfTent, 4, 6, OBJ_EVENT_GFX_REPORTER_M, MOVEMENT_TYPE_FACE_DOWN, Mechanics_EventScript_CupHost},
-    {InFallarborTent, 4, 6, OBJ_EVENT_GFX_EXPERT_F, MOVEMENT_TYPE_FACE_DOWN, Mechanics_EventScript_StyleMaster},
-    {InPokemonSchool, 11, 3, OBJ_EVENT_GFX_WOMAN_2, MOVEMENT_TYPE_FACE_DOWN, Mechanics_EventScript_SkillTeacher},
-    {InBirchsLab, 9, 10, OBJ_EVENT_GFX_SCIENTIST_2, MOVEMENT_TYPE_FACE_LEFT, Mechanics_EventScript_LabAide},
-    {StatueInPetalburgWoods, 14, 34, OBJ_EVENT_GFX_TRICK_HOUSE_STATUE, MOVEMENT_TYPE_NONE, Mechanics_EventScript_StatueTreecko},
-    {StatueInFieryPath, 28, 9, OBJ_EVENT_GFX_TRICK_HOUSE_STATUE, MOVEMENT_TYPE_NONE, Mechanics_EventScript_StatueTorchic},
-    {StatueOnRoute117, 18, 10, OBJ_EVENT_GFX_TRICK_HOUSE_STATUE, MOVEMENT_TYPE_NONE, Mechanics_EventScript_StatueMudkip},
-    {InSagesHouse, 7, 4, OBJ_EVENT_GFX_OLD_WOMAN, MOVEMENT_TYPE_FACE_DOWN, Mechanics_EventScript_EvoSage},
+    {LOCALID_MECH_TUTOR, InPokemonCenter, 13, 5, OBJ_EVENT_GFX_EXPERT_M, MOVEMENT_TYPE_FACE_LEFT, Mechanics_EventScript_MoveTutor},
+    {LOCALID_MECH_REFEREE, InSlateportTent, 9, 6, OBJ_EVENT_GFX_GENTLEMAN, MOVEMENT_TYPE_FACE_DOWN, Mechanics_EventScript_Referee},
+    {LOCALID_MECH_CUP_HOST, InVerdanturfTent, 4, 6, OBJ_EVENT_GFX_REPORTER_M, MOVEMENT_TYPE_FACE_DOWN, Mechanics_EventScript_CupHost},
+    {LOCALID_MECH_STYLE_MASTER, InFallarborTent, 4, 6, OBJ_EVENT_GFX_EXPERT_F, MOVEMENT_TYPE_FACE_DOWN, Mechanics_EventScript_StyleMaster},
+    {LOCALID_MECH_SKILL_TEACHER, InPokemonSchool, 11, 3, OBJ_EVENT_GFX_WOMAN_2, MOVEMENT_TYPE_FACE_DOWN, Mechanics_EventScript_SkillTeacher},
+    {LOCALID_MECH_LAB_AIDE, InBirchsLab, 9, 10, OBJ_EVENT_GFX_SCIENTIST_2, MOVEMENT_TYPE_FACE_LEFT, Mechanics_EventScript_LabAide},
+    {LOCALID_MECH_STATUE, StatueInPetalburgWoods, 14, 34, OBJ_EVENT_GFX_TRICK_HOUSE_STATUE, MOVEMENT_TYPE_NONE, Mechanics_EventScript_StatueTreecko},
+    {LOCALID_MECH_STATUE, StatueInFieryPath, 28, 9, OBJ_EVENT_GFX_TRICK_HOUSE_STATUE, MOVEMENT_TYPE_NONE, Mechanics_EventScript_StatueTorchic},
+    {LOCALID_MECH_STATUE, StatueOnRoute117, 18, 10, OBJ_EVENT_GFX_TRICK_HOUSE_STATUE, MOVEMENT_TYPE_NONE, Mechanics_EventScript_StatueMudkip},
+    {LOCALID_MECH_EVO_SAGE, InSagesHouse, 7, 4, OBJ_EVENT_GFX_OLD_WOMAN, MOVEMENT_TYPE_FACE_DOWN, Mechanics_EventScript_EvoSage},
+    {LOCALID_MECH_BOSS, BossInGraniteCave, 31, 5, OBJ_EVENT_GFX_SPECIES(SABLEYE), MOVEMENT_TYPE_FACE_RIGHT, Mechanics_EventScript_BossGranite},
+    {LOCALID_MECH_BOSS, BossInMeteorFalls, 13, 28, OBJ_EVENT_GFX_SPECIES(LUNATONE), MOVEMENT_TYPE_FACE_LEFT, Mechanics_EventScript_BossMeteor},
+    {LOCALID_MECH_BOSS, BossInShoalCave, 21, 13, OBJ_EVENT_GFX_SPECIES(GLALIE), MOVEMENT_TYPE_FACE_LEFT, Mechanics_EventScript_BossShoal},
+    {LOCALID_MECH_BOSS, BossInSeafloorCavern, 12, 11, OBJ_EVENT_GFX_SPECIES(SHARPEDO), MOVEMENT_TYPE_FACE_LEFT, Mechanics_EventScript_BossSeafloor},
+    {LOCALID_MECH_BOSS, BossOnVictoryRoad, 13, 38, OBJ_EVENT_GFX_SPECIES(FLYGON), MOVEMENT_TYPE_FACE_RIGHT, Mechanics_EventScript_BossVictory},
 };
 
 static EWRAM_DATA u8 sTimer = 0;
@@ -190,32 +225,44 @@ static void RunShowcase(void)
     }
 }
 
-static bool32 IsShown(u32 i)
+static bool32 IsShown(u8 localId)
 {
-    return GetObjectEventIdByLocalIdAndMap(LOCALID_MECH_FIRST + i, gSaveBlock1Ptr->location.mapNum,
+    return GetObjectEventIdByLocalIdAndMap(localId, gSaveBlock1Ptr->location.mapNum,
                                            gSaveBlock1Ptr->location.mapGroup) != OBJECT_EVENTS_COUNT;
 }
 
-static void UpdateNpcs(void)
+// The entry that wants to be on this map under `localId`, or NULL.
+static const struct MechNpc *GetWantedNpc(u8 localId)
 {
     u32 i;
 
     for (i = 0; i < ARRAY_COUNT(sMechNpcs); i++)
     {
-        const struct MechNpc *npc = &sMechNpcs[i];
-        bool32 wanted = npc->isHere();
+        if (sMechNpcs[i].localId == localId && sMechNpcs[i].isHere())
+            return &sMechNpcs[i];
+    }
+    return NULL;
+}
 
-        if (wanted == IsShown(i))
+static void UpdateNpcs(void)
+{
+    u32 localId;
+
+    for (localId = LOCALID_MECH_FIRST; localId <= LOCALID_MECH_LAST; localId++)
+    {
+        const struct MechNpc *npc = GetWantedNpc(localId);
+
+        if ((npc != NULL) == IsShown(localId))
             continue;
-        if (wanted)
+        if (npc != NULL)
         {
             s16 x = npc->x + MAP_OFFSET, y = npc->y + MAP_OFFSET;
-            SpawnSpecialObjectEventParameterized(npc->gfx, npc->movement, LOCALID_MECH_FIRST + i,
+            SpawnSpecialObjectEventParameterized(npc->gfx, npc->movement, localId,
                                                  x, y, MapGridGetElevationAt(x, y));
         }
         else
         {
-            RemoveObjectEventByLocalIdAndMap(LOCALID_MECH_FIRST + i, gSaveBlock1Ptr->location.mapNum,
+            RemoveObjectEventByLocalIdAndMap(localId, gSaveBlock1Ptr->location.mapNum,
                                              gSaveBlock1Ptr->location.mapGroup);
         }
     }
@@ -235,19 +282,17 @@ void Mechanics_Update(void)
 
 bool32 Mechanics_TryInteract(s16 x, s16 y)
 {
-    u32 i;
+    u32 localId;
 
-    for (i = 0; i < ARRAY_COUNT(sMechNpcs); i++)
+    for (localId = LOCALID_MECH_FIRST; localId <= LOCALID_MECH_LAST; localId++)
     {
-        const struct MechNpc *npc = &sMechNpcs[i];
-        u8 objectId;
+        const struct MechNpc *npc = GetWantedNpc(localId);
 
-        if (npc->x + MAP_OFFSET != x || npc->y + MAP_OFFSET != y || !IsShown(i))
+        if (npc == NULL || npc->x + MAP_OFFSET != x || npc->y + MAP_OFFSET != y || !IsShown(localId))
             continue;
-        objectId = GetObjectEventIdByLocalIdAndMap(LOCALID_MECH_FIRST + i, gSaveBlock1Ptr->location.mapNum,
-                                                   gSaveBlock1Ptr->location.mapGroup);
-        gSelectedObjectEvent = objectId;
-        gSpecialVar_LastTalked = LOCALID_MECH_FIRST + i;
+        gSelectedObjectEvent = GetObjectEventIdByLocalIdAndMap(localId, gSaveBlock1Ptr->location.mapNum,
+                                                               gSaveBlock1Ptr->location.mapGroup);
+        gSpecialVar_LastTalked = localId;
         gSpecialVar_Facing = GetPlayerFacingDirection();
         ScriptContext_SetupScript(npc->script);
         return TRUE;

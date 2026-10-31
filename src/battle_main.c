@@ -4631,6 +4631,7 @@ s32 GetWhichBattlerFaster(struct BattleCalcValues *calcValues, bool32 ignoreChos
 
 static void SetActionsAndBattlersTurnOrder(void)
 {
+    Mechanics_BeforeTurnOrder();
     s32 turnOrderId = 0;
     enum BattlerId battler, battler2;
 

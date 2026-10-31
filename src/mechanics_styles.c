@@ -91,13 +91,25 @@ void Mechanics_SetBattlerStyle(u32 battler, u8 returnValue)
 {
     u8 style = (returnValue & STYLE_RET_MASK) >> STYLE_RET_SHIFT;
 
-    if (style > STYLE_STRONG || !Mechanics_CanUseBattleStyles())
-        style = STYLE_NONE;
-    if (GetBattlerSide(battler) == B_SIDE_OPPONENT)
-        style = ChooseOpponentStyle(battler);
-    else if (gBattleMons[battler].pp[gBattleStruct->chosenMovePositions[battler]] < 2)
+    if (style > STYLE_STRONG || !Mechanics_CanUseBattleStyles()
+     || gBattleMons[battler].pp[gBattleStruct->chosenMovePositions[battler]] < 2)
         style = STYLE_NONE;
     sStyle[battler] = style;
+}
+
+// Before the turn order is set: the opponents' choices (their moves don't
+// all come through Mechanics_SetBattlerStyle).
+void Mechanics_BeforeTurnOrder(void)
+{
+    u32 battler;
+
+    for (battler = 0; battler < gBattlersCount; battler++)
+    {
+        if (GetBattlerSide(battler) != B_SIDE_OPPONENT || gChosenActionByBattler[battler] != B_ACTION_USE_MOVE)
+            continue;
+        sStyle[battler] = ChooseOpponentStyle(battler);
+        Mechanics_OnBossMoveChosen(battler);
+    }
 }
 
 void Mechanics_ClearBattlerStyle(u32 battler)

@@ -211,6 +211,30 @@ Pokémon the player picks:
 Then it evolves on the spot, as if traded (held items are used up the same
 way; Karrablast and Shelmet get the partner they need).
 
+## Cave bosses
+
+![Sableye Terastallizes into the Fairy type in Granite Cave; Lunatone Dynamaxes in Meteor Falls; each drops treasure](images/mechanics-cave-bosses.png)
+
+Five caves have a boss Pokémon standing in a hidden corner
+(`src/mechanics_bosses.c`). Each one uses a battle gimmick on its first
+turn, Terastallizing or Dynamaxing (a Dynamaxed boss stays that way for the
+whole battle, not just three turns), and its intro says which:
+
+| Cave | Boss | Level | Gimmick | Treasure |
+| --- | --- | --- | --- | --- |
+| Granite Cave 1F | Sableye | 22 | Tera Fairy | Dusk Stone |
+| Meteor Falls 1F | Lunatone | 33 | Dynamax | Moon Stone |
+| Shoal Cave (low tide) | Glalie | 42 | Tera Ghost | Spell Tag |
+| Seafloor Cavern | Sharpedo | 45 | Dynamax | Deep Sea Tooth |
+| Victory Road 1F | Flygon | 54 | Tera Fire | Ability Patch |
+
+Beat it and it flees, leaving the treasure; catch it and it joins the party
+(no treasure). Either way it's gone for good (FLAG_MECH_BOSS_*). Running
+away or losing leaves it there. The opponent's gimmick is chosen in
+`Mechanics_BeforeTurnOrder` (battle_main.c), which also picks the
+opponent's battle style. Bosses in the new Cinder Caverns and Frostvein
+Cave can be added to the table once those maps are merged.
+
 ## Screenshots
 
 ```sh
@@ -223,6 +247,7 @@ python3 tools/mechanics_shots/run.py tools/mechanics_shots/styles.lua out/ 20000
 python3 tools/mechanics_shots/run.py tools/mechanics_shots/skills.lua out/ 60000
 python3 tools/mechanics_shots/run.py tools/mechanics_shots/signature.lua out/ 150000
 python3 tools/mechanics_shots/run.py tools/mechanics_shots/evolution.lua out/ 150000
+python3 tools/mechanics_shots/run.py tools/mechanics_shots/bosses.lua out/ 150000
 ```
 
 The runner is `tools/world_shots/run.py` plus `Driver.fastText()` and

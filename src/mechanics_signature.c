@@ -120,6 +120,7 @@ void Mechanics_SetupGuardian(void)
     ZeroEnemyPartyMons();
     CreateMonWithIVs(&gParties[B_TRAINER_OPPONENT_A][0], line->species[2], level, Random32(),
                      OTID_STRUCT_PRESET(GUARDIAN_OT_ID), 20);
+    GiveMonInitialMoveset(&gParties[B_TRAINER_OPPONENT_A][0]);
     Mechanics_PrepareOpponentMon(&gParties[B_TRAINER_OPPONENT_A][0]);
 }
 

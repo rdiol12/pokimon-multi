@@ -7,3 +7,4 @@
 	.include "data/scripts/mechanics/skills.inc"
 	.include "data/scripts/mechanics/signature.inc"
 	.include "data/scripts/mechanics/evolution.inc"
+	.include "data/scripts/mechanics/bosses.inc"
