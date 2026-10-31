@@ -8,3 +8,4 @@
 	.include "data/scripts/mechanics/signature.inc"
 	.include "data/scripts/mechanics/evolution.inc"
 	.include "data/scripts/mechanics/bosses.inc"
+	.include "data/scripts/mechanics/storms.inc"

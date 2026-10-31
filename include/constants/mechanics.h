@@ -16,6 +16,8 @@
 #define LOCALID_MECH_LAB_AIDE 195 // Birch's aide, who starts the signature move quest
 #define LOCALID_MECH_STATUE 196 // a starter's old statue (Petalburg Woods, Fiery Path, Route 117)
 #define LOCALID_MECH_BOSS 197 // a cave boss (src/mechanics_bosses.c)
+#define LOCALID_MECH_STORM_ECHO 197 // Groudon's or Kyogre's echo (Routes 114 and 118)
+#define LOCALID_MECH_STORM_RESEARCHER 198 // the storm researcher in the Weather Institute
 #define LOCALID_MECH_EVO_SAGE 199 // the evolution sage in a Mauville City house
 
 // Battle rule sets (Mechanics_SetBattleRules). The Slateport Battle Tent's
@@ -92,6 +94,14 @@
 #define BOSS_VICTORY  4 // Victory Road: Terastal Flygon
 #define BOSS_COUNT    5
 
+// The postgame storms (src/mechanics_storms.c).
+#define STORM_GROUDON 0 // a drought on Route 114
+#define STORM_KYOGRE  1 // a thunderstorm on Route 118
+#define STORM_COUNT   2
+
+// The OT id of opponents that can't be caught (Mechanics_IsCatchBlocked).
+#define MECH_GUARDIAN_OT_ID 0x4D454348
+
 // Messages printed with STRINGID_MECH_MESSAGE; the id goes in
 // gBattleTextBuff3[0] so it reaches both games in a link battle.
 #define MECH_MSG_STYLE_AGILE  0
@@ -114,5 +124,8 @@
 #define FLAG_MECH_BOSS_SHOAL    FLAG_UNUSED_0x8EA
 #define FLAG_MECH_BOSS_SEAFLOOR FLAG_UNUSED_0x8EB
 #define FLAG_MECH_BOSS_VICTORY  FLAG_UNUSED_0x8EC
+#define FLAG_MECH_STORM_GROUDON FLAG_UNUSED_0x8ED // the drought on Route 114 is calmed
+#define FLAG_MECH_STORM_KYOGRE  FLAG_UNUSED_0x8EE // the thunderstorm on Route 118 is calmed
+#define FLAG_MECH_STORM_REWARD  FLAG_UNUSED_0x8EF // the researcher gave the reward
 
 #endif // GUARD_CONSTANTS_MECHANICS_H

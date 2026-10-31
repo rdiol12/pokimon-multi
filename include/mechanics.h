@@ -63,6 +63,10 @@ bool32 Mechanics_TryAnnounceBattleStyle(u32 battler);
 const u8 *Mechanics_GetBattleMessage(u8 id);
 void Mechanics_SetupStylePractice(void);
 
+// The postgame storms (src/mechanics_storms.c).
+bool32 Mechanics_IsStormActive(u8 storm);
+void Mechanics_UpdateStorms(void);
+
 // Battle commentary (src/mechanics_commentary.c).
 void Mechanics_OnBattleString(u16 stringId, u32 battler);
 bool32 Mechanics_TryOpeningCommentary(void);

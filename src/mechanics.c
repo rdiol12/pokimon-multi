@@ -32,6 +32,9 @@ extern const u8 Mechanics_EventScript_BossMeteor[];
 extern const u8 Mechanics_EventScript_BossShoal[];
 extern const u8 Mechanics_EventScript_BossSeafloor[];
 extern const u8 Mechanics_EventScript_BossVictory[];
+extern const u8 Mechanics_EventScript_StormResearcher[];
+extern const u8 Mechanics_EventScript_EchoGroudon[];
+extern const u8 Mechanics_EventScript_EchoKyogre[];
 
 struct MechNpc
 {
@@ -124,6 +127,21 @@ static bool32 InFallarborTent(void)
     return IsMap(MAP_FALLARBOR_TOWN_BATTLE_TENT_LOBBY);
 }
 
+static bool32 InWeatherInstitute(void)
+{
+    return IsMap(MAP_ROUTE119_WEATHER_INSTITUTE_2F) && FlagGet(FLAG_SYS_GAME_CLEAR);
+}
+
+static bool32 EchoOnRoute114(void)
+{
+    return IsMap(MAP_ROUTE114) && Mechanics_IsStormActive(STORM_GROUDON);
+}
+
+static bool32 EchoOnRoute118(void)
+{
+    return IsMap(MAP_ROUTE118) && Mechanics_IsStormActive(STORM_KYOGRE);
+}
+
 static const struct MechNpc sMechNpcs[] =
 {
     {LOCALID_MECH_TUTOR, InPokemonCenter, 13, 5, OBJ_EVENT_GFX_EXPERT_M, MOVEMENT_TYPE_FACE_LEFT, Mechanics_EventScript_MoveTutor},
@@ -141,6 +159,9 @@ static const struct MechNpc sMechNpcs[] =
     {LOCALID_MECH_BOSS, BossInShoalCave, 21, 13, OBJ_EVENT_GFX_SPECIES(GLALIE), MOVEMENT_TYPE_FACE_LEFT, Mechanics_EventScript_BossShoal},
     {LOCALID_MECH_BOSS, BossInSeafloorCavern, 12, 11, OBJ_EVENT_GFX_SPECIES(SHARPEDO), MOVEMENT_TYPE_FACE_LEFT, Mechanics_EventScript_BossSeafloor},
     {LOCALID_MECH_BOSS, BossOnVictoryRoad, 13, 38, OBJ_EVENT_GFX_SPECIES(FLYGON), MOVEMENT_TYPE_FACE_RIGHT, Mechanics_EventScript_BossVictory},
+    {LOCALID_MECH_STORM_RESEARCHER, InWeatherInstitute, 17, 3, OBJ_EVENT_GFX_SCIENTIST_1, MOVEMENT_TYPE_FACE_DOWN, Mechanics_EventScript_StormResearcher},
+    {LOCALID_MECH_STORM_ECHO, EchoOnRoute114, 9, 33, OBJ_EVENT_GFX_SPECIES(GROUDON), MOVEMENT_TYPE_FACE_DOWN, Mechanics_EventScript_EchoGroudon},
+    {LOCALID_MECH_STORM_ECHO, EchoOnRoute118, 30, 11, OBJ_EVENT_GFX_SPECIES(KYOGRE), MOVEMENT_TYPE_FACE_DOWN, Mechanics_EventScript_EchoKyogre},
 };
 
 static EWRAM_DATA u8 sTimer = 0;
@@ -160,6 +181,7 @@ struct MechanicsShowcase
     u8 badges;    // sets the first this many badge flags
     u8 hurt;      // brings the lead down to a third of its HP
     u16 varId;    // if set, VarSet(varId, varValue): story state for a scene
+                  // (below VARS_START: a flag, set if varValue isn't 0)
     u16 varValue;
     u8 friendship; // if set, the lead's friendship
 };
@@ -173,7 +195,12 @@ static void RunShowcase(void)
     gMechanicsShowcase.pending = FALSE;
     if (gMechanicsShowcase.varId)
     {
-        VarSet(gMechanicsShowcase.varId, gMechanicsShowcase.varValue);
+        if (gMechanicsShowcase.varId < VARS_START && gMechanicsShowcase.varValue)
+            FlagSet(gMechanicsShowcase.varId);
+        else if (gMechanicsShowcase.varId < VARS_START)
+            FlagClear(gMechanicsShowcase.varId);
+        else
+            VarSet(gMechanicsShowcase.varId, gMechanicsShowcase.varValue);
         gMechanicsShowcase.varId = 0;
     }
     if (gMechanicsShowcase.friendship)
@@ -278,6 +305,7 @@ void Mechanics_Update(void)
         return;
     sTimer = 0;
     UpdateNpcs();
+    Mechanics_UpdateStorms();
 }
 
 bool32 Mechanics_TryInteract(s16 x, s16 y)

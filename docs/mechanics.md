@@ -250,6 +250,24 @@ STRINGID_MECH_MESSAGE with the Pokémon in gBattleTextBuff1, and the choice
 uses no random numbers, so both games of a link battle print the same
 thing.
 
+## Calming the storms (postgame)
+
+![The Weather Institute researcher, Groudon's echo in the Route 114 drought, Kyogre's echo in the Route 118 thunderstorm, and the reward](images/mechanics-storm-quest.png)
+
+After the Hall of Fame, a researcher on the Weather Institute's second
+floor says what's left of Groudon's and Kyogre's power is stirring up a
+drought on Route 114 and a thunderstorm on Route 118
+(`src/mechanics_storms.c`). While a storm lasts, its route's weather turns
+when the player arrives, and an echo of the legendary (level 70) waits
+there. Beat it (echoes can't be caught) and the sky clears for good; it
+leaves a Heat Rock or a Damp Rock. With both calmed, the researcher gives a
+Smooth Rock and an Icy Rock.
+
+The weather only changes the current weather, never the saved one: a map
+can't start in a drought (`Drought_InitAll` never finishes during a warp),
+so `Mechanics_UpdateStorms` turns it once the screen has faded in. Mt.
+Chimney isn't touched.
+
 ## Screenshots
 
 ```sh
@@ -264,6 +282,7 @@ python3 tools/mechanics_shots/run.py tools/mechanics_shots/signature.lua out/ 15
 python3 tools/mechanics_shots/run.py tools/mechanics_shots/evolution.lua out/ 150000
 python3 tools/mechanics_shots/run.py tools/mechanics_shots/bosses.lua out/ 150000
 python3 tools/mechanics_shots/run.py tools/mechanics_shots/commentary.lua out/ 150000
+python3 tools/mechanics_shots/run.py tools/mechanics_shots/storms.lua out/ 250000
 ```
 
 The runner is `tools/world_shots/run.py` plus `Driver.fastText()` and
