@@ -22,6 +22,11 @@ extern const u8 Mechanics_EventScript_Referee[];
 extern const u8 Mechanics_EventScript_CupHost[];
 extern const u8 Mechanics_EventScript_StyleMaster[];
 extern const u8 Mechanics_EventScript_SkillTeacher[];
+extern const u8 Mechanics_EventScript_LabAide[];
+extern const u8 Mechanics_EventScript_StatueTreecko[];
+extern const u8 Mechanics_EventScript_StatueTorchic[];
+extern const u8 Mechanics_EventScript_StatueMudkip[];
+extern const u8 Mechanics_EventScript_EvoSage[];
 
 struct MechNpc
 {
@@ -58,6 +63,31 @@ static bool32 InPokemonSchool(void)
     return IsMap(MAP_RUSTBORO_CITY_POKEMON_SCHOOL);
 }
 
+static bool32 InBirchsLab(void)
+{
+    return IsMap(MAP_LITTLEROOT_TOWN_PROFESSOR_BIRCHS_LAB);
+}
+
+static bool32 StatueInPetalburgWoods(void)
+{
+    return IsMap(MAP_PETALBURG_WOODS) && Mechanics_IsStatueHere(STARTER_LINE_TREECKO);
+}
+
+static bool32 StatueInFieryPath(void)
+{
+    return IsMap(MAP_FIERY_PATH) && Mechanics_IsStatueHere(STARTER_LINE_TORCHIC);
+}
+
+static bool32 StatueOnRoute117(void)
+{
+    return IsMap(MAP_ROUTE117) && Mechanics_IsStatueHere(STARTER_LINE_MUDKIP);
+}
+
+static bool32 InSagesHouse(void)
+{
+    return IsMap(MAP_MAUVILLE_CITY_HOUSE1);
+}
+
 static bool32 InFallarborTent(void)
 {
     return IsMap(MAP_FALLARBOR_TOWN_BATTLE_TENT_LOBBY);
@@ -71,6 +101,11 @@ static const struct MechNpc sMechNpcs[] =
     {InVerdanturfTent, 4, 6, OBJ_EVENT_GFX_REPORTER_M, MOVEMENT_TYPE_FACE_DOWN, Mechanics_EventScript_CupHost},
     {InFallarborTent, 4, 6, OBJ_EVENT_GFX_EXPERT_F, MOVEMENT_TYPE_FACE_DOWN, Mechanics_EventScript_StyleMaster},
     {InPokemonSchool, 11, 3, OBJ_EVENT_GFX_WOMAN_2, MOVEMENT_TYPE_FACE_DOWN, Mechanics_EventScript_SkillTeacher},
+    {InBirchsLab, 9, 10, OBJ_EVENT_GFX_SCIENTIST_2, MOVEMENT_TYPE_FACE_LEFT, Mechanics_EventScript_LabAide},
+    {StatueInPetalburgWoods, 14, 34, OBJ_EVENT_GFX_TRICK_HOUSE_STATUE, MOVEMENT_TYPE_NONE, Mechanics_EventScript_StatueTreecko},
+    {StatueInFieryPath, 28, 9, OBJ_EVENT_GFX_TRICK_HOUSE_STATUE, MOVEMENT_TYPE_NONE, Mechanics_EventScript_StatueTorchic},
+    {StatueOnRoute117, 18, 10, OBJ_EVENT_GFX_TRICK_HOUSE_STATUE, MOVEMENT_TYPE_NONE, Mechanics_EventScript_StatueMudkip},
+    {InSagesHouse, 7, 4, OBJ_EVENT_GFX_OLD_WOMAN, MOVEMENT_TYPE_FACE_DOWN, Mechanics_EventScript_EvoSage},
 };
 
 static EWRAM_DATA u8 sTimer = 0;
@@ -89,6 +124,9 @@ struct MechanicsShowcase
     u8 persona;   // PERSONA_* + 1, or 0 for any
     u8 badges;    // sets the first this many badge flags
     u8 hurt;      // brings the lead down to a third of its HP
+    u16 varId;    // if set, VarSet(varId, varValue): story state for a scene
+    u16 varValue;
+    u8 friendship; // if set, the lead's friendship
 };
 
 EWRAM_DATA struct MechanicsShowcase gMechanicsShowcase = {0};
@@ -98,6 +136,16 @@ static void RunShowcase(void)
     u32 i;
 
     gMechanicsShowcase.pending = FALSE;
+    if (gMechanicsShowcase.varId)
+    {
+        VarSet(gMechanicsShowcase.varId, gMechanicsShowcase.varValue);
+        gMechanicsShowcase.varId = 0;
+    }
+    if (gMechanicsShowcase.friendship)
+    {
+        SetMonData(&gParties[B_TRAINER_PLAYER][0], MON_DATA_FRIENDSHIP, &gMechanicsShowcase.friendship);
+        gMechanicsShowcase.friendship = 0;
+    }
     for (i = 0; i < gMechanicsShowcase.badges; i++)
         FlagSet(FLAG_BADGE01_GET + i);
     if (gMechanicsShowcase.hurt)

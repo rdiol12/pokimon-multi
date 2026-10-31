@@ -5,3 +5,5 @@
 	.include "data/scripts/mechanics/cups.inc"
 	.include "data/scripts/mechanics/styles.inc"
 	.include "data/scripts/mechanics/skills.inc"
+	.include "data/scripts/mechanics/signature.inc"
+	.include "data/scripts/mechanics/evolution.inc"
