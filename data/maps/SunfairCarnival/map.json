@@ -212,7 +212,7 @@
     },
     {
       "graphics_id": "OBJ_EVENT_GFX_SPECIES(MR_MIME)",
-      "x": 21,
+      "x": 24,
       "y": 30,
       "elevation": 3,
       "movement_type": "MOVEMENT_TYPE_FACE_DOWN",

@@ -175,7 +175,7 @@ a.obj('OBJ_EVENT_GFX_LITTLE_GIRL', 34, 38, f'{NAME}_EventScript_BalloonGirl', 'M
 a.obj('OBJ_EVENT_GFX_SPECIES(PIKACHU)', 35, 38, f'{NAME}_EventScript_Pikachu', 'MOVEMENT_TYPE_FACE_LEFT')
 a.obj('OBJ_EVENT_GFX_OLD_MAN', 23, 14, f'{NAME}_EventScript_OldMan', 'MOVEMENT_TYPE_FACE_UP')
 a.obj('OBJ_EVENT_GFX_WOMAN_1', 44, 23, f'{NAME}_EventScript_Woman', 'MOVEMENT_TYPE_WANDER_LEFT_AND_RIGHT', rx=2)
-a.obj('OBJ_EVENT_GFX_SPECIES(MR_MIME)', 21, 30, f'{NAME}_EventScript_MrMime', 'MOVEMENT_TYPE_FACE_DOWN')
+a.obj('OBJ_EVENT_GFX_SPECIES(MR_MIME)', 24, 30, f'{NAME}_EventScript_MrMime', 'MOVEMENT_TYPE_FACE_DOWN')
 a.trainer('OBJ_EVENT_GFX_HIKER', 16, 22, f'{NAME}_EventScript_Blaze', 3, 'MOVEMENT_TYPE_FACE_RIGHT')
 a.obj('OBJ_EVENT_GFX_WOMAN_4', 50, 19, f'{NAME}_EventScript_Fortune', 'MOVEMENT_TYPE_FACE_DOWN')
 a.trainer('OBJ_EVENT_GFX_TWIN', 44, 15, f'{NAME}_EventScript_KitAndKat', 2, 'MOVEMENT_TYPE_FACE_DOWN')
