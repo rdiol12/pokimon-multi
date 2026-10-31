@@ -37,6 +37,47 @@ Lavaridge Town leads you up once you have Flannery's badge.
 - Items on the vent hills, hidden items, Lv29–34 wild Fire types (Numel,
   Litleo, Salandit, Rolycoly, Sizzlipede, Charcadet, Turtonator, Heatmor).
 
+## Cinder Caverns
+
+A volcano dungeon under Ember Springs. The cave door is on the north hill
+of Ember Springs.
+
+- 1F: a lava river splits the cave, so you go round by the sides. A
+  volcanologist explains the valves. Kindler Ignatius, Hex Maniac Rosa.
+- B1F: a lava lake. Three old Team Magma valves (west, east and far
+  south-west) each cool a stretch of the causeway across the lake
+  (`setmetatile`, reapplied on load from FLAG_CINDER_VALVE_*). Hiker Bruno,
+  Cooltrainer Tess. Magmarizer, TM Flamethrower, Full Restore.
+- Molten Heart: after the Pokémon League the guard on the landing steps
+  aside, and Heatran (Lv50) waits on an island in the lava. If you defeat
+  it, it sinks back into the magma; if you run, it stays.
+- Wild Pokémon Lv33–40 (Slugma, Torkoal, Magby, Litwick, Carkol, Larvesta,
+  Heatmor…) and rock smash encounters.
+- Map ids for bosses and events: MAP_CINDER_CAVERNS_1F, _B1F, _HEART.
+
+## Skyrope Canyon
+
+Rock mesas cut by narrow trails, and a deep river gorge crossed by three
+long rope bridges. A hiker in Fallarbor Town leads you there once you have
+Norman's badge.
+
+- Quest: a gust tore the planks off the east bridge and scattered the
+  Bridgewright's three coils of rope (west trail, north-west basin, the
+  south grass). Bring them back and he mends the bridge (`setmetatile`,
+  reapplied on load from FLAG_SKYROPE_BRIDGE_FIXED). Across it is a ledge
+  where Hawlucha (Lv36) trains, with Black Belt Koji, a Rare Candy and a
+  Sharp Beak. The artist gives a Star Piece once the bridge is fixed.
+- Trainers: Hiker Hamish, Bird Keeper Wren, Picnicker Daisy, Black Belt
+  Koji. Breakable rocks, Strength boulders, a wandering Mudbray and a
+  Rufflet guarding its nest.
+- Items (TM Aerial Ace, Hard Stone, Max Repel) and three hidden items.
+  Wild Pokémon Lv30–35 (Rufflet, Vullaby, Drilbur, Sandile, Mudbray,
+  Gligar, Skarmory, Hawlucha…), Basculin in the river, rock smash
+  encounters.
+- The style learns from Routes 114 and 115. Route 114's wooden bridge is
+  the rope bridge. synth.py now gives each metatile the collision it has
+  in its sketch class, since Route 114 uses the same rock as floor and wall.
+
 ## How the maps are made
 
 - `tools/areas/tiles.py` renders any tileset or layout to PNG.

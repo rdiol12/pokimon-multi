@@ -124,3 +124,136 @@ Level: 32
 Turtonator
 Level: 34
 /* end EmberSprings */
+
+/* begin CinderCaverns */
+=== AREA_TRAINER_CINDER_IGNATIUS ===
+Name: IGNATIUS
+Class: Kindler
+Pic: Kindler
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Basic Trainer
+
+Magmar
+Level: 34
+
+Houndoom
+Level: 35
+
+=== AREA_TRAINER_CINDER_ROSA ===
+Name: ROSA
+Class: Hex Maniac
+Pic: Hex Maniac
+Gender: Female
+Music: Suspicious
+Double Battle: No
+AI: Basic Trainer
+
+Litwick
+Level: 33
+
+Lampent
+Level: 35
+
+Sandygast
+Level: 34
+
+=== AREA_TRAINER_CINDER_BRUNO ===
+Name: BRUNO
+Class: Hiker
+Pic: Hiker
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Basic Trainer
+
+Coalossal
+Level: 36
+
+Magcargo
+Level: 35
+
+=== AREA_TRAINER_CINDER_TESS ===
+Name: TESS
+Class: Cooltrainer
+Pic: Cooltrainer F
+Gender: Female
+Music: Cool
+Double Battle: No
+AI: Basic Trainer
+
+Arcanine
+Level: 36
+
+Salazzle
+Level: 36
+
+Centiskorch
+Level: 37
+/* end CinderCaverns */
+
+/* begin SkyropeCanyon */
+=== AREA_TRAINER_SKYROPE_HAMISH ===
+Name: HAMISH
+Class: Hiker
+Pic: Hiker
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Basic Trainer
+
+Boldore
+Level: 31
+
+Rhyhorn
+Level: 32
+
+=== AREA_TRAINER_SKYROPE_WREN ===
+Name: WREN
+Class: Bird Keeper
+Pic: Bird Keeper
+Gender: Male
+Music: Cool
+Double Battle: No
+AI: Basic Trainer
+
+Rufflet
+Level: 31
+
+Swablu
+Level: 31
+
+Skarmory
+Level: 33
+
+=== AREA_TRAINER_SKYROPE_DAISY ===
+Name: DAISY
+Class: Picnicker
+Pic: Picnicker
+Gender: Female
+Music: Girl
+Double Battle: No
+AI: Basic Trainer
+
+Mudbray
+Level: 32
+
+Marill
+Level: 32
+
+=== AREA_TRAINER_SKYROPE_KOJI ===
+Name: KOJI
+Class: Black Belt
+Pic: Black Belt
+Gender: Male
+Music: Intense
+Double Battle: No
+AI: Basic Trainer
+
+Machoke
+Level: 33
+
+Hawlucha
+Level: 34
+/* end SkyropeCanyon */

@@ -398,3 +398,14 @@ def pokemon_center(prefix, mapsec, group, outside_map, outside_warp, heal_text_n
     interior(name, f'MAP_{up}_POKEMON_CENTER_1F', 'LAYOUT_LAVARIDGE_TOWN_POKEMON_CENTER_1F', [(6, 8), (7, 8)],
              outside_map, outside_warp, objs, '\n'.join(lines), mapsec, group, music='MUS_POKE_CENTER')
     return f'MAP_{up}_POKEMON_CENTER_1F'
+
+
+def ring(area, inner, ring_char, over=('.',)):
+    """Surrounds every inner-class cell with ring_char on cells of the given classes."""
+    cells = [(x, y) for y in range(area.h) for x in range(area.w) if area.grid[y][x] == inner]
+    for x, y in cells:
+        for dx in (-1, 0, 1):
+            for dy in (-1, 0, 1):
+                xx, yy = x + dx, y + dy
+                if 0 <= xx < area.w and 0 <= yy < area.h and area.grid[yy][xx] in over:
+                    area.grid[yy][xx] = ring_char

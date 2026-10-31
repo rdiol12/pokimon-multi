@@ -1,0 +1,157 @@
+{
+  "id": "MAP_CINDER_CAVERNS_B1F",
+  "name": "CinderCaverns_B1F",
+  "layout": "LAYOUT_CINDER_CAVERNS_B1F",
+  "music": "MUS_MT_CHIMNEY",
+  "region": "REGION_HOENN",
+  "region_map_section": "MAPSEC_CINDER_CAVERNS",
+  "requires_flash": false,
+  "weather": "WEATHER_NONE",
+  "map_type": "MAP_TYPE_UNDERGROUND",
+  "allow_cycling": false,
+  "allow_escaping": true,
+  "allow_running": true,
+  "show_map_name": false,
+  "battle_scene": "MAP_BATTLE_SCENE_NORMAL",
+  "connections": null,
+  "object_events": [
+    {
+      "graphics_id": "OBJ_EVENT_GFX_HIKER",
+      "x": 40,
+      "y": 27,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_FACE_LEFT",
+      "movement_range_x": 0,
+      "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NORMAL",
+      "trainer_sight_or_berry_tree_id": "3",
+      "script": "CinderCaverns_B1F_EventScript_Bruno",
+      "flag": "0"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_WOMAN_2",
+      "x": 8,
+      "y": 22,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_FACE_UP",
+      "movement_range_x": 0,
+      "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NORMAL",
+      "trainer_sight_or_berry_tree_id": "4",
+      "script": "CinderCaverns_B1F_EventScript_Tess",
+      "flag": "0"
+    },
+    {
+      "local_id": "LOCALID_CINDER_GUARD",
+      "graphics_id": "OBJ_EVENT_GFX_SCIENTIST_1",
+      "x": 24,
+      "y": 2,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_FACE_DOWN",
+      "movement_range_x": 0,
+      "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE",
+      "trainer_sight_or_berry_tree_id": "0",
+      "script": "CinderCaverns_B1F_EventScript_Guard",
+      "flag": "0"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_ITEM_BALL",
+      "x": 26,
+      "y": 3,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_LOOK_AROUND",
+      "movement_range_x": 0,
+      "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE",
+      "trainer_sight_or_berry_tree_id": "0",
+      "script": "CinderCaverns_B1F_EventScript_Item_Magmarizer",
+      "flag": "FLAG_ITEM_CINDER_MAGMARIZER"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_ITEM_BALL",
+      "x": 45,
+      "y": 12,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_LOOK_AROUND",
+      "movement_range_x": 0,
+      "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE",
+      "trainer_sight_or_berry_tree_id": "0",
+      "script": "CinderCaverns_B1F_EventScript_Item_FullRestore",
+      "flag": "FLAG_ITEM_CINDER_FULL_RESTORE"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_ITEM_BALL",
+      "x": 6,
+      "y": 35,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_LOOK_AROUND",
+      "movement_range_x": 0,
+      "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE",
+      "trainer_sight_or_berry_tree_id": "0",
+      "script": "CinderCaverns_B1F_EventScript_Item_TmFlamethrower",
+      "flag": "FLAG_ITEM_CINDER_TM_FLAMETHROWER"
+    }
+  ],
+  "warp_events": [
+    {
+      "x": 24,
+      "y": 38,
+      "elevation": 0,
+      "dest_map": "MAP_CINDER_CAVERNS_1F",
+      "dest_warp_id": "1"
+    },
+    {
+      "x": 24,
+      "y": 1,
+      "elevation": 0,
+      "dest_map": "MAP_CINDER_CAVERNS_HEART",
+      "dest_warp_id": "0"
+    }
+  ],
+  "coord_events": [],
+  "bg_events": [
+    {
+      "type": "sign",
+      "x": 4,
+      "y": 6,
+      "elevation": 0,
+      "player_facing_dir": "BG_EVENT_PLAYER_FACING_NORTH",
+      "script": "CinderCaverns_B1F_EventScript_ValveWest"
+    },
+    {
+      "type": "sign",
+      "x": 44,
+      "y": 6,
+      "elevation": 0,
+      "player_facing_dir": "BG_EVENT_PLAYER_FACING_NORTH",
+      "script": "CinderCaverns_B1F_EventScript_ValveEast"
+    },
+    {
+      "type": "sign",
+      "x": 9,
+      "y": 33,
+      "elevation": 0,
+      "player_facing_dir": "BG_EVENT_PLAYER_FACING_NORTH",
+      "script": "CinderCaverns_B1F_EventScript_ValveSouth"
+    },
+    {
+      "type": "hidden_item",
+      "x": 2,
+      "y": 10,
+      "elevation": 3,
+      "item": "ITEM_STAR_PIECE",
+      "flag": "FLAG_HIDDEN_ITEM_CINDER_STAR_PIECE"
+    },
+    {
+      "type": "hidden_item",
+      "x": 37,
+      "y": 31,
+      "elevation": 3,
+      "item": "ITEM_NUGGET",
+      "flag": "FLAG_HIDDEN_ITEM_CINDER_NUGGET"
+    }
+  ]
+}
