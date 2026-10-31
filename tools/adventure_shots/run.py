@@ -11,7 +11,8 @@ through gAdventureShowcase (src/adventure.c):
     (10 of each, up to 8), ranch = {"MARILL", ...} (the RANCH box, up to 6),
     ranchHoursAgo = hours since the last ranch visit, dungeonFloor = the
     dungeon floor to draw next (Driver.dungeonLadder() then says where its
-    ladder is).
+    ladder is), wild = "SPECIES" (every wild Pokémon is that one; "" for
+    as usual).
 """
 import os
 import sys
@@ -40,6 +41,10 @@ function Driver.adventure(t)
     end
     if t.ranchHoursAgo then E.write8(s + 36, t.ranchHoursAgo) end
     if t.dungeonFloor then E.write8(s + 37, t.dungeonFloor) end
+    if t.wild then
+        local id = t.wild == "" and 0 or SPECIES_ID[t.wild]
+        E.write8(s + 40, id & 0xFF); E.write8(s + 41, id >> 8)
+    end
     E.write8(s, 1)
     -- B closes whatever message is still open, so the scene can run.
     Driver.waitFor("the adventure scene", 1800, function() return E.read8(s) == 0 end, function(i)
