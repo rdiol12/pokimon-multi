@@ -1,6 +1,12 @@
 #ifndef GUARD_DECORATION_H
 #define GUARD_DECORATION_H
 
+// EWRAM that decoration placement uses only while it's open; other screens
+// that never run at the same time keep their state here too (the netplay deal
+// screen, src/netplay.c).
+#define DECORATION_SCRATCH_SIZE 2212
+extern u8 gDecorationScratch[DECORATION_SCRATCH_SIZE];
+
 enum DecorationPermission
 {
     /*

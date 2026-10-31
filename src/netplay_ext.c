@@ -48,8 +48,10 @@ static EWRAM_DATA u8 sRpcTextLen = 0;
 static EWRAM_DATA u16 sRpcTimer = 0;
 static EWRAM_DATA u16 sRpcTimeout = 0;
 static EWRAM_DATA char sChosen[NPX_MAX_COLS][NPX_FIELD_LENGTH] = {0};
-static EWRAM_DATA u8 sItemText[NPX_MAX_ROWS + 1][32] = {0};
-static EWRAM_DATA struct ListMenuItem sItems[NPX_MAX_ROWS + 1] = {0};
+// The list screens' rows; shared with the online hub (src/online.c), whose
+// lists never show at the same time as the plaza's.
+EWRAM_DATA u8 gNpxListText[NPX_MAX_ROWS + 1][32] = {0};
+EWRAM_DATA struct ListMenuItem gNpxListItems[NPX_MAX_ROWS + 1] = {0};
 
 // Badges: the title each player on the map shows.
 static EWRAM_DATA u16 sTitleIds[NETPLAY_MAX_REMOTES] = {0};   // remote player id
@@ -729,15 +731,15 @@ void NetplayExt_ChooseRow(void)
     struct WindowTemplate window = {.bg = 0, .tilemapLeft = 6, .tilemapTop = 1, .width = 20, .paletteNum = 15, .baseBlock = 0x008};
     u8 taskId = CreateTask(Task_ChooseRow, 80);
     struct Task *task = &gTasks[taskId];
-    u32 i, count = NpxFeatures_BuildList(gSpecialVar_0x8004, sItemText, NPX_MAX_ROWS);
+    u32 i, count = NpxFeatures_BuildList(gSpecialVar_0x8004, gNpxListText, NPX_MAX_ROWS);
 
     for (i = 0; i < count; i++)
     {
-        sItems[i].name = sItemText[i];
-        sItems[i].id = i;
+        gNpxListItems[i].name = gNpxListText[i];
+        gNpxListItems[i].id = i;
     }
-    sItems[count].name = gText_Cancel;
-    sItems[count].id = LIST_CANCEL;
+    gNpxListItems[count].name = gText_Cancel;
+    gNpxListItems[count].id = LIST_CANCEL;
 
     window.height = min(count + 1, LIST_SHOWN) * 2;
     task->tWindowId = AddWindow(&window);
@@ -745,7 +747,7 @@ void NetplayExt_ChooseRow(void)
     task->tCount = count;
     DrawStdWindowFrame(task->tWindowId, FALSE);
 
-    template.items = sItems;
+    template.items = gNpxListItems;
     template.totalItems = count + 1;
     template.maxShowed = min(count + 1, LIST_SHOWN);
     template.windowId = task->tWindowId;

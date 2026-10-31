@@ -116,7 +116,11 @@ EWRAM_DATA static u8 sCurDecorationCategory = DECORCAT_DESK;
 EWRAM_DATA static struct DecorationPCContext sDecorationContext = {};
 EWRAM_DATA static u8 sDecorMenuWindowIds[WINDOW_COUNT] = {};
 EWRAM_DATA static struct DecorationItemsMenu *sDecorationItemsMenu = NULL;
-EWRAM_DATA static struct PlaceDecorationGraphicsDataBuffer sPlaceDecorationGraphicsDataBuffer = {};
+// Only used while placing a decoration, so other screens that can't be open
+// at the same time borrow it (DECORATION_SCRATCH in decoration.h).
+EWRAM_DATA u8 gDecorationScratch[DECORATION_SCRATCH_SIZE] ALIGNED(4) = {0};
+STATIC_ASSERT(sizeof(struct PlaceDecorationGraphicsDataBuffer) <= DECORATION_SCRATCH_SIZE, DecorationScratchTooSmall);
+#define sPlaceDecorationGraphicsDataBuffer (*(struct PlaceDecorationGraphicsDataBuffer *)gDecorationScratch)
 EWRAM_DATA static u16 sCurDecorMapX = 0;
 EWRAM_DATA static u16 sCurDecorMapY = 0;
 EWRAM_DATA static u8 sDecor_CameraSpriteObjectIdx1 = 0;
