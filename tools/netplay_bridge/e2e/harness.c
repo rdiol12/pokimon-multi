@@ -13,6 +13,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+
+// 2026-10-31 09:00 UTC: a morning.
+#define TEST_RTC_DEFAULT 1793437200LL
 #include <unistd.h>
 
 #include <mgba/core/core.h>
@@ -80,6 +83,7 @@ int main(int argc, char** argv) {
 	setvbuf(stdout, NULL, _IOLBF, 0);
 	mLogSetDefaultLogger(&sLogger);
 
+	const char* rtcText = getenv("NETPLAY_RTC");
 	struct Instance instances[MAX_INSTANCES] = {0};
 	for (int i = 0; i < count; i++) {
 		struct Instance* inst = &instances[i];
@@ -100,6 +104,13 @@ int main(int argc, char** argv) {
 		}
 		snprintf(path, sizeof(path), "%s/game.sav", dir);
 		inst->core->loadSave(inst->core, VFileOpen(path, O_CREAT | O_RDWR));
+		// The game's clock starts at the same moment every run (weather,
+		// day and night and other features go by it), unless NETPLAY_RTC
+		// says otherwise: unix seconds, or "wall" for the real time.
+		if (!rtcText || strcmp(rtcText, "wall") != 0) {
+			inst->core->rtc.override = RTC_FAKE_EPOCH;
+			inst->core->rtc.value = (rtcText ? atoll(rtcText) : TEST_RTC_DEFAULT) * 1000LL;
+		}
 		inst->core->reset(inst->core);
 
 		mScriptContextInit(&inst->context);
