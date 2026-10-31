@@ -53,6 +53,8 @@ void SaveObjectEvents(void);
 void LoadObjectEvents(void);
 void CopyPartyAndObjectsToSave(void);
 void CopyPartyAndObjectsFromSave(void);
+void LoadMorePcBoxes(void);
+extern struct PokemonStorageSave gPokemonStorageSave;
 void LoadPlayerBag(void);
 void SavePlayerBag(void);
 void ApplyNewEncryptionKeyToHword(u16 *hWord, u32 newKey);

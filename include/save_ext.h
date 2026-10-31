@@ -16,6 +16,7 @@
 
 #include "breed_fusion_save.h"
 #include "reserve_save.h"
+#include "pokemon_storage_system.h"
 
 struct SaveBlockExt
 {
@@ -24,6 +25,7 @@ struct SaveBlockExt
     // New saved data goes below.
     struct ReserveLocalMon reserveMoreMons[RESERVE_LOCAL_MAX - RESERVE_LOCAL_SAVED]; // Haven Reserve drop-offs 7-40
     struct FusionRecipe fusionMoreRecipes[FUSION_RECIPE_TOTAL - FUSION_RECIPE_COUNT]; // fusion colors 13-252
+    struct PokemonStorageMore pcMoreBoxes; // PC boxes 15-32
 };
 
 extern struct SaveBlockExt gSaveBlockExt;
