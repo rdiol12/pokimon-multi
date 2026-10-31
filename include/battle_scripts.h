@@ -365,6 +365,7 @@ extern const u8 BattleScript_ActivateAsOne[];
 extern const u8 BattleScript_QuickClawActivation[];
 extern const u8 BattleScript_QuickDrawActivation[];
 extern const u8 BattleScript_MechanicsMessage[];
+extern const u8 BattleScript_MechanicsMessageRet[];
 extern const u8 BattleScript_CustapBerryActivation[];
 extern const u8 BattleScript_MicleBerryActivate[];
 extern const u8 BattleScript_JabocaRowapBerryActivates[];

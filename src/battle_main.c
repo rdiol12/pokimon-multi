@@ -3564,6 +3564,10 @@ static void TryDoEventsBeforeFirstTurn(void)
             StopCryAndClearCrySongs();
             BattleScriptExecute(BattleScript_ArenaTurnBeginning);
         }
+        else if (Mechanics_TryOpeningCommentary())
+        {
+            BattleScriptExecute(BattleScript_MechanicsMessage);
+        }
 
         gBattleStruct->eventState.beforeFirstTurn = 0;
         break;

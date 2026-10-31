@@ -166,6 +166,8 @@ static const u8 *const sBattleMessages[] =
 // STRINGID_MECH_MESSAGE: the text for gBattleTextBuff3[0].
 const u8 *Mechanics_GetBattleMessage(u8 id)
 {
+    if (id >= MECH_MSG_COMMENTARY)
+        return Mechanics_GetCommentary(id - MECH_MSG_COMMENTARY);
     if (id < ARRAY_COUNT(sBattleMessages))
         return sBattleMessages[id];
     return COMPOUND_STRING("");

@@ -12085,6 +12085,8 @@ void BS_EndTurnEvents(void)
         BattleScriptCall(BattleScript_PalacePrintFlavorTextRet);
     else if (gBattleTypeFlags & BATTLE_TYPE_ARENA && gBattleStruct->eventState.arenaTurn == 0)
         BattleScriptCall(BattleScript_ArenaTurnBeginningRet);
+    else if (Mechanics_TryTurnCommentary())
+        BattleScriptCall(BattleScript_MechanicsMessageRet);
 }
 
 void BS_TryWakeBattlersUproar(void)

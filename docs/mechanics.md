@@ -235,6 +235,21 @@ away or losing leaves it there. The opponent's gimmick is chosen in
 opponent's battle style. Bosses in the new Cinder Caverns and Frostvein
 Cave can be added to the table once those maps are merged.
 
+## Battle commentary
+
+![The announcer opens a RISING CUP battle, then calls a KO, a super effective hit and the player's Pokémon going down](images/mechanics-commentary.png)
+
+In online PvP (link) battles and tournaments, an announcer calls the
+action (`src/mechanics_commentary.c`). It opens the battle, then after each
+turn says one line about the biggest thing that happened: a side down to
+its last Pokémon, a KO, Dynamax or Terastal, a critical hit or a super
+effective hit. It notes those from the battle's own messages
+(`PrepareStringBattle`, battle_util.c) and speaks at the end of the turn
+(`BS_EndTurnEvents`, battle_script_commands.c). The line is
+STRINGID_MECH_MESSAGE with the Pokémon in gBattleTextBuff1, and the choice
+uses no random numbers, so both games of a link battle print the same
+thing.
+
 ## Screenshots
 
 ```sh
@@ -248,6 +263,7 @@ python3 tools/mechanics_shots/run.py tools/mechanics_shots/skills.lua out/ 60000
 python3 tools/mechanics_shots/run.py tools/mechanics_shots/signature.lua out/ 150000
 python3 tools/mechanics_shots/run.py tools/mechanics_shots/evolution.lua out/ 150000
 python3 tools/mechanics_shots/run.py tools/mechanics_shots/bosses.lua out/ 150000
+python3 tools/mechanics_shots/run.py tools/mechanics_shots/commentary.lua out/ 150000
 ```
 
 The runner is `tools/world_shots/run.py` plus `Driver.fastText()` and

@@ -96,6 +96,7 @@
 // gBattleTextBuff3[0] so it reaches both games in a link battle.
 #define MECH_MSG_STYLE_AGILE  0
 #define MECH_MSG_STYLE_STRONG 1
+#define MECH_MSG_COMMENTARY   16 // + a line of src/mechanics_commentary.c
 
 // Flags (FLAG_UNUSED_0x881-0x887 and 0x8E5-0x8EF belong to the mechanics).
 #define FLAG_MECH_MET_TUTOR    FLAG_UNUSED_0x881

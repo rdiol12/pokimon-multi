@@ -63,6 +63,13 @@ bool32 Mechanics_TryAnnounceBattleStyle(u32 battler);
 const u8 *Mechanics_GetBattleMessage(u8 id);
 void Mechanics_SetupStylePractice(void);
 
+// Battle commentary (src/mechanics_commentary.c).
+void Mechanics_OnBattleString(u16 stringId, u32 battler);
+bool32 Mechanics_TryOpeningCommentary(void);
+bool32 Mechanics_TryTurnCommentary(void);
+const u8 *Mechanics_GetCommentary(u8 line);
+bool32 Mechanics_IsCupActive(void);
+
 // Trainer skills (src/mechanics_skills.c).
 bool32 Mechanics_HasSkill(u8 skill);
 bool32 Mechanics_TryKeepBattleItem(u16 item);
