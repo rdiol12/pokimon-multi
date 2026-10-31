@@ -322,3 +322,53 @@ Level: 42
 Smoochum
 Level: 40
 /* end FrostveinCave */
+
+/* begin Sunscar */
+=== AREA_TRAINER_SUNSCAR_DEXTER ===
+Name: DEXTER
+Class: Ruin Maniac
+Pic: Ruin Maniac
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Basic Trainer
+
+Baltoy
+Level: 35
+
+Sigilyph
+Level: 37
+
+=== AREA_TRAINER_SUNSCAR_MILO ===
+Name: MILO
+Class: Camper
+Pic: Camper
+Gender: Male
+Music: Twins
+Double Battle: No
+AI: Basic Trainer
+
+Krokorok
+Level: 36
+
+Vibrava
+Level: 37
+
+=== AREA_TRAINER_SUNSCAR_SABLE ===
+Name: SABLE
+Class: Expert
+Pic: Expert F
+Gender: Female
+Music: Intense
+Double Battle: No
+AI: Basic Trainer
+
+Cacturne
+Level: 37
+
+Hippowdon
+Level: 38
+
+Garchomp
+Level: 36
+/* end Sunscar */

@@ -98,6 +98,26 @@ you there once you have the Mind Badge.
 - The style learns from Shoal Cave's ice room. Map ids:
   MAP_FROSTVEIN_CAVE_1F, MAP_FROSTVEIN_CAVE_B1F.
 
+## Sunscar Desert and Ruins
+
+A sand basin among rock mesas, with ruins at its north end. A guide in
+Mauville City leads you there once you have Winona's badge.
+
+- The Hall of Riddles: three Unown statues each whisper a riddle, and four
+  glyph tablets (sun, moon, wave, flame) stand in the hall. Read a tablet
+  and press your hand to it. The right glyph makes the statue glow, but
+  only in order: the sun, then the moon, then the wave. The flame is a
+  decoy. When all three glow the ruins shake and the sealed door opens
+  (`setmetatile`, reapplied on load).
+- The vault: Spiritomb (Lv40), the Odd Keystone, a Relic Gold, a Dusk Ball,
+  a hidden Relic Copper, and wild Unown.
+- In the desert: an archaeologist with hints, a digger who gives a Relic
+  Gold once the vault is open, a basking Sandile, a Trapinch pit, Ruin
+  Maniac Dexter, Camper Milo, Expert Sable. TM Sandstorm, Soft Sand, a
+  Hyper Potion and three hidden items. Wild Pokémon Lv34–38 (Sandile,
+  Trapinch, Cacnea, Hippopotas, Baltoy, Silicobra, Gible, Sigilyph…).
+- Map ids: MAP_SUNSCAR_DESERT, MAP_SUNSCAR_RUINS_HALL, MAP_SUNSCAR_RUINS_VAULT.
+
 ## How the maps are made
 
 - `tools/areas/tiles.py` renders any tileset or layout to PNG.
