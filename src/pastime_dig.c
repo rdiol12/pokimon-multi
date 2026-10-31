@@ -90,7 +90,7 @@ static const struct DigItem sTreasures[] =
 
 static const u8 *const sSiteNames[DIG_SITES] =
 {
-    COMPOUND_STRING("ROUTE 114"), COMPOUND_STRING("ROUTE 113"), COMPOUND_STRING("ROUTE 115"), COMPOUND_STRING("ROUTE 111"),
+    COMPOUND_STRING("ROUTE 114"), COMPOUND_STRING("ROUTE 113"), COMPOUND_STRING("ROUTE 112"), COMPOUND_STRING("ROUTE 111"),
 };
 
 // The archaeologist's rewards, by finds.
@@ -149,7 +149,7 @@ const struct PastimeSpot gDigSpots[1 + DIG_SITES] =
     {MAP_FALLARBOR_TOWN, 12, 13, OBJ_EVENT_GFX_HIKER, MOVEMENT_TYPE_FACE_DOWN, 0, Dig_EventScript_Archaeologist},
     SITE(MAP_ROUTE114, 22, 10, 0),
     SITE(MAP_ROUTE113, 52, 3, 1),
-    SITE(MAP_ROUTE115, 20, 9, 2),
+    SITE(MAP_ROUTE112, 27, 10, 2),
     SITE(MAP_ROUTE111, 8, 9, 3),
 };
 

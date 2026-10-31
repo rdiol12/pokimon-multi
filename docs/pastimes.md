@@ -489,7 +489,7 @@ next one and the festivals enjoyed. Screenshots:
 ![Archaeology digs](images/pastime-archaeology.png)
 
 An archaeologist in Fallarbor Town has four dig sites around Mt. Chimney
-(Routes 114, 113, 115 and 111), each marked by a bone poking out of the
+(Routes 114, 113, 112 and 111), each marked by a bone poking out of the
 ground. Each site can be dug once a day: three finds are buried in an 8x6
 patch and the player gets 14 digs (the + Control Pad moves the shovel, A
 digs, B stops). An empty square glows red next to a buried find, orange
