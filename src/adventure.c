@@ -6,6 +6,7 @@
 #include "daily_quest.h"
 #include "dungeon.h"
 #include "frontier_online.h"
+#include "hall_of_fame_wall.h"
 #include "ranch.h"
 #include "trainer_level.h"
 #include "treasure.h"
@@ -30,6 +31,7 @@ struct AdventureShowcase
     u8 treasureSpot;               // today's treasure map + 1, 0 = leave as is
     u8 frontierSet;                // set the Frontier streaks below
     u16 frontierStreaks[FRONTIER_ONLINE_FACILITIES]; // Factory, Arena, Pyramid
+    u8 hofEnter;                   // the party enters the Hall of Fame (for the wall)
 };
 
 EWRAM_DATA struct AdventureShowcase gAdventureShowcase = {0};
@@ -58,6 +60,9 @@ static void RunShowcase(void)
     if (gAdventureShowcase.frontierSet)
         FrontierOnline_Showcase(gAdventureShowcase.frontierStreaks[0], gAdventureShowcase.frontierStreaks[1], gAdventureShowcase.frontierStreaks[2]);
     gAdventureShowcase.frontierSet = FALSE;
+    if (gAdventureShowcase.hofEnter)
+        HallOfFameWall_OnEnter();
+    gAdventureShowcase.hofEnter = FALSE;
     if (gAdventureShowcase.setXp != 0)
         TrainerLevel_SetXp(gAdventureShowcase.setXp - 1);
     if (gAdventureShowcase.outfit != 0)
@@ -74,6 +79,7 @@ void Adventure_Update(void)
     TrainerLevel_Update();
     DailyQuest_Update();
     FrontierOnline_Update();
+    HallOfFameWall_Update();
 }
 
 // A pressed facing (x, y), map coordinates with MAP_OFFSET.

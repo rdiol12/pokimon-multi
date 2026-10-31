@@ -7,3 +7,4 @@
 	.include "data/scripts/adventure/dungeon.inc"
 	.include "data/scripts/adventure/treasure.inc"
 	.include "data/scripts/adventure/frontier.inc"
+	.include "data/scripts/adventure/hall_of_fame.inc"

@@ -37,6 +37,22 @@ figcaption {{ font-size: .9rem; color: #555; }}
 </div>
 </body></html>
 """
+HOF_PAGE = """<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pokimon Multi Hall of Fame</title>
+<style>
+body {{ font-family: system-ui, sans-serif; margin: 0 auto; max-width: 48rem; padding: 1rem; }}
+.entry {{ border: 2px solid #c8a040; border-radius: 6px; padding: .5rem .8rem; margin: .6rem 0; background: #fffbea; }}
+.entry h2 {{ font-size: 1rem; margin: 0 0 .3rem; }}
+.entry small {{ color: #777; font-weight: normal; }}
+.team {{ display: flex; flex-wrap: wrap; gap: .3rem 1rem; font-size: .9rem; }}
+</style></head><body>
+<h1>Hall of Fame</h1>
+<p><a href="/">League</a> &middot; every team that entered the Hall of Fame, newest first.</p>
+{entries}
+</body></html>
+"""
 MAX_REQUEST = 8192
 
 PAGE = """<!doctype html>
@@ -56,7 +72,7 @@ code {{ background: #eee; padding: 0 .2rem; }}
 <tr><th>#</th><th>Trainer</th><th class=n>Rating</th><th class=n>W</th><th class=n>L</th><th class=n>D</th></tr>
 {rows}
 </table>
-<p><a href="/gallery">Photo gallery</a></p>
+<p><a href="/gallery">Photo gallery</a> &middot; <a href="/halloffame">Hall of Fame</a></p>
 <h2>Play</h2>
 <ol>
 <li>Open the game in mGBA 0.10 or newer.</li>
@@ -97,6 +113,25 @@ class Web:
         header = f"NETPLAY_HOST = NETPLAY_HOST or {json.dumps(host)}\nNETPLAY_PORT = NETPLAY_PORT or {self.game_port}\n"
         return header + script
 
+    def hall_of_fame(self):
+        import adventure_hof
+
+        db = self.server.league.db
+        adventure_hof.setup(db)
+        names = adventure_hof.species_names()
+
+        def mon(entry):
+            species, level, shiny = (int(n) for n in entry.split("."))
+            star = " &#9733;" if shiny else ""
+            return f"<span>{html.escape(names.get(species, f'#{species}'))} Lv. {level}{star}</span>"
+
+        entries = "\n".join(
+            f'<div class=entry><h2>#{number} {html.escape(name)} <small>{html.escape(date)}</small></h2>'
+            f'<div class=team>{"".join(mon(m) for m in team.split(","))}</div></div>'
+            for number, name, date, team in adventure_hof.entries(db, 200)
+        ) or "<p>No one has entered the Hall of Fame yet.</p>"
+        return HOF_PAGE.format(entries=entries)
+
     def route(self, path, host_header):
         host = self.public_host or re.sub(r":\d+$", "", host_header or "") or "127.0.0.1"
         if path == "/health":
@@ -121,6 +156,8 @@ class Web:
         if m and gallery and os.path.exists(os.path.join(gallery, m.group(1))):
             with open(os.path.join(gallery, m.group(1)), "rb") as f:
                 return 200, "image/png", f.read()
+        if path == "/halloffame":
+            return 200, "text/html; charset=utf-8", self.hall_of_fame()
         if path == "/":
             rows = "\n".join(
                 f"<tr><td>{r['rank']}</td><td>{html.escape(r['name'])}</td><td class=n>{r['rating']}</td>"
