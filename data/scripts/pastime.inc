@@ -20,3 +20,4 @@
 	.include "data/scripts/pastime/carnival.inc"
 	.include "data/scripts/pastime/orchestra.inc"
 	.include "data/scripts/pastime/art.inc"
+	.include "data/scripts/pastime/detective.inc"

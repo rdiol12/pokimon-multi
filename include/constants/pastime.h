@@ -26,6 +26,7 @@
 #define PASTIME_MENU_CARNIVAL   16
 #define PASTIME_MENU_ORCHESTRA  17
 #define PASTIME_MENU_ART        18
+#define PASTIME_MENU_DETECTIVE  19
 #define PASTIME_MENU_CLOSE      31
 
 // NPCs and objects the activities place on maps from code (src/pastime.c)
@@ -220,5 +221,14 @@
 #define ART_PAINTINGS          5
 #define ART_SIZE               12 // cells a side
 #define ART_MENU_CANCEL        15
+
+// Detective cases from Mauville (src/pastime_detective.c).
+#define DETECTIVE_CASES        4
+#define DETECTIVE_CLUES        3
+#define DETECTIVE_SUSPECTS     3
+#define DETECTIVE_MENU_NOT_YET 15
+#define DETECTIVE_OPEN         0 // VAR_RESULT of Detective_GetState
+#define DETECTIVE_NEW          1
+#define DETECTIVE_ALL_SOLVED   2
 
 #endif // GUARD_CONSTANTS_PASTIME_H

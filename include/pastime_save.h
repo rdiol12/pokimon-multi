@@ -124,6 +124,11 @@ struct PastimeSaveData
     u8 artBest[ART_PAINTINGS]; // best percent right, per painting
     u8 artFiller;
     u16 artPaintings;
+    // Detective cases (src/pastime_detective.c)
+    u8 detectiveCase;    // index + 1 of the open case, 0: none
+    u8 detectiveClues;   // a bit per clue of the open case
+    u8 detectiveSolved;  // a bit per case
+    u8 detectiveFiller;
 };
 
 #endif // GUARD_PASTIME_SAVE_H

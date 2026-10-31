@@ -419,3 +419,18 @@ and the painting is hung in the gallery and the museum pays ¥20 per
 percent; hanging all five gives a Shiny Stone. **R > PASTIMES > ART
 STUDIO** shows each painting's best score. Screenshots:
 `tools/pastime_shots/art.lua`.
+
+## Detective cases
+
+![Detective cases](images/pastime-detective.png)
+
+The DETECTIVE in Mauville City (17,10) hands out four cases in turn: THE
+VANISHED PIE (Petalburg), THE LOST WIND CHIME (Fortree), THE SOAKED
+LAUNDRY (Slateport) and THE MIDNIGHT HOWL (Lavaridge). Opening a case
+brings out three witnesses in its town (only while it's open); each gives a
+clue, and a toast counts them. Back at the agency the player names the
+culprit from three suspects. Right solves the case (Nugget, PP Up, Big
+Pearl, Lucky Egg) and raises the rank (ROOKIE, SLEUTH, INSPECTOR, ACE
+DETECTIVE); wrong closes it unsolved, to be opened again from the start.
+**R > PASTIMES > CASE FILES** shows each case and the clues found.
+Screenshots: `tools/pastime_shots/detective.lua`.
