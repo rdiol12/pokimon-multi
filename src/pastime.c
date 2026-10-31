@@ -43,6 +43,7 @@ static const struct PastimeSpotList sSpotLists[] =
     {gDojoSpots, 1},
     {gRangerSpots, 1 + RANGER_LOST_COUNT},
     {gSchoolSpots, 1},
+    {gGardenSpots, 1 + GARDEN_PLOTS},
 };
 
 #define MAX_SHOWN (LOCALID_PASTIME_LAST - LOCALID_PASTIME_FIRST + 1)
@@ -100,8 +101,12 @@ static bool32 UpdateSpot(const struct PastimeSpot *spot, u8 localId, void *data)
     if (shown && !wanted)
         RemoveObjectEventByLocalIdAndMap(localId, gSaveBlock1Ptr->location.mapNum, gSaveBlock1Ptr->location.mapGroup);
     else if (!shown && wanted)
-        SpawnSpecialObjectEventParameterized(spot->getGraphicsId != NULL ? spot->getGraphicsId(spot->arg) : spot->graphicsId,
-                                             spot->movementType, localId, x, y, MapGridGetElevationAt(x, y));
+    {
+        u8 objectEventId = SpawnSpecialObjectEventParameterized(spot->getGraphicsId != NULL ? spot->getGraphicsId(spot->arg) : spot->graphicsId,
+                                                                spot->movementType, localId, x, y, MapGridGetElevationAt(x, y));
+        if (spot->onSpawn != NULL && objectEventId < OBJECT_EVENTS_COUNT)
+            spot->onSpawn(spot->arg, objectEventId);
+    }
     return FALSE;
 }
 
@@ -148,6 +153,7 @@ void Pastime_Update(void)
     UpdateSpots();
     Delivery_Update();
     BugContest_Update();
+    Garden_Update();
 }
 
 // A pressed facing (x, y), map coordinates with MAP_OFFSET.

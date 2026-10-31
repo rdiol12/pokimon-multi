@@ -89,6 +89,12 @@ struct PastimeSaveData
     u8 schoolPassed;    // a bit per lesson
     u8 schoolFiller;
     u16 schoolTests;
+    // Community garden (src/pastime_garden.c)
+    u16 gardenDay;      // day + 1 of the last GARDEN SHOW entry
+    u8 gardenGift;      // TRUE once the starter Berries were given
+    u8 gardenFiller;
+    u16 gardenPoints;
+    u16 gardenShows;
 };
 
 #endif // GUARD_PASTIME_SAVE_H

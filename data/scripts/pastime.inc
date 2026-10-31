@@ -14,3 +14,4 @@
 	.include "data/scripts/pastime/dojo.inc"
 	.include "data/scripts/pastime/ranger.inc"
 	.include "data/scripts/pastime/school.inc"
+	.include "data/scripts/pastime/garden.inc"

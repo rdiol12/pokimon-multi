@@ -130,5 +130,10 @@ void School_PushAnswers(void);
 void School_Answer(void);
 void School_Finish(void);
 void School_ShowList(void);
+void Garden_GetShow(void);
+void Garden_CheckShow(void);
+void Garden_GiveStarterBerries(void);
+void Garden_ShowList(void);
+void Garden_Update(void);
 
 #endif // GUARD_PASTIME_H
