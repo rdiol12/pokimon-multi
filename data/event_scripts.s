@@ -371,6 +371,8 @@ gStdScripts_End::
 	.include "data/maps/StarfallIsle_ExplorersHouse/scripts.inc"
 	.include "data/maps/StarfallIsle_PlayerHouse/scripts.inc"
 	.include "data/maps/AmberwoodHollow/scripts.inc"
+	.include "data/scripts/areas/skyrope.inc"
+	.include "data/maps/SkyropeCanyon/scripts.inc"
 	.include "data/maps/CinderCaverns_Heart/scripts.inc"
 	.include "data/maps/CinderCaverns_B1F/scripts.inc"
 	.include "data/maps/CinderCaverns_1F/scripts.inc"

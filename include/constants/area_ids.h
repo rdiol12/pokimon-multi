@@ -4,7 +4,7 @@
 // Flags, vars and trainers of each new area. AREA_TRAINER_* index the area
 // trainer table; TRAINER_* are the ids scripts battle.
 
-#define AREA_TRAINERS_COUNT 20
+#define AREA_TRAINERS_COUNT 28
 
 /* begin ElderwoodForest */
 #define FLAG_ELDERWOOD_BOUNSWEET_HOME         AREA_FLAG(0)
@@ -80,5 +80,32 @@
 #define AREA_TRAINER_CINDER_TESS              19
 #define TRAINER_CINDER_TESS                   AREA_TRAINER(AREA_TRAINER_CINDER_TESS)
 /* end CinderCaverns */
+
+/* begin SkyropeCanyon */
+#define FLAG_SKYROPE_ROPE_1                   AREA_FLAG(72)
+#define FLAG_SKYROPE_ROPE_2                   AREA_FLAG(73)
+#define FLAG_SKYROPE_ROPE_3                   AREA_FLAG(74)
+#define FLAG_SKYROPE_QUEST_STARTED            AREA_FLAG(75)
+#define FLAG_SKYROPE_BRIDGE_FIXED             AREA_FLAG(76)
+#define FLAG_HIDE_SKYROPE_HAWLUCHA            AREA_FLAG(77)
+#define FLAG_SKYROPE_HAWLUCHA_DONE            AREA_FLAG(78)
+#define FLAG_SKYROPE_ARTIST_GIFT              AREA_FLAG(79)
+#define FLAG_ITEM_SKYROPE_HARD_STONE          AREA_FLAG(80)
+#define FLAG_ITEM_SKYROPE_MAX_REPEL           AREA_FLAG(81)
+#define FLAG_ITEM_SKYROPE_TM_AERIAL_ACE       AREA_FLAG(82)
+#define FLAG_ITEM_SKYROPE_RARE_CANDY          AREA_FLAG(83)
+#define FLAG_ITEM_SKYROPE_SHARP_BEAK          AREA_FLAG(84)
+#define FLAG_HIDDEN_ITEM_SKYROPE_STAR_PIECE   AREA_FLAG(85)
+#define FLAG_HIDDEN_ITEM_SKYROPE_ESCAPE_ROPE  AREA_FLAG(86)
+#define FLAG_HIDDEN_ITEM_SKYROPE_NUGGET       AREA_FLAG(87)
+#define AREA_TRAINER_SKYROPE_HAMISH           24
+#define TRAINER_SKYROPE_HAMISH                AREA_TRAINER(AREA_TRAINER_SKYROPE_HAMISH)
+#define AREA_TRAINER_SKYROPE_WREN             25
+#define TRAINER_SKYROPE_WREN                  AREA_TRAINER(AREA_TRAINER_SKYROPE_WREN)
+#define AREA_TRAINER_SKYROPE_DAISY            26
+#define TRAINER_SKYROPE_DAISY                 AREA_TRAINER(AREA_TRAINER_SKYROPE_DAISY)
+#define AREA_TRAINER_SKYROPE_KOJI             27
+#define TRAINER_SKYROPE_KOJI                  AREA_TRAINER(AREA_TRAINER_SKYROPE_KOJI)
+/* end SkyropeCanyon */
 
 #endif // GUARD_CONSTANTS_AREA_IDS_H

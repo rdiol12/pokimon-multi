@@ -59,3 +59,12 @@ def _tune_magma(st):
     st.uniform_plain = True
     st.exclude |= {0x215, 0x364, 0x33B, 0x30E, 0x2AF, 0x35C, 0x3A8, 0x3A9, 0x397, 0x396, 0x39D, 0x25E, 0x256}  # machines, ladders, doors
     return st
+
+
+def canyon():
+    """Routes 114 and 115: terraced rock, rivers and a wooden bridge."""
+    if 'canyon' not in _cache:
+        _cache['canyon'] = Style('gTileset_General', 'gTileset_Fallarbor', ['LAYOUT_ROUTE114', 'LAYOUT_ROUTE115'],
+                                 wall_classes={'T': TREES}, colors=True)
+        _cache['canyon'].exclude = {0xCF, 0xAF, 0x208, 0x350, 0x20E, 0x20F}  # stairs, holes, sand
+    return _cache['canyon']

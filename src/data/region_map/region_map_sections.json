@@ -1650,6 +1650,10 @@
     {
       "id": "MAPSEC_CINDER_CAVERNS",
       "name": "CINDER CAVERNS"
+    },
+    {
+      "id": "MAPSEC_SKYROPE_CANYON",
+      "name": "SKYROPE CANYON"
     }
   ]
 }

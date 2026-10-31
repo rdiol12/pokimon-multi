@@ -35,6 +35,7 @@ class Style:
         self.models = [defaultdict(Counter) for _ in range(10)]
         self.H, self.V, self.D = defaultdict(Counter), defaultdict(Counter), defaultdict(Counter)
         self.elev = defaultdict(Counter)
+        self.elev_by_class = defaultdict(Counter)  # (metatile, class): collision | elevation
         L = layouts()
         for lid in corpus:
             l = L[lid]
@@ -96,6 +97,7 @@ class Style:
                 for i, k in enumerate(self.keys(pat, left, up, upr)):
                     self.models[i][k[1:]][m & 0x3FF] += 1
                 self.elev[m & 0x3FF][m & 0xFC00] += 1
+                self.elev_by_class[(m & 0x3FF, cl[y, x])][m & 0xFC00] += 1
 
     def choose(self, pat, left, up, upleft):
         keys = self.keys(pat, left, up, -1)
@@ -146,5 +148,8 @@ class Style:
                 m = self.choose(pat, left, up, int(out[y - 1, x - 1]) & 0x3FF if x and y else -1)
                 if m is None:
                     raise ValueError(f'no metatile for class {pat[4]!r} at {x},{y}')
-                out[y, x] = m | self.elev[m].most_common(1)[0][0]
+                # the same metatile can be floor in one place and wall in
+                # another (Route 114's rock): take the collision of its class
+                e = self.elev_by_class.get((m, pat[4])) or self.elev[m]
+                out[y, x] = m | e.most_common(1)[0][0]
         return out

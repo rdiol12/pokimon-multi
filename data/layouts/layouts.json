@@ -9404,6 +9404,16 @@
       "secondary_tileset": "gTileset_Lavaridge",
       "border_filepath": "data/layouts/CinderCaverns_Heart/border.bin",
       "blockdata_filepath": "data/layouts/CinderCaverns_Heart/map.bin"
+    },
+    {
+      "id": "LAYOUT_SKYROPE_CANYON",
+      "name": "SkyropeCanyon_Layout",
+      "width": 64,
+      "height": 60,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Fallarbor",
+      "border_filepath": "data/layouts/SkyropeCanyon/border.bin",
+      "blockdata_filepath": "data/layouts/SkyropeCanyon/map.bin"
     }
   ]
 }

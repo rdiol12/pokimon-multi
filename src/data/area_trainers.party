@@ -192,3 +192,68 @@ Level: 36
 Centiskorch
 Level: 37
 /* end CinderCaverns */
+
+/* begin SkyropeCanyon */
+=== AREA_TRAINER_SKYROPE_HAMISH ===
+Name: HAMISH
+Class: Hiker
+Pic: Hiker
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Basic Trainer
+
+Boldore
+Level: 31
+
+Rhyhorn
+Level: 32
+
+=== AREA_TRAINER_SKYROPE_WREN ===
+Name: WREN
+Class: Bird Keeper
+Pic: Bird Keeper
+Gender: Male
+Music: Cool
+Double Battle: No
+AI: Basic Trainer
+
+Rufflet
+Level: 31
+
+Swablu
+Level: 31
+
+Skarmory
+Level: 33
+
+=== AREA_TRAINER_SKYROPE_DAISY ===
+Name: DAISY
+Class: Picnicker
+Pic: Picnicker
+Gender: Female
+Music: Girl
+Double Battle: No
+AI: Basic Trainer
+
+Mudbray
+Level: 32
+
+Marill
+Level: 32
+
+=== AREA_TRAINER_SKYROPE_KOJI ===
+Name: KOJI
+Class: Black Belt
+Pic: Black Belt
+Gender: Male
+Music: Intense
+Double Battle: No
+AI: Basic Trainer
+
+Machoke
+Level: 33
+
+Hawlucha
+Level: 34
+/* end SkyropeCanyon */

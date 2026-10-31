@@ -55,6 +55,29 @@ of Ember Springs.
   Heatmor…) and rock smash encounters.
 - Map ids for bosses and events: MAP_CINDER_CAVERNS_1F, _B1F, _HEART.
 
+## Skyrope Canyon
+
+Rock mesas cut by narrow trails, and a deep river gorge crossed by three
+long rope bridges. A hiker in Fallarbor Town leads you there once you have
+Norman's badge.
+
+- Quest: a gust tore the planks off the east bridge and scattered the
+  Bridgewright's three coils of rope (west trail, north-west basin, the
+  south grass). Bring them back and he mends the bridge (`setmetatile`,
+  reapplied on load from FLAG_SKYROPE_BRIDGE_FIXED). Across it is a ledge
+  where Hawlucha (Lv36) trains, with Black Belt Koji, a Rare Candy and a
+  Sharp Beak. The artist gives a Star Piece once the bridge is fixed.
+- Trainers: Hiker Hamish, Bird Keeper Wren, Picnicker Daisy, Black Belt
+  Koji. Breakable rocks, Strength boulders, a wandering Mudbray and a
+  Rufflet guarding its nest.
+- Items (TM Aerial Ace, Hard Stone, Max Repel) and three hidden items.
+  Wild Pokémon Lv30–35 (Rufflet, Vullaby, Drilbur, Sandile, Mudbray,
+  Gligar, Skarmory, Hawlucha…), Basculin in the river, rock smash
+  encounters.
+- The style learns from Routes 114 and 115. Route 114's wooden bridge is
+  the rope bridge. synth.py now gives each metatile the collision it has
+  in its sketch class, since Route 114 uses the same rock as floor and wall.
+
 ## How the maps are made
 
 - `tools/areas/tiles.py` renders any tileset or layout to PNG.
