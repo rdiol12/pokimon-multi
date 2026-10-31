@@ -85,16 +85,59 @@ Frontier sets. Cups won are marked WON (`gSaveBlock3Ptr->mechanics.cupsWon`).
 **Online PvP.** `Mechanics_ApplyLevelCap(level)` caps the party for a
 battle and `Mechanics_RestoreParty()` puts it back.
 
+## Rare color variants
+
+![Zigzagoon, Altaria and Gardevoir in normal, AURORA, DUSK and MIDNIGHT colors, and a DUSK Gardevoir of your own](images/mechanics-color-variants.png)
+
+About 1 Pokémon in 340 has rare colors, separate from (and rarer to stack
+with) being shiny (`src/mechanics_colors.c`):
+
+| Variant | Look |
+| --- | --- |
+| AURORA | hues turned a third of the way round |
+| DUSK | warm sepia gold |
+| MIDNIGHT | hues turned the other way, darker |
+
+The variant comes from the personality value, so it never changes, is kept
+through trades and needs no save data. `GetMonSpritePalFromSpeciesAndPersonality`
+(src/pokemon.c) returns the shifted palette, so it shows in battle (front
+and back), the summary screen, the PC, evolution, hatching and contests. A
+wild one is announced: "Its colors are unusual…". Overworld followers and
+party icons keep their normal colors (they don't know the personality).
+
+## Pokémon personalities
+
+![PLAYFUL, SHY, BRAVE, LAZY and GRUMPY followers talking and idling](images/mechanics-personalities.png)
+
+Every Pokémon has one of eight personalities: PLAYFUL, SHY, PROUD, LAZY,
+CURIOUS, BRAVE, GENTLE or GRUMPY (`src/mechanics_personality.c`). Like
+color variants it comes from the personality value (mixed so it doesn't
+follow the nature), so it needs no save data. It shows on the Pokémon
+following you:
+
+- Talking to it: 2 times in 5 it says one of its own three lines (or "has
+  a SHY personality. You can just tell!") with its own emote and
+  animation; otherwise the usual follower message, but with the moods its
+  personality favours picked more often.
+- Standing still for 4 seconds: PLAYFUL and BRAVE ones jump, CURIOUS and
+  SHY ones look around, the others show their mood emote.
+
+Hooks: `GetFollowerAction` and `ObjectEventEmote` (made public) in
+src/event_object_movement.c; `Mechanics_UpdatePersonaFollower` runs from
+the overworld update.
+
 ## Screenshots
 
 ```sh
 python3 tools/mechanics_shots/run.py tools/mechanics_shots/move_tutor.lua out/
 python3 tools/mechanics_shots/run.py tools/mechanics_shots/rules.lua out/ 120000
 python3 tools/mechanics_shots/run.py tools/mechanics_shots/cups.lua out/ 300000
+python3 tools/mechanics_shots/run.py tools/mechanics_shots/colors.lua out/
+python3 tools/mechanics_shots/run.py tools/mechanics_shots/personality.lua out/ 100000
 ```
 
 The runner is `tools/world_shots/run.py` plus `Driver.fastText()` and
 `Driver.step(key, name)`, `Driver.fight(name, shotEvery)` (battles with the
 first move) and `Driver.mech{...}` (gMechanicsShowcase in src/mechanics.c:
-fix moveless party Pokémon, set the lead's moves). It needs a built `pokeemerald.gba` and
+fix moveless party Pokémon, set the lead's moves, give a lead or wild Pokémon with a chosen color variant and personality). It needs a built `pokeemerald.gba` and
 `libmgba-dev`.

@@ -19,10 +19,19 @@ world_run.SYMBOLS += ["gMechanicsShowcase"]
 world_run.HELPERS += """
 -- Runs a request through gMechanicsShowcase (src/mechanics.c):
 -- moves = {"FLAMETHROWER", ...} sets the lead's moves;
+-- species = "ZIGZAGOON", level = 10, variant = 1 (COLOR_*), wild = true
+-- makes a Pokémon with that color variant: the new lead, or a wild battle;
+-- persona = 0-7 (PERSONA_*) picks its personality too;
 -- fixMoves = true gives party Pokémon without moves their level-up moves.
 function Driver.mech(t)
     local s = Driver.SYM.gMechanicsShowcase
     E.write8(s + 1, t.fixMoves and 1 or 0)
+    local sp = t.species and SPECIES_ID[t.species] or 0
+    E.write16(s + 10, sp)
+    E.write8(s + 12, t.level or 30)
+    E.write8(s + 13, t.variant or 0)
+    E.write8(s + 14, t.wild and 1 or 0)
+    E.write8(s + 15, t.persona and t.persona + 1 or 0)
     for i = 1, 4 do
         local m = t.moves and MOVE_ID[t.moves[i]] or 0
         E.write16(s + 2 + (i - 1) * 2, m)
