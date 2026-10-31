@@ -190,7 +190,10 @@
     "SnowdriftVillage_WestCabin",
     "SnowdriftVillage_EastCabin",
     "MirageOasis_Inn",
-    "MirageOasis_SunkenCourt"
+    "MirageOasis_SunkenCourt",
+    "VerdantRiver",
+    "VerdantRiver_Temple",
+    "VerdantRiver_Hut"
   ],
   "gMapGroup_IndoorLittleroot": [
     "LittlerootTown_BrendansHouse_1F",

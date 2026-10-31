@@ -1369,3 +1369,83 @@ Level: 51
 Golurk
 Level: 52
 /* end Mirage */
+
+/* begin Verdant */
+=== AREA_TRAINER_VERDANT_KOBE ===
+Name: KOBE
+Class: Bug Maniac
+Pic: Bug Maniac
+Gender: Male
+Music: Suspicious
+Double Battle: No
+AI: Basic Trainer
+
+Heracross
+Level: 33
+
+Vikavolt
+Level: 34
+
+=== AREA_TRAINER_VERDANT_MAYA ===
+Name: MAYA
+Class: Swimmer F
+Pic: Swimmer F
+Gender: Female
+Music: Swimmer
+Double Battle: No
+AI: Basic Trainer
+
+Lombre
+Level: 33
+
+Azumarill
+Level: 34
+
+=== AREA_TRAINER_VERDANT_REED ===
+Name: REED
+Class: Fisherman
+Pic: Fisherman
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Basic Trainer
+
+Basculin
+Level: 33
+
+Whiscash
+Level: 34
+
+Barraskewda
+Level: 34
+
+=== AREA_TRAINER_VERDANT_LIANA ===
+Name: LIANA
+Class: Bird Keeper
+Pic: Bird Keeper
+Gender: Female
+Music: Cool
+Double Battle: No
+AI: Basic Trainer
+
+Trumbeak
+Level: 34
+
+Tropius
+Level: 35
+
+=== AREA_TRAINER_VERDANT_ROWAN ===
+Name: ROWAN
+Class: Swimmer M
+Pic: Swimmer M
+Gender: Male
+Music: Swimmer
+Double Battle: No
+AI: Basic Trainer
+
+Golduck
+Level: 35
+
+Drednaw
+Level: 36
+/* end Verdant */

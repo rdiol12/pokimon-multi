@@ -471,6 +471,33 @@ the altar and the oasis gate from tools/areas/oasis_art.py.
 - Map ids: MAP_MIRAGE_DUNES, MAP_MIRAGE_OASIS, MAP_MIRAGE_OASIS_INN,
   MAP_MIRAGE_OASIS_SUNKEN_COURT. Done flag FLAG_MIRAGE_SPRING_DONE.
 
+## Verdant River
+
+A jungle river village for after the fifth badge (trainers Lv33–36). A
+canoe guide on the south end of Route 119 paddles you there once you have
+Norman's badge; the paddler at the landing takes you back. The ground is
+Route 119's jungle style; gTileset_Jungle is the Fortree tiles Routes 119
+and 120 and Fortree use (the rest are cleared, `pack(..., keep=...)`) plus
+rapids in four directions (current behaviours), sluice levers, stilt huts,
+dock planks, canoes, totems and the river temple from
+tools/areas/jungle_art.py.
+
+- The gorge: rapids fill the gorge between the village and the lake. Pull
+  the sluice lever on the lookout above the village and the gorge calms
+  (setmetatile to still water), so you can surf up to the lake.
+- The whirl: a ring of currents runs round the temple island and throws
+  you out to the west. The lever on the west beach turns the south side of
+  the ring north, so riding it carries you onto the island's dock and the
+  temple door. Inside: Keldeo (Lv40), TM Calm Mind and a Max Revive.
+- Reach the temple and the village elder gives you a Lv30 Froakie.
+- Also: a current east of the river mouth into a hidden lagoon (a Lotad
+  and Mystic Water), a healer's hut, Fisherman Reed, Bug Maniac Kobe, Bird
+  Keeper Liana, Swimmers Maya and Rowan, items and hidden items.
+- Map ids: MAP_VERDANT_RIVER, MAP_VERDANT_RIVER_TEMPLE,
+  MAP_VERDANT_RIVER_HUT. Done flag FLAG_VERDANT_TEMPLE_REACHED.
+- Warps to coordinates past 127 (Route 119 is 140 tall) used to wrap
+  round: `SetWarpDestination` now takes s16 x and y, like `struct WarpData`.
+
 ## How the maps are made
 
 - `tools/areas/tiles.py` renders any tileset or layout to PNG.

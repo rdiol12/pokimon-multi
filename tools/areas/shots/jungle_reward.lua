@@ -1,0 +1,35 @@
+-- Verdant River: the elder gives Froakie once the temple is reached; the
+-- hidden lagoon behind the current, its Lotad and the healer's hut.
+dofile(INSTANCE_DIR .. "/../driver_lib.lua")
+local D, K = Driver, Driver.KEY
+local R = MAPS.MAP_VERDANT_RIVER
+
+D.run(function()
+    D.boot()
+    D.wait(60)
+    D.season(1)
+    D.flag("FLAG_VERDANT_SLUICE", true)
+    D.flag("FLAG_VERDANT_WHIRL", true)
+    D.flag("FLAG_VERDANT_TEMPLE_REACHED", true)
+    D.scene(12, R, 10, 49, { give = "LUCARIO", level = 45, lead = true, surf = true })
+    D.wait(300)
+    D.talk(K.UP, "01-elder-thanks", 6)
+    D.wait(200)
+    D.shot("02-froakie")
+    for _ = 1, 6 do D.press(K.B, 40) end
+    D.wait(100)
+    D.scene(12, R, 34, 47)
+    D.wait(300)
+    D.shot("03-current-east")
+    D.hold(K.RIGHT, 16)
+    D.wait(200)
+    D.shot("04-hidden-lagoon")
+    D.scene(12, R, 13, 52)
+    D.wait(300)
+    D.hold(K.UP, 16)
+    D.wait(300)
+    D.waitFor("the overworld", 1200, D.inOverworld)
+    D.wait(100)
+    D.shot("05-healer-hut")
+    D.result("ok")
+end)

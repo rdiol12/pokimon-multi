@@ -9765,6 +9765,26 @@
       "secondary_tileset": "gTileset_Oasis",
       "border_filepath": "data/layouts/MirageOasis_SunkenCourt/border.bin",
       "blockdata_filepath": "data/layouts/MirageOasis_SunkenCourt/map.bin"
+    },
+    {
+      "id": "LAYOUT_VERDANT_RIVER",
+      "name": "VerdantRiver_Layout",
+      "width": 56,
+      "height": 64,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Jungle",
+      "border_filepath": "data/layouts/VerdantRiver/border.bin",
+      "blockdata_filepath": "data/layouts/VerdantRiver/map.bin"
+    },
+    {
+      "id": "LAYOUT_VERDANT_RIVER_TEMPLE",
+      "name": "VerdantRiver_Temple_Layout",
+      "width": 22,
+      "height": 18,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Cave",
+      "border_filepath": "data/layouts/VerdantRiver_Temple/border.bin",
+      "blockdata_filepath": "data/layouts/VerdantRiver_Temple/map.bin"
     }
   ]
 }

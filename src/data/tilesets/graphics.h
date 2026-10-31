@@ -273,6 +273,29 @@ const u16 gTilesetPalettes_Oasis[][16] =
     INCGFX_U16("data/tilesets/secondary/oasis/palettes/15.pal", ".gbapal"),
 };
 
+// Verdant River (tools/areas/jungle_art.py): Fortree's jungle tiles plus new art.
+const u32 gTilesetTiles_Jungle[] = INCGFX_U32("data/tilesets/secondary/jungle/tiles.png", ".4bpp.fastSmol", "-num_tiles 496 -Wnum_tiles");
+
+const u16 gTilesetPalettes_Jungle[][16] =
+{
+    INCGFX_U16("data/tilesets/secondary/jungle/palettes/00.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/jungle/palettes/01.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/jungle/palettes/02.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/jungle/palettes/03.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/jungle/palettes/04.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/jungle/palettes/05.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/jungle/palettes/06.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/jungle/palettes/07.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/jungle/palettes/08.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/jungle/palettes/09.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/jungle/palettes/10.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/jungle/palettes/11.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/jungle/palettes/12.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/jungle/palettes/13.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/jungle/palettes/14.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/jungle/palettes/15.pal", ".gbapal"),
+};
+
 // Whisperstem Valley (tools/areas/bamboo_art.py): Rustboro's tiles plus new art.
 const u32 gTilesetTiles_Bamboo[] = INCGFX_U32("data/tilesets/secondary/bamboo/tiles.png", ".4bpp.fastSmol", "-num_tiles 512 -Wnum_tiles");
 
