@@ -250,6 +250,32 @@ and stepping stones.
 - Map ids: MAP_WHISPERSTEM_VALLEY, MAP_WHISPERSTEM_VALLEY_TEAHOUSE (the
   Lavaridge herb shop's room). Done flag FLAG_BAMBOO_TEA_DONE.
 
+## Cobblerock and Cobblerock Mine
+
+A mining town in the hills, for after the first badge (trainers Lv13–16,
+wild Pokémon Lv11–16). A miner by Rustboro City's Pokémon Center takes you
+up once you have Roxanne's badge. The mountain is Route 116's, and the
+mine's art (rails with curves, carts, crates, ore piles, ore veins, timber
+supports, lamp posts) is drawn by tools/areas/mine_art.py. The town uses it
+through gTileset_Bamboo (palette 6), and the mine through its own tileset,
+gTileset_Mine (the cave tiles plus the art, palette 12), with the mine()
+style learned from Granite Cave.
+
+- The assayer's samples: three ore veins sparkle red and blue, one on 1F
+  and two on B1F. Chip a sample from each (they turn to plain rock, and
+  stay that way through `setmetatile` on load), then bring them to the
+  assay office. The assayer gives you a Rolycoly (Lv15) and has the foreman
+  move the boulder off the old shaft.
+- The old shaft: a Carbink (Lv18 static battle) among the crystals, a
+  Nugget and a hidden Star Piece.
+- Also: rails running from the mine into the ore yard, the foreman, an old
+  miner with hints, a supply merchant (Escape Rope, Repel, Hard Stone…),
+  the miners' rest where the cook heals your team, Hikers Grant and Doug,
+  Ruin Maniac Todd, Picnicker Rhoda, TM Dig, an Everstone and hidden items.
+- Map ids: MAP_COBBLEROCK, MAP_COBBLEROCK_MINE_1F, MAP_COBBLEROCK_MINE_B1F,
+  MAP_COBBLEROCK_MINE_OLD_SHAFT, MAP_COBBLEROCK_ASSAY_OFFICE,
+  MAP_COBBLEROCK_MINERS_REST. Done flag FLAG_COBBLE_ASSAY_DONE.
+
 ## How the maps are made
 
 - `tools/areas/tiles.py` renders any tileset or layout to PNG.

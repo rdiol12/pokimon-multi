@@ -1690,6 +1690,10 @@
     {
       "id": "MAPSEC_WHISPERSTEM_VALLEY",
       "name": "WHISPERSTEM VALLEY"
+    },
+    {
+      "id": "MAPSEC_COBBLEROCK",
+      "name": "COBBLEROCK"
     }
   ]
 }

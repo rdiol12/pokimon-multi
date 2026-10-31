@@ -4,7 +4,7 @@
 // Flags, vars and trainers of each new area. AREA_TRAINER_* index the area
 // trainer table; TRAINER_* are the ids scripts battle.
 
-#define AREA_TRAINERS_COUNT 92
+#define AREA_TRAINERS_COUNT 100
 
 /* begin ElderwoodForest */
 #define FLAG_ELDERWOOD_BOUNSWEET_HOME         AREA_FLAG(0)
@@ -322,5 +322,33 @@
 #define AREA_TRAINER_BAMBOO_KAITO             91
 #define TRAINER_BAMBOO_KAITO                  AREA_TRAINER(AREA_TRAINER_BAMBOO_KAITO)
 /* end WhisperstemValley */
+
+/* begin Cobblerock */
+#define FLAG_COBBLE_ORE_1                     AREA_FLAG(288)
+#define FLAG_COBBLE_ORE_2                     AREA_FLAG(289)
+#define FLAG_COBBLE_ORE_3                     AREA_FLAG(290)
+#define FLAG_COBBLE_ASSAY_DONE                AREA_FLAG(291)
+#define FLAG_COBBLE_CARBINK_DONE              AREA_FLAG(292)
+#define FLAG_ITEM_COBBLE_REPEL                AREA_FLAG(293)
+#define FLAG_ITEM_COBBLE_ESCAPE_ROPE          AREA_FLAG(294)
+#define FLAG_ITEM_COBBLE_HARD_STONE           AREA_FLAG(295)
+#define FLAG_ITEM_COBBLE_EVERSTONE            AREA_FLAG(296)
+#define FLAG_ITEM_COBBLE_SUPER_POTION         AREA_FLAG(297)
+#define FLAG_ITEM_COBBLE_TM_DIG               AREA_FLAG(298)
+#define FLAG_ITEM_COBBLE_NUGGET               AREA_FLAG(299)
+#define FLAG_ITEM_COBBLE_GREAT_BALL           AREA_FLAG(300)
+#define FLAG_HIDDEN_ITEM_COBBLE_HEART_SCALE   AREA_FLAG(301)
+#define FLAG_HIDDEN_ITEM_COBBLE_STAR_PIECE    AREA_FLAG(302)
+#define FLAG_HIDDEN_ITEM_COBBLE_PEARL         AREA_FLAG(303)
+#define FLAG_COBBLE_FOREMAN_TALKED            AREA_FLAG(304)
+#define AREA_TRAINER_COBBLE_GRANT             96
+#define TRAINER_COBBLE_GRANT                  AREA_TRAINER(AREA_TRAINER_COBBLE_GRANT)
+#define AREA_TRAINER_COBBLE_RHODA             97
+#define TRAINER_COBBLE_RHODA                  AREA_TRAINER(AREA_TRAINER_COBBLE_RHODA)
+#define AREA_TRAINER_COBBLE_DOUG              98
+#define TRAINER_COBBLE_DOUG                   AREA_TRAINER(AREA_TRAINER_COBBLE_DOUG)
+#define AREA_TRAINER_COBBLE_TODD              99
+#define TRAINER_COBBLE_TODD                   AREA_TRAINER(AREA_TRAINER_COBBLE_TODD)
+/* end Cobblerock */
 
 #endif // GUARD_CONSTANTS_AREA_IDS_H

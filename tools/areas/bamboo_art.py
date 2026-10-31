@@ -1,6 +1,7 @@
 """Whisperstem Valley's tileset: Rustboro's secondary tileset (the one Route
 104 and Petalburg Woods use) plus new pixel art in Emerald's style: bamboo
-groves that tile in any size, a teahouse, stone lanterns and a shrine gate.
+groves that tile in any size, a teahouse, stone lanterns and a shrine gate,
+and the mining town of Cobblerock's rails, carts and ore (from mine_art.py).
 
     python3 tools/areas/bamboo_art.py
 
@@ -10,6 +11,7 @@ import os, sys
 import numpy as np
 sys.path.insert(0, os.path.dirname(__file__))
 from art import Canvas, pack, ROOT
+import mine_art
 
 GROUND = 0x001            # General's grass shows under see-through pixels
 
@@ -203,11 +205,13 @@ OBJECTS = {
     'lantern': (lantern, 12, {'over': lambda r, c: r == 0}),
     'gate': (gate, 12, {'walk': PATH_COL, 'over': lambda r, c: r < 2}),
     'stepping_stone': (stepping_stone, 12, {'walk': lambda r, c: True}),
+    # Cobblerock's rails, carts and ore (tools/areas/mine_art.py), in palette 6
+    **mine_art.objects(6),
 }
 
 
 def main():
-    pack('data/tilesets/secondary/rustboro', 'data/tilesets/secondary/bamboo', OBJECTS, {12: PAL}, GROUND,
+    pack('data/tilesets/secondary/rustboro', 'data/tilesets/secondary/bamboo', OBJECTS, {12: PAL, 6: mine_art.PAL}, GROUND,
          f'{ROOT}/tools/areas/bamboo_tiles.json', fill_free=True)
 
 

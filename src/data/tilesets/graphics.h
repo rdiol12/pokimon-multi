@@ -89,6 +89,29 @@ const u16 gTilesetPalettes_Carnival[][16] =
     INCGFX_U16("data/tilesets/secondary/carnival/palettes/15.pal", ".gbapal"),
 };
 
+// Cobblerock Mine (tools/areas/mine_art.py): the cave's tiles plus new art.
+const u32 gTilesetTiles_Mine[] = INCGFX_U32("data/tilesets/secondary/mine/tiles.png", ".4bpp.fastSmol", "-num_tiles 432 -Wnum_tiles");
+
+const u16 gTilesetPalettes_Mine[][16] =
+{
+    INCGFX_U16("data/tilesets/secondary/mine/palettes/00.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/mine/palettes/01.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/mine/palettes/02.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/mine/palettes/03.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/mine/palettes/04.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/mine/palettes/05.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/mine/palettes/06.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/mine/palettes/07.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/mine/palettes/08.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/mine/palettes/09.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/mine/palettes/10.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/mine/palettes/11.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/mine/palettes/12.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/mine/palettes/13.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/mine/palettes/14.pal", ".gbapal"),
+    INCGFX_U16("data/tilesets/secondary/mine/palettes/15.pal", ".gbapal"),
+};
+
 // Whisperstem Valley (tools/areas/bamboo_art.py): Rustboro's tiles plus new art.
 const u32 gTilesetTiles_Bamboo[] = INCGFX_U32("data/tilesets/secondary/bamboo/tiles.png", ".4bpp.fastSmol", "-num_tiles 512 -Wnum_tiles");
 

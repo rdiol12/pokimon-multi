@@ -804,3 +804,65 @@ Level: 12
 Pancham
 Level: 13
 /* end WhisperstemValley */
+
+/* begin Cobblerock */
+=== AREA_TRAINER_COBBLE_GRANT ===
+Name: GRANT
+Class: Hiker
+Pic: Hiker
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Basic Trainer
+
+Geodude
+Level: 13
+
+Roggenrola
+Level: 14
+
+=== AREA_TRAINER_COBBLE_RHODA ===
+Name: RHODA
+Class: Picnicker
+Pic: Picnicker
+Gender: Female
+Music: Girl
+Double Battle: No
+AI: Basic Trainer
+
+Drilbur
+Level: 14
+
+Whismur
+Level: 13
+
+=== AREA_TRAINER_COBBLE_DOUG ===
+Name: DOUG
+Class: Hiker
+Pic: Hiker
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Basic Trainer
+
+Nosepass
+Level: 15
+
+Rolycoly
+Level: 15
+
+=== AREA_TRAINER_COBBLE_TODD ===
+Name: TODD
+Class: Ruin Maniac
+Pic: Ruin Maniac
+Gender: Male
+Music: Hiker
+Double Battle: No
+AI: Basic Trainer
+
+Baltoy
+Level: 15
+
+Onix
+Level: 16
+/* end Cobblerock */
