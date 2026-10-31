@@ -89,7 +89,7 @@ static void ApplyAffineAnimFrame(u8 matrixNum, struct AffineAnimFrameCmd *frameC
 static void AllocSpriteTileRange(u16 tag, u16 start, u16 count);
 static void DoLoadSpritePalette(const u16 *src, u16 paletteOffset);
 static void UpdateSpriteMatrixAnchorPos(struct Sprite *, s32, s32);
-static bool32 AddToOamBuffer(u8 *oamIndex, const struct OamData *oam, bool32 copyToObjWin);
+static bool32 AddToOamBuffer(u16 *oamIndex, const struct OamData *oam, bool32 copyToObjWin, u32 paletteBank);
 
 typedef void (*AnimFunc)(struct Sprite *);
 typedef void (*AnimCmdFunc)(struct Sprite *);
@@ -253,7 +253,7 @@ const struct OamDimensions gOamDimensions[3][4] =
 static u16 sSpriteTileRangeTags[MAX_SPRITES];
 static u16 sSpriteTileRanges[MAX_SPRITES][2];
 static struct AffineAnimState sAffineAnimStates[OAM_MATRIX_COUNT];
-static u16 sSpritePaletteTags[16];
+static u16 sSpritePaletteTags[PKX_OBJ_PALETTES]; // 16..63 exist only on extended GBA v2
 
 // iwram common
 COMMON_DATA u32 gOamMatrixAllocBitmap = 0;
@@ -266,6 +266,79 @@ EWRAM_DATA static u8 sSpriteCopyRequestCount = 0;
 EWRAM_DATA static struct SpriteCopyRequest sSpriteCopyRequests[MAX_SPRITE_COPY_REQUESTS] = {0};
 EWRAM_DATA u8 gOamLimit = 0;
 static EWRAM_DATA u8 sOamDummyIndex = 0;
+
+// Extended GBA v2 (emulator/README.md): once gOamLimit normal entries are used, sprites
+// overflow into hardware entries 128..511, and sprite palettes 16..63 exist. Each
+// hardware entry has an attribute byte holding its palette bank (palette = bank * 16 + paletteNum).
+#define OAM_EXT_COUNT (PKX_OAM_ENTRIES - 128)
+EWRAM_DATA bool8 gPkxObjExtended = FALSE;
+static EWRAM_EXT_DATA struct OamData sOamBufferExt[OAM_EXT_COUNT];
+static EWRAM_EXT_DATA u8 ALIGNED(4) sOamAttr[PKX_OAM_ENTRIES];
+static EWRAM_EXT_DATA u16 sOamExtDummyIndex;
+static EWRAM_EXT_DATA u16 sOamExtLoadCount;
+
+static inline u32 SpritePaletteSlotCount(void)
+{
+    return gPkxObjExtended ? PKX_OBJ_PALETTES : 16;
+}
+
+static inline u32 OamVirtualLimit(void)
+{
+    return gPkxObjExtended ? gOamLimit + OAM_EXT_COUNT : gOamLimit;
+}
+
+// Virtual OAM index: 0..gOamLimit-1 are gMain.oamBuffer, the rest are extended entries.
+static inline struct OamData *OamSlot(u32 index)
+{
+    if (index < gOamLimit)
+        return &gMain.oamBuffer[index];
+    return &sOamBufferExt[index - gOamLimit];
+}
+
+static inline u32 OamHardwareIndex(u32 index)
+{
+    return index < gOamLimit ? index : 128 + index - gOamLimit;
+}
+
+void InitPkxObj(void)
+{
+    u32 i;
+    gPkxObjExtended = FALSE;
+    if (*(vu16 *)REG_ADDR_PKX_ID != PKX_ID || *(vu16 *)REG_ADDR_PKX_VERSION < 2)
+        return;
+    for (i = 0; i < OAM_EXT_COUNT; i++)
+        sOamBufferExt[i] = gDummyOamData;
+    CpuFill32(0, sOamAttr, sizeof(sOamAttr));
+    sOamExtDummyIndex = 0;
+    sOamExtLoadCount = OAM_EXT_COUNT;
+    *(vu16 *)REG_ADDR_PKX_CONTROL = PKX_ENABLE_OBJ;
+    gPkxObjExtended = (*(vu16 *)REG_ADDR_PKX_CONTROL & PKX_CONTROL_OBJ) != 0;
+}
+
+void SetSpritePaletteSlot(struct Sprite *sprite, u32 slot)
+{
+    if (slot >= PKX_OBJ_PALETTES)
+        slot &= 15; // invalid slots (0xFF) behave as before
+    sprite->oam.paletteNum = slot & 15;
+    sprite->paletteBank = slot >> 4;
+}
+
+u32 GetSpritePaletteSlot(const struct Sprite *sprite)
+{
+    return sprite->oam.paletteNum | (sprite->paletteBank << 4);
+}
+
+u64 GetExtSpritePalettesInUse(void)
+{
+    u32 i;
+    u64 used = 0;
+    if (!gPkxObjExtended)
+        return 0;
+    for (i = 16; i < PKX_OBJ_PALETTES; i++)
+        if (sSpritePaletteTags[i] != TAG_NONE)
+            used |= (u64)1 << (i - 16);
+    return used;
+}
 EWRAM_DATA u16 gReservedSpriteTileCount = 0;
 EWRAM_DATA static u8 sSpriteTileAllocBitmap[128] = {0};
 EWRAM_DATA s16 gSpriteCoordOffsetX = 0;
@@ -277,6 +350,15 @@ void ResetSpriteData(void)
 {
     ResetOamRange(0, 128);
     sOamDummyIndex = 0;
+    if (gPkxObjExtended)
+    {
+        u32 i;
+        for (i = 0; i < OAM_EXT_COUNT; i++)
+            sOamBufferExt[i] = gDummyOamData;
+        CpuFill32(0, sOamAttr, sizeof(sOamAttr));
+        sOamExtDummyIndex = 0;
+        sOamExtLoadCount = OAM_EXT_COUNT;
+    }
     ResetAllSprites();
     ClearSpriteCopyRequests();
     ResetAffineAnimData();
@@ -309,7 +391,7 @@ void BuildOamBuffer(void)
 {
     bool32 oamLoadDisabled;
     u32 i;
-    u8 oamIndex;
+    u16 oamIndex;
 
     // All attributes which affect sorting packed into a single u32:
     // { priority:2, subpriority:8, y:9, :5, index:8 }.
@@ -389,9 +471,28 @@ void BuildOamBuffer(void)
             break;
     }
 
-    for (i = oamIndex; i < sOamDummyIndex; i++)
-        gMain.oamBuffer[i] = gDummyOamData;
-    sOamDummyIndex = oamIndex;
+    {
+        u32 baseCount = min(oamIndex, gOamLimit);
+        for (i = baseCount; i < sOamDummyIndex; i++)
+        {
+            gMain.oamBuffer[i] = gDummyOamData;
+            if (gPkxObjExtended)
+                sOamAttr[i] = 0;
+        }
+        sOamDummyIndex = baseCount;
+    }
+    if (gPkxObjExtended)
+    {
+        u32 extCount = oamIndex > gOamLimit ? oamIndex - gOamLimit : 0;
+        for (i = extCount; i < sOamExtDummyIndex; i++)
+        {
+            sOamBufferExt[i] = gDummyOamData;
+            sOamAttr[128 + i] = 0;
+        }
+        // LoadOam copies every extended entry that changed since the last load
+        sOamExtLoadCount = max(sOamExtLoadCount, max(extCount, sOamExtDummyIndex));
+        sOamExtDummyIndex = extCount;
+    }
 
     for (i = 0; matrices != 0; i++, matrices >>= 1)
     {
@@ -533,7 +634,7 @@ u32 CreateSpriteAt(u32 index, const struct SpriteTemplate *template, s16 x, s16 
         InitSpriteAffineAnim(sprite);
 
     if (template->paletteTag != TAG_NONE)
-        sprite->oam.paletteNum = IndexOfSpritePaletteTag(template->paletteTag);
+        SetSpritePaletteSlot(sprite, IndexOfSpritePaletteTag(template->paletteTag));
 
     return index;
 }
@@ -590,7 +691,18 @@ void ResetOamRange(u32 start, u32 end)
 void LoadOam(void)
 {
     if (!gMain.oamLoadDisabled)
+    {
         CpuCopy32(gMain.oamBuffer, (void *)OAM, sizeof(gMain.oamBuffer));
+        if (gPkxObjExtended)
+        {
+            CpuCopy32(sOamAttr, (void *)PKX_OAM_ATTR, sizeof(sOamAttr));
+            if (sOamExtLoadCount)
+            {
+                CpuCopy32(sOamBufferExt, (void *)(PKX_OAM + 128 * sizeof(struct OamData)), sOamExtLoadCount * sizeof(struct OamData));
+                sOamExtLoadCount = 0;
+            }
+        }
+    }
 }
 
 void ClearSpriteCopyRequests(void)
@@ -1632,7 +1744,7 @@ void FreeAllSpritePalettes(void)
 {
     u32 i;
     gReservedSpritePaletteCount = 0;
-    for (i = 0; i < 16; i++)
+    for (i = 0; i < PKX_OBJ_PALETTES; i++)
         sSpritePaletteTags[i] = TAG_NONE;
 }
 
@@ -1687,7 +1799,7 @@ void LoadSpritePalettes(const struct SpritePalette *palettes)
 
 u8 LoadSpritePaletteInSlot(const struct SpritePalette *palette, u8 paletteNum)
 {
-    paletteNum = min(15, paletteNum);
+    paletteNum = min(SpritePaletteSlotCount() - 1, paletteNum);
     sSpritePaletteTags[paletteNum] = palette->tag;
     DoLoadSpritePalette(palette->data, paletteNum * 16);
     return paletteNum;
@@ -1714,8 +1826,9 @@ u32 AllocSpritePalette(u16 tag)
 
 u32 IndexOfSpritePaletteTag(u16 tag)
 {
-    u32 i;
-    for (i = gReservedSpritePaletteCount; i < 16; i++)
+    u32 i, count = SpritePaletteSlotCount();
+    // The normal 16 come first, so extended slots are only used once those are full
+    for (i = gReservedSpritePaletteCount; i < count; i++)
         if (sSpritePaletteTags[i] == tag)
             return i;
 
@@ -1724,6 +1837,8 @@ u32 IndexOfSpritePaletteTag(u16 tag)
 
 u16 GetSpritePaletteTagByPaletteNum(u8 paletteNum)
 {
+    if (paletteNum >= PKX_OBJ_PALETTES)
+        return TAG_NONE;
     return sSpritePaletteTags[paletteNum];
 }
 
@@ -1741,20 +1856,20 @@ void SetSubspriteTables(struct Sprite *sprite, const struct SubspriteTable *subs
     sprite->subspriteMode = SUBSPRITES_ON;
 }
 
-bool8 AddSpriteToOamBuffer(struct Sprite *sprite, u8 *oamIndex)
+bool8 AddSpriteToOamBuffer(struct Sprite *sprite, u16 *oamIndex)
 {
     if (!sprite->subspriteTables || sprite->subspriteMode == SUBSPRITES_OFF)
-        return AddToOamBuffer(oamIndex, &sprite->oam, sprite->copyToObjWin);
+        return AddToOamBuffer(oamIndex, &sprite->oam, sprite->copyToObjWin, sprite->paletteBank);
     else
         return AddSubspritesToOamBuffer(sprite, oamIndex);
 }
 
-bool8 AddSubspritesToOamBuffer(struct Sprite *sprite, u8 *oamIndex)
+bool8 AddSubspritesToOamBuffer(struct Sprite *sprite, u16 *oamIndex)
 {
     const struct SubspriteTable *subspriteTable;
     struct OamData *oam;
 
-    if (*oamIndex >= gOamLimit)
+    if (*oamIndex >= OamVirtualLimit())
         return TRUE;
 
     subspriteTable = &sprite->subspriteTables[sprite->subspriteTableNum];
@@ -1762,7 +1877,7 @@ bool8 AddSubspritesToOamBuffer(struct Sprite *sprite, u8 *oamIndex)
 
     if (!subspriteTable || !subspriteTable->subsprites)
     {
-        return AddToOamBuffer(oamIndex, oam, sprite->copyToObjWin);
+        return AddToOamBuffer(oamIndex, oam, sprite->copyToObjWin, sprite->paletteBank);
     }
     else
     {
@@ -1784,7 +1899,7 @@ bool8 AddSubspritesToOamBuffer(struct Sprite *sprite, u8 *oamIndex)
             u16 x;
             u16 y;
 
-            if (*oamIndex >= gOamLimit)
+            if (*oamIndex >= OamVirtualLimit())
                 return TRUE;
 
             x = subspriteTable->subsprites[i].x;
@@ -1818,7 +1933,7 @@ bool8 AddSubspritesToOamBuffer(struct Sprite *sprite, u8 *oamIndex)
             if (sprite->subspriteMode < SUBSPRITES_IGNORE_PRIORITY)
                 subspriteOam.priority = subspriteTable->subsprites[i].priority;
 
-            if (AddToOamBuffer(oamIndex, &subspriteOam, sprite->copyToObjWin))
+            if (AddToOamBuffer(oamIndex, &subspriteOam, sprite->copyToObjWin, sprite->paletteBank))
                 return TRUE;
         }
 
@@ -1827,20 +1942,25 @@ bool8 AddSubspritesToOamBuffer(struct Sprite *sprite, u8 *oamIndex)
     return FALSE;
 }
 
-static bool32 AddToOamBuffer(u8 *oamIndex, const struct OamData *oam, bool32 copyToObjWin)
+static bool32 AddToOamBuffer(u16 *oamIndex, const struct OamData *oam, bool32 copyToObjWin, u32 paletteBank)
 {
-    if (*oamIndex >= gOamLimit)
+    u32 limit = OamVirtualLimit();
+    if (*oamIndex >= limit)
         return TRUE;
 
-    gMain.oamBuffer[*oamIndex] = *oam;
+    *OamSlot(*oamIndex) = *oam;
+    if (gPkxObjExtended)
+        sOamAttr[OamHardwareIndex(*oamIndex)] = paletteBank;
     (*oamIndex)++;
 
     if (copyToObjWin)
     {
-        if (*oamIndex >= gOamLimit)
+        if (*oamIndex >= limit)
             return TRUE;
-        gMain.oamBuffer[*oamIndex] = *oam;
-        gMain.oamBuffer[*oamIndex].objMode = ST_OAM_OBJ_WINDOW;
+        *OamSlot(*oamIndex) = *oam;
+        OamSlot(*oamIndex)->objMode = ST_OAM_OBJ_WINDOW;
+        if (gPkxObjExtended)
+            sOamAttr[OamHardwareIndex(*oamIndex)] = paletteBank;
         (*oamIndex)++;
     }
 
@@ -2194,9 +2314,9 @@ inline u32 GetSpriteHeight(struct Sprite *sprite)
 
 u32 CountFreePaletteSlots(void)
 {
-    u32 i, count = 0;
+    u32 i, count = 0, slots = SpritePaletteSlotCount();
 
-    for (i = gReservedSpritePaletteCount; i < 16; i++)
+    for (i = gReservedSpritePaletteCount; i < slots; i++)
         if (sSpritePaletteTags[i] == TAG_NONE)
             count++;
 

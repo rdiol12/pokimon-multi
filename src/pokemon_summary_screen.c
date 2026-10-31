@@ -4329,9 +4329,9 @@ void SetTypeSpritePosAndPal(enum Type typeId, u8 x, u8 y, u8 spriteArrayId)
     struct Sprite *sprite = &gSprites[sMonSummaryScreen->spriteIds[spriteArrayId]];
     StartSpriteAnim(sprite, typeId);
     if (typeId < NUMBER_OF_MON_TYPES)
-        sprite->oam.paletteNum = gTypesInfo[typeId].palette;
+        SetSpritePaletteSlot(sprite, gTypesInfo[typeId].palette);
     else
-        sprite->oam.paletteNum = gContestCategoryInfo[typeId - NUMBER_OF_MON_TYPES].palette;
+        SetSpritePaletteSlot(sprite, gContestCategoryInfo[typeId - NUMBER_OF_MON_TYPES].palette);
     sprite->x = x + 16;
     sprite->y = y + 8;
     SetSpriteInvisibility(spriteArrayId, FALSE);
@@ -4462,9 +4462,9 @@ static void SwapMovesTypeSprites(u8 moveIndex1, u8 moveIndex2)
     sprite1->animNum = sprite2->animNum;
     sprite2->animNum = temp;
 
-    temp = sprite1->oam.paletteNum;
-    sprite1->oam.paletteNum = sprite2->oam.paletteNum;
-    sprite2->oam.paletteNum = temp;
+    temp = GetSpritePaletteSlot(sprite1);
+    SetSpritePaletteSlot(sprite1, GetSpritePaletteSlot(sprite2));
+    SetSpritePaletteSlot(sprite2, temp);
 
     sprite1->animBeginning = TRUE;
     sprite1->animEnded = FALSE;
@@ -4605,7 +4605,7 @@ static void StopPokemonAnimations(void)  // A subtle effect, this function stops
     gSprites[sMonSummaryScreen->spriteIds[SPRITE_ARR_ID_MON]].callback = SpriteCallbackDummy;
     StopPokemonAnimationDelayTask();
 
-    paletteIndex = OBJ_PLTT_ID(gSprites[sMonSummaryScreen->spriteIds[SPRITE_ARR_ID_MON]].oam.paletteNum);
+    paletteIndex = OBJ_PLTT_ID(GetSpritePaletteSlot(&gSprites[sMonSummaryScreen->spriteIds[SPRITE_ARR_ID_MON]]));
 
     for (i = 0; i < 16; i++)
     {

@@ -1948,7 +1948,7 @@ void AnimTask_GrowAndGrayscale(u8 taskId)
     u8 spriteId = GetAnimBattlerSpriteId(ANIM_TARGET);
     PrepareBattlerSpriteForRotScale(spriteId, ST_OAM_OBJ_BLEND);
     SetSpriteRotScale(spriteId, 0xD0, 0xD0, 0);
-    SetGrayscaleOrOriginalPalette(gSprites[spriteId].oam.paletteNum + 16, FALSE);
+    SetGrayscaleOrOriginalPalette(GetSpritePaletteSlot(&gSprites[spriteId]) + 16, FALSE);
     gTasks[taskId].data[0] = 80;
     gTasks[taskId].func = AnimTask_GrowAndGrayscale_Step;
 }
@@ -1959,7 +1959,7 @@ static void AnimTask_GrowAndGrayscale_Step(u8 taskId)
     {
         u8 spriteId = GetAnimBattlerSpriteId(ANIM_TARGET);
         ResetSpriteRotScale(spriteId);
-        SetGrayscaleOrOriginalPalette(gSprites[spriteId].oam.paletteNum + 16, TRUE);
+        SetGrayscaleOrOriginalPalette(GetSpritePaletteSlot(&gSprites[spriteId]) + 16, TRUE);
         DestroyAnimVisualTask(taskId);
     }
 }
@@ -2997,7 +2997,7 @@ static void SetMusicNotePalette(struct Sprite *sprite, u8 a, u8 b)
 {
     u8 tile = (b & 1) ? 32 : 0;
     sprite->oam.tileNum += tile + a * 4;
-    sprite->oam.paletteNum = IndexOfSpritePaletteTag(sMusicNotePaletteTagsTable[b >> 1]);
+    SetSpritePaletteSlot(sprite, IndexOfSpritePaletteTag(sMusicNotePaletteTagsTable[b >> 1]));
 }
 
 static void AnimHealBellMusicNote(struct Sprite *sprite)
@@ -3674,7 +3674,7 @@ static void AnimPerishSongMusicNote2(struct Sprite *sprite)
     }
 
     if (++sprite->data[0] == sprite->data[1])
-        SetGrayscaleOrOriginalPalette(sprite->oam.paletteNum + 16, FALSE);
+        SetGrayscaleOrOriginalPalette(GetSpritePaletteSlot(sprite) + 16, FALSE);
 
     if (sprite->data[0] == sprite->data[1] + 80)
         DestroyAnimSprite(sprite);

@@ -7,6 +7,10 @@
 #define gPaletteFadeSubmode          (gPaletteFade.multipurpose2) // fast fade
 
 #define PLTT_BUFFER_SIZE (PLTT_SIZE / sizeof(u16))
+// Extended GBA v2: sprite palettes 16..63 follow the normal 512 colors in the palette
+// buffers, so OBJ_PLTT_ID(slot) works for every sprite palette slot.
+#define PLTT_EXT_COLORS ((PKX_OBJ_PALETTES - 16) * 16)
+#define PLTT_BUFFER_SIZE_ALL (PLTT_BUFFER_SIZE + PLTT_EXT_COLORS)
 
 #define PALETTE_FADE_STATUS_DELAY 2
 #define PALETTE_FADE_STATUS_ACTIVE 1
@@ -85,8 +89,8 @@ extern const struct BlendSettings gTimeOfDayBlend[];
 
 extern struct PaletteFadeControl gPaletteFade;
 extern u32 gPlttBufferTransferPending;
-extern u16 ALIGNED(4) gPlttBufferUnfaded[PLTT_BUFFER_SIZE];
-extern u16 ALIGNED(4) gPlttBufferFaded[PLTT_BUFFER_SIZE];
+extern u16 ALIGNED(4) gPlttBufferUnfaded[PLTT_BUFFER_SIZE_ALL];
+extern u16 ALIGNED(4) gPlttBufferFaded[PLTT_BUFFER_SIZE_ALL];
 
 void LoadPalette(const void *src, u32 offset, u32 size);
 void LoadPaletteFast(const void *src, u32 offset, u32 size);

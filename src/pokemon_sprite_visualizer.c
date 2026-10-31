@@ -1284,7 +1284,7 @@ void CB2_Pokemon_Sprite_Visualizer(void)
         gMultiuseSpriteTemplate.paletteTag = species;
         front_y = GetBattlerSpriteFinal_YCustom(species, 0, 0);
         data->frontspriteId = CreateSprite(&gMultiuseSpriteTemplate, front_x, front_y, 0);
-        gSprites[data->frontspriteId].oam.paletteNum = 1;
+        SetSpritePaletteSlot(&gSprites[data->frontspriteId], 1);
         gSprites[data->frontspriteId].callback = SpriteCallbackDummy;
         gSprites[data->frontspriteId].oam.priority = 0;
         //Front Shadow
@@ -1296,7 +1296,7 @@ void CB2_Pokemon_Sprite_Visualizer(void)
         SetMultiuseSpriteTemplateToPokemon(species, 2);
         offset_y = gSpeciesInfo[species].backPicYOffset;
         data->backspriteId = CreateSprite(&gMultiuseSpriteTemplate, VISUALIZER_MON_BACK_X, VISUALIZER_MON_BACK_Y + offset_y, 0);
-        gSprites[data->backspriteId].oam.paletteNum = 5;
+        SetSpritePaletteSlot(&gSprites[data->backspriteId], 5);
         gSprites[data->backspriteId].callback = SpriteCallbackDummy;
         gSprites[data->backspriteId].oam.priority = 0;
 
@@ -2027,7 +2027,7 @@ static void ReloadPokemonSprites(struct PokemonSpriteVisualizer *data)
     gMultiuseSpriteTemplate.paletteTag = species;
     front_y = GetBattlerSpriteFinal_YCustom(species, 0, 0);
     data->frontspriteId = CreateSprite(&gMultiuseSpriteTemplate, front_x, front_y, 0);
-    gSprites[data->frontspriteId].oam.paletteNum = 1;
+    SetSpritePaletteSlot(&gSprites[data->frontspriteId], 1);
     gSprites[data->frontspriteId].callback = SpriteCallbackDummy;
     gSprites[data->frontspriteId].oam.priority = 0;
     //Front Shadow
@@ -2039,7 +2039,7 @@ static void ReloadPokemonSprites(struct PokemonSpriteVisualizer *data)
     SetMultiuseSpriteTemplateToPokemon(species, 2);
     offset_y = gSpeciesInfo[species].backPicYOffset;
     data->backspriteId = CreateSprite(&gMultiuseSpriteTemplate, VISUALIZER_MON_BACK_X, VISUALIZER_MON_BACK_Y + offset_y, 0);
-    gSprites[data->backspriteId].oam.paletteNum = 5;
+    SetSpritePaletteSlot(&gSprites[data->backspriteId], 5);
     gSprites[data->backspriteId].callback = SpriteCallbackDummy;
     gSprites[data->backspriteId].oam.priority = 0;
 

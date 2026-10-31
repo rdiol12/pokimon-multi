@@ -7,6 +7,7 @@
 #include "menu.h"
 #include "gpu_regs.h"
 #include "task.h"
+#include "sprite.h"
 #include "constants/field_weather.h"
 #include "constants/rgb.h"
 
@@ -29,10 +30,30 @@ static void Task_BlendPalettesGradually(u8 taskId);
 
 // palette buffers require alignment with agbcc because
 // unaligned word reads are issued in BlendPalette otherwise
-ALIGNED(4) EWRAM_DATA u16 gPlttBufferUnfaded[PLTT_BUFFER_SIZE] = {0};
-ALIGNED(4) EWRAM_DATA u16 gPlttBufferFaded[PLTT_BUFFER_SIZE] = {0};
+ALIGNED(4) EWRAM_DATA u16 gPlttBufferUnfaded[PLTT_BUFFER_SIZE_ALL] = {0};
+ALIGNED(4) EWRAM_DATA u16 gPlttBufferFaded[PLTT_BUFFER_SIZE_ALL] = {0};
 EWRAM_DATA struct PaletteFadeControl gPaletteFade = {0};
 static EWRAM_DATA u32 sPlttBufferTransferPending = 0;
+
+// Extended sprite palettes 16..63 (in use ones only) are faded together with the sprite
+// palettes whenever all 16 normal sprite palettes are selected.
+static u64 SelectedExtObjPalettes(u32 selectedPalettes)
+{
+    if ((selectedPalettes & PALETTES_OBJECTS) != PALETTES_OBJECTS)
+        return 0;
+    return GetExtSpritePalettesInUse();
+}
+
+#define EXT_OBJ_PLTT_ID(i) OBJ_PLTT_ID(16 + (i))
+#define FOR_EACH_EXT_OBJ_PALETTE(i, mask) \
+    for (u64 _ext = (mask), i = 0; _ext != 0; i++, _ext >>= 1) \
+        if (_ext & 1)
+
+static void BlendExtObjPalettes(u32 selectedPalettes, u8 coeff, u32 color)
+{
+    FOR_EACH_EXT_OBJ_PALETTE(i, SelectedExtObjPalettes(selectedPalettes))
+        BlendPalette(EXT_OBJ_PLTT_ID(i), 16, coeff, color);
+}
 
 static const u8 sRoundedDownGrayscaleMap[] = {
      0,  0,  0,  0,  0,
@@ -71,6 +92,8 @@ void TransferPlttBuffer(void)
     if (!gPaletteFade.bufferTransferDisabled)
     {
         DmaCopy16Defvars(3, gPlttBufferFaded, (void *)PLTT, PLTT_SIZE);
+        if (GetExtSpritePalettesInUse())
+            DmaCopy16Defvars(3, &gPlttBufferFaded[PLTT_BUFFER_SIZE], (void *)PKX_OBJ_PLTT, PLTT_EXT_COLORS * sizeof(u16));
         sPlttBufferTransferPending = FALSE;
         if (gPaletteFade.mode == HARDWARE_FADE && gPaletteFade.active)
             UpdateBlendRegisters();
@@ -255,6 +278,14 @@ static u8 UpdateTimeOfDayPaletteFade(void)
     src = gPlttBufferUnfaded;
     dst = gPlttBufferFaded;
     TimeMixPalettes(timePalettes, src, dst, gPaletteFade.bld0, gPaletteFade.bld1, gPaletteFade.weight);
+    FOR_EACH_EXT_OBJ_PALETTE(p, SelectedExtObjPalettes(gPaletteFadeSelectedPalettes))
+    {
+        u32 offset = EXT_OBJ_PLTT_ID(p);
+        if (!IS_BLEND_IMMUNE_TAG(GetSpritePaletteTagByPaletteNum(16 + p)))
+            TimeMixPalettes(1, src + offset, dst + offset, gPaletteFade.bld0, gPaletteFade.bld1, gPaletteFade.weight);
+        else
+            CpuFastCopy(src + offset, dst + offset, PLTT_SIZE_4BPP);
+    }
 
     // palettes that were not blended above must be copied through
     if ((copyPalettes = ~timePalettes))
@@ -342,6 +373,8 @@ static u32 UpdateNormalPaletteFade_Alternate(void)
         selectedPalettes >>= 1;
         paletteOffset += 16;
     }
+    if (gPaletteFade.objPaletteToggle)
+        BlendExtObjPalettes(gPaletteFadeSelectedPalettes, gPaletteFade.y, gPaletteFade.blendColor);
 
     gPaletteFade.objPaletteToggle ^= 1;
 
@@ -412,8 +445,7 @@ static u32 UpdateNormalPaletteFade_Simultaneous(void)
         selectedPalettes >>= 1;
         paletteOffset += 16;
     }
-
-    
+    BlendExtObjPalettes(gPaletteFadeSelectedPalettes, gPaletteFade.y, gPaletteFade.blendColor);
 
     if (gPaletteFade.y == gPaletteFade.targetY)
     {
@@ -464,6 +496,10 @@ void InvertPlttBuffer(u32 selectedPalettes)
 {
     u16 paletteOffset = 0;
 
+    FOR_EACH_EXT_OBJ_PALETTE(p, SelectedExtObjPalettes(selectedPalettes))
+        for (u32 i = 0; i < 16; i++)
+            gPlttBufferFaded[EXT_OBJ_PLTT_ID(p) + i] = ~gPlttBufferFaded[EXT_OBJ_PLTT_ID(p) + i];
+
     while (selectedPalettes)
     {
         if (selectedPalettes & 1)
@@ -480,6 +516,17 @@ void InvertPlttBuffer(u32 selectedPalettes)
 void TintPlttBuffer(u32 selectedPalettes, s8 r, s8 g, s8 b)
 {
     u16 paletteOffset = 0;
+
+    FOR_EACH_EXT_OBJ_PALETTE(p, SelectedExtObjPalettes(selectedPalettes))
+    {
+        for (u32 i = 0; i < 16; i++)
+        {
+            struct PlttData *data = (struct PlttData *)&gPlttBufferFaded[EXT_OBJ_PLTT_ID(p) + i];
+            data->r += r;
+            data->g += g;
+            data->b += b;
+        }
+    }
 
     while (selectedPalettes)
     {
@@ -502,6 +549,9 @@ void TintPlttBuffer(u32 selectedPalettes, s8 r, s8 g, s8 b)
 void UnfadePlttBuffer(u32 selectedPalettes)
 {
     u16 paletteOffset = 0;
+
+    FOR_EACH_EXT_OBJ_PALETTE(p, SelectedExtObjPalettes(selectedPalettes))
+        CpuFastCopy(&gPlttBufferUnfaded[EXT_OBJ_PLTT_ID(p)], &gPlttBufferFaded[EXT_OBJ_PLTT_ID(p)], PLTT_SIZE_4BPP);
 
     while (selectedPalettes)
     {
@@ -560,7 +610,7 @@ static u32 UpdateFastPaletteFade(void)
     if (gPaletteFade.objPaletteToggle)
     {
         paletteOffsetStart = OBJ_PLTT_OFFSET;
-        paletteOffsetEnd = PLTT_BUFFER_SIZE;
+        paletteOffsetEnd = gPkxObjExtended ? PLTT_BUFFER_SIZE_ALL : PLTT_BUFFER_SIZE;
     }
     else
     {
@@ -677,13 +727,13 @@ static u32 UpdateFastPaletteFade(void)
         {
         case FAST_FADE_IN_FROM_WHITE:
         case FAST_FADE_IN_FROM_BLACK:
-            CpuCopy32(gPlttBufferUnfaded, gPlttBufferFaded, PLTT_SIZE);
+            CpuCopy32(gPlttBufferUnfaded, gPlttBufferFaded, sizeof(gPlttBufferFaded));
             break;
         case FAST_FADE_OUT_TO_WHITE:
-            CpuFill32(0xFFFFFFFF, gPlttBufferFaded, PLTT_SIZE);
+            CpuFill32(0xFFFFFFFF, gPlttBufferFaded, sizeof(gPlttBufferFaded));
             break;
         case FAST_FADE_OUT_TO_BLACK:
-            CpuFill32(0x00000000, gPlttBufferFaded, PLTT_SIZE);
+            CpuFill32(0x00000000, gPlttBufferFaded, sizeof(gPlttBufferFaded));
             break;
         }
 
@@ -850,7 +900,20 @@ static bool32 IsSoftwarePaletteFadeFinishing(void)
 }
 
 // optimized based on lucktyphlosion's BlendPalettesFine
+static void BlendPalettesFineRange(u32 palettes, u16 *src, u16 *dst, u32 coeff, u32 color);
+
 void BlendPalettesFine(u32 palettes, u16 *src, u16 *dst, u32 coeff, u32 color)
+{
+    BlendPalettesFineRange(palettes, src, dst, coeff, color);
+    // Whole-buffer blends also cover the extended sprite palettes
+    if ((src == gPlttBufferUnfaded || src == gPlttBufferFaded) && (dst == gPlttBufferUnfaded || dst == gPlttBufferFaded))
+    {
+        FOR_EACH_EXT_OBJ_PALETTE(i, SelectedExtObjPalettes(palettes))
+            BlendPalettesFineRange(1, src + EXT_OBJ_PLTT_ID(i), dst + EXT_OBJ_PLTT_ID(i), coeff, color);
+    }
+}
+
+static void BlendPalettesFineRange(u32 palettes, u16 *src, u16 *dst, u32 coeff, u32 color)
 {
     s32 newR, newG, newB;
 
@@ -1080,7 +1143,7 @@ void AvgPaletteWeighted(u16 *src0, u16 *src1, u16 *dst, u16 weight0)
 
 void BlendPalettesUnfaded(u32 selectedPalettes, u8 coeff, u32 color)
 {
-    DmaCopy32Defvars(3, gPlttBufferUnfaded, gPlttBufferFaded, PLTT_SIZE);
+    DmaCopy32Defvars(3, gPlttBufferUnfaded, gPlttBufferFaded, sizeof(gPlttBufferFaded));
     BlendPalettes(selectedPalettes, coeff, color);
 }
 

@@ -329,7 +329,7 @@ void UpdateIndicatorVisibilityAndType(u32 healthboxId, bool32 invisible)
 
     if (palTag != TAG_NONE)
     {
-        sprite->oam.paletteNum = IndexOfSpritePaletteTag(palTag);
+        SetSpritePaletteSlot(sprite, IndexOfSpritePaletteTag(palTag));
         sprite->invisible = invisible;
 
         u32 *dst = (u32 *)(OBJ_VRAM0 + TILE_SIZE_4BPP * GetSpriteTileStartByTag(BATTLER_INDICATOR_TAG + battler));

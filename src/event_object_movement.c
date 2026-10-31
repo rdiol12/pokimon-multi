@@ -1715,14 +1715,14 @@ static void RemoveObjectEventInternal(struct ObjectEvent *objectEvent)
     // It's possible that this function is called while the sprite pointed to `== sDummySprite`, i.e during map resume;
     // In this case, don't free the palette as `paletteNum` is likely blank dummy data
     if (!gSprites[objectEvent->spriteId].inUse &&
-        !gSprites[objectEvent->spriteId].oam.paletteNum &&
+        !GetSpritePaletteSlot(&gSprites[objectEvent->spriteId]) &&
         gSprites[objectEvent->spriteId].callback == SpriteCallbackDummy)
     {
         DestroySprite(&gSprites[objectEvent->spriteId]);
     }
     else
     {
-        u32 paletteNum = gSprites[objectEvent->spriteId].oam.paletteNum;
+        u32 paletteNum = GetSpritePaletteSlot(&gSprites[objectEvent->spriteId]);
         u16 tileStart;
         if (OW_GFX_COMPRESS)
             tileStart = gSprites[objectEvent->spriteId].sheetTileStart;
@@ -1879,7 +1879,7 @@ static u8 TrySetupObjectEventSprite(const struct ObjectEventTemplate *objectEven
     sprite = &gSprites[spriteId];
     // Use palette from species palette table
     if (spriteTemplate->paletteTag == OBJ_EVENT_PAL_TAG_DYNAMIC)
-        sprite->oam.paletteNum = LoadDynamicFollowerPalette(OW_SPECIES(objectEvent), OW_SHINY(objectEvent), OW_FEMALE(objectEvent));
+        SetSpritePaletteSlot(sprite, LoadDynamicFollowerPalette(OW_SPECIES(objectEvent), OW_SHINY(objectEvent), OW_FEMALE(objectEvent)));
     if (OW_GFX_COMPRESS && sprite->usingSheet)
         sprite->sheetSpan = GetSpanPerImage(sprite->oam.shape, sprite->oam.size);
     GetMapCoordsFromSpritePos(objectEvent->currentCoords.x + cameraX, objectEvent->currentCoords.y + cameraY, &sprite->x, &sprite->y);
@@ -2252,9 +2252,9 @@ static void FollowerSetGraphics(struct ObjectEvent *objEvent, enum Species speci
         struct Sprite *sprite = &gSprites[objEvent->spriteId];
         // Free palette if otherwise unused
         sprite->inUse = FALSE;
-        FieldEffectFreePaletteIfUnused(sprite->oam.paletteNum);
+        FieldEffectFreePaletteIfUnused(GetSpritePaletteSlot(sprite));
         sprite->inUse = TRUE;
-        sprite->oam.paletteNum = LoadDynamicFollowerPalette(species, shiny, female);
+        SetSpritePaletteSlot(sprite, LoadDynamicFollowerPalette(species, shiny, female));
     }
 }
 
@@ -2292,15 +2292,15 @@ static void RefreshFollowerGraphics(struct ObjectEvent *objEvent)
     if (graphicsInfo->paletteTag == OBJ_EVENT_PAL_TAG_DYNAMIC)
     {
         sprite->inUse = FALSE;
-        FieldEffectFreePaletteIfUnused(sprite->oam.paletteNum);
+        FieldEffectFreePaletteIfUnused(GetSpritePaletteSlot(sprite));
         sprite->inUse = TRUE;
-        sprite->oam.paletteNum = LoadDynamicFollowerPalette(species, shiny, female);
+        SetSpritePaletteSlot(sprite, LoadDynamicFollowerPalette(species, shiny, female));
     }
     else if (i != 0xFF)
     {
         UpdateSpritePalette(&sObjectEventSpritePalettes[i], sprite);
         if (gWeatherPtr->currWeather != WEATHER_FOG_HORIZONTAL) // don't want to weather blend in fog
-            UpdateSpritePaletteWithWeather(sprite->oam.paletteNum, FALSE);
+            UpdateSpritePaletteWithWeather(GetSpritePaletteSlot(sprite), FALSE);
     }
 }
 
@@ -2770,7 +2770,7 @@ void UpdateLightSprite(struct Sprite *sprite)
     if (!(x >= left && x <= right && y >= top && y <= bottom))
     {
         sheetTileStart = sprite->sheetTileStart;
-        paletteNum = sprite->oam.paletteNum;
+        paletteNum = GetSpritePaletteSlot(sprite);
         DestroySprite(sprite);
         FieldEffectFreeTilesIfUnused(sheetTileStart);
         FieldEffectFreePaletteIfUnused(paletteNum);
@@ -2793,14 +2793,14 @@ void UpdateLightSprite(struct Sprite *sprite)
         else if (gPlayerAvatar.tileTransitionState)
         {
             sprite->invisible = FALSE;
-            if (GetSpritePaletteTagByPaletteNum(sprite->oam.paletteNum) == OBJ_EVENT_PAL_TAG_LIGHT_2)
-                LoadSpritePaletteInSlot(&sObjectEventSpritePalettes[FindObjectEventPaletteIndexByTag(OBJ_EVENT_PAL_TAG_LIGHT)], sprite->oam.paletteNum);
+            if (GetSpritePaletteTagByPaletteNum(GetSpritePaletteSlot(sprite)) == OBJ_EVENT_PAL_TAG_LIGHT_2)
+                LoadSpritePaletteInSlot(&sObjectEventSpritePalettes[FindObjectEventPaletteIndexByTag(OBJ_EVENT_PAL_TAG_LIGHT)], GetSpritePaletteSlot(sprite));
         }
         else if ((sprite->invisible = gTimeUpdateCounter & 1))
         {
             sprite->invisible = FALSE;
-            if (GetSpritePaletteTagByPaletteNum(sprite->oam.paletteNum) == OBJ_EVENT_PAL_TAG_LIGHT_2)
-                LoadSpritePaletteInSlot(&sObjectEventSpritePalettes[FindObjectEventPaletteIndexByTag(OBJ_EVENT_PAL_TAG_LIGHT)], sprite->oam.paletteNum);
+            if (GetSpritePaletteTagByPaletteNum(GetSpritePaletteSlot(sprite)) == OBJ_EVENT_PAL_TAG_LIGHT_2)
+                LoadSpritePaletteInSlot(&sObjectEventSpritePalettes[FindObjectEventPaletteIndexByTag(OBJ_EVENT_PAL_TAG_LIGHT)], GetSpritePaletteSlot(sprite));
         }
     } else {
         sprite->invisible = FALSE;
@@ -2826,7 +2826,7 @@ static void SpawnLightSprite(s16 x, s16 y, s16 camX, s16 camY, u32 lightType)
     LoadSpriteSheetByTemplate(template, 0, 0);
     sprite = &gSprites[CreateSprite(template, 0, 0, 0)];
     if (lightType == 0 && (i = IndexOfSpritePaletteTag(template->paletteTag + 1)) < 16)
-        sprite->oam.paletteNum = i;
+        SetSpritePaletteSlot(sprite, i);
     else
         UpdateSpritePaletteByTemplate(template, sprite);
     GetMapCoordsFromSpritePos(x + camX, y + camY, &sprite->x, &sprite->y);
@@ -3093,19 +3093,19 @@ static u8 UpdateSpritePalette(const struct SpritePalette *spritePalette, struct 
 {
     // Free palette if otherwise unused
     sprite->inUse = FALSE;
-    FieldEffectFreePaletteIfUnused(sprite->oam.paletteNum);
+    FieldEffectFreePaletteIfUnused(GetSpritePaletteSlot(sprite));
     sprite->inUse = TRUE;
     if (IndexOfSpritePaletteTag(spritePalette->tag) == 0xFF)
     {
-        sprite->oam.paletteNum = LoadSpritePalette(spritePalette);
-        UpdateSpritePaletteWithWeather(sprite->oam.paletteNum, FALSE);
+        SetSpritePaletteSlot(sprite, LoadSpritePalette(spritePalette));
+        UpdateSpritePaletteWithWeather(GetSpritePaletteSlot(sprite), FALSE);
     }
     else
     {
-        sprite->oam.paletteNum = LoadSpritePalette(spritePalette);
+        SetSpritePaletteSlot(sprite, LoadSpritePalette(spritePalette));
     }
 
-    return sprite->oam.paletteNum;
+    return GetSpritePaletteSlot(sprite);
 }
 
 // Find and update based on template's paletteTag

@@ -329,7 +329,7 @@ void CreateBattlerSprite(enum BattlerId battler)
 
             SetMultiuseSpriteTemplateToPokemon(species, position);
             gBattlerSpriteIds[battler] = CreateSprite(&gMultiuseSpriteTemplate, GetBattlerSpriteCoord(battler, BATTLER_COORD_X_2), posY, GetBattlerSpriteSubpriority(battler));
-            gSprites[gBattlerSpriteIds[battler]].oam.paletteNum = battler;
+            SetSpritePaletteSlot(&gSprites[gBattlerSpriteIds[battler]], battler);
             gSprites[gBattlerSpriteIds[battler]].callback = SpriteCallbackDummy;
             gSprites[gBattlerSpriteIds[battler]].data[0] = battler;
             gSprites[gBattlerSpriteIds[battler]].data[2] = species;
@@ -343,7 +343,7 @@ void CreateBattlerSprite(enum BattlerId battler)
             gBattlerSpriteIds[battler] = CreateSprite(&gMultiuseSpriteTemplate, 0x50,
                                                 (8 - GetTrainerBackPicCoords(trainerPicId)->size) * 4 + 80,
                                                  GetBattlerSpriteSubpriority(0));
-            gSprites[gBattlerSpriteIds[battler]].oam.paletteNum = IndexOfSpritePaletteTag(GetTrainerPicTag(trainerPicId, FALSE));
+            SetSpritePaletteSlot(&gSprites[gBattlerSpriteIds[battler]], IndexOfSpritePaletteTag(GetTrainerPicTag(trainerPicId, FALSE)));
             gSprites[gBattlerSpriteIds[battler]].callback = SpriteCallbackDummy;
             gSprites[gBattlerSpriteIds[battler]].data[0] = battler;
         }
@@ -353,7 +353,7 @@ void CreateBattlerSprite(enum BattlerId battler)
             gBattlerSpriteIds[battler] = CreateSprite(&gMultiuseSpriteTemplate, 0x50,
                                                 (8 - GetTrainerBackPicCoords(CATCH_TUTORIAL_TRAINER_PIC)->size) * 4 + 80,
                                                  GetBattlerSpriteSubpriority(0));
-            gSprites[gBattlerSpriteIds[battler]].oam.paletteNum = IndexOfSpritePaletteTag(GetTrainerPicTag(CATCH_TUTORIAL_TRAINER_PIC, FALSE));
+            SetSpritePaletteSlot(&gSprites[gBattlerSpriteIds[battler]], IndexOfSpritePaletteTag(GetTrainerPicTag(CATCH_TUTORIAL_TRAINER_PIC, FALSE)));
             gSprites[gBattlerSpriteIds[battler]].callback = SpriteCallbackDummy;
             gSprites[gBattlerSpriteIds[battler]].data[0] = battler;
         }
@@ -369,7 +369,7 @@ void CreateBattlerSprite(enum BattlerId battler)
 
             SetMultiuseSpriteTemplateToPokemon(species, position);
             gBattlerSpriteIds[battler] = CreateSprite(&gMultiuseSpriteTemplate, GetBattlerSpriteCoord(battler, BATTLER_COORD_X_2), posY, GetBattlerSpriteSubpriority(battler));
-            gSprites[gBattlerSpriteIds[battler]].oam.paletteNum = battler;
+            SetSpritePaletteSlot(&gSprites[gBattlerSpriteIds[battler]], battler);
             gSprites[gBattlerSpriteIds[battler]].callback = SpriteCallbackDummy;
             gSprites[gBattlerSpriteIds[battler]].data[0] = battler;
             gSprites[gBattlerSpriteIds[battler]].data[2] = species;
@@ -433,7 +433,7 @@ static void CreateCaughtMonSprite(void)
 {
     SetMultiuseSpriteTemplateToPokemon(GetMonData(GetBattlerMon(gBattlerTarget), MON_DATA_SPECIES), GetBattlerPosition(gBattlerTarget));
     gBattlerSpriteIds[gBattlerTarget] = CreateSprite(&gMultiuseSpriteTemplate, DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2, GetBattlerSpriteSubpriority(gBattlerTarget));
-    gSprites[gBattlerSpriteIds[gBattlerTarget]].oam.paletteNum = gBattlerTarget;
+    SetSpritePaletteSlot(&gSprites[gBattlerSpriteIds[gBattlerTarget]], gBattlerTarget);
     gSprites[gBattlerSpriteIds[gBattlerTarget]].callback = SpriteCallbackDummy;
     gSprites[gBattlerSpriteIds[gBattlerTarget]].data[0] = gBattlerTarget;
     gSprites[gBattlerSpriteIds[gBattlerTarget]].data[2] = GetMonData(GetBattlerMon(gBattlerTarget), MON_DATA_SPECIES);

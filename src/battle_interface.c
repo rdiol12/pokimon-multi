@@ -1938,7 +1938,7 @@ static void UpdateStatusIconInHealthbox(u8 healthboxSpriteId)
         return;
     }
 
-    pltAdder = PLTT_ID(gSprites[healthboxSpriteId].oam.paletteNum);
+    pltAdder = PLTT_ID(GetSpritePaletteSlot(&gSprites[healthboxSpriteId]));
     pltAdder += battler + 12;
 
     FillPalette(sStatusIconColors[statusPalId], OBJ_PLTT_OFFSET + pltAdder, PLTT_SIZEOF(1));
@@ -3288,7 +3288,7 @@ void SwapBallToDisplay(bool32 sameBall)
 void ArrowsChangeColorLastBallCycle(bool32 showArrows)
 {
 #if B_LAST_USED_BALL == TRUE && B_LAST_USED_BALL_CYCLE == TRUE
-    u16 paletteNum = 16 + gSprites[gBattleStruct->ballSpriteIds[1]].oam.paletteNum;
+    u16 paletteNum = 16 + GetSpritePaletteSlot(&gSprites[gBattleStruct->ballSpriteIds[1]]);
     struct PlttData *defaultPlttArrow;
     struct PlttData *defaultPlttOutline;
     struct PlttData *pltArrow;

@@ -2180,16 +2180,16 @@ static void FlashSelectionOnWheel(u8 selectionId)
         // The specific color of the poke it references doesn't matter, because the icons of a poke share a palette
         // So it just uses the first sprite ID of each
         case COL_WYNAUT:
-            palOffset = PLTT_ID(gSprites[sRoulette->spriteIds[SPR_WHEEL_ICON_ORANGE_WYNAUT]].oam.paletteNum);
+            palOffset = PLTT_ID(GetSpritePaletteSlot(&gSprites[sRoulette->spriteIds[SPR_WHEEL_ICON_ORANGE_WYNAUT]]));
             break;
         case COL_AZURILL:
-            palOffset = PLTT_ID(gSprites[sRoulette->spriteIds[SPR_WHEEL_ICON_GREEN_AZURILL]].oam.paletteNum);
+            palOffset = PLTT_ID(GetSpritePaletteSlot(&gSprites[sRoulette->spriteIds[SPR_WHEEL_ICON_GREEN_AZURILL]]));
             break;
         case COL_SKITTY:
-            palOffset = PLTT_ID(gSprites[sRoulette->spriteIds[SPR_WHEEL_ICON_PURPLE_SKITTY]].oam.paletteNum);
+            palOffset = PLTT_ID(GetSpritePaletteSlot(&gSprites[sRoulette->spriteIds[SPR_WHEEL_ICON_PURPLE_SKITTY]]));
             break;
         case COL_MAKUHITA:
-            palOffset = PLTT_ID(gSprites[sRoulette->spriteIds[SPR_WHEEL_ICON_ORANGE_MAKUHITA]].oam.paletteNum);
+            palOffset = PLTT_ID(GetSpritePaletteSlot(&gSprites[sRoulette->spriteIds[SPR_WHEEL_ICON_ORANGE_MAKUHITA]]));
             break;
         }
         if (numSelected == 1)

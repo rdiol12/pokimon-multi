@@ -7963,7 +7963,7 @@ static void CreateCursorSprites(void)
     if (spriteId != MAX_SPRITES)
     {
         sStorage->cursorSprite = &gSprites[spriteId];
-        sStorage->cursorSprite->oam.paletteNum = sStorage->cursorPalNums[sAutoActionOn];
+        SetSpritePaletteSlot(sStorage->cursorSprite, sStorage->cursorPalNums[sAutoActionOn]);
         sStorage->cursorSprite->oam.priority = 1;
         if (sIsMonBeingMoved)
             StartSpriteAnim(sStorage->cursorSprite, CURSOR_ANIM_FIST);
@@ -8001,7 +8001,7 @@ static void CreateCursorSprites(void)
 static void ToggleCursorAutoAction(void)
 {
     sAutoActionOn = !sAutoActionOn;
-    sStorage->cursorSprite->oam.paletteNum = sStorage->cursorPalNums[sAutoActionOn];
+    SetSpritePaletteSlot(sStorage->cursorSprite, sStorage->cursorPalNums[sAutoActionOn]);
 }
 
 static u8 GetCursorPosition(void)
