@@ -1,4 +1,5 @@
 #include "global.h"
+#include "life.h"
 #include "battle_pyramid.h"
 #include "bg.h"
 #include "fieldmap.h"
@@ -988,6 +989,7 @@ static void LoadTilesetPalette(struct Tileset const *tileset, u16 destOffset, u1
             else
                 LoadPaletteFast(tileset->palettes, destOffset, size);
             gPlttBufferFaded[destOffset] = gPlttBufferUnfaded[destOffset] = RGB_BLACK;
+            Seasons_TintPrimaryPalettes(skipFaded);
             ApplyGlobalTintToPaletteEntries(destOffset + 1, (size - 2) >> 1);
         }
         else if (tileset->isSecondary == TRUE)
