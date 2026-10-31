@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#1b1f24">
+<title>Pokimon Multi</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<section id="setup" class="screen" hidden>
+  <div class="setup-card">
+    <h1>Pokimon Multi</h1>
+    <p class="lead">Online Pokémon Emerald, on your phone.</p>
+    <ol class="steps">
+      <li>Pick your own <b>Pokémon Emerald (USA)</b> ROM file.
+        The app patches it here on your phone; nothing is uploaded.</li>
+      <li id="patch-step" hidden>Pick the <b>.bps</b> patch from the
+        <a href="https://github.com/rdiol12/pokimon-multi/releases" target="_blank" rel="noopener">releases page</a>.</li>
+    </ol>
+    <label class="big-button" id="rom-pick">Choose ROM<input type="file" id="rom-file" hidden></label>
+    <label class="big-button" id="patch-pick" hidden>Choose patch<input type="file" id="patch-file" accept=".bps" hidden></label>
+    <p id="setup-msg" class="msg" role="status"></p>
+  </div>
+</section>
+
+<section id="game" class="screen" hidden>
+  <header class="bar">
+    <span id="status" class="status offline" title="Online status"><i></i><span>Offline</span></span>
+    <button id="ff" class="chip" aria-pressed="false">▶▶</button>
+    <button id="menu-open" class="chip" aria-label="Menu">☰</button>
+  </header>
+  <div class="screen-wrap"><canvas id="screen" width="240" height="160"></canvas></div>
+  <div id="pad" class="pad">
+    <div class="shoulders">
+      <button class="btn shoulder" data-key="l">L</button>
+      <button class="btn shoulder" data-key="r">R</button>
+    </div>
+    <div class="dpad" id="dpad" aria-label="D-pad">
+      <span class="arm up"></span><span class="arm down"></span>
+      <span class="arm left"></span><span class="arm right"></span>
+      <span class="hub"></span>
+    </div>
+    <div class="face">
+      <button class="btn round b" data-key="b">B</button>
+      <button class="btn round a" data-key="a">A</button>
+    </div>
+    <div class="meta">
+      <button class="btn pill" data-key="select">SELECT</button>
+      <button class="btn pill" data-key="start">START</button>
+    </div>
+  </div>
+</section>
+
+<dialog id="menu">
+  <h2>Menu</h2>
+  <button data-action="export">Export save</button>
+  <label class="as-button">Import save<input type="file" id="save-file" hidden></label>
+  <button data-action="reset">Restart game</button>
+  <button data-action="change-rom">Change ROM</button>
+  <p class="small" id="about"></p>
+  <button data-action="close" class="primary">Back to game</button>
+</dialog>
+
+<div id="loading" class="loading">Loading…</div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
