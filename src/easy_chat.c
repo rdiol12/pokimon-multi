@@ -679,6 +679,18 @@ static const struct EasyChatScreenTemplate sEasyChatScreenTemplates[] = {
         .confirmText1 = gText_TheAnswer,
         .confirmText2 = gText_IsAsShownOkay,
     },
+    {
+        .type = EASY_CHAT_TYPE_COMMUNITY_CHAT,
+        .numColumns = 2,
+        .numRows = 3,
+        .frameId = FRAMEID_GENERAL_2x3,
+        .fourFooterOptions = FALSE,
+        .titleText = COMPOUND_STRING("Chat room"),
+        .instructionsText1 = gText_CombineSixWordsOrPhrases,
+        .instructionsText2 = gText_AndMakeAMessage,
+        .confirmText1 = COMPOUND_STRING("Your message to the room"),
+        .confirmText2 = gText_IsAsShownOkay,
+    },
 };
 
 // IDs are used indirectly as indexes into gEasyChatWordsByLetterPointers
