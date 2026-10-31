@@ -547,8 +547,9 @@ async def serve(host, port, db_path, http_port=0, public_host="", season_days=28
     server = Server(League(db_path), season_days)
     world.attach(server, db_path)
     import ext
+    import online
 
-    ext.install(server)
+    online.install(server, ext.install(server))
     srv = await asyncio.start_server(server.handle, host, port)
     log.info("listening on %s", ", ".join(str(s.getsockname()) for s in srv.sockets))
     servers = [srv]
