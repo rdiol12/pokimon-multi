@@ -30,6 +30,7 @@
 #define WORLD_BOARD_HUNT     3
 // 8-15: the fourth-batch features (docs/adventure.md).
 #define WORLD_BOARD_DUNGEON  8 // value: deepest floor, extra: dives
+#define WORLD_BOARD_TREASURE 9 // value: treasures found, extra: the last spot
 
 // Legendary quests (src/world_legends.c), index into legendStage.
 #define LEGEND_RAIKOU    0

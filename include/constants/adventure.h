@@ -10,6 +10,7 @@
 #define ADVENTURE_MENU_OUTFITS       1
 #define ADVENTURE_MENU_DAILY_QUESTS  2
 #define ADVENTURE_MENU_CRAFTING      3
+#define ADVENTURE_MENU_TREASURE_MAP  4
 #define ADVENTURE_MENU_CLOSE         15
 
 // Flags (FLAG_UNUSED_0x264-0x27C and 0x281-0x28D are this batch's).
@@ -57,6 +58,12 @@
 #define RANCH_TALK_EMPTY       1
 #define RANCH_TALK_NOTHING_YET 2
 #define RANCH_TALK_HAUL        3
+
+// Treasure_Talk results.
+#define TREASURE_TALK_FIRST 0 // the first map ever
+#define TREASURE_TALK_NEW   1 // today's map
+#define TREASURE_TALK_STILL 2 // still hunting today's
+#define TREASURE_TALK_DONE  3 // found today's
 
 // Dungeon, the Rift Below (src/dungeon.c).
 #define DUNGEON_MAX_FLOOR 99

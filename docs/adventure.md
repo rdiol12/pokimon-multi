@@ -225,6 +225,33 @@ shinies to match, stars painted onto the Starfall forms, and a maple leaf
 on the Amberwood forms' heads; the party icons and following sprites are
 recoloured to match.
 
+## Treasure hunts
+
+![Treasure hunts: the treasure hunter in Dewford, today's map and its riddle, the map again from the R menu, digging in Oldale, and the TREASURE HUNTERS board](images/adventure-treasure.png)
+
+An old treasure hunter in Dewford Town (4,14) hands out one **treasure
+map** a day, the same one to every player (`src/treasure.c`). The map is
+a picture of the 7x5 metatiles around the spot, inked on parchment with a
+red X (`tools/adventure/make_treasure_maps.py` draws them from the real
+maps), shown above the message box with a riddle that names the place.
+R > ADVENTURE > TREASURE MAP shows today's map again.
+
+Pressing A on the X (standing on it or facing it) digs up a chest: a
+Nugget, Big Pearl, Star Piece, Rare Candy, PP Up, Ability Capsule, Bottle
+Cap, Comet Shard, Heart Scale, Moon or Sun Stone, Big Nugget, Relic Gold,
+Rare Bone, Pearl String or Gold Bottle Cap, picked by the day. Each
+treasure gives 25 trainer XP online and counts on the server's
+**TREASURE HUNTERS** board (world board 9: value treasures found). A map
+from another day leaves nothing to dig.
+
+The twelve spots: Oldale Town, Petalburg City, Route 104 by Mr. Briney's
+cottage, Dewford Town, Slateport City, Route 113 by the Glass Workshop,
+Mossdeep City, Route 119 by the Weather Institute, Fallarbor Town, the
+Berry Master's garden on Route 123, Lilycove City below the Contest Hall,
+and Route 116 by the Tunneler's rest house.
+
+![The twelve treasure maps](images/adventure-treasure-maps.png)
+
 ## Screenshots
 
 ```sh
@@ -235,10 +262,12 @@ python3 tools/adventure_shots/run.py tools/adventure_shots/ranch.lua out/ranch 2
 python3 tools/adventure_shots/run.py tools/adventure_shots/dungeon.lua out/dungeon 9000
 python3 tools/adventure_shots/run.py tools/adventure_shots/dungeon_online.lua out/dungeon_online 6000 2
 python3 tools/adventure_shots/run.py tools/adventure_shots/regional_forms.lua out/regional_forms 30000
+python3 tools/adventure_shots/run.py tools/adventure_shots/treasure.lua out/treasure 9000
+python3 tools/adventure_shots/run.py tools/adventure_shots/treasure_online.lua out/treasure_online 8000 2
 ```
 
 `run.py` is `tools/world_shots/run.py` (headless libmgba, `Driver.scene`,
 two players with a server when the last argument is 2) plus
 `Driver.adventure{xp = ..., outfit = ..., items = {...}, ranch = {...},
-dungeonFloor = ..., wild = "SPECIES"}`, which sets up a scene through
+dungeonFloor = ..., wild = "SPECIES", treasure = n}`, which sets up a scene through
 `gAdventureShowcase` (`src/adventure.c`).
