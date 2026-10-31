@@ -518,3 +518,19 @@ the alphas, where they roam, which are tamed and gone today, and the tamed
 and battled counts. The bigger sprite uses an affine matrix of its own; it
 only faces down, since a sideways flip would land on the matrix number.
 Screenshots: `tools/pastime_shots/alpha.lua`.
+
+## Lighthouse keeper
+
+![Lighthouse keeper](images/pastime-lighthouse.png)
+
+The old keeper of Dewford's harbor light stands by the water. By day he
+asks the player to come back after dark; from 19:00 to 5:00 the player can
+keep the light for one shift a night. Eight ships come in out of the dark
+across five lanes, faster as the night goes on and up to three at once,
+heading for the rocks along the shore. LEFT and RIGHT swing the beam; held
+on a ship long enough, her crew sees the rocks and steers clear, and a ship
+left in the dark runs aground. Each ship guided pays ¥200, a perfect shift
+adds a Big Pearl, and a new best shift gets a fanfare. **R > PASTIMES >
+LIGHTHOUSE** has the shifts worked, ships guided, the best shift and
+whether tonight's shift is done. Screenshots:
+`tools/pastime_shots/lighthouse.lua`.

@@ -52,6 +52,7 @@ static const struct PastimeSpotList sSpotLists[] =
     {gFestivalSpots, 1 + FESTIVAL_STALLS},
     {gDigSpots, 1 + DIG_SITES},
     {gAlphaSpots, ALPHA_COUNT},
+    {gLighthouseSpots, 1},
 };
 
 #define MAX_SHOWN (LOCALID_PASTIME_LAST - LOCALID_PASTIME_FIRST + 1)

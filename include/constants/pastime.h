@@ -32,6 +32,7 @@
 #define PASTIME_MENU_FESTIVALS  22
 #define PASTIME_MENU_DIG        23
 #define PASTIME_MENU_ALPHAS     24
+#define PASTIME_MENU_LIGHTHOUSE 25
 #define PASTIME_MENU_CLOSE      31
 
 // NPCs and objects the activities place on maps from code (src/pastime.c)
@@ -269,5 +270,13 @@
 #define ALPHA_ZONE_TILES       2
 #define ALPHA_SPEED            3
 #define ALPHA_PERFECT_IVS      3
+
+// Lighthouse keeper (src/pastime_lighthouse.c).
+#define LIGHTHOUSE_LANES       5
+#define LIGHTHOUSE_SHIPS       8  // a shift
+#define LIGHTHOUSE_PAY         200 // ¥ a ship guided
+#define LIGHTHOUSE_RESULT_DAY  0  // VAR_RESULT of Lighthouse_CheckShift
+#define LIGHTHOUSE_RESULT_DONE 1
+#define LIGHTHOUSE_RESULT_WORK 2
 
 #endif // GUARD_CONSTANTS_PASTIME_H

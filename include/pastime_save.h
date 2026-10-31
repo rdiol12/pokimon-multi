@@ -156,6 +156,12 @@ struct PastimeSaveData
     u8 alphaTamedMask;   // a bit per alpha ever tamed
     u16 alphaTamed;
     u16 alphaBattled;
+    // Lighthouse keeper (src/pastime_lighthouse.c)
+    u16 lighthouseNight;  // night + 1 of the last shift
+    u16 lighthouseShifts;
+    u16 lighthouseShips;  // ships guided past the rocks
+    u8 lighthouseBest;
+    u8 lighthouseFiller;
 };
 
 #endif // GUARD_PASTIME_SAVE_H

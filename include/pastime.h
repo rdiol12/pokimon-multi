@@ -223,4 +223,10 @@ void Alpha_Tame(void);
 void Alpha_PrepareBattle(void);
 void Alpha_ShowList(void);
 
+// Lighthouse keeper (pastime_lighthouse.c).
+void Lighthouse_CheckShift(void);
+void Lighthouse_Play(void);
+void Lighthouse_Finish(void);
+void Lighthouse_ShowList(void);
+
 #endif // GUARD_PASTIME_H
