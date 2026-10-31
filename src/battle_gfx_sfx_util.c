@@ -1,4 +1,5 @@
 #include "global.h"
+#include "injury.h"
 #include "battle.h"
 #include "battle_controllers.h"
 #include "battle_ai_main.h"
@@ -666,6 +667,11 @@ void BattleLoadMonSpriteGfx(struct Pokemon *mon, enum BattlerId battler)
 
     LoadPalette(paletteData, paletteOffset, PLTT_SIZE_4BPP);
     LoadPalette(paletteData, BG_PLTT_ID(8) + BG_PLTT_ID(battler), PLTT_SIZE_4BPP);
+
+    // Lost body parts and scars
+    if (gBattleSpritesDataPtr->battlerData[battler].transformSpecies == SPECIES_NONE)
+        Injury_DrawOnPic(&mon->box, species, gMonSpritesGfxPtr->spritesGfx[position], paletteData,
+                         !IsOnPlayerSide(battler), IsOnPlayerSide(battler) ? 1 : MAX_MON_PIC_FRAMES);
 
     // transform's pink color
     if (gBattleMons[battler].volatiles.transformed)

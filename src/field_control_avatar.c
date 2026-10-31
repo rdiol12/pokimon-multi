@@ -1,4 +1,5 @@
 #include "global.h"
+#include "injury.h"
 #include "battle_setup.h"
 #include "bike.h"
 #include "coord_event_weather.h"
@@ -788,6 +789,11 @@ static bool8 TryStartStepCountScript(u16 metatileBehavior)
             return TRUE;
         }
     #endif
+        if (Injury_TryStartNotify())
+        {
+            ScriptContext_SetupScript(Injury_EventScript_Notify);
+            return TRUE;
+        }
         if (ShouldEggHatch())
         {
             IncrementGameStat(GAME_STAT_HATCHED_EGGS);
@@ -868,6 +874,7 @@ static void UpdateFriendshipStepCounter(void)
             AdjustFriendship(mon, FRIENDSHIP_EVENT_WALKING);
             mon++;
         }
+        Injury_OnWalk128Steps();
     }
 }
 

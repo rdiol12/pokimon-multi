@@ -1,4 +1,5 @@
 #include "global.h"
+#include "injury.h"
 #include "main.h"
 #include "battle.h"
 #include "battle_anim.h"
@@ -3590,6 +3591,8 @@ static void BufferMonTrainerMemo(void)
 
 static void PrintMonTrainerMemo(void)
 {
+    if (!sMonSummaryScreen->summary.isEgg)
+        Injury_BufferSummaryMemo(&sMonSummaryScreen->currentMon.box, gStringVar4);
     PrintTextOnWindow(AddWindowFromTemplateList(sPageInfoTemplate, PSS_DATA_WINDOW_INFO_MEMO), gStringVar4, 0, 1, 0, 0);
 }
 
@@ -4508,6 +4511,17 @@ static u8 LoadMonGfxAndSprite(struct Pokemon *mon, s16 *state)
         (*state)++;
         return 0xFF;
     case 1:
+        if (!summary->isEgg)
+        {
+            void *pic;
+            if (gMain.inBattle || gMonSpritesGfxPtr != NULL)
+                pic = gMonSpritesGfxPtr->spritesGfx[B_POSITION_OPPONENT_LEFT];
+            else
+                pic = MonSpritesGfxManager_GetSpritePtr(MON_SPR_GFX_MANAGER_A, B_POSITION_OPPONENT_LEFT);
+            Injury_DrawOnPic(&mon->box, summary->species, pic,
+                             GetMonSpritePalFromSpeciesAndPersonalityIsEgg(summary->species, summary->isShiny, summary->pid, FALSE),
+                             TRUE, MAX_MON_PIC_FRAMES);
+        }
         LoadSpritePaletteWithTag(GetMonSpritePalFromSpeciesAndPersonalityIsEgg(summary->species, summary->isShiny, summary->pid, summary->isEgg), summary->species2);
         SetMultiuseSpriteTemplateToPokemon(summary->species2, B_POSITION_OPPONENT_LEFT);
         (*state)++;
