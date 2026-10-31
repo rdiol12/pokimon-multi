@@ -33,6 +33,7 @@
 #define PASTIME_MENU_DIG        23
 #define PASTIME_MENU_ALPHAS     24
 #define PASTIME_MENU_LIGHTHOUSE 25
+#define PASTIME_MENU_BOTTLES    26
 #define PASTIME_MENU_CLOSE      31
 
 // NPCs and objects the activities place on maps from code (src/pastime.c)
@@ -278,5 +279,10 @@
 #define LIGHTHOUSE_RESULT_DAY  0  // VAR_RESULT of Lighthouse_CheckShift
 #define LIGHTHOUSE_RESULT_DONE 1
 #define LIGHTHOUSE_RESULT_WORK 2
+
+// Bottle treasure maps (src/pastime_bottle.c).
+#define BOTTLE_MAPS            3
+#define BOTTLE_MAP_PIECES      4
+#define BOTTLE_BEACHES         5
 
 #endif // GUARD_CONSTANTS_PASTIME_H

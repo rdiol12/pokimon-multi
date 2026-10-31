@@ -162,6 +162,11 @@ struct PastimeSaveData
     u16 lighthouseShips;  // ships guided past the rocks
     u8 lighthouseBest;
     u8 lighthouseFiller;
+    // Bottle treasure maps (src/pastime_bottle.c)
+    u16 bottleDay;       // day + 1 of the last bottle picked up
+    u16 bottlePieces;    // a bit per map piece found
+    u8 bottleTreasures;  // a bit per treasure dug up
+    u8 bottleFiller;
 };
 
 #endif // GUARD_PASTIME_SAVE_H
