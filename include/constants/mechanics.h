@@ -8,6 +8,7 @@
 #define LOCALID_MECH_FIRST 190
 #define LOCALID_MECH_TUTOR 190 // the move tutor in every Pokémon Center
 #define LOCALID_MECH_REFEREE 191 // the rules referee in the Slateport Battle Tent
+#define LOCALID_MECH_CUP_HOST 192 // the tournament host in the Verdanturf Battle Tent
 
 // Battle rule sets (Mechanics_SetBattleRules). The Slateport Battle Tent's
 // referee offers them against Battle Frontier trainers; online PvP can use
@@ -20,9 +21,16 @@
 #define RULESET_MISTY       5 // Misty Terrain for the whole battle
 #define RULESET_COUNT       5
 
+// Level-capped tournaments (src/mechanics_cups.c).
+#define CUP_LITTLE 0 // level 5, Pokémon that haven't evolved yet
+#define CUP_RISING 1 // level 30
+#define CUP_PRIME  2 // level 50
+#define CUP_COUNT  3
+
 // Flags (FLAG_UNUSED_0x881-0x887 and 0x8E5-0x8EF belong to the mechanics).
 #define FLAG_MECH_MET_TUTOR    FLAG_UNUSED_0x881
 #define FLAG_MECH_RULE_INVERSE FLAG_UNUSED_0x882 // B_FLAG_INVERSE_BATTLE
 #define FLAG_MECH_MET_REFEREE  FLAG_UNUSED_0x883
+#define FLAG_MECH_MET_CUP_HOST FLAG_UNUSED_0x884
 
 #endif // GUARD_CONSTANTS_MECHANICS_H

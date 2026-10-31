@@ -25,5 +25,11 @@ u8 Mechanics_GetPartyBattleLevel(void);
 u16 Mechanics_PickFacilityTrainer(u8 level);
 void Mechanics_FillFacilityParty(u16 trainerId, u8 count, u8 level);
 void Mechanics_StartFacilityBattle(void);
+void Mechanics_PrepareOpponentMon(struct Pokemon *mon);
+
+// Level caps (src/mechanics_cups.c): brings the party's Pokémon above
+// `level` down to it, until RestoreParty puts the real party back.
+void Mechanics_ApplyLevelCap(u8 level);
+void Mechanics_RestoreParty(void);
 
 #endif // GUARD_MECHANICS_H

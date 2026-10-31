@@ -62,11 +62,35 @@ Frontier trainer whose party is already in `gParties[B_TRAINER_OPPONENT_A]`
 (`Mechanics_FillFacilityParty` makes one); the script gets the outcome in
 `VAR_RESULT`. No trainer ids are used, so `TRAINERS_MAX` stays as it is.
 
+## Level-capped tournaments
+
+![The cup host, the cup list, the RISING CUP with a level 60 Swampert at level 30, three rounds, the prize, and the real levels back afterwards](images/mechanics-level-cups.png)
+
+A host in the Verdanturf Battle Tent lobby runs level cups
+(`src/mechanics_cups.c`, `data/scripts/mechanics/cups.inc`): three rounds
+in a row against Battle Frontier trainers, each a little stronger.
+
+| Cup | Level | Who may enter | First-win prize |
+| --- | --- | --- | --- |
+| LITTLE CUP | 5 | Pokémon that haven't evolved but still can | Eviolite |
+| RISING CUP | 30 | anyone | Life Orb |
+| PRIME CUP | 50 | anyone | Choice Scarf |
+
+For the cup, the player's Pokémon above the level are brought down to it
+(EXP, level and stats), and only those that may enter fight. The real party
+comes back after the cup, won or lost. Little Cup opponents are first-stage
+Pokémon at level 5 (`sLittleCupSpecies`); the other cups use Battle
+Frontier sets. Cups won are marked WON (`gSaveBlock3Ptr->mechanics.cupsWon`).
+
+**Online PvP.** `Mechanics_ApplyLevelCap(level)` caps the party for a
+battle and `Mechanics_RestoreParty()` puts it back.
+
 ## Screenshots
 
 ```sh
 python3 tools/mechanics_shots/run.py tools/mechanics_shots/move_tutor.lua out/
 python3 tools/mechanics_shots/run.py tools/mechanics_shots/rules.lua out/ 120000
+python3 tools/mechanics_shots/run.py tools/mechanics_shots/cups.lua out/ 300000
 ```
 
 The runner is `tools/world_shots/run.py` plus `Driver.fastText()` and
