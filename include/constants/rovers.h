@@ -4,6 +4,7 @@
 // Roaming trainers (src/rovers.c, docs/rovers.md).
 
 #define ROVER_COUNT       150
+#define ROVER_OT_ID_BASE  70000 // trainer ids of rovers (server/rovers.py TID_BASE)
 #define ROVERS_MAX_HERE   4
 
 #define ROVER_STYLE_COLLECTOR 0 // catches a lot, swaps team members

@@ -14,10 +14,24 @@ here = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(here, "..", "..", "world_shots"))
 import run  # noqa: E402
 
-run.SYMBOLS += ["gRoverShowcase", "gNetplayExtMailbox", "gBattleOutcome", "gLifeShowcase"]
+run.SYMBOLS += ["gRoverShowcase", "gNetplayExtMailbox", "gBattleOutcome", "gLifeShowcase", "gSpecialVar_Result"]
 run.HELPERS += """
 -- Summer (the seasons feature would otherwise follow the clock).
 function Driver.summer() E.write8(Driver.SYM.gLifeShowcase + 2, 2) end
+
+-- Presses A through messages until a YES/NO box is open (VAR_RESULT is
+-- 0xFF while it waits), then answers it.
+function Driver.answer(yes, name)
+    local n = 0
+    Driver.waitFor("a YES/NO box", 3000, function() return E.read16(Driver.SYM.gSpecialVar_Result) == 0xFF end, function(i)
+        if i % 60 == 50 and name then n = n + 1; Driver.shot(name .. "-msg" .. n) end
+        if i % 60 == 55 then Driver.press(Driver.KEY.A, 0) end
+    end)
+    Driver.wait(30)
+    if name then Driver.shot(name) end
+    if not yes then Driver.press(Driver.KEY.DOWN, 15) end
+    Driver.press(Driver.KEY.A, 40)
+end
 
 -- Puts rovers on the current map (src/rovers.c RunShowcase).
 -- scene: 1 wander, 2 duel, 3 vs the map's trainer, 4 wild, 5 charger,

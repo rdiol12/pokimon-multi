@@ -55,6 +55,8 @@ void Rovers_OnMapTransition(void);
 const u8 *Rovers_GetTalkScript(struct ObjectEvent *objectEvent);
 bool32 Rovers_IsRoverObject(struct ObjectEvent *objectEvent);
 bool32 Rovers_IsWatching(void);
+bool32 Rovers_IsTrading(void);
+const u8 *Rovers_TradeName(void);
 u16 Rovers_AiVsAiTrainerPic(void);
 bool32 Rovers_InjuresBattler(u32 battler);
 void Rovers_OnLifeBattleEnd(const struct Trainer *trainer, bool32 playerWon);

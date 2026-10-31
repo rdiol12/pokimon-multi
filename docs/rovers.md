@@ -11,6 +11,9 @@ heal at Pokémon Centers. The player meets them anywhere and can:
   sides played by the AI. The result counts for both trainers.
 - **talk** to a wandering one to see its badges, record and team, and
   **battle** it.
+- **trade** with one: say no to a battle and it offers its weakest Pokémon
+  for one of its favourite type (the in-game trade scene; the Pokémon you
+  get has the rover as its trainer).
 - see their **rankings and news** on the quest board in every town. They
   are not on the PvP ladder, which stays for players.
 
@@ -26,6 +29,23 @@ Also here:
   four maps away, and who cleared the last ones. Each one shows up on its map
   and charges from far away. Knock it out or catch it to clear the job; the
   reward is collected at any board. Rovers take these jobs too.
+
+## Their own lives
+
+Each rover carries money and a bag (`server/rovers_life.py`). On routes and
+in caves it gathers Apricorns, Berries, Shards and Mushrooms, and crafts them
+with the crafting recipes (`src/crafting.c`) into Apricorn Balls, Great
+Balls, Potions, Super Potions, Full Heals, Revives and evolution stones.
+Catching goes much better with a ball in the bag; it buys Poké Balls and
+Potions at Pokémon Centers' marts when it runs short. Pokémon it can't carry
+go to its ranch (up to six), where they bring back finds like the Hoenn
+Ranch's (`src/ranch.c`) for the rover's favourite type; past that they go to
+the Haven Reserve. In Petalburg, Slateport and Fortree it takes daily quests
+(catch, train, win battles) for money, and in Mauville it sends a Pokémon on
+a job that comes back stronger with pay. Winning a battle against another
+rover wins prize money; gym badges pay too. The game is sent its battle
+medicine (used in battles against it), ball count, ranch size and money,
+which it mentions when you talk to it.
 
 ## How it works
 
@@ -68,7 +88,7 @@ experience is given and nothing is saved.
 
 - Object local ids 130-149 (`include/constants/rovers.h`), spawned in C; no
   map.json edits. Rover objects aren't removed when they walk off screen.
-- No flags, vars or save data. EWRAM: about 870 bytes.
+- No flags, vars or save data. EWRAM: about 900 bytes.
 - Hooks: `Life_OverworldUpdate`/`Life_OnMapTransition` (src/life.c), talk
   scripts in `field_control_avatar.c`, `IsAiVsAiBattle` (battle_controllers.c),
   `CanInjureInBattle` (injury.c), `CB2_EndLifeTrainerBattle` and
@@ -77,7 +97,8 @@ experience is given and nothing is saved.
   multi-battle partner's party, which crashed on the first switch), the
   left trainer's send-out and withdraw messages (`battle_message.c`; the
   in-game partner's text read a name that isn't there and overran the stack)
-  and no white-out text when the left rover loses (`BS_JumpIfNoWhiteOut`).
+  and no white-out text when the left rover loses (`BS_JumpIfNoWhiteOut`),
+  and the trade scene's names for a rover trade (`trade.c`).
 - The Haven Reserve (`server/community_reserve.py`, other branch): a rover that
   lets a Pokémon go drops it there, and rovers in Verdanturf sometimes catch
   one. Optional: rovers.py works without it.
