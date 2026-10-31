@@ -85,6 +85,7 @@
 #include "constants/trainer_hill.h"
 #include "constants/weather.h"
 #include "netplay.h"
+#include "netplay_ext.h"
 #include "world.h"
 #include "community.h"
 
@@ -1665,7 +1666,8 @@ static void DoCB1_Overworld(u16 newKeys, u16 heldKeys)
     FieldClearPlayerInput(&inputStruct);
     FieldGetPlayerInput(&inputStruct, newKeys, heldKeys);
     CancelSignPostMessageBox(&inputStruct);
-    if (Netplay_OverworldUpdate() || World_OverworldUpdate() || Community_OverworldUpdate())
+    // Netplay and the plaza both run every frame; either may start a script.
+    if ((Netplay_OverworldUpdate() | NetplayExt_OverworldUpdate()) || World_OverworldUpdate() || Community_OverworldUpdate())
     {
         LockPlayerFieldControls();
         HideMapNamePopUpWindow();

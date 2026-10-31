@@ -655,3 +655,26 @@ gSpecials::
 	def_special Netplay_MarketScreen, waitstate=1
 	def_special Netplay_MarketPickedMon
 	def_special Netplay_AddFriend, waitstate=1
+	def_special NetplayExt_OpenPlaza, waitstate=1
+	def_special NetplayExt_Request, waitstate=1
+	def_special NetplayExt_ShowBoard, waitstate=1
+	def_special NetplayExt_ChooseRow, waitstate=1
+	def_special NetplayExt_CountRows
+	def_special NetplayExt_ClearNewMail
+	def_special NetplayExt_NameGuild
+	def_special NetplayExt_CheckGuildName
+	def_special NetplayExt_CheckOfferedMon
+	def_special NetplayExt_CheckBountyMon
+	def_special NetplayExt_CheckMoney
+	def_special NetplayExt_CheckGiftRoom
+	def_special NetplayExt_CheckGift
+	def_special NetplayExt_HasSecretBase
+	def_special NetplayExt_VisitBase
+	def_special NetplayExt_PrepStoredBattle
+	def_special NetplayExt_EndStoredBattle
+	def_special NetplayExt_DraftPickCount
+	def_special NetplayExt_DraftBegin
+	def_special NetplayExt_DraftCancel
+	def_special NetplayExt_DraftWait, waitstate=1
+	def_special NetplayExt_DownloadReplay, waitstate=1
+	def_special NetplayExt_PlayReplay

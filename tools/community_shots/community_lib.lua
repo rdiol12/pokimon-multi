@@ -22,6 +22,7 @@ local function pick(n, after)
 end
 
 -- START > ONLINE > COMMUNITY, then the row-th entry (from 0).
+-- (ONLINE: LADDER, SEASON, FRIENDS, WATCH, PLAZA, COMMUNITY.)
 -- START: POKéMON, BAG, PLAYER, STYLE, ONLINE, SAVE, OPTION, EXIT. That menu
 -- wraps around and remembers its cursor, so count from where it was left.
 Driver.startCursor = 0
@@ -31,7 +32,7 @@ function Driver.community(row, shotName)
     for _ = 1, (Driver.START_ONLINE - Driver.startCursor) % 8 do Driver.press(Driver.KEY.DOWN, 6) end
     Driver.startCursor = Driver.START_ONLINE
     Driver.press(Driver.KEY.A, 30)
-    pick(4)
+    pick(5)
     if shotName then Driver.shot(shotName) end
     pick(row, 10)
 end
