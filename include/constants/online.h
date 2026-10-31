@@ -36,7 +36,12 @@
 #define ONL_REQ_SHOP_STOCK  19 // VAR_0x8005: item, VAR_0x8006: how many; the price picked
 #define ONL_REQ_SHOP_TAKE   20 // the shelf picked from SHOP_MINE
 #define ONL_REQ_SHOP_COLLECT 21
-#define ONL_REQ_COUNT       22
+#define ONL_REQ_PAGEANT_ENTER 22 // VAR_0x8005: party slot
+#define ONL_REQ_PAGEANT_SHOW  23 // VAR_0x8005: index
+#define ONL_REQ_PAGEANT_VOTE  24 // VAR_0x8005: index, VAR_0x8006: entry
+#define ONL_REQ_PAGEANT_BOARD 25
+#define ONL_REQ_PAGEANT_CLAIM 26
+#define ONL_REQ_COUNT       27
 
 // The hub's rows (VAR_RESULT of its menu).
 #define ONLINE_HUB_GOALS    0
@@ -44,6 +49,7 @@
 #define ONLINE_HUB_FISHING  2
 #define ONLINE_HUB_COFISH   3
 #define ONLINE_HUB_SHOPS    4
+#define ONLINE_HUB_PAGEANT  5
 #define ONLINE_HUB_CLOSE    127
 
 // VAR_0x800B of the co-op fishing requests.

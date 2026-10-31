@@ -10,6 +10,7 @@ import online  # noqa: E402
 import online_coopfish  # noqa: E402
 import online_fishing  # noqa: E402
 import online_goals  # noqa: E402
+import online_pageant  # noqa: E402
 import online_shops  # noqa: E402
 import online_sightings  # noqa: E402
 import online_web  # noqa: E402
@@ -27,7 +28,8 @@ class OnlineTest(unittest.IsolatedAsyncioTestCase):
         self.league = ns.League(":memory:")
         self.server = ns.Server(self.league)
         self.online = online.Online(self.server, ext.install(self.server),
-                                    [online_goals, online_sightings, online_web, online_fishing, online_coopfish, online_shops], clock=lambda: self.now)
+                                    [online_goals, online_sightings, online_web, online_fishing, online_coopfish, online_shops,
+                                     online_pageant], clock=lambda: self.now)
         self.srv = await asyncio.start_server(self.server.handle, "127.0.0.1", 0)
         self.port = self.srv.sockets[0].getsockname()[1]
         self.clients = []
@@ -255,6 +257,43 @@ class ShopTest(OnlineTest):
         self.assertEqual(rows(out)[3][0], "Pok# Ball x1 $100")
         status, out = await self.ask(a, f"SHOP TAKE {rows(out)[1][1]}")
         self.assertEqual(rows(out)[1], ["+ITEM", str(ITEMS["POTION"]), "1"])
+
+
+class PageantTest(OnlineTest):
+    async def test_enter_vote_and_win(self):
+        a = await self.connect("Ann", 1)
+        b = await self.connect("Ben", 2)
+        c = await self.connect("Cy", 3)
+        self.assertEqual((await self.ask(a, "PAGEANT SHOW 0"))[0], 1)
+        milotic, eevee = SPECIES["MILOTIC"], SPECIES["EEVEE"]
+        await self.ask(a, f"PAGEANT ENTER {milotic} 40 1 1234 Lady")
+        await self.ask(b, f"PAGEANT ENTER {eevee} 12 0 99 MR. FLUFF")
+        # Ann only sees Ben's entry, and can't vote for her own.
+        status, out = await self.ask(a, "PAGEANT SHOW 5")
+        self.assertEqual(rows(out)[1], [str(eevee), "0", "99", rows(out)[1][3], "0"])
+        self.assertIn("MR. FLUFF", rows(out)[0][0])
+        ben_entry = rows(out)[1][3]
+        status, out = await self.ask(b, "PAGEANT SHOW 0")
+        ann_entry = rows(out)[1][3]
+        self.assertEqual((await self.ask(a, f"PAGEANT VOTE 0 {ann_entry}"))[0], 1)
+        self.assertEqual((await self.ask(a, f"PAGEANT VOTE 0 {ben_entry}"))[0], 0)
+        self.assertEqual((await self.ask(a, f"PAGEANT VOTE 0 {ben_entry}"))[0], 1)  # once each
+        status, out = await self.ask(c, "PAGEANT SHOW 0")
+        self.assertEqual(rows(out)[0][1], "3")  # votes left
+        for entry in (ann_entry, ben_entry):
+            await self.ask(c, f"PAGEANT VOTE 0 {entry}")
+        status, out = await self.ask(b, "PAGEANT BOARD")
+        self.assertEqual(rows(out)[3], ["*1", "MR. FLUFF", "Ben", "2"])
+        self.assertEqual(rows(out)[4], ["2", "Lady", "Ann", "1"])
+        # Next week Ben collects 1st place, Ann 2nd; only once.
+        self.now += online.WEEK
+        status, out = await self.ask(b, "PAGEANT BOARD")
+        self.assertEqual(rows(out)[0][1], "1")
+        status, out = await self.ask(b, "PAGEANT CLAIM")
+        self.assertEqual(rows(out)[2], ["+MONEY", "15000"])
+        self.assertEqual((await self.ask(b, "PAGEANT CLAIM"))[0], 1)
+        status, out = await self.ask(a, "PAGEANT CLAIM")
+        self.assertEqual(rows(out)[1], ["+ITEM", str(ITEMS["RARE_CANDY"]), "2"])
 
 
 if __name__ == "__main__":

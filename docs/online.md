@@ -112,6 +112,23 @@ Shops stay open while their owner is offline; the money waits on the
 server. An owner who is online hears of each sale. The market board and
 the auction house sell Pokémon; shops sell items.
 
+## Pokémon pageants
+
+![TEST1 looks through the entries and votes; TEST2 enters a shiny Gardevoir, hears of the vote, sees the standings and collects last week's prize](images/online-pageant.png)
+
+Every week there's a pageant with a theme after the contest categories
+(Cutest, Coolest, Most Beautiful, Smartest, Toughest)
+(`server/online_pageant.py`, `src/online_pageant.c`,
+`data/scripts/online/pageant.inc`). HUB → POKéMON PAGEANT:
+
+- **ENTER A POKéMON** enters one from the party (entering again swaps it,
+  and its votes start over). Everyone online hears of it.
+- **VOTE** goes through the other players' entries one at a time, each
+  with its picture (shiny colours too), and **VOTE FOR IT** gives it one of
+  your three votes for the week. Its owner hears of each vote.
+- **STANDINGS** shows the week's board. When a week is over, its top three
+  win 3, 2 or 1 Rare Candies and ¥15,000, ¥8,000 or ¥4,000, collected here.
+
 ## How it talks to the server
 
 These features use the Online Plaza's request channel (`NpxRpc_*` in

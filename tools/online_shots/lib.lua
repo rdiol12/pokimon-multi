@@ -6,7 +6,17 @@ local D, K = Driver, Driver.KEY
 -- remember their cursor, so it only moves down the first time.
 local hubOpened = false
 function Driver.openHub(row, shotName)
-    D.press(K.START, 40)
+    -- A notice may have the player: read it away first.
+    if D.fieldLocked() then print("openHub: field locked, closing what's open") end
+    D.waitFor("the field", 1200, function() return not D.fieldLocked() end, function(i)
+        if i % 30 == 0 then D.press(K.B, 0) end
+    end)
+    -- START can be missed (the map name popup is up after a warp): retry.
+    for _ = 1, 6 do
+        D.press(K.START, 40)
+        if D.fieldLocked() then break end
+        D.wait(60)
+    end
     if not hubOpened then for _ = 1, 4 do D.press(K.DOWN, 8) end end
     D.press(K.A, 30) -- ONLINE
     if not hubOpened then for _ = 1, 5 do D.press(K.DOWN, 8) end end

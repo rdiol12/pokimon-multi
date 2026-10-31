@@ -139,7 +139,8 @@ def cell_pixel(group, num):
 # --- shiny sprites -----------------------------------------------------------
 
 def read_jasc(path):
-    lines = open(path).read().split()
+    with open(path) as f:
+        lines = f.read().split()
     count = int(lines[2])
     return [tuple(int(v) for v in lines[3 + i * 3:6 + i * 3]) for i in range(count)]
 
@@ -157,7 +158,8 @@ def shiny_png(species):
     pic, pal = (os.path.join(ROOT, p) for p in SPRITES[species])
     if not (os.path.exists(pic) and os.path.exists(pal)):
         return None
-    data = open(pic, "rb").read()
+    with open(pic, "rb") as f:
+        data = f.read()
     colors = read_jasc(pal)
     out, pos = [data[:8]], 8
     while pos < len(data):
@@ -224,7 +226,8 @@ def route(server, path):
     if path == "/shinies":
         return 200, "text/html; charset=utf-8", shiny_page(server)
     if path == "/static/hoenn.png":
-        return 200, "image/png", open(os.path.join(STATIC, "hoenn.png"), "rb").read()
+        with open(os.path.join(STATIC, "hoenn.png"), "rb") as f:
+            return 200, "image/png", f.read()
     m = SPRITE_RE.match(path)
     if m:
         png = shiny_png(int(m.group(1)))

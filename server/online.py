@@ -156,10 +156,11 @@ def install(server, ext_obj):
     import online_coopfish
     import online_fishing
     import online_goals
+    import online_pageant
     import online_shops
     import online_sightings
     import online_web
 
     online_web.install(server)
     return Online(server, ext_obj, [online_goals, online_sightings, online_web, online_fishing, online_coopfish,
-                                       online_shops])
+                                       online_shops, online_pageant])
