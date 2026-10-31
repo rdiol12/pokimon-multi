@@ -75,6 +75,10 @@ const struct GuideEntry gGuideEntries[] =
     AREA("GULLWING POINT", "A boatman in DEWFORD TOWN takes you to the\ncape with the lighthouse and pirate ship.",
          MAPSEC_DEWFORD_TOWN, MAP_GULLWING_POINT, 0, FLAG_GULL_CAPTAIN_BEATEN),
 #endif
+#ifdef FLAG_PARK_PARADE
+    AREA("WONDERWILD PARK", "The tram guide at SLATEPORT's north gate\nrides you out to the theme park.",
+         MAPSEC_SLATEPORT_CITY, MAP_WONDERWILD_PARK, 2, FLAG_PARK_PARADE),
+#endif
 #ifdef FLAG_CARNIVAL_EGG_DONE
     AREA("SUNFAIR CARNIVAL", "A sailor in SLATEPORT takes you to the\nfairground by the sea.",
          MAPSEC_SLATEPORT_CITY, MAP_SUNFAIR_CARNIVAL, 0, FLAG_CARNIVAL_EGG_DONE),
