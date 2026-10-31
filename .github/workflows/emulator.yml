@@ -75,7 +75,7 @@ jobs:
             mingw-w64-ucrt-x86_64-qt5-base mingw-w64-ucrt-x86_64-qt5-multimedia mingw-w64-ucrt-x86_64-qt5-tools
             mingw-w64-ucrt-x86_64-SDL2 mingw-w64-ucrt-x86_64-lua mingw-w64-ucrt-x86_64-libpng
             mingw-w64-ucrt-x86_64-zlib mingw-w64-ucrt-x86_64-libzip mingw-w64-ucrt-x86_64-sqlite3
-            mingw-w64-ucrt-x86_64-libelf mingw-w64-ucrt-x86_64-ntldd
+            mingw-w64-ucrt-x86_64-libelf mingw-w64-ucrt-x86_64-libepoxy mingw-w64-ucrt-x86_64-ntldd
       - name: Qt player
         run: CMAKE_GENERATOR=Ninja emulator/build.sh qt
       - name: Package

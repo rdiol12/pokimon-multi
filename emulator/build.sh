@@ -47,7 +47,7 @@ cmake_build() { # build-dir target extra-cmake-args...
     local dir="$1" target="$2"
     shift 2
     cmake -S "$SRC" -B "$dir" -DCMAKE_BUILD_TYPE=Release \
-        -DUSE_FFMPEG=OFF -DUSE_LIBZIP=OFF -DUSE_DISCORD_RPC=OFF -DUSE_EDITLINE=OFF -DBUILD_SUITE=OFF -DBUILD_CINEMA=OFF \
+        -DUSE_FFMPEG=OFF -DUSE_LIBZIP=OFF -DUSE_DISCORD_RPC=OFF -DUSE_EDITLINE=OFF -DBUILD_SUITE=OFF -DBUILD_CINEMA=OFF -DSKIP_GIT=ON \
         "$@" > "$dir.cmake.log" 2>&1 || { cat "$dir.cmake.log"; exit 1; }
     cmake --build "$dir" --target "$target" -j "$JOBS"
 }
