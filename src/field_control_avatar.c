@@ -426,6 +426,8 @@ static const u8 *GetInteractedObjectEventScript(struct MapPosition *position, u8
         script = Netplay_GetTalkScript(objectEventId);
     else if (LifePhoto_IsPhotoMon(&gObjectEvents[objectEventId]))
         script = Life_EventScript_PhotoMon;
+    else if (LifeGhost_IsGhost(&gObjectEvents[objectEventId]))
+        script = Life_EventScript_Ghost;
     else if (InTrainerHill() == TRUE)
         script = GetTrainerHillTrainerScript();
     else

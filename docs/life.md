@@ -234,6 +234,38 @@ CANCEL | COLLECT`, closes auctions whose time is up on every request, and
 keeps everything waiting for a player in `auction_inbox`. Tests:
 `python3 -m unittest server/test_life_auction.py`.
 
+## Ghost trainers (online)
+
+![A ghost appears on Route 101, whose team it is, the battle, the ghost fading, and its owner hearing how it did](images/life-ghosts.png)
+
+While you're online your team is kept on the server, and other players meet
+it on their routes as a see-through "ghost" of you
+(`src/life_ghosts.c`, `data/scripts/life/ghosts.inc`, `server/life_ghosts.py`).
+
+- **Your ghost.** The team goes up when you come online, whenever it
+  changes (a Pokémon joins, leaves or levels up; checked every 5 seconds)
+  and every 10 minutes. Each Pokémon keeps its species, level, moves,
+  held item, ability, nature, IVs, EVs, nickname, gender, shininess and
+  friendship. Teams not uploaded for 30 days stop appearing.
+- **Meeting one.** On entering a route while online there's a 1 in 4
+  chance (at most one every 3 minutes) that another player's ghost appears
+  a few steps away, three steps ahead if there's room. It's drawn
+  see-through, as Brendan or May to match its owner. Talk to it to see
+  whose team it is and its record, then battle it or let it fade away.
+- **The battle** is a normal trainer battle against class GHOST, with the
+  owner's name and the rival battle music. So a strong team doesn't flatten
+  a new player, its levels are capped at your best Pokémon's level plus 5.
+  Win and you get prize money; lose and you white out as usual.
+- **The owner hears about it.** The result goes to the server, and the next
+  time the owner's team uploads they get a toast like "YOUR GHOST TEAM: Won
+  2, lost 1 while you were away".
+
+All requests run in the background over the Online Plaza's channel, between
+other requests, so they never hold the player up. The battle uses the same
+`LifeBattle_Start` path as Team Eclipse (`CB2_EndLifeTrainerBattle` tells
+`LifeGhost_OnBattleEnd` how it went). Server words: `GHOST PUT | GET |
+RESULT`; table `ghosts`. Tests: `python3 -m unittest server/test_life_ghosts.py`.
+
 ## Screenshots
 
 ```sh
@@ -247,6 +279,7 @@ python3 tools/life_shots/run.py tools/life_shots/eclipse.lua out/eclipse 700000
 # extensions, and let the scenario move the server's auction clock
 (cd tools/netplay_bridge && LIFE_AUCTION_SKEW_FILE=/tmp/auction/clock_skew \
     python3 ../life_shots/run.py ../life_shots/auction.lua /tmp/auction 60000 2)
+(cd tools/netplay_bridge && python3 ../life_shots/run.py ../life_shots/ghosts.lua /tmp/ghosts 80000 2)
 ```
 
 `run.py` is `tools/world_shots/run.py` with this batch's symbols added, so
@@ -260,7 +293,8 @@ direction it faces (`DIR_*`, 0 = toward the player) and how many stand
 side by side. Byte 9 is the Team Eclipse step plus one: it beats the game
 (all badges, the story's visitors to those maps gone, the party healed,
 battle style SET) and puts the chapter at that step. Byte 10 sets the
-player's money to that many thousand.
+player's money to that many thousand. Byte 11 = 1 asks the server for a
+ghost trainer right away, wherever the player is.
 
 Art: `tools/life_shots/draw_art.py` draws this batch's sprites into
 `graphics/life/`.

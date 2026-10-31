@@ -4,22 +4,23 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(__file__))
 import life_auction  # noqa: E402
-from test_ext import MON, ExtTest  # noqa: E402
+import test_ext  # noqa: E402
+from test_ext import MON  # noqa: E402
 
 
 class AuctionTest(unittest.IsolatedAsyncioTestCase):
-    connect = ExtTest.connect
-    ask = ExtTest.ask
+    connect = test_ext.ExtTest.connect
+    ask = test_ext.ExtTest.ask
 
     async def asyncSetUp(self):
-        await ExtTest.asyncSetUp(self)
+        await test_ext.ExtTest.asyncSetUp(self)
         self.clock = 1_000_000.0
         self.real_now = life_auction.now
         life_auction.now = lambda: self.clock
 
     async def asyncTearDown(self):
         life_auction.now = self.real_now
-        await ExtTest.asyncTearDown(self)
+        await test_ext.ExtTest.asyncTearDown(self)
 
     def rows(self, answer):
         return [r.split("|") for r in answer.decode().split("\n") if r]

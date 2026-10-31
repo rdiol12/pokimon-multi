@@ -41,6 +41,7 @@ bool32 Life_OverworldUpdate(void)
         RunShowcase();
     Seasons_Update();
     LifePhoto_Update();
+    LifeGhost_Update();
     return FALSE;
 }
 
@@ -49,6 +50,7 @@ void Life_OnMapTransition(void)
     Seasons_OnMapTransition();
     LifePhoto_OnMapTransition();
     LifeEclipse_UpdateObjects();
+    LifeGhost_OnMapTransition();
 }
 
 enum Species Life_ModifyWildSpecies(enum Species species, u8 level)

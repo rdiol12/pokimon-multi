@@ -28,6 +28,7 @@ struct LifeShowcase
     u8 photoCount;    // how many of them, side by side
     u8 eclipseStep;   // Team Eclipse: game clear, and this chapter step + 1
     u8 moneyThousands; // sets the player's money to this many thousand
+    u8 ghostNow;       // 1: ask the server for a ghost trainer right away
 };
 extern struct LifeShowcase gLifeShowcase;
 
@@ -61,6 +62,31 @@ void LifeBattle_Start(const struct Trainer *trainer, const u8 *defeatText);
 
 // Team Eclipse (life_eclipse.c).
 void LifeAuction_OpenFromMenu(void);
+
+// Ghost trainers (life_ghosts.c). One Pokémon of a ghost's team as it goes
+// over the wire (server/life_ghosts.py MON_SIZE).
+struct LifeGhostMon
+{
+    /*0x00*/ u16 species;
+    /*0x02*/ u16 heldItem;
+    /*0x04*/ u16 moves[MAX_MON_MOVES];
+    /*0x0C*/ u16 ability;
+    /*0x0E*/ u8 level;
+    /*0x0F*/ u8 nature;
+    /*0x10*/ u8 ivs[NUM_STATS];
+    /*0x16*/ u8 evs[NUM_STATS]; // HP, Atk, Def, SpAtk, SpDef, Speed (struct TrainerMon's order)
+    /*0x1C*/ u8 shiny;
+    /*0x1D*/ u8 gender; // TRAINER_MON_MALE, _FEMALE or _RANDOM_GENDER (genderless)
+    /*0x1E*/ u8 friendship;
+    /*0x1F*/ u8 padding;
+    /*0x20*/ u8 nickname[POKEMON_NAME_LENGTH]; // EOS-terminated unless it's 12 letters
+}; // size 0x2C
+
+void LifeGhost_OnMapTransition(void);
+void LifeGhost_Update(void);
+bool32 LifeGhost_IsGhost(struct ObjectEvent *objectEvent);
+void LifeGhost_OnBattleEnd(const struct Trainer *trainer, bool32 playerWon);
+extern const u8 Life_EventScript_Ghost[];
 void LifeEclipse_UpdateObjects(void);
 void LifeEclipse_ApplyShowcase(u32 step);
 void LifeEclipse_BufferIntro(void);

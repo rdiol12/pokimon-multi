@@ -6,3 +6,4 @@
 	.include "data/scripts/life/photo.inc"
 	.include "data/scripts/life/eclipse.inc"
 	.include "data/scripts/life/auction.inc"
+	.include "data/scripts/life/ghosts.inc"

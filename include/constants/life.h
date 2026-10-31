@@ -96,6 +96,9 @@
 #define LIFE_AUC_GOT_CANCELED 5
 #define LIFE_AUC_LISTINGS     20
 
+// Ghost trainers (src/life_ghosts.c, server/life_ghosts.py).
+#define LOCALID_LIFE_GHOST    224
+
 // Seasons (src/life_seasons.c), from the real-world month.
 #define SEASON_SPRING 0 // March to May
 #define SEASON_SUMMER 1 // June to August
