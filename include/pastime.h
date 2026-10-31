@@ -82,5 +82,13 @@ void Cafe_PushMenu(void);
 void Cafe_CheckDish(void);
 void Cafe_Cook(void);
 void Cafe_ShowList(void);
+bool32 Cafe_HasIngredients(u32 dish);
+void Cafe_UseIngredients(u32 dish);
+const u8 *Cafe_GetDishName(u32 dish);
+void Cook_CheckEntry(void);
+void Cook_CheckDish(void);
+void Cook_Play(void);
+void Cook_Judge(void);
+void Cook_ShowList(void);
 
 #endif // GUARD_PASTIME_H

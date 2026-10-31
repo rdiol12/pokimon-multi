@@ -168,3 +168,26 @@ recorded, Battle Frontier and Safari battles don't count. The hook is
 A new dish replaces the old one. **R > PASTIMES > CAFE** shows the dish in
 effect, battles left, and every recipe (grey when you're missing an
 ingredient). Screenshots: `tools/pastime_shots/cafe.lua`.
+
+## Cooking contests
+
+![Cooking contests](images/pastime-cooking.png)
+
+The COOK-OFF judge stands next to the CAFÉ SOLEIL chef in Lilycove and runs
+one contest a day. Pick one of the cafe's dishes (its ingredients are used
+up), then chop, stir and plate: three rounds of the timing meter
+(`src/world_meter.c`). The judges score 30 for the dish (40 for the Rainbow
+Feast), 20 for each step done well and up to 10 for taste, against three
+rival chefs. Win to move up a rank and get its prize:
+
+| Rank | Meter | Rivals score | Prize |
+| --- | --- | --- | --- |
+| NORMAL | wide zone, slow | 45 to 60 | Rare Candy |
+| GREAT | 3 tiles, faster | 57 to 72 | PP Max |
+| ULTRA | 3 tiles, fast | 69 to 84 | Leftovers |
+| MASTER | 2 tiles, fast | 80 to 95 | Ability Capsule (then Rare Candy) |
+
+The best score goes to the server's **COOK-OFF CHAMPS** leaderboard (world
+board 17 in `server/world.py`). **R > PASTIMES > COOK-OFF** has MY RECORDS
+(rank, best score, wins, entries, today's contest) and COOK-OFF CHAMPS.
+Screenshots: `tools/pastime_shots/cooking.lua` (two players online).

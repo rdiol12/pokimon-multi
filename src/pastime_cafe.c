@@ -97,7 +97,7 @@ const struct PastimeSpot gCafeSpots[1] =
     {MAP_LILYCOVE_CITY, 38, 27, OBJ_EVENT_GFX_COOK, MOVEMENT_TYPE_FACE_DOWN, 0, Cafe_EventScript_Chef},
 };
 
-static bool32 HasIngredients(u32 dish)
+bool32 Cafe_HasIngredients(u32 dish)
 {
     u32 i;
 
@@ -191,17 +191,29 @@ void Cafe_CheckDish(void)
     p = StringCopy(p, COMPOUND_STRING(" battles.\pIt takes:\n"));
     p = AppendRecipe(p, dish, TRUE);
     StringCopy(p, COMPOUND_STRING("."));
-    gSpecialVar_Result = HasIngredients(dish);
+    gSpecialVar_Result = Cafe_HasIngredients(dish);
     StringCopy(gStringVar1, sDishes[dish].name);
+}
+
+void Cafe_UseIngredients(u32 dish)
+{
+    u32 i;
+
+    for (i = 0; i < ARRAY_COUNT(sDishes[dish].ingredients) && sDishes[dish].ingredients[i].count != 0; i++)
+        RemoveBagItem(sDishes[dish].ingredients[i].item, sDishes[dish].ingredients[i].count);
+}
+
+const u8 *Cafe_GetDishName(u32 dish)
+{
+    return sDishes[dish].name;
 }
 
 // Script: cooks and eats the dish (VAR_0x8005).
 void Cafe_Cook(void)
 {
-    u32 dish = gSpecialVar_0x8005, i;
+    u32 dish = gSpecialVar_0x8005;
 
-    for (i = 0; i < ARRAY_COUNT(sDishes[dish].ingredients) && sDishes[dish].ingredients[i].count != 0; i++)
-        RemoveBagItem(sDishes[dish].ingredients[i].item, sDishes[dish].ingredients[i].count);
+    Cafe_UseIngredients(dish);
     sSave.cafeDish = dish;
     sSave.cafeBattles = sDishes[dish].battles;
     if (sSave.cafeDishesCooked < 0xFFFF)
@@ -228,7 +240,7 @@ static void GetLine(u16 index, u8 *dest)
         StringCopy(dest, COMPOUND_STRING(" battles left"));
         return;
     }
-    if (!HasIngredients(index))
+    if (!Cafe_HasIngredients(index))
         dest = StringCopy(dest, COMPOUND_STRING("{COLOR LIGHT_GRAY}{SHADOW WHITE}"));
     dest = StringCopy(dest, sDishes[index].name);
     dest = StringCopy(dest, COMPOUND_STRING("{CLEAR_TO 96}"));

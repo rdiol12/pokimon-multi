@@ -52,6 +52,12 @@ struct PastimeSaveData
     u8 cafeDish;
     u8 cafeBattles;
     u16 cafeDishesCooked;
+    // Cooking contest (src/pastime_cooking.c)
+    u16 cookDay;      // day + 1 of the last contest entered
+    u8 cookRank;      // COOK_RANK_*
+    u8 cookBest;
+    u16 cookWins;
+    u16 cookEntries;
 };
 
 #endif // GUARD_PASTIME_SAVE_H
