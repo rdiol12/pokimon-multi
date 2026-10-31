@@ -26,6 +26,7 @@ extern const u8 Mechanics_EventScript_LabAide[];
 extern const u8 Mechanics_EventScript_StatueTreecko[];
 extern const u8 Mechanics_EventScript_StatueTorchic[];
 extern const u8 Mechanics_EventScript_StatueMudkip[];
+extern const u8 Mechanics_EventScript_EvoSage[];
 
 struct MechNpc
 {
@@ -82,6 +83,11 @@ static bool32 StatueOnRoute117(void)
     return IsMap(MAP_ROUTE117) && Mechanics_IsStatueHere(STARTER_LINE_MUDKIP);
 }
 
+static bool32 InSagesHouse(void)
+{
+    return IsMap(MAP_MAUVILLE_CITY_HOUSE1);
+}
+
 static bool32 InFallarborTent(void)
 {
     return IsMap(MAP_FALLARBOR_TOWN_BATTLE_TENT_LOBBY);
@@ -99,6 +105,7 @@ static const struct MechNpc sMechNpcs[] =
     {StatueInPetalburgWoods, 14, 34, OBJ_EVENT_GFX_TRICK_HOUSE_STATUE, MOVEMENT_TYPE_NONE, Mechanics_EventScript_StatueTreecko},
     {StatueInFieryPath, 28, 9, OBJ_EVENT_GFX_TRICK_HOUSE_STATUE, MOVEMENT_TYPE_NONE, Mechanics_EventScript_StatueTorchic},
     {StatueOnRoute117, 18, 10, OBJ_EVENT_GFX_TRICK_HOUSE_STATUE, MOVEMENT_TYPE_NONE, Mechanics_EventScript_StatueMudkip},
+    {InSagesHouse, 7, 4, OBJ_EVENT_GFX_OLD_WOMAN, MOVEMENT_TYPE_FACE_DOWN, Mechanics_EventScript_EvoSage},
 };
 
 static EWRAM_DATA u8 sTimer = 0;
@@ -119,6 +126,7 @@ struct MechanicsShowcase
     u8 hurt;      // brings the lead down to a third of its HP
     u16 varId;    // if set, VarSet(varId, varValue): story state for a scene
     u16 varValue;
+    u8 friendship; // if set, the lead's friendship
 };
 
 EWRAM_DATA struct MechanicsShowcase gMechanicsShowcase = {0};
@@ -132,6 +140,11 @@ static void RunShowcase(void)
     {
         VarSet(gMechanicsShowcase.varId, gMechanicsShowcase.varValue);
         gMechanicsShowcase.varId = 0;
+    }
+    if (gMechanicsShowcase.friendship)
+    {
+        SetMonData(&gParties[B_TRAINER_PLAYER][0], MON_DATA_FRIENDSHIP, &gMechanicsShowcase.friendship);
+        gMechanicsShowcase.friendship = 0;
     }
     for (i = 0; i < gMechanicsShowcase.badges; i++)
         FlagSet(FLAG_BADGE01_GET + i);

@@ -193,6 +193,24 @@ least 30), which can't be caught. Beat it and the aide teaches the move
 (the usual move tutor menu; only that line can learn it, through a hook in
 `CanTeachMove`, party_menu.c).
 
+## Evolution quests
+
+![The sage: Onix needs a Metal Coat, Kadabra's bond is too weak, Machoke wins the trial and becomes Machamp](images/mechanics-evolution-quests.png)
+
+Pokémon that only evolve by trading (Kadabra, Machoke, Graveler, Haunter,
+Onix with a Metal Coat, Feebas with a Prism Scale, Karrablast and Shelmet
+and the rest) can evolve without a trade (`src/mechanics_evolution.c`).
+The sage in Mauville City's house (the one with the scientist) checks the
+Pokémon the player picks:
+
+1. If its trade evolution needs a held item, it has to hold it.
+2. Its friendship has to be at least 160.
+3. A trial battle against two Battle Frontier Pokémon at its level, with
+   it in the lead (the sage swaps it there) and still standing at the end.
+
+Then it evolves on the spot, as if traded (held items are used up the same
+way; Karrablast and Shelmet get the partner they need).
+
 ## Screenshots
 
 ```sh
@@ -204,6 +222,7 @@ python3 tools/mechanics_shots/run.py tools/mechanics_shots/personality.lua out/ 
 python3 tools/mechanics_shots/run.py tools/mechanics_shots/styles.lua out/ 200000
 python3 tools/mechanics_shots/run.py tools/mechanics_shots/skills.lua out/ 60000
 python3 tools/mechanics_shots/run.py tools/mechanics_shots/signature.lua out/ 150000
+python3 tools/mechanics_shots/run.py tools/mechanics_shots/evolution.lua out/ 150000
 ```
 
 The runner is `tools/world_shots/run.py` plus `Driver.fastText()` and

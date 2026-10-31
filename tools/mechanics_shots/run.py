@@ -34,6 +34,7 @@ function Driver.mech(t)
     E.write8(s + 15, t.persona and t.persona + 1 or 0)
     E.write8(s + 16, t.badges or 0)
     E.write8(s + 17, t.hurt and 1 or 0)
+    E.write8(s + 22, t.friendship or 0)
     if t.var then
         E.write16(s + 18, t.var[1])
         E.write16(s + 20, t.var[2])
