@@ -36,8 +36,10 @@ local OLDALE, OLDALE_MART = 10, 4 -- map numbers (groups 0 and 2)
 -- in its Poké Mart, then opens the board.
 local function goToMarketBoard(inside)
     walk("Oldale Town", D.KEY.UP, function() return D.mb8(0x017) == OLDALE end)
-    walk("the street to the Mart", D.KEY.UP, function() return select(2, D.pos()) <= 8 end)
+    -- The night-only storyteller stands at (9, 12), so turn east below her.
+    walk("the street to the Mart", D.KEY.UP, function() return select(2, D.pos()) <= 13 end)
     walk("the Mart's column", D.KEY.RIGHT, function() return D.pos() >= 14 end)
+    walk("the Mart's street", D.KEY.UP, function() return select(2, D.pos()) <= 8 end)
     walk("the Mart", D.KEY.UP, function() return D.mb8(0x016) == 2 and D.mb8(0x017) == OLDALE_MART end)
     D.waitFor("the Mart", 300, D.inOverworld)
     D.wait(60)
@@ -415,11 +417,16 @@ D.run(function()
         waitForMarketReload()
         D.shot("market-listed")
         D.press(K.B, 30)
-        -- Out of player 2's way, and wait for it to buy and step back.
+        -- Out of player 2's way, and wait for it to buy and step back. Our
+        -- follower trails one tile behind, so step down by the counter to
+        -- pull it out of the aisle, and player 2 steps back two tiles so its
+        -- follower clears the board.
         walk("out of the way", K.LEFT, function() return D.pos() <= 3 end)
+        walk("out of the aisle", K.DOWN, function() return select(2, D.pos()) >= 3 end)
         D.waitFor("player 2 at the board", 4000, function() return remoteAt(5, 2) end)
-        D.waitFor("player 2 to step back", 3000, function() return remoteAt(5, 3) end)
+        D.waitFor("player 2 to step back", 3000, function() return remoteAt(5, 4) end)
         local money = D.money()
+        walk("back to the aisle", K.UP, function() return select(2, D.pos()) <= 2 end)
         walk("back to the board", K.RIGHT, function() return D.pos() >= 5 end)
         D.press(K.UP, 20)
         openMarketBoard() -- collects first, then shows the board
@@ -431,7 +438,7 @@ D.run(function()
         D.waitFor("player 1 to go into the Mart", 3000, function() return D.remoteCount() == 0 end)
         D.wait(300)
         goToMarketBoard(function()
-            D.waitFor("player 1 out of the way", 3000, function() return remoteAt(3, 2) end)
+            D.waitFor("player 1 out of the way", 3000, function() return remoteAt(3, 3) end)
         end)
         openMarketBoard()
         D.shot("market-for-sale")
@@ -446,7 +453,7 @@ D.run(function()
         D.log(string.format("bought: ¥%d -> ¥%d, %d -> %d Pokémon", money, D.money(), count, D.partyCount()))
         if D.money() ~= money - 1000 then D.fail("expected to pay ¥1000") end
         D.press(K.B, 30)
-        walk("away from the board", K.DOWN, function() return select(2, D.pos()) >= 3 end)
+        walk("away from the board", K.DOWN, function() return select(2, D.pos()) >= 4 end)
         D.wait(600)
     end
 
@@ -455,6 +462,7 @@ D.run(function()
     seq = D.mb8(0x0C8)
     if INSTANCE == 2 then
         D.wait(200)
+        walk("back below player 1", K.UP, function() return select(2, D.pos()) <= 3 end)
         D.press(K.UP, 20) -- face player 1
         talkToOtherPlayer(5) -- Co-op battle
     else

@@ -58,13 +58,257 @@ other players see it online with no change to the netplay protocol.
 `tools/adventure/gen_outfits.py` writes the palettes and graphics
 (`src/data/object_events/outfit_graphics_info*.h`).
 
+## Daily quests
+
+![Daily quests: the Petalburg request, the quest list, the notice, the reward, and the Slateport and Fortree requests](images/adventure-daily-quests.png)
+
+Three people next to the Pokémon Centers ask for a favour each day
+(`src/daily_quest.c`, `data/scripts/adventure/daily_quests.inc`):
+
+| Where | Requests |
+| --- | --- |
+| Petalburg (23,17) | catch 3, beat 3 Trainers, walk 1,000 steps, show a Lv. 20+ Normal type, catch a Bug type, battle a player online, hatch an Egg |
+| Slateport (17,20) | fish up 3, catch 2 Water types, show a Lv. 30+ Water type, trade online, catch an Electric type, beat 5 Trainers, walk 2,000 steps |
+| Fortree (3,7) | pick 10 Berries, catch 2 Flying types, catch 2 Grass types, show a Lv. 35+ Flying type, catch 5, show a Lv. 30+ Grass type, battle a player online twice |
+
+Each person offers one request a day, picked from their list by the
+clock's day. Every request pays an item that fits it (a Dive Ball for
+fishing, a Miracle Seed for Grass types...), ¥800–3,000, and 40 trainer
+XP when online. A request stays open until it's done; the next one comes
+the day after it was turned in.
+
+Progress counts from when the request was taken: catches and Trainers
+are counted as they happen, the rest from the game's own counters (steps,
+hatched Eggs, battles and trades with other players) and the world
+records (Berries picked, fish landed). "Show" requests are checked when
+talking to the person. A notice shows when a request is ready to turn in,
+and R > ADVENTURE > DAILY QUESTS lists the open ones with their progress
+and reward. Saved in `dailyQuests` (one slot per person).
+
+## Crafting
+
+![Crafting: the Rustboro crafter, the recipe list, a Level Ball, Potions and a Fire Stone being made, and the Apricorn shop](images/adventure-crafting.png)
+
+A crafter stands outside the Devon Corporation in Rustboro (14,17). The
+first talk explains crafting, gives 4 Red and 2 White Apricorns and sets
+`FLAG_ADVENTURE_CRAFTING`; after that he sells all seven Apricorns
+(¥20 each), and R > ADVENTURE > CRAFTING opens the recipe list anywhere
+(`src/crafting.c`). The list greys out recipes the bag can't pay for, and
+the right side shows the item, how many are in the bag and what it needs.
+A crafts one; holding A keeps crafting. Each craft gives 3 trainer XP
+online.
+
+| Makes | From |
+| --- | --- |
+| Level, Lure, Moon, Friend, Love, Fast, Heavy Ball | 2 Red, Blue, Yellow, Green, Pink, White or Black Apricorns (Kurt's recipes) |
+| 2 Poké Balls | Red + White Apricorn |
+| Great Ball | 2 Poké Balls + Blue Apricorn |
+| Ultra Ball | 2 Great Balls + Black + Yellow Apricorn |
+| 2 Potions | 2 Oran Berries |
+| Super Potion | 2 Oran + Sitrus Berry |
+| Full Heal | Pecha + Chesto + Rawst Berry |
+| Ether | 2 Leppa Berries |
+| Revive | 2 Tiny Mushrooms + Sitrus Berry |
+| Max Revive | 2 Revives + Big Mushroom |
+| 2 Repels | Tiny Mushroom |
+| Super Repel | 2 Repels + Tiny Mushroom |
+| Honey | 3 Pecha Berries |
+| Fire, Water, Thunder, Leaf Stone | 4 Red, Blue, Yellow or Green Shards (like the Route 124 treasure hunter) |
+| Star Piece | 4 Stardust |
+
+## Pokémon ranching
+
+![Ranching: the ranch hand on Route 117, the ranch, the rancher, the Pokémon in the pasture, and what they found](images/adventure-ranch.png)
+
+The **Hoenn Ranch** (`MAP_ADVENTURE_RANCH`) is a meadow behind the Route
+117 Day Care: the ranch house, a stone-fenced pasture, a flower bed and a
+path back. The ranch hand next to the Day Care (Route 117, 55,6) takes
+the player there; walking out at the bottom leads back.
+`tools/adventure/make_ranch.py` builds the layout from Route 117's own
+metatiles (same tilesets), and `tools/adventure/render_map.py` draws any
+layout to a PNG.
+
+The Pokémon in the **last PC box** live at the ranch; the rancher names
+that box RANCH on the first visit. The first six wander the pasture
+(object graphics set from the box when the map loads, `Ranch_SetupMap`),
+and talking to one plays its cry. All of them gather while the player is
+away: one find every 6 hours of the clock each, up to a day's worth (40
+finds at most), handed over by the rancher with a list of who found what
+(`src/ranch.c`). Collecting gives 10 trainer XP online.
+
+What a Pokémon finds:
+
+- its species' own speciality: Shuckle → Berry Juice, Miltank → Moomoo
+  Milk, Chansey/Blissey/Happiny → Oval Stone (rarely a Lucky Egg),
+  Combee/Vespiquen → Honey;
+- Honey with Honey Gather, Emerald's Pickup items with Pickup;
+- Berries (Oran, Pecha, Cheri, Chesto, Rawst, Aspear, Leppa) half the
+  time for Grass and Bug types;
+- otherwise by one of its types, mostly crafting materials: Apricorns
+  (Fire → Red, Water → Blue, Electric → Yellow, Psychic/Fairy → Pink,
+  Dark/Ghost/Poison → Black...), Shards (Ground, Rock, Steel), Mushrooms,
+  Heart Scales, Stardust, and a rare one per type (Pearl, Hard Stone,
+  Charcoal, Star Piece, Dragon Scale...).
+
+## Dungeons
+
+![Dungeons: the spelunker by Meteor Falls, a ladder down, B2F, B12F, B20F, and the DEEPEST DIVERS board](images/adventure-dungeons.png)
+
+The **Rift Below** (`MAP_ADVENTURE_DUNGEON`) is a cave under Route 114.
+The spelunker outside Meteor Falls (Route 114, 10,64) lets the player
+down and shows the DEEPEST DIVERS board. Every dive starts at B1F, and
+every floor is dug out anew from a seed when the player climbs down
+(`src/dungeon.c`): a few rooms joined by tunnels on a 16x16 grid of
+2x2-metatile cells, with the wall pieces picked from the open cave around
+them (Altering Cave's metatiles), some boulders, item balls, and a ladder
+in the room farthest from the start. The way in at the bottom of the
+start room always leads back up to Route 114. The seed is saved, so
+battles and Continue give back the same floor
+(`ON_TRANSITION` places the item balls, `ON_LOAD`/`ON_RESUME` draw it).
+
+Going deeper:
+
+- more rooms: 4 on B1F, one more every third floor, up to 8;
+- more item balls: 2, one more every third floor, up to 4; from B4F and
+  B8F the loot gets better (evolution stones, Star Pieces, then Full
+  Restores, Max Revives, Rare Candies, PP Ups, Nuggets), and every fifth
+  floor one ball holds a prize (Rare Candy, PP Up, Big Nugget, PP Max, and
+  from B25F a Master Ball);
+- wild Pokémon: Hoenn cave Pokémon on B1F–B3F (Zubat, Geodude, Aron,
+  Whismur, Makuhita, Nosepass, Sableye, Mawile), then evolved and rarer
+  ones from B4F and B8F (Lunatone, Solrock, Baltoy, Snorunt, Bagon,
+  Beldum, Gible...), and from B15F fully grown ones (Crobat, Golem,
+  Aggron, Steelix, Metang, Flygon, Dusclops...); two levels more per floor
+  from level 12–16 on B1F, up to 75.
+
+Each floor climbed gives 15 trainer XP online, and a new deepest floor
+goes on the server's **DEEPEST DIVERS** board (world board 8: value the
+floor, extra the number of dives). `tools/adventure/make_dungeon.py`
+writes the base layout (solid rock), and `render_map.py --dump` draws a
+floor as the game dug it out (`Driver.dumpMap` in the screenshot runner):
+
+![Three floors as the game dug them out: B5F, B12F and B20F](images/adventure-dungeon-floors.png)
+
+## Regional forms
+
+![Regional forms in battle and their summaries: Starfall Wingull, Pelipper and Luvdisc, Amberwood Teddiursa and Ursaring](images/adventure-regional-forms.png)
+
+Starfall Isle and Amberwood Hollow have their own forms of five Pokémon,
+wild only there (`src/data/wild_encounters.json`):
+
+| Form | Types | Abilities | Where |
+|---|---|---|---|
+| Starfall Wingull | Psychic/Flying | Keen Eye, Synchronize, Magic Guard (hidden) | Starfall Isle, surfing (60%) |
+| Starfall Pelipper | Psychic/Flying | Keen Eye, Synchronize, Psychic Surge (hidden) | Starfall Isle, surfing (5%); Starfall Wingull at level 25 |
+| Starfall Luvdisc | Water/Fairy | Swift Swim, Pixilate, Hydration (hidden) | Starfall Isle, Good Rod |
+| Amberwood Teddiursa | Normal/Grass | Pickup, Harvest, Honey Gather (hidden) | Amberwood Hollow, grass (10%) |
+| Amberwood Ursaring | Grass/Ground | Guts, Harvest, Grassy Surge (hidden) | Amberwood Hollow, grass (5%); Amberwood Teddiursa at level 30 |
+
+Each has its own stats (about the same total as the usual form), level-up
+moves (Starfall: Confusion, Psybeam, Cosmic Power, Psychic, Future Sight;
+Luvdisc: Fairy Wind, Draining Kiss, Moonlight, Moonblast; Amberwood:
+Leafage, Razor Leaf, Seed Bomb, Horn Leech, Wood Hammer, and Bulldoze when
+Ursaring evolves), Pokédex category and text, and held items (Stardust,
+Star Piece, Tiny and Big Mushrooms). They keep the usual form's TMs and
+Egg moves, and their Eggs hatch into the same form. The species are
+`SPECIES_WINGULL_STARFALL` ... `SPECIES_URSARING_AMBERWOOD`, the first
+custom species (1573–1577); their data is in
+`src/data/pokemon/species_info/adventure_forms.h` and
+`src/data/pokemon/adventure_forms.h`.
+
+![Each form next to the usual one: front, shiny, back, party icon and following sprite](images/adventure-regional-forms-sprites.png)
+
+The sprites are the official Emerald-style ones of each species, repainted
+by `tools/adventure/gen_regional_forms.py`: new palettes (Starfall's
+night-blue, lavender and gold; Amberwood's autumn red and gold) with
+shinies to match, stars painted onto the Starfall forms, and a maple leaf
+on the Amberwood forms' heads; the party icons and following sprites are
+recoloured to match.
+
+## Treasure hunts
+
+![Treasure hunts: the treasure hunter in Dewford, today's map and its riddle, the map again from the R menu, digging in Oldale, and the TREASURE HUNTERS board](images/adventure-treasure.png)
+
+An old treasure hunter in Dewford Town (4,14) hands out one **treasure
+map** a day, the same one to every player (`src/treasure.c`). The map is
+a picture of the 7x5 metatiles around the spot, inked on parchment with a
+red X (`tools/adventure/make_treasure_maps.py` draws them from the real
+maps), shown above the message box with a riddle that names the place.
+R > ADVENTURE > TREASURE MAP shows today's map again.
+
+Pressing A on the X (standing on it or facing it) digs up a chest: a
+Nugget, Big Pearl, Star Piece, Rare Candy, PP Up, Ability Capsule, Bottle
+Cap, Comet Shard, Heart Scale, Moon or Sun Stone, Big Nugget, Relic Gold,
+Rare Bone, Pearl String or Gold Bottle Cap, picked by the day. Each
+treasure gives 25 trainer XP online and counts on the server's
+**TREASURE HUNTERS** board (world board 9: value treasures found). A map
+from another day leaves nothing to dig.
+
+The twelve spots: Oldale Town, Petalburg City, Route 104 by Mr. Briney's
+cottage, Dewford Town, Slateport City, Route 113 by the Glass Workshop,
+Mossdeep City, Route 119 by the Weather Institute, Fallarbor Town, the
+Berry Master's garden on Route 123, Lilycove City below the Contest Hall,
+and Route 116 by the Tunneler's rest house.
+
+![The twelve treasure maps](images/adventure-treasure-maps.png)
+
+## Online Battle Frontier
+
+![The online Battle Frontier: the records keeper outside the Ranking Hall and the Factory, Arena and Pyramid boards with two players](images/adventure-frontier.png)
+
+The Battle Factory, Arena and Pyramid send each player's best streak to
+the server while online (`src/frontier_online.c`): the best of every
+mode, current or record, once a second when it improves. The server
+ranks everyone on the **BATTLE FACTORY**, **BATTLE ARENA** and **BATTLE
+PYRAMID** boards (world boards 10–12: value the streak or floors, extra
+the level mode, and singles or doubles at the Factory). Every win there
+gives 5 trainer XP online (streak growth since the last look, saved in
+`frontierWins`; streaks a save had before this feature don't count).
+
+A records keeper outside the Ranking Hall (Battle Frontier east, 38,14)
+and R > ADVENTURE > FRONTIER RECORDS show the boards.
+
+## Hall of Fame wall
+
+![The Hall of Fame wall: the curator in the Pokémon League, the wall with three teams from two players, and R > ADVENTURE > HALL OF FAME WALL](images/adventure-hall-of-fame.png)
+
+Every team that enters the Hall of Fame goes up on a wall on the server
+(`src/hall_of_fame_wall.c`, `server/adventure_hof.py`). Entering keeps the
+team (species, level, shiny) in the save (`hofTeam`, `hofPending`), and the
+overworld sends it as soon as the game is online, so a champion who played
+offline still gets on the wall. The same player entering again with the
+same team adds nothing.
+
+It goes through the Online Plaza's request channel
+(`docs/netplay_ext.md`): `HOF ADD` with the team as 24 bytes of data,
+and `HOF LIST`, which answers the 16 newest teams (number, trainer, date,
+`species.level.shiny` per Pokémon) after a `total|mine` line.
+
+The curator in the Pokémon League (Ever Grande City, League 1F, 6,4) and
+R > ADVENTURE > HALL OF FAME WALL show the wall: the newest teams first,
+and the selected team's Pokémon icons with their levels (a star for
+shiny) along the bottom. The server's web page has every team at
+`/halloffame`, linked from the league page.
+
 ## Screenshots
 
 ```sh
 python3 tools/adventure_shots/run.py tools/adventure_shots/trainer_level.lua out/trainer_level 30000 2
+python3 tools/adventure_shots/run.py tools/adventure_shots/daily_quests.lua out/daily_quests 40000
+python3 tools/adventure_shots/run.py tools/adventure_shots/crafting.lua out/crafting 20000
+python3 tools/adventure_shots/run.py tools/adventure_shots/ranch.lua out/ranch 20000
+python3 tools/adventure_shots/run.py tools/adventure_shots/dungeon.lua out/dungeon 9000
+python3 tools/adventure_shots/run.py tools/adventure_shots/dungeon_online.lua out/dungeon_online 6000 2
+python3 tools/adventure_shots/run.py tools/adventure_shots/regional_forms.lua out/regional_forms 30000
+python3 tools/adventure_shots/run.py tools/adventure_shots/treasure.lua out/treasure 9000
+python3 tools/adventure_shots/run.py tools/adventure_shots/treasure_online.lua out/treasure_online 8000 2
+python3 tools/adventure_shots/run.py tools/adventure_shots/frontier_online.lua out/frontier_online 7000 2
+python3 tools/adventure_shots/run.py tools/adventure_shots/hall_of_fame.lua out/hall_of_fame 14000 2
 ```
 
 `run.py` is `tools/world_shots/run.py` (headless libmgba, `Driver.scene`,
 two players with a server when the last argument is 2) plus
-`Driver.adventure{xp = ..., outfit = ...}`, which sets up a scene through
+`Driver.adventure{xp = ..., outfit = ..., items = {...}, ranch = {...},
+dungeonFloor = ..., wild = "SPECIES", treasure = n,
+frontier = {factory, arena, pyramid}, hofEnter = true}`, which sets up a scene through
 `gAdventureShowcase` (`src/adventure.c`).

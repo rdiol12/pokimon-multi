@@ -154,6 +154,7 @@ enum Species GetOverworldWeatherSpecies(enum Species species);
 void UpdateFollowingPokemon(void);
 void RemoveFollowingPokemon(void);
 struct ObjectEvent *GetFollowerObject(void);
+void ObjectEventEmote(struct ObjectEvent *objEvent, u8 emotion);
 enum Direction GetDirectionToFace(s16, s16, s16, s16);
 void UpdateLightSprite(struct Sprite *);
 void TrySpawnObjectEvents(s16 cameraX, s16 cameraY);

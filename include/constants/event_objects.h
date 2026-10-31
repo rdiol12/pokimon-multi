@@ -417,6 +417,11 @@ enum
     // OUTFIT_COUNT - 1 outfits x 2 genders x OUTFIT_STATES avatar states.
     OBJ_EVENT_GFX_OUTFIT_FIRST,
     OBJ_EVENT_GFX_OUTFIT_LAST = OBJ_EVENT_GFX_OUTFIT_FIRST + 69,
+    // Team Eclipse (src/life_eclipse.c)
+    OBJ_EVENT_GFX_ECLIPSE_MEMBER_M,
+    OBJ_EVENT_GFX_ECLIPSE_MEMBER_F,
+    OBJ_EVENT_GFX_ECLIPSE_ADMIN,
+    OBJ_EVENT_GFX_ECLIPSE_LEADER,
     NUM_OBJ_EVENT_GFX,
 };
 
@@ -625,6 +630,7 @@ enum
 #define OBJ_EVENT_PAL_TAG_LIGHT_2                 0x8002
 #define OBJ_EVENT_PAL_TAG_EMOTES                  0x8003
 #define OBJ_EVENT_PAL_TAG_NEON_LIGHT              0x8004
+#define OBJ_EVENT_PAL_TAG_ECLIPSE                 0x8005 // Team Eclipse (src/life_eclipse.c)
 // Not a real OW palette tag; used for the white flash applied to followers
 #define OBJ_EVENT_PAL_TAG_WHITE                   (OBJ_EVENT_PAL_TAG_NONE - 1)
 #define OBJ_EVENT_PAL_TAG_NONE                    0x11FF

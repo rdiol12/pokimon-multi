@@ -2,8 +2,9 @@ name: Build game
 
 # Runs only when started by hand: Actions > Build game > Run workflow. Each
 # run builds the ROM and publishes a GitHub release with a BPS patch for
-# Pokémon Emerald (USA) and the mGBA bridge script. The ROM itself is never
-# published.
+# Pokémon Emerald (USA) and the mGBA bridge script, plus the phone apps
+# (an Android .apk and an unsigned iOS .ipa, mobile/README.md) with that
+# patch inside. The ROM itself is never published.
 on:
   workflow_dispatch:
     inputs:
@@ -22,6 +23,10 @@ on:
         description: "Also run the test suite (slow)"
         type: boolean
         default: false
+      phone_apps:
+        description: "Also build the Android and iOS apps"
+        type: boolean
+        default: true
 
 env:
   GAME_REVISION: 0
@@ -114,5 +119,116 @@ jobs:
 
           Server: ${SERVER:-as set in include/config/netplay.h}
           EOF
+          cat >> release/notes.md <<EOF
+
+          **On a phone:** install \`pokimon-multi-$VERSION.apk\` (Android) or sign and
+          install \`pokimon-multi-$VERSION.ipa\` (iOS, with AltStore or Sideloadly), then
+          pick your own Emerald ROM in the app. Online play works in the app; no
+          script to load. See mobile/README.md.
+          EOF
           gh release create "$VERSION" release/*.bps release/netplay_bridge.lua \
             --target "$GITHUB_SHA" --title "Pokimon Multi $VERSION" --notes-file release/notes.md
+
+      - name: Keep the patch for the phone apps
+        if: ${{ inputs.phone_apps }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: patch
+          path: release/*.bps
+          retention-days: 1
+
+  # The phone apps: the web app in mobile/ with this release's patch inside,
+  # in an Android WebView and an iOS WKWebView.
+  android:
+    needs: build-emerald
+    if: ${{ inputs.phone_apps }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.10.2"
+      - uses: actions/download-artifact@v4
+        with:
+          name: patch
+          path: patch
+      - name: Web app
+        env:
+          POKIMON_VERSION: ${{ inputs.version }}
+        run: |
+          cd mobile
+          npm ci
+          node scripts/assemble.mjs ../patch/*.bps
+      - name: APK
+        env:
+          POKIMON_VERSION: ${{ inputs.version }}
+          POKIMON_VERSION_CODE: ${{ github.run_number }}
+          # Optional: a release keystore (base64) so updates install over the
+          # previous version. Without it the APK is signed with a debug key.
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          POKIMON_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
+            export POKIMON_KEYSTORE="$RUNNER_TEMP/release.jks"
+          fi
+          gradle -p mobile/android assembleRelease --no-daemon
+      - name: Upload to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          cp mobile/android/app/build/outputs/apk/release/app-release.apk "pokimon-multi-$VERSION.apk"
+          gh release upload "$VERSION" "pokimon-multi-$VERSION.apk"
+
+  ios:
+    needs: build-emerald
+    if: ${{ inputs.phone_apps }}
+    runs-on: macos-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: actions/download-artifact@v4
+        with:
+          name: patch
+          path: patch
+      - name: Web app
+        env:
+          POKIMON_VERSION: ${{ inputs.version }}
+        run: |
+          cd mobile
+          npm ci
+          node scripts/assemble.mjs ../patch/*.bps
+      - name: Unsigned IPA
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          brew install xcodegen
+          cd mobile/ios
+          xcodegen generate
+          # CFBundleShortVersionString takes only digits and dots.
+          MARKETING=$(echo "$VERSION" | tr -cd '0-9.' | sed 's/^\.*//; s/\.*$//')
+          xcodebuild -project PokimonMulti.xcodeproj -scheme PokimonMulti -configuration Release \
+            -sdk iphoneos -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO MARKETING_VERSION="${MARKETING:-1.0}" CURRENT_PROJECT_VERSION="${{ github.run_number }}" build
+          mkdir -p Payload
+          cp -R build/Build/Products/Release-iphoneos/PokimonMulti.app Payload/
+          zip -qry "../../pokimon-multi-$VERSION.ipa" Payload
+      - name: Upload to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+        run: gh release upload "$VERSION" "pokimon-multi-$VERSION.ipa"

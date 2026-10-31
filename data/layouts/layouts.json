@@ -9354,6 +9354,167 @@
       "secondary_tileset": "gTileset_Amberwood",
       "border_filepath": "data/layouts/AmberwoodHollow/border.bin",
       "blockdata_filepath": "data/layouts/AmberwoodHollow/map.bin"
+    },
+    {
+      "id": "LAYOUT_ADVENTURE_RANCH",
+      "name": "AdventureRanch_Layout",
+      "width": 24,
+      "height": 18,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Mauville",
+      "border_filepath": "data/layouts/AdventureRanch/border.bin",
+      "blockdata_filepath": "data/layouts/AdventureRanch/map.bin"
+    },
+    {
+      "id": "LAYOUT_ADVENTURE_DUNGEON",
+      "name": "AdventureDungeon_Layout",
+      "width": 32,
+      "height": 32,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Cave",
+      "border_filepath": "data/layouts/AdventureDungeon/border.bin",
+      "blockdata_filepath": "data/layouts/AdventureDungeon/map.bin",
+      "layout_version": "emerald"
+    },
+    {
+      "id": "LAYOUT_ELDERWOOD_FOREST",
+      "name": "ElderwoodForest_Layout",
+      "width": 56,
+      "height": 52,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Fortree",
+      "border_filepath": "data/layouts/ElderwoodForest/border.bin",
+      "blockdata_filepath": "data/layouts/ElderwoodForest/map.bin"
+    },
+    {
+      "id": "LAYOUT_EMBER_SPRINGS",
+      "name": "EmberSprings_Layout",
+      "width": 46,
+      "height": 40,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Lavaridge",
+      "border_filepath": "data/layouts/EmberSprings/border.bin",
+      "blockdata_filepath": "data/layouts/EmberSprings/map.bin"
+    },
+    {
+      "id": "LAYOUT_CINDER_CAVERNS_1F",
+      "name": "CinderCaverns_1F_Layout",
+      "width": 44,
+      "height": 36,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Lavaridge",
+      "border_filepath": "data/layouts/CinderCaverns_1F/border.bin",
+      "blockdata_filepath": "data/layouts/CinderCaverns_1F/map.bin"
+    },
+    {
+      "id": "LAYOUT_CINDER_CAVERNS_B1F",
+      "name": "CinderCaverns_B1F_Layout",
+      "width": 48,
+      "height": 40,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Lavaridge",
+      "border_filepath": "data/layouts/CinderCaverns_B1F/border.bin",
+      "blockdata_filepath": "data/layouts/CinderCaverns_B1F/map.bin"
+    },
+    {
+      "id": "LAYOUT_CINDER_CAVERNS_HEART",
+      "name": "CinderCaverns_Heart_Layout",
+      "width": 26,
+      "height": 22,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Lavaridge",
+      "border_filepath": "data/layouts/CinderCaverns_Heart/border.bin",
+      "blockdata_filepath": "data/layouts/CinderCaverns_Heart/map.bin"
+    },
+    {
+      "id": "LAYOUT_SKYROPE_CANYON",
+      "name": "SkyropeCanyon_Layout",
+      "width": 64,
+      "height": 60,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Fallarbor",
+      "border_filepath": "data/layouts/SkyropeCanyon/border.bin",
+      "blockdata_filepath": "data/layouts/SkyropeCanyon/map.bin"
+    },
+    {
+      "id": "LAYOUT_FROSTVEIN_CAVE_1F",
+      "name": "FrostveinCave_1F_Layout",
+      "width": 40,
+      "height": 32,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Cave",
+      "border_filepath": "data/layouts/FrostveinCave_1F/border.bin",
+      "blockdata_filepath": "data/layouts/FrostveinCave_1F/map.bin"
+    },
+    {
+      "id": "LAYOUT_FROSTVEIN_CAVE_B1F",
+      "name": "FrostveinCave_B1F_Layout",
+      "width": 40,
+      "height": 34,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Cave",
+      "border_filepath": "data/layouts/FrostveinCave_B1F/border.bin",
+      "blockdata_filepath": "data/layouts/FrostveinCave_B1F/map.bin"
+    },
+    {
+      "id": "LAYOUT_SUNSCAR_DESERT",
+      "name": "SunscarDesert_Layout",
+      "width": 48,
+      "height": 44,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Mauville",
+      "border_filepath": "data/layouts/SunscarDesert/border.bin",
+      "blockdata_filepath": "data/layouts/SunscarDesert/map.bin"
+    },
+    {
+      "id": "LAYOUT_SUNSCAR_RUINS_HALL",
+      "name": "SunscarRuins_Hall_Layout",
+      "width": 24,
+      "height": 20,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Cave",
+      "border_filepath": "data/layouts/SunscarRuins_Hall/border.bin",
+      "blockdata_filepath": "data/layouts/SunscarRuins_Hall/map.bin"
+    },
+    {
+      "id": "LAYOUT_SUNSCAR_RUINS_VAULT",
+      "name": "SunscarRuins_Vault_Layout",
+      "width": 20,
+      "height": 16,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Cave",
+      "border_filepath": "data/layouts/SunscarRuins_Vault/border.bin",
+      "blockdata_filepath": "data/layouts/SunscarRuins_Vault/map.bin"
+    },
+    {
+      "id": "LAYOUT_HOLLOWMERE",
+      "name": "Hollowmere_Layout",
+      "width": 44,
+      "height": 40,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Petalburg",
+      "border_filepath": "data/layouts/Hollowmere/border.bin",
+      "blockdata_filepath": "data/layouts/Hollowmere/map.bin"
+    },
+    {
+      "id": "LAYOUT_MIREBOUGH_MARSH",
+      "name": "MireboughMarsh_Layout",
+      "width": 56,
+      "height": 48,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Fortree",
+      "border_filepath": "data/layouts/MireboughMarsh/border.bin",
+      "blockdata_filepath": "data/layouts/MireboughMarsh/map.bin"
+    },
+    {
+      "id": "LAYOUT_SUNFAIR_CARNIVAL",
+      "name": "SunfairCarnival_Layout",
+      "width": 60,
+      "height": 48,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Carnival",
+      "border_filepath": "data/layouts/SunfairCarnival/border.bin",
+      "blockdata_filepath": "data/layouts/SunfairCarnival/map.bin"
     }
   ]
 }

@@ -725,6 +725,7 @@ enum StringID
     STRINGID_S,
     STRINGID_LOSTSOMEOFITSHP,
     STRINGID_BELCHCANTUSE,
+    STRINGID_MECH_MESSAGE, // src/mechanics_styles.c: Mechanics_GetBattleMessage
     STRINGID_COUNT
 };
 

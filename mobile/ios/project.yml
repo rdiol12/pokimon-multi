@@ -1,0 +1,56 @@
+# XcodeGen spec for the iOS app: `xcodegen generate` in mobile/ios makes
+# PokimonMulti.xcodeproj. The web app (mobile/dist, from `npm run assemble`)
+# is bundled as the www folder.
+name: PokimonMulti
+options:
+  bundleIdPrefix: io.github.rdiol12
+  deploymentTarget:
+    iOS: "15.0"
+settings:
+  base:
+    MARKETING_VERSION: "1.0" # the workflow passes the release name
+    CURRENT_PROJECT_VERSION: "1"
+targets:
+  PokimonMulti:
+    type: application
+    platform: iOS
+    sources:
+      - path: PokimonMulti
+      - path: ../dist
+        name: www
+        type: folder
+        buildPhase: resources
+    info:
+      path: PokimonMulti/Info.plist
+      properties:
+        CFBundleDisplayName: Pokimon Multi
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSRequiresIPhoneOS: true
+        UILaunchScreen:
+          UIColorName: ""
+        UIRequiresFullScreen: true
+        UIStatusBarHidden: true
+        UIViewControllerBasedStatusBarAppearance: true
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        NSLocalNetworkUsageDescription: Lets the game reach a netplay server on your own network.
+        ITSAppUsesNonExemptEncryption: false
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.github.rdiol12.pokimonmulti
+        TARGETED_DEVICE_FAMILY: "1,2"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        SWIFT_VERSION: "5.0"
+        GENERATE_INFOPLIST_FILE: false
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGNING_ALLOWED: "NO"
+        CODE_SIGNING_REQUIRED: "NO"
+        CODE_SIGN_IDENTITY: ""

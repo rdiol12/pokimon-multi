@@ -469,6 +469,16 @@ const u16 gTrainerPalette_LadyFrlg[] = INCGFX_U16("graphics/trainers/palettes/la
 const u32 gTrainerFrontPic_PainterFrlg[] = INCGFX_U32("graphics/trainers/front_pics/painter_frlg.png", ".4bpp.smol");
 const u16 gTrainerPalette_PainterFrlg[] = INCGFX_U16("graphics/trainers/palettes/painter_frlg.pal", ".gbapal");
 
+// Team Eclipse (tools/life_shots/draw_art.py).
+const u32 gTrainerFrontPic_EclipseGruntM[] = INCGFX_U32("graphics/life/eclipse_grunt_m.png", ".4bpp.smol");
+const u16 gTrainerPalette_EclipseGruntM[] = INCGFX_U16("graphics/life/eclipse_grunt_m.png", ".gbapal");
+const u32 gTrainerFrontPic_EclipseGruntF[] = INCGFX_U32("graphics/life/eclipse_grunt_f.png", ".4bpp.smol");
+const u16 gTrainerPalette_EclipseGruntF[] = INCGFX_U16("graphics/life/eclipse_grunt_f.png", ".gbapal");
+const u32 gTrainerFrontPic_EclipseAdmin[] = INCGFX_U32("graphics/life/eclipse_admin.png", ".4bpp.smol");
+const u16 gTrainerPalette_EclipseAdmin[] = INCGFX_U16("graphics/life/eclipse_admin.png", ".gbapal");
+const u32 gTrainerFrontPic_EclipseLeader[] = INCGFX_U32("graphics/life/eclipse_leader.png", ".4bpp.smol");
+const u16 gTrainerPalette_EclipseLeader[] = INCGFX_U16("graphics/life/eclipse_leader.png", ".gbapal");
+
 static const u8 gTrainerBackPic_None[] = INCGFX_U8("graphics/trainers/back_pics/none.png", ".4bpp");
 const u8 gTrainerBackPic_Brendan[] = INCGFX_U8("graphics/trainers/back_pics/brendan.png", ".4bpp");
 const u8 gTrainerBackPic_May[] = INCGFX_U8("graphics/trainers/back_pics/may.png", ".4bpp");
@@ -1225,5 +1235,21 @@ const struct TrainerPicInfo gTrainerPicInfo[TRAINER_PIC_COUNT] =
     [TRAINER_PIC_PAINTER_FRLG] =
     {
         .frontPic = TRAINER_FRONT_PIC(gTrainerFrontPic_PainterFrlg, gTrainerPalette_PainterFrlg),
+    },
+    [TRAINER_PIC_ECLIPSE_GRUNT_M] =
+    {
+        .frontPic = TRAINER_FRONT_PIC(gTrainerFrontPic_EclipseGruntM, gTrainerPalette_EclipseGruntM),
+    },
+    [TRAINER_PIC_ECLIPSE_GRUNT_F] =
+    {
+        .frontPic = TRAINER_FRONT_PIC(gTrainerFrontPic_EclipseGruntF, gTrainerPalette_EclipseGruntF),
+    },
+    [TRAINER_PIC_ECLIPSE_ADMIN] =
+    {
+        .frontPic = TRAINER_FRONT_PIC(gTrainerFrontPic_EclipseAdmin, gTrainerPalette_EclipseAdmin),
+    },
+    [TRAINER_PIC_ECLIPSE_LEADER] =
+    {
+        .frontPic = TRAINER_FRONT_PIC(gTrainerFrontPic_EclipseLeader, gTrainerPalette_EclipseLeader),
     },
 };

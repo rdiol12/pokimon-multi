@@ -1,0 +1,48 @@
+-- Cinder Caverns: the door on Ember Springs' hill, the lava rivers on 1F,
+-- the valves that cool B1F's lava lake, the guard, and Heatran.
+dofile(INSTANCE_DIR .. "/../driver_lib.lua")
+local D, K = Driver, Driver.KEY
+local F1 = MAPS.MAP_CINDER_CAVERNS_1F
+local B1 = MAPS.MAP_CINDER_CAVERNS_B1F
+
+local function say(dir, name, pages)
+    D.talk(dir, name, pages)
+    D.wait(30)
+end
+
+D.run(function()
+    D.boot()
+    D.wait(60)
+    D.scene(12, MAPS.MAP_EMBER_SPRINGS, 19, 3)
+    D.shot("01-cave-door")
+    D.hold(K.UP, 40)
+    D.wait(150)
+    D.waitFor("the overworld", 1200, D.inOverworld)
+    D.wait(60)
+    D.shot("02-1f-arrive")
+    D.scene(12, F1, 22, 21); D.shot("03-lava-river")
+    D.scene(12, F1, 24, 30); say(K.RIGHT, "04-volcanologist", 3)
+    D.scene(12, B1, 24, 33); D.shot("05-lava-lake")
+    D.scene(12, B1, 4, 7); say(K.UP, "06-valve", 1)
+    D.press(K.A, 150)
+    D.shot("07-steam")
+    D.press(K.A, 60)
+    D.scene(12, B1, 24, 13); D.shot("08-first-stretch-cooled")
+    D.flag("FLAG_CINDER_VALVE_EAST", true)
+    D.flag("FLAG_CINDER_VALVE_SOUTH", true)
+    D.scene(12, B1, 24, 20); D.shot("09-causeway")
+    D.scene(12, B1, 24, 3); say(K.UP, "10-guard", 2)
+    D.flag("FLAG_SYS_GAME_CLEAR", true)
+    D.scene(12, B1, 24, 4); D.shot("11-guard-steps-aside")
+    D.hold(K.UP, 50)
+    D.wait(150)
+    D.waitFor("the overworld", 1200, D.inOverworld)
+    D.wait(60)
+    D.shot("12-molten-heart")
+    D.scene(12, MAPS.MAP_CINDER_CAVERNS_HEART, 13, 9)
+    D.talk(K.UP, "13-heatran", 1)
+    D.waitFor("the battle", 1500, D.inBattle, function(i) if i % 40 == 0 then D.press(K.A, 0) end end)
+    D.wait(400)
+    D.shot("14-heatran-battle")
+    D.result("ok")
+end)

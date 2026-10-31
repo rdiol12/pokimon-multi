@@ -10,6 +10,7 @@
 #include "string_util.h"
 #include "task.h"
 #include "world.h"
+#include "frontier_online.h"
 #include "world_mailbox.h"
 #include "constants/battle.h"
 #include "constants/characters.h"
@@ -427,6 +428,19 @@ static void FormatBoardValue(u8 *dest, u8 board, u32 value, u32 extra)
         else
             StringExpandPlaceholders(dest, COMPOUND_STRING("{STR_VAR_1} badges, {STR_VAR_2} lost"));
         break;
+    case WORLD_BOARD_FACTORY:
+    case WORLD_BOARD_ARENA:
+    case WORLD_BOARD_PYRAMID:
+        FrontierOnline_FormatScore(dest, board, value, extra);
+        break;
+    case WORLD_BOARD_TREASURE:
+        ConvertIntToDecimalStringN(gStringVar1, value, STR_CONV_MODE_LEFT_ALIGN, 5);
+        StringExpandPlaceholders(dest, COMPOUND_STRING("{STR_VAR_1} found"));
+        break;
+    case WORLD_BOARD_DUNGEON:
+        ConvertIntToDecimalStringN(gStringVar1, value, STR_CONV_MODE_LEFT_ALIGN, 3);
+        StringExpandPlaceholders(dest, COMPOUND_STRING("B{STR_VAR_1}F"));
+        break;
     }
 }
 
@@ -456,6 +470,11 @@ static const u8 *const sBoardTitles[] =
     [WORLD_BOARD_BERRIES]  = COMPOUND_STRING("BERRY PICKERS"),
     [WORLD_BOARD_HARDCORE] = COMPOUND_STRING("HARDCORE LADDER"),
     [WORLD_BOARD_HUNT]     = COMPOUND_STRING("SAFARI HUNT"),
+    [WORLD_BOARD_DUNGEON]  = COMPOUND_STRING("DEEPEST DIVERS"),
+    [WORLD_BOARD_TREASURE] = COMPOUND_STRING("TREASURE HUNTERS"),
+    [WORLD_BOARD_FACTORY]  = COMPOUND_STRING("BATTLE FACTORY"),
+    [WORLD_BOARD_ARENA]    = COMPOUND_STRING("BATTLE ARENA"),
+    [WORLD_BOARD_PYRAMID]  = COMPOUND_STRING("BATTLE PYRAMID"),
     [WORLD_BOARD_QUIZ]     = COMPOUND_STRING("QUIZ CHAMPS"),
     [WORLD_BOARD_COOKING]  = COMPOUND_STRING("COOK-OFF CHAMPS"),
     [WORLD_BOARD_BUG_CONTEST] = COMPOUND_STRING("BUG CONTEST"),

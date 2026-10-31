@@ -1,0 +1,63 @@
+plugins {
+    id "com.android.application"
+}
+
+// The web app (mobile/dist, made by `npm run assemble` in mobile/) is the
+// app's assets: index.html, the mGBA core, the bridge and the patch.
+def webRoot = file("../../dist")
+
+android {
+    namespace "io.github.rdiol12.pokimonmulti"
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "io.github.rdiol12.pokimonmulti"
+        minSdk 26
+        targetSdk 35
+        versionCode((System.getenv("POKIMON_VERSION_CODE") ?: "1") as int)
+        versionName System.getenv("POKIMON_VERSION") ?: "dev"
+    }
+
+    // Release builds are signed with the keystore in the environment when
+    // there is one (see mobile/README.md), so an update installs over the
+    // previous version; otherwise with the debug key.
+    signingConfigs {
+        release {
+            def store = System.getenv("POKIMON_KEYSTORE")
+            if (store) {
+                storeFile file(store)
+                storePassword System.getenv("POKIMON_KEYSTORE_PASSWORD")
+                keyAlias System.getenv("POKIMON_KEY_ALIAS") ?: "pokimon"
+                keyPassword System.getenv("POKIMON_KEY_PASSWORD") ?: System.getenv("POKIMON_KEYSTORE_PASSWORD")
+            }
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig System.getenv("POKIMON_KEYSTORE") ? signingConfigs.release : signingConfigs.debug
+        }
+    }
+
+    sourceSets {
+        main.assets.srcDirs = [webRoot]
+    }
+    androidResources {
+        // Keep the wasm and the patch uncompressed in the APK.
+        noCompress += ["wasm", "bps"]
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+
+tasks.register("checkWebRoot") {
+    doLast {
+        if (!new File(webRoot, "index.html").exists()) {
+            throw new GradleException("mobile/dist is missing: run `npm install && npm run assemble` in mobile/ first")
+        }
+    }
+}
+preBuild.dependsOn "checkWebRoot"

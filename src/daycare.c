@@ -1062,6 +1062,13 @@ static void SetInitialEggData(struct Pokemon *mon, enum Species species, struct 
     SetMonData(mon, MON_DATA_LANGUAGE, &language);
 }
 
+// The shared daycare (src/community_daycare.c): an egg from two parents
+// that aren't in this save's daycare. The party must have room.
+void GiveEggFromParents(struct DayCare *daycare)
+{
+    _GiveEggFromDaycare(daycare);
+}
+
 void GiveEggFromDaycare(void)
 {
     _GiveEggFromDaycare(&gSaveBlock1Ptr->daycare);

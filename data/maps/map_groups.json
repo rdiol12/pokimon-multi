@@ -74,7 +74,8 @@
     "gMapGroup_IndoorFiveIslandRoute_Frlg",
     "gMapGroup_IndoorTwoIslandRoute_Frlg",
     "gMapGroup_IndoorSixIslandRoute_Frlg",
-    "gMapGroup_IndoorSevenIslandRoute_Frlg"
+    "gMapGroup_IndoorSevenIslandRoute_Frlg",
+    "gMapGroup_Adventure"
   ],
   "gMapGroup_TownsAndRoutes": [
     "PetalburgCity",
@@ -135,7 +136,25 @@
     "Underwater_Route105",
     "Underwater_Route125",
     "StarfallIsle",
-    "AmberwoodHollow"
+    "AmberwoodHollow",
+    "ElderwoodForest",
+    "EmberSprings",
+    "CinderCaverns_1F",
+    "CinderCaverns_B1F",
+    "CinderCaverns_Heart",
+    "SkyropeCanyon",
+    "FrostveinCave_1F",
+    "FrostveinCave_B1F",
+    "SunscarDesert",
+    "SunscarRuins_Hall",
+    "SunscarRuins_Vault",
+    "Hollowmere",
+    "Hollowmere_Inn",
+    "Hollowmere_House",
+    "Hollowmere_Manor_1F",
+    "Hollowmere_Manor_2F",
+    "MireboughMarsh",
+    "SunfairCarnival"
   ],
   "gMapGroup_IndoorLittleroot": [
     "LittlerootTown_BrendansHouse_1F",
@@ -166,7 +185,10 @@
     "LavaridgeTown_House",
     "LavaridgeTown_Mart",
     "LavaridgeTown_PokemonCenter_1F",
-    "LavaridgeTown_PokemonCenter_2F"
+    "LavaridgeTown_PokemonCenter_2F",
+    "EmberSprings_PokemonCenter_1F",
+    "EmberSprings_Inn",
+    "EmberSprings_HermitHouse"
   ],
   "gMapGroup_IndoorFallarbor": [
     "FallarborTown_Mart",
@@ -262,7 +284,9 @@
     "FortreeCity_House3",
     "FortreeCity_House4",
     "FortreeCity_House5",
-    "FortreeCity_DecorationShop"
+    "FortreeCity_DecorationShop",
+    "ElderwoodForest_ElderHouse",
+    "ElderwoodForest_Lookout"
   ],
   "gMapGroup_IndoorLilycove": [
     "LilycoveCity_CoveLilyMotel_1F",
@@ -1172,5 +1196,9 @@
   ],
   "gMapGroup_IndoorSevenIslandRoute_Frlg": [
     "SevenIsland_SevaultCanyon_House_Frlg"
+  ],
+  "gMapGroup_Adventure": [
+    "AdventureRanch",
+    "AdventureDungeon"
   ]
 }

@@ -13,6 +13,7 @@ extern const struct Tileset gTileset_BrendansMaysHouse;
 extern const struct Tileset gTileset_GenericBuilding1;
 extern const struct Tileset gTileset_General;
 extern const struct Tileset gTileset_Petalburg;
+extern const struct Tileset gTileset_Carnival;
 extern const struct Tileset gTileset_Rustboro;
 extern const struct Tileset gTileset_Fallarbor;
 extern const struct Tileset gTileset_Mauville;
