@@ -13,7 +13,8 @@ through gAdventureShowcase (src/adventure.c):
     dungeon floor to draw next (Driver.dungeonLadder() then says where its
     ladder is), wild = "SPECIES" (every wild Pokémon is that one; "" for
     as usual), treasure = n (today's treasure map is spot n, see
-    src/treasure.c).
+    src/treasure.c), frontier = {factory, arena, pyramid} (record streaks,
+    level 50).
 """
 import os
 import sys
@@ -43,6 +44,13 @@ function Driver.adventure(t)
     if t.ranchHoursAgo then E.write8(s + 36, t.ranchHoursAgo) end
     if t.dungeonFloor then E.write8(s + 37, t.dungeonFloor) end
     if t.treasure then E.write8(s + 42, t.treasure + 1) end
+    if t.frontier then
+        E.write8(s + 43, 1)
+        for i = 1, 3 do
+            local v = t.frontier[i] or 0
+            E.write8(s + 42 + i * 2, v & 0xFF); E.write8(s + 43 + i * 2, v >> 8)
+        end
+    end
     if t.wild then
         local id = t.wild == "" and 0 or SPECIES_ID[t.wild]
         E.write8(s + 40, id & 0xFF); E.write8(s + 41, id >> 8)

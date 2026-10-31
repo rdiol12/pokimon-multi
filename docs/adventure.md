@@ -252,6 +252,22 @@ and Route 116 by the Tunneler's rest house.
 
 ![The twelve treasure maps](images/adventure-treasure-maps.png)
 
+## Online Battle Frontier
+
+![The online Battle Frontier: the records keeper outside the Ranking Hall and the Factory, Arena and Pyramid boards with two players](images/adventure-frontier.png)
+
+The Battle Factory, Arena and Pyramid send each player's best streak to
+the server while online (`src/frontier_online.c`): the best of every
+mode, current or record, once a second when it improves. The server
+ranks everyone on the **BATTLE FACTORY**, **BATTLE ARENA** and **BATTLE
+PYRAMID** boards (world boards 10–12: value the streak or floors, extra
+the level mode, and singles or doubles at the Factory). Every win there
+gives 5 trainer XP online (streak growth since the last look, saved in
+`frontierWins`; streaks a save had before this feature don't count).
+
+A records keeper outside the Ranking Hall (Battle Frontier east, 38,14)
+and R > ADVENTURE > FRONTIER RECORDS show the boards.
+
 ## Screenshots
 
 ```sh
@@ -264,10 +280,12 @@ python3 tools/adventure_shots/run.py tools/adventure_shots/dungeon_online.lua ou
 python3 tools/adventure_shots/run.py tools/adventure_shots/regional_forms.lua out/regional_forms 30000
 python3 tools/adventure_shots/run.py tools/adventure_shots/treasure.lua out/treasure 9000
 python3 tools/adventure_shots/run.py tools/adventure_shots/treasure_online.lua out/treasure_online 8000 2
+python3 tools/adventure_shots/run.py tools/adventure_shots/frontier_online.lua out/frontier_online 7000 2
 ```
 
 `run.py` is `tools/world_shots/run.py` (headless libmgba, `Driver.scene`,
 two players with a server when the last argument is 2) plus
 `Driver.adventure{xp = ..., outfit = ..., items = {...}, ranch = {...},
-dungeonFloor = ..., wild = "SPECIES", treasure = n}`, which sets up a scene through
+dungeonFloor = ..., wild = "SPECIES", treasure = n,
+frontier = {factory, arena, pyramid}}`, which sets up a scene through
 `gAdventureShowcase` (`src/adventure.c`).

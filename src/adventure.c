@@ -5,6 +5,7 @@
 #include "script.h"
 #include "daily_quest.h"
 #include "dungeon.h"
+#include "frontier_online.h"
 #include "ranch.h"
 #include "trainer_level.h"
 #include "treasure.h"
@@ -27,6 +28,8 @@ struct AdventureShowcase
     u8 dungeonLadderX, dungeonLadderY; // out: where that floor's ladder is
     u16 wildSpecies;               // every wild Pokémon is this one, 0 = as usual
     u8 treasureSpot;               // today's treasure map + 1, 0 = leave as is
+    u8 frontierSet;                // set the Frontier streaks below
+    u16 frontierStreaks[FRONTIER_ONLINE_FACILITIES]; // Factory, Arena, Pyramid
 };
 
 EWRAM_DATA struct AdventureShowcase gAdventureShowcase = {0};
@@ -52,6 +55,9 @@ static void RunShowcase(void)
     if (gAdventureShowcase.treasureSpot != 0)
         Treasure_Showcase(gAdventureShowcase.treasureSpot - 1);
     gAdventureShowcase.treasureSpot = 0;
+    if (gAdventureShowcase.frontierSet)
+        FrontierOnline_Showcase(gAdventureShowcase.frontierStreaks[0], gAdventureShowcase.frontierStreaks[1], gAdventureShowcase.frontierStreaks[2]);
+    gAdventureShowcase.frontierSet = FALSE;
     if (gAdventureShowcase.setXp != 0)
         TrainerLevel_SetXp(gAdventureShowcase.setXp - 1);
     if (gAdventureShowcase.outfit != 0)
@@ -67,6 +73,7 @@ void Adventure_Update(void)
         RunShowcase();
     TrainerLevel_Update();
     DailyQuest_Update();
+    FrontierOnline_Update();
 }
 
 // A pressed facing (x, y), map coordinates with MAP_OFFSET.
