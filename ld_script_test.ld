@@ -11,6 +11,10 @@ MEMORY
     IWRAM            (rwx) : ORIGIN = 0x3000000, LENGTH = 0x7F00
     IWRAM_PERSISTENT (rwx) : ORIGIN = 0x3007F00, LENGTH = 0x100
     ROM               (rx) : ORIGIN = 0x8000000, LENGTH = 32M
+    /* Extended GBA v4 big ROM (emulator/README.md): bytes past 32 MiB show at 0xC000000.
+       ROM2_LOAD is only where they sit in the .gba file, right after the first 32 MiB. */
+    ROM2              (rx) : ORIGIN = 0xC000000, LENGTH = 32M
+    ROM2_LOAD         (rx) : ORIGIN = 0xA000000, LENGTH = 32M
 }
 
 SECTIONS {
@@ -169,6 +173,13 @@ SECTIONS {
     {
         test/*.o(.dacs);
     } > ROM =0
+
+    /* Big data marked ROM2_DATA (include/gba/defines.h). Empty unless the ROM outgrows 32 MiB. */
+    .rom2 :
+    ALIGN(4)
+    {
+        *(.rom2 .rom2.*);
+    } > ROM2 AT> ROM2_LOAD
 
     /* DWARF debug sections.
        Symbols in the DWARF debugging sections are relative to the beginning
