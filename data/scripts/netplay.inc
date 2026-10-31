@@ -8,6 +8,7 @@ Netplay_EventScript_TalkToPlayer::
 	message Netplay_Text_WhatToDo
 	waitmessage
 	dynmultipush Netplay_Text_Battle, NETPLAY_KIND_BATTLE
+	dynmultipush Netplay_Text_Double, NETPLAY_KIND_DOUBLE
 	dynmultipush Netplay_Text_Trade, NETPLAY_KIND_TRADE
 	dynmultipush Netplay_Text_BuySell, NETPLAY_KIND_DEAL
 	dynmultipush Netplay_Text_AddFriend, NETPLAY_KIND_FRIEND
@@ -16,6 +17,7 @@ Netplay_EventScript_TalkToPlayer::
 	dynmultistack 0, 0, FALSE, 6, FALSE, NETPLAY_KIND_BATTLE, DYN_MULTICHOICE_CB_NONE
 	switch VAR_RESULT
 	case NETPLAY_KIND_BATTLE, Netplay_EventScript_SendInvite
+	case NETPLAY_KIND_DOUBLE, Netplay_EventScript_SendInvite
 	case NETPLAY_KIND_COOP, Netplay_EventScript_SendInvite
 	case NETPLAY_KIND_TRADE, Netplay_EventScript_SendInvite
 	case NETPLAY_KIND_DEAL, Netplay_EventScript_SendInvite
@@ -61,6 +63,7 @@ Netplay_EventScript_Invite::
 	goto_if_eq VAR_RESULT, NETPLAY_KIND_TRADE, Netplay_EventScript_TradeInvite
 	goto_if_eq VAR_RESULT, NETPLAY_KIND_DEAL, Netplay_EventScript_DealInvite
 	goto_if_eq VAR_RESULT, NETPLAY_KIND_COOP, Netplay_EventScript_CoopInvite
+	goto_if_eq VAR_RESULT, NETPLAY_KIND_DOUBLE, Netplay_EventScript_DoubleInvite
 	playse SE_PIN
 	msgbox Netplay_Text_BattleInvite, MSGBOX_YESNO
 	goto Netplay_EventScript_AnswerInvite
@@ -69,6 +72,12 @@ Netplay_EventScript_Invite::
 Netplay_EventScript_TradeInvite:
 	playse SE_PIN
 	msgbox Netplay_Text_TradeInvite, MSGBOX_YESNO
+	goto Netplay_EventScript_AnswerInvite
+	end
+
+Netplay_EventScript_DoubleInvite:
+	playse SE_PIN
+	msgbox Netplay_Text_DoubleInvite, MSGBOX_YESNO
 	goto Netplay_EventScript_AnswerInvite
 	end
 
@@ -181,6 +190,13 @@ Netplay_Text_WhatToDo:
 
 Netplay_Text_Battle:
 	.string "Battle$"
+
+Netplay_Text_Double:
+	.string "Ranked double battle$"
+
+Netplay_Text_DoubleInvite:
+	.string "{STR_VAR_1} challenges you to a\n"
+	.string "ranked double battle! Accept?$"
 
 Netplay_Text_Coop:
 	.string "Co-op battle$"

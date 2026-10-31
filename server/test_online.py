@@ -9,6 +9,7 @@ import netplay_server as ns  # noqa: E402
 import online  # noqa: E402
 import online_betting  # noqa: E402
 import online_coopfish  # noqa: E402
+import online_doubles  # noqa: E402
 import online_duo  # noqa: E402
 import online_fishing  # noqa: E402
 import online_goals  # noqa: E402
@@ -34,8 +35,10 @@ class OnlineTest(unittest.IsolatedAsyncioTestCase):
         self.online = online.Online(self.server, ext.install(self.server),
                                     [online_goals, online_sightings, online_web, online_fishing, online_coopfish, online_shops,
                                      online_pageant, online_duo, online_mentors,
-                                     online_pquests, online_betting], clock=lambda: self.now)
+                                     online_pquests, online_betting,
+                                     online_doubles], clock=lambda: self.now)
         online_betting.install(self.server)
+        online_doubles.install(self.server)
         self.srv = await asyncio.start_server(self.server.handle, "127.0.0.1", 0)
         self.port = self.srv.sockets[0].getsockname()[1]
         self.clients = []
@@ -424,9 +427,9 @@ class PlayerQuestTest(OnlineTest):
 
 
 class BettingTest(OnlineTest):
-    async def battle(self, host, guest):
+    async def battle(self, host, guest, kind="battle"):
         guest_id = next(p.id for p in self.server.players.values() if p.name == guest.name)
-        await host.send(f"REQ battle {guest_id}")
+        await host.send(f"REQ {kind} {guest_id}")
         while not (line := await guest.recv()).startswith("INVITE "):
             pass
         sid = line.split()[1]
@@ -477,6 +480,24 @@ class BettingTest(OnlineTest):
         self.now += online_betting.BET_SECONDS + 1
         out = (await self.ask(c, "BET LIST 50"))[1]
         self.assertEqual(rows(out)[0][1], "0", out)
+
+
+class DoublesTest(BettingTest):
+    async def test_doubles_have_their_own_ladder(self):
+        a = await self.connect("Ann", 1)
+        b = await self.connect("Ben", 2)
+        a.name, b.name = "Ann", "Ben"
+        self.assertIn("RANKED DOUBLE", rows((await self.ask(a, "DOUBLES BOARD"))[1])[0][0])
+        sid = await self.battle(a, b, "double")
+        await a.send(f"RESULT {sid} loss")
+        await b.send(f"RESULT {sid} win")
+        await self.ask(b, "OSTAT")
+        status, out = await self.ask(a, "DOUBLES BOARD")
+        self.assertEqual(rows(out)[3], ["1", "Ben", "1016", "1-0-0"])
+        self.assertEqual(rows(out)[4], ["*2", "Ann", "984", "0-1-0"])
+        self.assertIn("N", [r[0] for r in rows(out)])
+        # The singles ladder didn't change.
+        self.assertEqual(self.league.db.execute("SELECT COUNT(*) FROM matches").fetchone()[0], 0)
 
 
 if __name__ == "__main__":

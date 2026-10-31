@@ -484,7 +484,7 @@ void Netplay_OnBattleEnd(u8 battleOutcome)
 
     if (sSession.active && sSession.kind == NETPLAY_KIND_COOP)
         gSaveBlock2Ptr->frontier.lvlMode = sSavedFrontierLvlMode;
-    if (!sSession.active || sSession.kind != NETPLAY_KIND_BATTLE)
+    if (!sSession.active || (sSession.kind != NETPLAY_KIND_BATTLE && sSession.kind != NETPLAY_KIND_DOUBLE))
         return;
     // Running from a link battle sets B_OUTCOME_LINK_BATTLE_RAN on top of won/lost.
     switch (battleOutcome & ~B_OUTCOME_LINK_BATTLE_RAN)
@@ -539,6 +539,9 @@ void Netplay_SendInvite(void)
         break;
     case NETPLAY_KIND_COOP:
         type = NETPLAY_REQ_COOP;
+        break;
+    case NETPLAY_KIND_DOUBLE:
+        type = NETPLAY_REQ_DOUBLE;
         break;
     default:
         type = NETPLAY_REQ_TRADE;
@@ -653,7 +656,7 @@ void Netplay_StartActivity(void)
 
 static bool32 IsBattleKind(u8 kind)
 {
-    return kind == NETPLAY_KIND_BATTLE || kind == NETPLAY_KIND_COOP;
+    return kind == NETPLAY_KIND_BATTLE || kind == NETPLAY_KIND_COOP || kind == NETPLAY_KIND_DOUBLE;
 }
 
 // Co-op: the two players against two Battle Frontier trainers, in the
@@ -718,6 +721,7 @@ static void LinkupFailed(u8 taskId)
 static void Task_Linkup(u8 taskId)
 {
     s16 *data = gTasks[taskId].data;
+    u32 i;
 
     if (tState < 3 && (!sSession.active || HasLinkErrorOccurred() || ++tTimer > LINKUP_TIMEOUT))
     {
@@ -728,7 +732,10 @@ static void Task_Linkup(u8 taskId)
     switch (tState)
     {
     case 0:
-        gLinkType = IsBattleKind(sSession.kind) ? LINKTYPE_SINGLE_BATTLE : LINKTYPE_TRADE_SETUP;
+        if (sSession.kind == NETPLAY_KIND_DOUBLE)
+            gLinkType = LINKTYPE_DOUBLE_BATTLE;
+        else
+            gLinkType = IsBattleKind(sSession.kind) ? LINKTYPE_SINGLE_BATTLE : LINKTYPE_TRADE_SETUP;
         gBattleTypeFlags = 0;
         OpenLinkTimed();
         ResetLinkPlayerCount();
@@ -741,6 +748,11 @@ static void Task_Linkup(u8 taskId)
         case EXCHANGE_COMPLETE:
             gFieldLinkPlayerCount = GetLinkPlayerCount_2();
             gLocalLinkPlayerId = GetMultiplayerId();
+            // Battler ids follow the link order, as from cable club seats;
+            // the battle's own exchange sends the local one again.
+            SetLocalLinkPlayerId(gLocalLinkPlayerId);
+            for (i = 0; i < gFieldLinkPlayerCount; i++)
+                gLinkPlayers[i].id = i;
             SaveLinkPlayers(gFieldLinkPlayerCount);
             tState++;
             break;
@@ -759,7 +771,12 @@ static void Task_Linkup(u8 taskId)
         FadeScreen(FADE_TO_BLACK, 0);
         if (IsBattleKind(sSession.kind))
         {
-            gSpecialVar_0x8004 = sSession.kind == NETPLAY_KIND_COOP ? USING_BATTLE_TOWER : USING_SINGLE_BATTLE;
+            if (sSession.kind == NETPLAY_KIND_COOP)
+                gSpecialVar_0x8004 = USING_BATTLE_TOWER;
+            else if (sSession.kind == NETPLAY_KIND_DOUBLE)
+                gSpecialVar_0x8004 = USING_DOUBLE_BATTLE;
+            else
+                gSpecialVar_0x8004 = USING_SINGLE_BATTLE;
             gLinkType = LINKTYPE_BATTLE;
             HealPlayerParty();
             SavePlayerParty();
@@ -799,6 +816,8 @@ static void Task_Linkup(u8 taskId)
             else
             {
                 gBattleTypeFlags = BATTLE_TYPE_LINK | BATTLE_TYPE_TRAINER;
+                if (sSession.kind == NETPLAY_KIND_DOUBLE)
+                    gBattleTypeFlags |= BATTLE_TYPE_DOUBLE;
                 TRAINER_BATTLE_PARAM.opponentA = TRAINER_LINK_OPPONENT;
             }
             sSession.inActivity = TRUE;
@@ -3121,8 +3140,8 @@ static void ReportBattle(void)
     u8 text[NETPLAY_BATTLE_TEXT_LENGTH];
     u32 i;
 
-    if (!sSession.active || sSession.kind != NETPLAY_KIND_BATTLE || sSession.role != 0
-     || !gMain.inBattle || gBattleMons[0].species == SPECIES_NONE)
+    if (!sSession.active || (sSession.kind != NETPLAY_KIND_BATTLE && sSession.kind != NETPLAY_KIND_DOUBLE)
+     || sSession.role != 0 || !gMain.inBattle || gBattleMons[0].species == SPECIES_NONE)
         return;
 
     memset(sides, 0, sizeof(sides));

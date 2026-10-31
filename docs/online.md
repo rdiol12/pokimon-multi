@@ -208,6 +208,22 @@ battle itself can be watched from ONLINE → WATCH as before.
 The module wraps the plaza server's `cmd_accept` and `finish_battle`, so it
 hears of every battle start and result without changing them.
 
+## Ranked doubles
+
+![TEST2 challenges TEST1 to a ranked double battle, TEST1 sent out Mudkip and Poochyena, the battle, everyone hears who won, the RANKED DOUBLES ladder](images/online-ranked-doubles.png)
+
+ONLINE → challenge a player → RANKED DOUBLE BATTLE starts a two-on-two
+link battle: each player uses the first two Pokémon of their party, as in a
+cable club double battle. It's a new plaza session kind, `double`
+(`NETPLAY_KIND_DOUBLE`, bridge `REQ double`), linked the same way as single
+battles; `Task_Linkup` now gives each game its battler id from the link
+order, which the double battle intro needs for the opponent's name.
+
+Results go to their own Elo ladder (`server/online_doubles.py`, table
+`online_doubles`), separate from the singles league; the server announces
+each winner, and HUB → DOUBLES LADDER shows the board. Spectator betting
+takes double battles too.
+
 ## How it talks to the server
 
 These features use the Online Plaza's request channel (`NpxRpc_*` in
