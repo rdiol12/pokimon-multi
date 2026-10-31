@@ -64,6 +64,9 @@ local function waitForMarketReload()
     D.wait(30)
 end
 
+-- Rows of the menu when talking to another player (data/scripts/netplay.inc).
+local TALK = { BATTLE = 1, DOUBLE = 2, TRADE = 3, DEAL = 4, FRIEND = 5, COOP = 6 }
+
 local function talkToOtherPlayer(choice)
     -- Player 2 stands at x=7 facing west, next to player 1 at x=6.
     D.press(K.A, 150) -- "What would you like to do with TEST1?" + menu
@@ -187,7 +190,7 @@ D.run(function()
         D.setKeys(0)
         D.wait(30)
         if select(3, D.pos()) ~= D.DIR.WEST then D.press(K.LEFT, 20) end
-        talkToOtherPlayer(1)
+        talkToOtherPlayer(TALK.BATTLE)
     else
         acceptInvite(seq)
     end
@@ -221,7 +224,7 @@ D.run(function()
     if INSTANCE == 2 then
         D.wait(120)
         if select(3, D.pos()) ~= D.DIR.WEST then D.press(K.LEFT, 20) end
-        talkToOtherPlayer(2)
+        talkToOtherPlayer(TALK.TRADE)
     else
         acceptInvite(seq)
     end
@@ -263,7 +266,7 @@ D.run(function()
         D.press(K.RIGHT, 40)
         if select(3, D.pos()) ~= D.DIR.EAST then D.fail("can't turn after the trade") end
         D.press(K.LEFT, 40)
-        talkToOtherPlayer(3)
+        talkToOtherPlayer(TALK.DEAL)
     else
         acceptInvite(seq)
     end
@@ -336,7 +339,7 @@ D.run(function()
     -- player 2 finds it on the friend list and travels there. ---------------
     if INSTANCE == 2 then
         if select(3, D.pos()) ~= D.DIR.WEST then D.press(K.LEFT, 20) end
-        talkToOtherPlayer(4) -- Add friend
+        talkToOtherPlayer(TALK.FRIEND)
         D.wait(60)
         D.shot("friend-added")
         D.waitFor("player 1 to leave", 3000, function() return D.remoteCount() == 0 end)
@@ -464,7 +467,7 @@ D.run(function()
         D.wait(200)
         walk("back below player 1", K.UP, function() return select(2, D.pos()) <= 3 end)
         D.press(K.UP, 20) -- face player 1
-        talkToOtherPlayer(5) -- Co-op battle
+        talkToOtherPlayer(TALK.COOP)
     else
         acceptInvite(seq)
     end
