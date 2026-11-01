@@ -1,4 +1,5 @@
 #include "global.h"
+#include "qol.h"
 #include "trainer_look.h"
 #include "overworld.h"
 #include "battle_pyramid.h"
@@ -1681,6 +1682,7 @@ static void DoCB1_Overworld(u16 newKeys, u16 heldKeys)
     }
     else if (!ArePlayerFieldControlsLocked())
     {
+        QoL_TryAutosave(); // OPTION > AUTOSAVE, only while standing still (src/qol.c)
         if (ProcessPlayerFieldInput(&inputStruct) == 1)
         {
             LockPlayerFieldControls();

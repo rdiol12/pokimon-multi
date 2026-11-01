@@ -87,10 +87,10 @@ won or lost, and both parties are healed and put back afterwards.
 
 ![Teaming up against two trainers](images/netplay-coop.png)
 
-**L** opens the emote menu: eight emotes that pop up above your head (happy, love, music,
-wow, huh, angry, sad, hmm) and six quick phrases (HI!, GG!, BATTLE?, TRADE?,
-THANKS!, BYE!) that show in a box with your name. Everyone on the same map
-sees them.
+**L** opens the emote wheel (`docs/qol.md`): three pages of eight, sixteen emotes
+that pop up above your head and eight quick phrases (HI!, GG!, BATTLE?, TRADE?,
+THANKS!, BYE!, FOLLOW ME!, NICE!) that also show in a box with your name.
+Everyone on the same map sees them.
 
 The **market board** is on the back wall of every Hoenn Poké Mart (right of
 the counter; face the wall and press A). It lists Pokémon other trainers put
@@ -188,7 +188,7 @@ most once per frame; the bridge acts once per new `seq`.
 | 6 | leave or cancel a session | session id |
 | 7 | offer a deal (buy/sell) | target id |
 | 8 | fetch the PvP ladder | — |
-| 9 | emote | arg: emote (0–7 icons, 8–13 phrases) |
+| 9 | emote | arg: emote (0–7 and 14–21 icons, 8–13 and 22–23 phrases; `include/emote_wheel.h`) |
 | 10 | fetch the friend list | — |
 | 11 | add a friend | target id |
 | 12 | remove a friend | arg: index in the last friend list |
