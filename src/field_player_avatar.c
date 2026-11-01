@@ -1,4 +1,5 @@
 #include "global.h"
+#include "qol.h"
 #include "world.h"
 #include "main.h"
 #include "bike.h"
@@ -960,7 +961,7 @@ static void PlayerNotOnBikeMoving(enum Direction direction, u16 heldKeys)
     }
 
     if (!(gPlayerAvatar.flags & PLAYER_AVATAR_FLAG_UNDERWATER)
-     && (heldKeys & B_BUTTON)
+     && QoL_WantsToRun(heldKeys) // B, or no B with OPTION > AUTO-RUN
      && FlagGet(FLAG_SYS_B_DASH)
      && IsRunningDisallowed(gObjectEvents[gPlayerAvatar.objectEventId].currentMetatileBehavior) == 0
      && !FollowerNPCComingThroughDoor()
