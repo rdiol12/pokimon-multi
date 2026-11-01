@@ -1,4 +1,5 @@
 #include "global.h"
+#include "injury.h"
 #include "malloc.h"
 #include "bg.h"
 #include "data.h"
@@ -487,6 +488,8 @@ struct PokemonStorageSystemData
     u8 displayMonMarkings;
     u8 displayMonLevel;
     bool8 displayMonIsEgg;
+    u8 displayMonInjuryLooks; // scar and lost parts (src/injury.c)
+    u32 injuredIconBuffer[0x200 / 4];
     u8 displayMonName[POKEMON_NAME_LENGTH + 1];
     u8 displayMonNameText[36];
     u8 displayMonSpeciesName[36];
@@ -634,7 +637,7 @@ static void ReshowReleaseMon(void);
 static bool8 ResetReleaseMonSpritePtr(void);
 static void SetMovingMonPriority(u8);
 static void SpriteCB_HeldMon(struct Sprite *);
-static struct Sprite *CreateMonIconSprite(enum Species species, u32 personality, s16 x, s16 y, u8 oamPriority, u8 subpriority, bool32 isEgg);
+static struct Sprite *CreateMonIconSprite(struct BoxPokemon *boxMon, enum Species species, u32 personality, s16 x, s16 y, u8 oamPriority, u8 subpriority, bool32 isEgg);
 static void DestroyBoxMonIcon(struct Sprite *);
 
 // Pokémon data
@@ -4002,6 +4005,9 @@ static void LoadDisplayMonGfx(enum Species species, u32 pid, bool32 isEgg)
     if (species != SPECIES_NONE)
     {
         LoadSpecialPokePicIsEgg(sStorage->tileBuffer, species, pid, TRUE, isEgg);
+        if (!isEgg)
+            Injury_DrawLooks(sStorage->displayMonInjuryLooks, sStorage->tileBuffer, MON_PIC_WIDTH, MON_PIC_HEIGHT,
+                             sStorage->displayMonPalette, TRUE, 1);
         CpuCopy32(sStorage->tileBuffer, sStorage->displayMonTilePtr, MON_PIC_SIZE);
         LoadPalette(sStorage->displayMonPalette, sStorage->displayMonPalOffset, PLTT_SIZE_4BPP);
         sStorage->displayMonSprite->invisible = FALSE;
@@ -4455,7 +4461,7 @@ static void CreateMovingMonIcon(void)
     u8 priority = GetMonIconPriorityByCursorPos();
     bool32 isEgg = GetMonData(&sStorage->movingMon, MON_DATA_IS_EGG);
 
-    sStorage->movingMonSprite = CreateMonIconSprite(species, personality, 0, 0, priority, 7, isEgg);
+    sStorage->movingMonSprite = CreateMonIconSprite(&sStorage->movingMon.box, species, personality, 0, 0, priority, 7, isEgg);
     sStorage->movingMonSprite->callback = SpriteCB_HeldMon;
 }
 
@@ -4490,7 +4496,7 @@ static void InitBoxMonSprites(u8 boxId)
             if (species != SPECIES_NONE)
             {
                 personality = GetBoxMonDataAt(boxId, boxPosition, MON_DATA_PERSONALITY);
-                sStorage->boxMonsSprites[count] = CreateMonIconSprite(species, personality, 8 * (3 * j) + 100, 8 * (3 * i) + 44, 2, 19 - j, isEgg);
+                sStorage->boxMonsSprites[count] = CreateMonIconSprite(GetBoxedMonPtr(boxId, boxPosition), species, personality, 8 * (3 * j) + 100, 8 * (3 * i) + 44, 2, 19 - j, isEgg);
 
                 if (ShouldBoxmonSpriteBeTransparent(boxId, boxPosition))
                     sStorage->boxMonsSprites[boxPosition]->oam.objMode = ST_OAM_OBJ_BLEND;
@@ -4516,7 +4522,7 @@ static void CreateBoxMonIconAtPos(u8 boxPosition)
         s16 y = 8 * (3 * (boxPosition / IN_BOX_COLUMNS)) + 44;
         u32 personality = GetCurrentBoxMonData(boxPosition, MON_DATA_PERSONALITY);
 
-        sStorage->boxMonsSprites[boxPosition] = CreateMonIconSprite(species, personality, x, y, 2, 19 - (boxPosition % IN_BOX_COLUMNS), isEgg);
+        sStorage->boxMonsSprites[boxPosition] = CreateMonIconSprite(GetBoxedMonPtr(StorageGetCurrentBox(), boxPosition), species, personality, x, y, 2, 19 - (boxPosition % IN_BOX_COLUMNS), isEgg);
         if (ShouldBoxmonSpriteBeTransparent(StorageGetCurrentBox(), boxPosition))
             sStorage->boxMonsSprites[boxPosition]->oam.objMode = ST_OAM_OBJ_BLEND;
     }
@@ -4611,7 +4617,7 @@ static u8 CreateBoxMonIconsInColumn(u8 column, u16 distance, s16 speed)
     {
         if (sStorage->boxSpecies[boxPosition] != SPECIES_NONE)
         {
-            sStorage->boxMonsSprites[boxPosition] = CreateMonIconSprite(sStorage->boxSpecies[boxPosition],
+            sStorage->boxMonsSprites[boxPosition] = CreateMonIconSprite(GetBoxedMonPtr(sStorage->incomingBoxId, boxPosition), sStorage->boxSpecies[boxPosition],
                                                                         sStorage->boxPersonalities[boxPosition],
                                                                         x, y, 2, subpriority,
                                                                         sStorage->boxIsEgg[boxPosition]);
@@ -4750,9 +4756,9 @@ static void  CreatePartyMonSprite(u8 partyPosition, bool8 visible)
     u32 personality = GetMonData(partyPokemon, MON_DATA_PERSONALITY);
 
     if (partyPosition == 0)
-        sStorage->partySprites[0] = CreateMonIconSprite(species, personality, 104, 64, 1, 12, isEgg);
+        sStorage->partySprites[0] = CreateMonIconSprite(&partyPokemon->box, species, personality, 104, 64, 1, 12, isEgg);
     else
-        sStorage->partySprites[partyPosition] = CreateMonIconSprite(species, personality, 152,  8 * (3 * (partyPosition - 1)) + 16, 1, 12, isEgg);
+        sStorage->partySprites[partyPosition] = CreateMonIconSprite(&partyPokemon->box, species, personality, 152,  8 * (3 * (partyPosition - 1)) + 16, 1, 12, isEgg);
 
     struct Sprite *partySprite = sStorage->partySprites[partyPosition];
 
@@ -4782,7 +4788,7 @@ static void CreatePartyMonsSprites(bool8 visible)
     bool32 isEgg = GetMonData(&gParties[B_TRAINER_PLAYER][0], MON_DATA_IS_EGG);
     u32 personality = GetMonData(&gParties[B_TRAINER_PLAYER][0], MON_DATA_PERSONALITY);
 
-    sStorage->partySprites[0] = CreateMonIconSprite(species, personality, 104, 64, 1, 12, isEgg);
+    sStorage->partySprites[0] = CreateMonIconSprite(&gParties[B_TRAINER_PLAYER][0].box, species, personality, 104, 64, 1, 12, isEgg);
     count = 1;
     for (i = 1; i < PARTY_SIZE; i++)
     {
@@ -4791,7 +4797,7 @@ static void CreatePartyMonsSprites(bool8 visible)
         if (species != SPECIES_NONE)
         {
             personality = GetMonData(&gParties[B_TRAINER_PLAYER][i], MON_DATA_PERSONALITY);
-            sStorage->partySprites[i] = CreateMonIconSprite(species, personality, 152,  8 * (3 * (i - 1)) + 16, 1, 12, isEgg);
+            sStorage->partySprites[i] = CreateMonIconSprite(&gParties[B_TRAINER_PLAYER][i].box, species, personality, 152,  8 * (3 * (i - 1)) + 16, 1, 12, isEgg);
             count++;
         }
         else
@@ -5182,9 +5188,37 @@ static u16 TryLoadMonIconTiles(enum Species species, enum SpeciesIconType iconTy
     return offset;
 }
 
+// A Pokémon with a scar or a lost part gets an icon slot of its own (src/injury.c).
+// Its id in iconSpeciesList is INJURED_ICON_ID | slot, which no species uses.
+#define INJURED_ICON_ID 0x3000
+#define IS_INJURED_ICON_ID(id) (((id) & 0xF000) == INJURED_ICON_ID)
+
+static u16 TryLoadInjuredMonIconTiles(struct BoxPokemon *boxMon, enum Species species, enum SpeciesIconType iconType, u32 palIndex, u16 *iconId)
+{
+    u32 i;
+
+    if (boxMon == NULL || iconType == EGG_ICON || Injury_GetLooks(boxMon) == 0)
+        return 0xFFFF;
+    for (i = 0; i < MAX_MON_ICONS; i++)
+    {
+        if (sStorage->iconSpeciesList[i] == SPECIES_NONE)
+            break;
+    }
+    if (i == MAX_MON_ICONS)
+        return 0xFFFF; // full: show the plain icon
+    if (!Injury_DrawOnIconTiles(boxMon, GetMonIconTilesByIconType(species & SPECIES_MASK, iconType), (u8 *)sStorage->injuredIconBuffer,
+                                gMonIconPaletteTable[palIndex].data, 1))
+        return 0xFFFF;
+    *iconId = INJURED_ICON_ID | i;
+    sStorage->iconSpeciesList[i] = *iconId;
+    sStorage->numIconsPerSpecies[i] = 1;
+    CpuCopy32(sStorage->injuredIconBuffer, (void *)(OBJ_VRAM0) + 16 * i * TILE_SIZE_4BPP, 0x200);
+    return 16 * i;
+}
+
 static void RemoveSpeciesFromIconList(enum Species species, enum SpeciesIconType iconType)
 {
-    u32 iconId = MakeIconIdFromSpeciesAndIconType(species, iconType);
+    u32 iconId = IS_INJURED_ICON_ID(species) ? species : MakeIconIdFromSpeciesAndIconType(species, iconType);
 
     for (u32 i = 0; i < MAX_MON_ICONS; i++)
     {
@@ -5197,9 +5231,9 @@ static void RemoveSpeciesFromIconList(enum Species species, enum SpeciesIconType
     }
 }
 
-static struct Sprite *CreateMonIconSprite(enum Species species, u32 personality, s16 x, s16 y, u8 oamPriority, u8 subpriority, bool32 isEgg)
+static struct Sprite *CreateMonIconSprite(struct BoxPokemon *boxMon, enum Species species, u32 personality, s16 x, s16 y, u8 oamPriority, u8 subpriority, bool32 isEgg)
 {
-    u16 tileNum;
+    u16 tileNum, iconId;
     u8 spriteId;
     struct SpriteTemplate template = sSpriteTemplate_MonIcon;
     u32 iconType = NORMAL_ICON;
@@ -5230,20 +5264,29 @@ static struct Sprite *CreateMonIconSprite(enum Species species, u32 personality,
         template.paletteTag = PALTAG_MON_ICON_0 + gSpeciesInfo[species].iconPalIndex;
     }
 
-    tileNum = TryLoadMonIconTiles(species, iconType);
+    tileNum = TryLoadInjuredMonIconTiles(boxMon, species, iconType, template.paletteTag - PALTAG_MON_ICON_0, &iconId);
+    if (tileNum == 0xFFFF)
+    {
+        iconId = species;
+        tileNum = TryLoadMonIconTiles(species, iconType);
+    }
+    else
+    {
+        iconType = NORMAL_ICON;
+    }
     if (tileNum == 0xFFFF)
         return NULL;
 
     spriteId = CreateSpriteUnchecked(&template, x, y, subpriority);
     if (spriteId == MAX_SPRITES)
     {
-        RemoveSpeciesFromIconList(species, iconType);
+        RemoveSpeciesFromIconList(iconId, iconType);
         return NULL;
     }
 
     gSprites[spriteId].oam.tileNum = tileNum;
     gSprites[spriteId].oam.priority = oamPriority;
-    gSprites[spriteId].data[0] = species;
+    gSprites[spriteId].data[0] = iconId;
     gSprites[spriteId].data[1] = iconType;
 
     return &gSprites[spriteId];
@@ -6990,6 +7033,7 @@ static void SetDisplayMonData(void *pokemon, u8 mode)
     bool8 sanityIsBadEgg;
 
     sStorage->displayMonItemId = ITEM_NONE;
+    sStorage->displayMonInjuryLooks = 0;
     gender = MON_MALE;
     sanityIsBadEgg = FALSE;
     if (mode == MODE_PARTY)
@@ -7013,6 +7057,7 @@ static void SetDisplayMonData(void *pokemon, u8 mode)
             sStorage->displayMonPalette = GetMonFrontSpritePal(mon);
             gender = GetMonGender(mon);
             sStorage->displayMonItemId = GetMonData(mon, MON_DATA_HELD_ITEM);
+            sStorage->displayMonInjuryLooks = Injury_GetLooks(&mon->box);
         }
     }
     else if (mode == MODE_BOX)
@@ -7038,6 +7083,7 @@ static void SetDisplayMonData(void *pokemon, u8 mode)
             sStorage->displayMonPalette = GetMonSpritePalFromSpeciesAndPersonalityIsEgg(sStorage->displayMonSpecies, isShiny, sStorage->displayMonPersonality, sStorage->displayMonIsEgg);
             gender = GetGenderFromSpeciesAndPersonality(sStorage->displayMonSpecies, sStorage->displayMonPersonality);
             sStorage->displayMonItemId = GetBoxMonData(boxMon, MON_DATA_HELD_ITEM);
+            sStorage->displayMonInjuryLooks = Injury_GetLooks(boxMon);
         }
     }
     else

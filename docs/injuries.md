@@ -24,11 +24,17 @@ part is hurt. If the damage reaches 100%, the part is lost for good.
 - **Clinic**: after healing, the Pokémon Center nurse offers to treat each hurt
   Pokémon. The cost is damage% × (level + 10), or 1.5 times that for an open
   wound. Treating can leave a scar (30%, or 60% after a lost part).
-- **Looks**: in battle (front and back) and on the summary screen, a lost part
-  has its tip cut off and the stump bandaged, a lost eye gets an eye patch, and
-  a scar is three claw marks. The game finds the part on the sprite itself, so
-  this works for every species without new art. The summary's trainer memo
-  lists the hurt part, the lost parts and the scar.
+- **Looks**: a lost part has its tip cut off and the stump bandaged, a lost
+  eye gets an eye patch, and a scar is three claw marks. The game finds the
+  part on the sprite itself, so this works for every species without new art.
+  They show everywhere the Pokémon does: in battle (front and back), on the
+  summary screen, on party menu, trade screen and PC box icons, in the PC's
+  big picture, on the following Pokémon in the overworld, and on other
+  players' following Pokémon online (the follower's marks go out with its
+  look: `LOOK ... injury`, see `docs/world.md`). Marks are sized for the
+  Pokémon, so on small icons and overworld sprites they are short dark claw
+  marks and a small bandage. The summary's trainer memo lists the hurt part,
+  the lost parts and the scar.
 
 | Part | Stat | Lost |
 |------|------|------|
@@ -63,3 +69,7 @@ battle RNG, so the two games stay in sync.
 ## Screenshots
 
 `python3 tools/injury/run.py <out dir>` (needs a built ROM and libmgba-dev).
+Outside battle: `python3 tools/injury/scars.py <out dir>` (follower, party
+menu, summary and PC) and `python3 tools/injury/scars.py <out dir> online`
+(two players see each other's marked followers). Both need the mGBA fork
+(`emulator/build.sh headless`).

@@ -237,6 +237,12 @@ export class Emulator {
     // ------------------------------------------------------------- audio
 
     async startAudio(workletUrl) {
+        // iOS plays Web Audio as "ambient" sound, which the silent switch
+        // mutes, whatever audio session the app itself asked for. iOS 16.4+
+        // lets the page say it is playback, like a music or game app.
+        try {
+            if (globalThis.navigator?.audioSession) globalThis.navigator.audioSession.type = 'playback';
+        } catch (e) { /* not supported */ }
         let ctx;
         try {
             ctx = new AudioContext({ latencyHint: 'interactive' });
@@ -257,8 +263,27 @@ export class Emulator {
         this.audio = { ctx, node };
     }
 
+    // Call from a tap. iOS starts audio only from inside a user gesture, and
+    // only once something has actually been played in one.
     resumeAudio() {
-        if (this.audio && this.audio.ctx.state !== 'running') this.audio.ctx.resume().catch(() => {});
+        if (!this.audio) return;
+        const { ctx } = this.audio;
+        if (ctx.state === 'running') return;
+        try {
+            const src = ctx.createBufferSource();
+            src.buffer = ctx.createBuffer(1, 1, ctx.sampleRate);
+            src.connect(ctx.destination);
+            src.start(0);
+        } catch (e) { /* closed context */ }
+        ctx.resume().catch(() => {});
+        playbackKeepAlive(true);
+    }
+
+    // Mute: stop the context and the iOS keep-alive.
+    suspendAudio() {
+        if (!this.audio) return;
+        this.audio.ctx.suspend().catch(() => {});
+        playbackKeepAlive(false);
     }
 
     drainAudio(keep) {
@@ -361,4 +386,44 @@ function scriptProcessorSink(ctx) {
         port.onmessage?.({ data: Math.floor(played) });
     };
     return { port, connect: (dest) => proc.connect(dest) };
+}
+
+// Before iOS 16.4 the only way to make iOS treat the page's audio as playback
+// (heard with the silent switch on) is to have an HTML media element playing
+// too. This loops one second of silence for that, on iOS only, started from
+// a tap like the AudioContext.
+let keepAlive = null;
+function playbackKeepAlive(on) {
+    const doc = globalThis.document;
+    const nav = globalThis.navigator;
+    if (!doc || !nav || nav.audioSession) return;
+    const ios = /iPhone|iPad|iPod/.test(nav.userAgent) || (nav.platform === 'MacIntel' && nav.maxTouchPoints > 1);
+    if (!ios) return;
+    if (!on) {
+        keepAlive?.pause();
+        return;
+    }
+    if (!keepAlive) {
+        keepAlive = doc.createElement('audio');
+        keepAlive.src = silentWav(8000);
+        keepAlive.loop = true;
+        keepAlive.setAttribute('playsinline', '');
+        keepAlive.setAttribute('x-webkit-airplay', 'deny');
+    }
+    if (keepAlive.paused) keepAlive.play().catch(() => {});
+}
+
+// A data: URL of n samples of 8 kHz mono 8-bit silence.
+function silentWav(n) {
+    const bytes = new Uint8Array(44 + n);
+    const view = new DataView(bytes.buffer);
+    const text = (at, s) => { for (let i = 0; i < s.length; i++) bytes[at + i] = s.charCodeAt(i); };
+    text(0, 'RIFF'); view.setUint32(4, 36 + n, true); text(8, 'WAVE');
+    text(12, 'fmt '); view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true);
+    view.setUint32(24, 8000, true); view.setUint32(28, 8000, true); view.setUint16(32, 1, true); view.setUint16(34, 8, true);
+    text(36, 'data'); view.setUint32(40, n, true);
+    bytes.fill(128, 44);
+    let bin = '';
+    for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return 'data:audio/wav;base64,' + btoa(bin);
 }

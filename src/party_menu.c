@@ -1,4 +1,5 @@
 #include "global.h"
+#include "injury.h"
 #include "malloc.h"
 #include "mechanics.h"
 #include "battle.h"
@@ -4386,6 +4387,8 @@ static void CreatePartyMonIconSprite(struct Pokemon *mon, struct PartyMenuBox *m
     enum Species species = GetMonData(mon, MON_DATA_SPECIES);
     bool32 isEgg = GetMonData(mon, MON_DATA_IS_EGG);
     CreatePartyMonIconSpriteParameterized(species, GetMonData(mon, MON_DATA_PERSONALITY), isEgg, menuBox, 1);
+    if (species != SPECIES_NONE)
+        Injury_ApplyToMonIcon(menuBox->monSpriteId, &mon->box);
     UpdatePartyMonHPBar(menuBox->monSpriteId, mon);
 }
 

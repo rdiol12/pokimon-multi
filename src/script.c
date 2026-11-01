@@ -32,6 +32,12 @@ enum {
 extern const u8 *gRamScriptRetAddr;
 
 static u8 sGlobalScriptContextStatus;
+// Set when something enables the global script while it is already running,
+// e.g. an online feature's callnative that fails at once (offline, or the
+// request channel is busy) and enables the script before the waitstate after
+// it has run. Without this the waitstate would stop the script for good and
+// the player could never move again.
+static bool8 sEnabledWhileRunning;
 static struct ScriptContext sGlobalScriptContext;
 static struct ScriptContext sImmediateScriptContext;
 static bool8 sLockFieldControls;
@@ -306,6 +312,7 @@ void ScriptContext_SetupScript(const u8 *ptr)
 {
     InitScriptContext(&sGlobalScriptContext, gScriptCmdTable, gScriptCmdTableEnd);
     SetupBytecodeScript(&sGlobalScriptContext, ptr);
+    sEnabledWhileRunning = FALSE;
     LockPlayerFieldControls();
     if (OW_FOLLOWERS_SCRIPT_MOVEMENT)
         FlagSet(FLAG_SAFE_FOLLOWER_MOVEMENT);
@@ -326,9 +333,26 @@ void ScriptContext_Stop(void)
     sGlobalScriptContextStatus = CONTEXT_WAITING;
 }
 
+// Called before a special or callnative runs.
+void ScriptContext_ClearEarlyEnable(void)
+{
+    sEnabledWhileRunning = FALSE;
+}
+
+// TRUE (once) if the last special or callnative already enabled the script,
+// so the waitstate after it must not wait.
+bool8 ScriptContext_TakeEarlyEnable(void)
+{
+    bool8 early = sEnabledWhileRunning;
+    sEnabledWhileRunning = FALSE;
+    return early;
+}
+
 // Puts the script into running mode.
 void ScriptContext_Enable(void)
 {
+    if (sGlobalScriptContextStatus == CONTEXT_RUNNING)
+        sEnabledWhileRunning = TRUE;
     sGlobalScriptContextStatus = CONTEXT_RUNNING;
     LockPlayerFieldControls();
 }

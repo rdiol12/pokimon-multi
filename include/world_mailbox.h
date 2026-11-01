@@ -68,7 +68,9 @@ struct WorldMailbox
     /*0x19C*/ u32 remoteTrainerLooks[NETPLAY_MAILBOX_REMOTES]; // by slot, like remotes[]
     /*0x1BC*/ struct WorldRemoteLook moreRemotes[NETPLAY_MAX_REMOTES - NETPLAY_MAILBOX_REMOTES]; // slots 8-23
     /*0x33C*/ u32 moreRemoteTrainerLooks[NETPLAY_MAX_REMOTES - NETPLAY_MAILBOX_REMOTES];
-}; // size 0x37C
+    /*0x37C*/ u8 followerInjury; // this player's follower's scar and lost parts (INJURY_LOOKS_*), sent with the look
+    /*0x37D*/ u8 remoteFollowerInjuries[NETPLAY_MAX_REMOTES]; // by slot 0-23
+}; // size 0x395
 
 extern struct WorldMailbox gWorldMailbox;
 
