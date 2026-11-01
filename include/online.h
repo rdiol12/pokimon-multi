@@ -56,6 +56,12 @@ void Online_ShowHud(OnlineHudText text, bool32 whileLocked);
 void Online_HideHud(void);
 u8 *Online_FormatTime(u8 *dest, u32 frames, bool32 cs);
 
+// Living ecosystem (src/online_eco.c): rerolls a wild slot whose species is
+// thinned out on this map, and swaps in species that migrated here.
+struct WildPokemon;
+u32 Eco_PickSlot(const struct WildPokemon *mons, u32 index, u32 (*choose)(u32 arg), u32 arg);
+enum Species Eco_ModifyWildSpecies(enum Species species);
+
 // Asks for the live features' status within a few frames.
 void Online_PollStatusSoon(void);
 

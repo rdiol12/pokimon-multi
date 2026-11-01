@@ -92,4 +92,7 @@ const struct OnlineRequest gOnlineRequests[ONL_REQ_COUNT] =
     [ONL_REQ_HIDE_END]   = {"HIDE END"},
     [ONL_REQ_HIDE_QUIT]  = {"HIDE QUIT"},
     [ONL_REQ_HIDE_BOARD] = {"HIDEBOARD"},
+    [ONL_REQ_ECO_AREA]   = {"ECO AREA"},
+    [ONL_REQ_ECO_MOVES]  = {"ECO MOVES"},
+    [ONL_REQ_RESEARCH_BOARD] = {"RESEARCH BOARD", 1},
 };

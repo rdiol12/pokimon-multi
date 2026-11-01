@@ -19,6 +19,7 @@
 #include "world.h"
 #include "online.h"
 #include "field_ability.h"
+#include "research.h"
 
 extern const u8 World_EventScript_Menu[];
 
@@ -134,6 +135,7 @@ bool32 World_OverworldUpdate(void)
     Mechanics_Update();
     Pastime_Update();
     FieldAbility_Update();
+    Research_Update();
     if (Guide_OverworldUpdate())
         return TRUE;
     if (Online_OverworldUpdate())
@@ -159,6 +161,7 @@ enum Species World_ModifyWildSpecies(enum Species species, u8 level)
     species = Adventure_ModifyWildSpecies(species);
     species = Pastime_ModifyWildSpecies(species);
     ShinyChain_OnWildSpecies(species);
+    Research_OnWildSpecies(species);
     return species;
 }
 
@@ -173,6 +176,7 @@ void World_OnWildBattleEnd(void)
         Adventure_OnCatch(gBattleResults.caughtMonSpecies);
         Online_OnCatch();
         Pastime_OnCatch();
+        Research_OnCatch();
     }
     FieldAbility_OnWildBattleEnd();
     ShinyChain_OnWildBattleEnd();

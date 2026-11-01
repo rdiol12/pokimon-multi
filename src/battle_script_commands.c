@@ -1,4 +1,5 @@
 #include "global.h"
+#include "research.h"
 #include "breed_fusion.h"
 #include "battle.h"
 #include "mechanics.h"
@@ -2178,6 +2179,7 @@ static void Cmd_getexp(void)
         {
             gBattleScripting.getexpState++;
             gBattleStruct->givenExpMons[GetBattlerTrainer(gBattlerFainted) & BIT_FLANK] |= (1u << gBattlerPartyIndexes[gBattlerFainted]);
+            Research_OnDefeat(faintedSpecies);
         }
         break;
     case 1: // calculate experience points to redistribute

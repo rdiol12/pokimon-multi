@@ -27,7 +27,7 @@ root = os.path.abspath(os.path.join(here, "..", ".."))
 sys.path.insert(0, os.path.join(root, "tools", "world_shots"))
 import run as world_run  # noqa: E402
 
-world_run.SYMBOLS += ["gOnlineShowcase", "gNetplayExtMailbox", "gBattleResults", "gSpecialVar_0x800A", "gSpecialVar_0x800B"]
+world_run.SYMBOLS += ["gSaveBlockExt", "gOnlineShowcase", "gNetplayExtMailbox", "gBattleResults", "gSpecialVar_0x800A", "gSpecialVar_0x800B"]
 
 
 class Fake:

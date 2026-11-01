@@ -17,6 +17,7 @@
 #include "breed_fusion_save.h"
 #include "reserve_save.h"
 #include "pokemon_storage_system.h"
+#include "research.h"
 
 // The towns' quest boards when playing offline (src/rovers.c): today's
 // rampaging Pokémon the player cleared and the reward not yet collected.
@@ -52,6 +53,7 @@ struct SaveBlockExt
     struct FusionRecipe fusionMoreRecipes[FUSION_RECIPE_TOTAL - FUSION_RECIPE_COUNT]; // fusion colors 13-252
     struct PokemonStorageMore pcMoreBoxes; // PC boxes 15-32
     struct RoverOfflineBoard roverBoard; // offline quest boards
+    struct ResearchSave research; // research Pokédex (src/research.c)
     u8 visitedMaps[HOENN_MULTI_MAP_GROUPS][HOENN_MULTI_MAPS_PER_GROUP / 8]; // friend travel (src/hoenn_multi.c)
 };
 
