@@ -477,8 +477,10 @@ D.run(function()
     seq = D.mb8(0x0C8)
     if INSTANCE == 2 then
         D.wait(200)
+        -- Already facing player 1; another UP would walk onto their tile now
+        -- that players don't block each other.
         walk("back below player 1", K.UP, function() return select(2, D.pos()) <= 3 end)
-        D.press(K.UP, 20) -- face player 1
+        D.wait(20)
         talkToOtherPlayer(TALK.COOP)
     else
         acceptInvite(seq)

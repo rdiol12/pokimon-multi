@@ -39,6 +39,10 @@ struct RoverOfflineBoard
     struct RoverOfflineClear clears[ROVER_OFFLINE_CLEARS];
 };
 
+// Maps the player has been to (src/hoenn_multi.c): one bit per map.
+#define HOENN_MULTI_MAP_GROUPS 128
+#define HOENN_MULTI_MAPS_PER_GROUP 256
+
 struct SaveBlockExt
 {
     u32 version;
@@ -48,6 +52,7 @@ struct SaveBlockExt
     struct FusionRecipe fusionMoreRecipes[FUSION_RECIPE_TOTAL - FUSION_RECIPE_COUNT]; // fusion colors 13-252
     struct PokemonStorageMore pcMoreBoxes; // PC boxes 15-32
     struct RoverOfflineBoard roverBoard; // offline quest boards
+    u8 visitedMaps[HOENN_MULTI_MAP_GROUPS][HOENN_MULTI_MAPS_PER_GROUP / 8]; // friend travel (src/hoenn_multi.c)
 };
 
 extern struct SaveBlockExt gSaveBlockExt;

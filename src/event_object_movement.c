@@ -1,4 +1,5 @@
 #include "global.h"
+#include "hoenn_multi.h"
 #include "injury.h"
 #include "breed_fusion.h"
 #include "malloc.h"
@@ -6615,6 +6616,7 @@ u32 GetObjectObjectCollidesWith(struct ObjectEvent *objectEvent, s16 x, s16 y, b
         if (curObject->active && (curObject->movementType != MOVEMENT_TYPE_FOLLOW_PLAYER || objectEvent != &gObjectEvents[gPlayerAvatar.objectEventId]) && curObject != objectEvent
          && !FollowerNPC_IsCollisionExempt(curObject, objectEvent)
          && !Online_RacePassesThrough(objectEvent, curObject)
+         && !HoennMulti_PassesThrough(objectEvent, curObject)
          )
         {
             // check for collision if curObject is active, not the object in question, and not exempt from collisions

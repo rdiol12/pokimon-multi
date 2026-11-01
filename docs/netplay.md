@@ -6,6 +6,10 @@ leaderboard.
 
 ![Two players meeting, battling, trading and making a deal](images/netplay-overview.png)
 
+How the original Hoenn was adjusted for many players (walking through other
+players, places where you don't see them, friend travel that follows the
+story) is in [hoenn_multi.md](hoenn_multi.md).
+
 ```
  ROM (gNetplayMailbox in EWRAM)  <->  mGBA Lua bridge  <->  TCP  <->  server/
 ```
