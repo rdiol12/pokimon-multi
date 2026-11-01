@@ -46,6 +46,8 @@ local MAX_REMOTES = 24 -- slots 0-7 at OFF_REMOTES, 8-23 at OFF_MORE_REMOTES
 local MAILBOX_REMOTES = 8
 local OFF_MORE_REMOTES = 0x1BC
 local OFF_MORE_TRAINER_LOOKS = 0x33C
+local OFF_FOLLOWER_INJURY = 0x37C -- u8: the follower's scar and lost parts (INJURY_LOOKS_*)
+local OFF_REMOTE_INJURIES = 0x37D -- u8 per slot 0-23
 local NAME_LENGTH = 8
 
 local REQ_SCORE, REQ_BOARD = 1, 2
@@ -133,7 +135,8 @@ end
 function NetplayWorld:handleLine(cmd, args)
     if cmd == "LOOK" then
         self.looks[tonumber(args[2])] = { follower = tonumber(args[3]), mount = tonumber(args[4]),
-                                          accessory = tonumber(args[5]) or 0, trainer = tonumber(args[6]) or 0 }
+                                          accessory = tonumber(args[5]) or 0, trainer = tonumber(args[6]) or 0,
+                                          injury = tonumber(args[7]) or 0 }
     elseif cmd == "HOUSE" then
         self.houses[tonumber(args[2])] = { open = tonumber(args[3]), decor = args[4] }
     elseif cmd == "CLOCK" then
@@ -171,8 +174,8 @@ function NetplayWorld:handleLine(cmd, args)
 end
 
 function NetplayWorld:sendLook(net)
-    local look = string.format("LOOK %d %d %d %d", self:r16(OFF_FOLLOWER), self:r16(OFF_MOUNT), self:r8(OFF_ACCESSORY),
-                               self:r32(OFF_TRAINER_LOOK))
+    local look = string.format("LOOK %d %d %d %d %d", self:r16(OFF_FOLLOWER), self:r16(OFF_MOUNT), self:r8(OFF_ACCESSORY),
+                               self:r32(OFF_TRAINER_LOOK), self:r8(OFF_FOLLOWER_INJURY))
     if look ~= self.lastLook then
         self.lastLook = look
         net.send(look)
@@ -212,6 +215,7 @@ function NetplayWorld:writeRemotes()
             self:w8(off + 6, house and house.open or 0)
             self:w8(off + 7, look and look.accessory or 0)
             self:w32(lookOff, look and look.trainer or 0)
+            self:w8(OFF_REMOTE_INJURIES + slot, look and look.injury or 0)
             for i = 0, DECOR_SIZE - 1 do
                 local byte = house and tonumber(house.decor:sub(i * 2 + 1, i * 2 + 2), 16) or 0
                 self:w8(off + 8 + i, byte)
@@ -220,6 +224,7 @@ function NetplayWorld:writeRemotes()
         else
             self:w16(off, 0)
             self:w32(lookOff, 0)
+            self:w8(OFF_REMOTE_INJURIES + slot, 0)
         end
     end
 end

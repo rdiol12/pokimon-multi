@@ -65,6 +65,8 @@ bool32 World_TryInteract(s16 x, s16 y);
 
 // Online (world_online.c).
 void WorldOnline_Update(void);
+// What another player's follower shows of its injuries (INJURY_LOOKS_*), by its object's local id.
+u32 WorldOnline_GetFollowerInjuryLooks(u8 localId);
 void World_OnWildBattleStart(void);
 void WorldOnline_OnCatch(void);
 const u8 *WorldOnline_GetOpenHouse(u16 *playerId, u8 *name);

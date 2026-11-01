@@ -4,6 +4,7 @@
 #include "event_data.h"
 #include "event_object_movement.h"
 #include "field_player_avatar.h"
+#include "injury.h"
 #include "main.h"
 #include "pastime.h"
 #include "pokemon.h"
@@ -167,6 +168,7 @@ static void PublishLook(void)
     gWorldMailbox.followerGfx = (follower != NULL && !follower->invisible && gWorldMailbox.mountGfx == 0)
                               ? follower->graphicsId : 0;
     gWorldMailbox.accessory = gWorldMailbox.followerGfx != 0 ? Fashion_WornNow() : 0;
+    gWorldMailbox.followerInjury = gWorldMailbox.followerGfx != 0 ? Injury_GetObjectEventLooks(follower) : 0;
     memcpy(gWorldMailbox.decor, gSaveBlock3Ptr->world.houseDecor, sizeof(gWorldMailbox.decor));
     gWorldMailbox.houseOpen = FlagGet(FLAG_WORLD_HOUSE_OPEN);
     gWorldMailbox.trainerLook = TrainerLook_Get();
@@ -183,6 +185,19 @@ u32 WorldOnline_GetRemoteTrainerLook(u32 slot)
     if (id == 0 || World_GetRemoteLookSlot(slot)->id != id)
         return 0;
     return *World_GetRemoteTrainerLookSlot(slot);
+}
+
+u32 WorldOnline_GetFollowerInjuryLooks(u8 localId)
+{
+    u32 slot = localId - LOCALID_REMOTE_FOLLOWER_START;
+    u16 id;
+
+    if (localId < LOCALID_REMOTE_FOLLOWER_START || slot >= NETPLAY_MAX_REMOTES)
+        return 0;
+    id = Netplay_GetRemoteSlot(slot)->id;
+    if (id == 0 || World_GetRemoteLookSlot(slot)->id != id)
+        return 0;
+    return gWorldMailbox.remoteFollowerInjuries[slot];
 }
 
 static const struct WorldRemoteLook *FindLook(u16 id)
@@ -263,6 +278,19 @@ static void SyncFollower(u32 slot, struct ObjectEvent *avatar, u16 gfx)
         MoveObjectEventToMapCoords(obj, tx, ty);
 }
 
+// Their follower's scar and lost parts, redrawn when they change.
+static void SyncFollowerInjury(u32 slot)
+{
+    u8 objId = FindObject(LOCALID_REMOTE_FOLLOWER_START + slot);
+    u32 looks;
+
+    if (objId == OBJECT_EVENTS_COUNT)
+        return;
+    looks = WorldOnline_GetFollowerInjuryLooks(LOCALID_REMOTE_FOLLOWER_START + slot);
+    if (looks != Injury_GetObjectEventLooks(&gObjectEvents[objId]))
+        Injury_SetObjectEventLooks(&gObjectEvents[objId], looks);
+}
+
 static void SyncRemote(u32 slot)
 {
     const struct NetplayRemotePlayer *remote = Netplay_GetRemoteSlot(slot);
@@ -311,6 +339,7 @@ static void SyncRemote(u32 slot)
     if (look->followerGfx != 0 && look->mountGfx == 0)
     {
         SyncFollower(slot, avatar, look->followerGfx);
+        SyncFollowerInjury(slot);
         Fashion_ShowRemote(slot, FindObject(LOCALID_REMOTE_FOLLOWER_START + slot), look->accessory);
     }
     else

@@ -12,6 +12,14 @@
 // needs no EWRAM.
 #include "global.h"
 #include "battle.h"
+#include "decompress.h"
+#include "event_object_movement.h"
+#include "field_effect.h"
+#include "palette.h"
+#include "pokemon_icon.h"
+#include "sprite.h"
+#include "world.h"
+#include "constants/event_objects.h"
 #include "event_data.h"
 #include "injury.h"
 #include "rovers.h"
@@ -618,32 +626,59 @@ bool32 Injury_BufferSummaryMemo(struct BoxPokemon *boxMon, u8 *dest)
 // ---------------------------------------------------------------------------
 // Sprites
 //
-// Works on a decompressed 4bpp 64x64 pic. Parts are found from the sprite's
-// silhouette: the tip of the silhouette in the part's direction is cut off and
-// the stump is wrapped in a bandage. A lost eye gets an eye patch on the head.
-// Colors come from the Pokémon's own palette (its darkest, lightest and most
-// neutral colors), so it needs no extra palette slots.
+// Works on decompressed 4bpp pics of any size made of 8x8 tiles in rows
+// (battle and summary pics are 64x64, party/PC icons and most overworld
+// followers are 32x32). Parts are found from the sprite's silhouette: the tip
+// of the silhouette in the part's direction is cut off and the stump is
+// wrapped in a bandage. A lost eye gets an eye patch on the head. Colors come
+// from the Pokémon's own palette (its darkest, lightest and most neutral
+// colors), so it needs no extra palette slots.
+//
+// The marks are sized for the Pokémon: full size on battle and summary pics,
+// and small or tiny on icons and overworld sprites, where the Pokémon is only
+// 15-40 pixels tall, so a scar is still three short claw marks there.
 
-#define PIC_W 64
-
-static inline u8 *PixelPtr(u8 *frame, s32 x, s32 y)
+struct InjuryPic
 {
-    return &frame[((y >> 3) * 8 + (x >> 3)) * 32 + (y & 7) * 4 + ((x & 7) >> 1)];
+    u8 *frame;
+    s16 w, h;
+};
+
+// Mark sizes by pic size.
+struct InjuryScale
+{
+    u8 stumpRadius; // how far the bandage reaches
+    u8 cut;         // how much of the tip is cut off
+    u8 band;        // bandage depth
+    u8 patchRadius; // eye patch
+    u8 patchRoom;   // free pixels the patch needs around it
+    u8 strap;       // eye patch strap half-length
+    u8 scarLen;     // half-length of each claw mark
+    u8 scarGap;     // space between claw marks
+};
+
+static const struct InjuryScale sScaleBig   = { .stumpRadius = 12, .cut = 2, .band = 9, .patchRadius = 3, .patchRoom = 3, .strap = 9, .scarLen = 6, .scarGap = 3 };
+static const struct InjuryScale sScaleSmall = { .stumpRadius = 6,  .cut = 1, .band = 5, .patchRadius = 2, .patchRoom = 2, .strap = 5, .scarLen = 3, .scarGap = 3 };
+static const struct InjuryScale sScaleTiny  = { .stumpRadius = 4,  .cut = 1, .band = 3, .patchRadius = 1, .patchRoom = 1, .strap = 3, .scarLen = 2, .scarGap = 2 };
+
+static inline u8 *PixelPtr(const struct InjuryPic *pic, s32 x, s32 y)
+{
+    return &pic->frame[((y >> 3) * (pic->w >> 3) + (x >> 3)) * 32 + (y & 7) * 4 + ((x & 7) >> 1)];
 }
 
-static u32 GetPx(u8 *frame, s32 x, s32 y)
+static u32 GetPx(const struct InjuryPic *pic, s32 x, s32 y)
 {
-    if (x < 0 || y < 0 || x >= PIC_W || y >= PIC_W)
+    if (x < 0 || y < 0 || x >= pic->w || y >= pic->h)
         return 0;
-    return (x & 1) ? (*PixelPtr(frame, x, y) >> 4) : (*PixelPtr(frame, x, y) & 0xF);
+    return (x & 1) ? (*PixelPtr(pic, x, y) >> 4) : (*PixelPtr(pic, x, y) & 0xF);
 }
 
-static void SetPx(u8 *frame, s32 x, s32 y, u32 c)
+static void SetPx(const struct InjuryPic *pic, s32 x, s32 y, u32 c)
 {
     u8 *p;
-    if (x < 0 || y < 0 || x >= PIC_W || y >= PIC_W)
+    if (x < 0 || y < 0 || x >= pic->w || y >= pic->h)
         return;
-    p = PixelPtr(frame, x, y);
+    p = PixelPtr(pic, x, y);
     if (x & 1)
         *p = (*p & 0x0F) | (c << 4);
     else
@@ -680,17 +715,18 @@ struct Silhouette
     bool8 empty;
 };
 
-static void MeasureSilhouette(u8 *frame, struct Silhouette *sil)
+static void MeasureSilhouette(const struct InjuryPic *pic, struct Silhouette *sil)
 {
     s32 x, y, n = 0, sx = 0, sy = 0;
 
-    sil->x0 = sil->y0 = PIC_W;
+    sil->x0 = pic->w;
+    sil->y0 = pic->h;
     sil->x1 = sil->y1 = -1;
-    for (y = 0; y < PIC_W; y++)
+    for (y = 0; y < pic->h; y++)
     {
-        for (x = 0; x < PIC_W; x++)
+        for (x = 0; x < pic->w; x++)
         {
-            if (!GetPx(frame, x, y))
+            if (!GetPx(pic, x, y))
                 continue;
             n++; sx += x; sy += y;
             if (x < sil->x0) sil->x0 = x;
@@ -716,27 +752,26 @@ static const s8 sPartDirs[INJURY_PART_COUNT][2] =
     [INJURY_PART_LIMB] = { -13,  63 },
 };
 
-#define STUMP_RADIUS 12
-
-static bool32 InStump(s32 x, s32 y, s32 dx, s32 dy, s32 P, s32 ex, s32 ey)
+static bool32 InStump(s32 x, s32 y, s32 dx, s32 dy, s32 P, s32 ex, s32 ey, const struct InjuryScale *sc)
 {
     s32 p = x * dx + y * dy;
     s32 ddx = x - ex, ddy = y - ey;
-    return p > P - 9 * 64 && p <= P - 2 * 64 && ddx * ddx + ddy * ddy <= STUMP_RADIUS * STUMP_RADIUS;
+    return p > P - sc->band * 64 && p <= P - sc->cut * 64
+        && ddx * ddx + ddy * ddy <= sc->stumpRadius * sc->stumpRadius;
 }
 
-static void DrawLostPart(u8 *frame, u32 part, bool32 isFront, const struct InjuryColors *c)
+static void DrawLostPart(const struct InjuryPic *pic, u32 part, bool32 isFront, const struct InjuryColors *c, const struct InjuryScale *sc)
 {
     s32 dx = sPartDirs[part][0], dy = sPartDirs[part][1];
-    s32 x, y, P = -0x7FFFFFFF, ex = 0, ey = 0;
+    s32 x, y, P = -0x7FFFFFFF, ex = 0, ey = 0, r = sc->stumpRadius;
 
     if (!isFront)
         dx = -dx;
-    for (y = 0; y < PIC_W; y++)
+    for (y = 0; y < pic->h; y++)
     {
-        for (x = 0; x < PIC_W; x++)
+        for (x = 0; x < pic->w; x++)
         {
-            if (GetPx(frame, x, y) && x * dx + y * dy > P)
+            if (GetPx(pic, x, y) && x * dx + y * dy > P)
             {
                 P = x * dx + y * dy;
                 ex = x; ey = y;
@@ -747,41 +782,42 @@ static void DrawLostPart(u8 *frame, u32 part, bool32 isFront, const struct Injur
         return;
 
     // Cut off the tip and wrap the stump.
-    for (y = max(0, ey - STUMP_RADIUS); y <= min(PIC_W - 1, ey + STUMP_RADIUS); y++)
+    for (y = max(0, ey - r); y <= min(pic->h - 1, ey + r); y++)
     {
-        for (x = max(0, ex - STUMP_RADIUS); x <= min(PIC_W - 1, ex + STUMP_RADIUS); x++)
+        for (x = max(0, ex - r); x <= min(pic->w - 1, ex + r); x++)
         {
             s32 ddx = x - ex, ddy = y - ey;
-            if (!GetPx(frame, x, y) || ddx * ddx + ddy * ddy > STUMP_RADIUS * STUMP_RADIUS)
+            if (!GetPx(pic, x, y) || ddx * ddx + ddy * ddy > r * r)
                 continue;
-            if (x * dx + y * dy > P - 2 * 64)
-                SetPx(frame, x, y, 0);
-            else if (InStump(x, y, dx, dy, P, ex, ey))
-                SetPx(frame, x, y, ((x - y + 99) % 3 == 0) ? c->mid : c->light);
+            if (x * dx + y * dy > P - sc->cut * 64)
+                SetPx(pic, x, y, 0);
+            else if (InStump(x, y, dx, dy, P, ex, ey, sc))
+                SetPx(pic, x, y, ((x - y + 99) % 3 == 0) ? c->mid : c->light);
         }
     }
     // Outline the bandage.
-    for (y = max(0, ey - STUMP_RADIUS); y <= min(PIC_W - 1, ey + STUMP_RADIUS); y++)
+    for (y = max(0, ey - r); y <= min(pic->h - 1, ey + r); y++)
     {
-        for (x = max(0, ex - STUMP_RADIUS); x <= min(PIC_W - 1, ex + STUMP_RADIUS); x++)
+        for (x = max(0, ex - r); x <= min(pic->w - 1, ex + r); x++)
         {
-            if (!GetPx(frame, x, y) || !InStump(x, y, dx, dy, P, ex, ey))
+            if (!GetPx(pic, x, y) || !InStump(x, y, dx, dy, P, ex, ey, sc))
                 continue;
-            if (!GetPx(frame, x + 1, y) || !InStump(x + 1, y, dx, dy, P, ex, ey)
-             || !GetPx(frame, x - 1, y) || !InStump(x - 1, y, dx, dy, P, ex, ey)
-             || !GetPx(frame, x, y + 1) || !InStump(x, y + 1, dx, dy, P, ex, ey)
-             || !GetPx(frame, x, y - 1) || !InStump(x, y - 1, dx, dy, P, ex, ey))
-                SetPx(frame, x, y, c->dark);
+            if (!GetPx(pic, x + 1, y) || !InStump(x + 1, y, dx, dy, P, ex, ey, sc)
+             || !GetPx(pic, x - 1, y) || !InStump(x - 1, y, dx, dy, P, ex, ey, sc)
+             || !GetPx(pic, x, y + 1) || !InStump(x, y + 1, dx, dy, P, ex, ey, sc)
+             || !GetPx(pic, x, y - 1) || !InStump(x, y - 1, dx, dy, P, ex, ey, sc))
+                SetPx(pic, x, y, c->dark);
         }
     }
 }
 
-static void DrawEyePatch(u8 *frame, const struct Silhouette *sil, bool32 isFront, const struct InjuryColors *c)
+static void DrawEyePatch(const struct InjuryPic *pic, const struct Silhouette *sil, bool32 isFront, const struct InjuryColors *c, const struct InjuryScale *sc)
 {
     s32 w = sil->x1 - sil->x0 + 1, h = sil->y1 - sil->y0 + 1;
     s32 tx = sil->x0 + w * (isFront ? 32 : 68) / 100;
     s32 ty = sil->y0 + h * 22 / 100;
     s32 x, y, a, b, best = 0x7FFFFFFF, ex = -1, ey = -1;
+    s32 room = sc->patchRoom, pr = sc->patchRadius;
 
     // Nearest point to the usual head spot that has room for a patch.
     for (y = sil->y0; y <= sil->y0 + h / 2; y++)
@@ -789,8 +825,8 @@ static void DrawEyePatch(u8 *frame, const struct Silhouette *sil, bool32 isFront
         for (x = sil->x0; x <= sil->x1; x++)
         {
             s32 d;
-            if (!GetPx(frame, x, y) || !GetPx(frame, x - 3, y - 3) || !GetPx(frame, x + 3, y - 3)
-             || !GetPx(frame, x - 3, y + 3) || !GetPx(frame, x + 3, y + 3))
+            if (!GetPx(pic, x, y) || !GetPx(pic, x - room, y - room) || !GetPx(pic, x + room, y - room)
+             || !GetPx(pic, x - room, y + room) || !GetPx(pic, x + room, y + room))
                 continue;
             d = (x - tx) * (x - tx) * 4 + (y - ty) * (y - ty) * 4;
             if (d < best)
@@ -804,38 +840,41 @@ static void DrawEyePatch(u8 *frame, const struct Silhouette *sil, bool32 isFront
         return;
 
     // Strap across the head.
-    for (a = -9; a <= 9; a++)
+    for (a = -(s32)sc->strap; a <= sc->strap; a++)
     {
-        s32 yy = ey - 2 - (isFront ? (a * 35 + (a < 0 ? -50 : 50)) / 100 : -(a * 35 + (a < 0 ? -50 : 50)) / 100);
-        if ((a > 2 || a < -2) && GetPx(frame, ex + a, yy))
-            SetPx(frame, ex + a, yy, c->dark);
+        s32 slope = (a * 35 + (a < 0 ? -50 : 50)) / 100;
+        s32 yy = ey - (pr - 1) - (isFront ? slope : -slope);
+        if ((a > pr - 1 || a < -(pr - 1)) && GetPx(pic, ex + a, yy))
+            SetPx(pic, ex + a, yy, c->dark);
     }
     // Patch.
-    for (a = -3; a <= 3; a++)
+    for (a = -pr; a <= pr; a++)
     {
-        for (b = -3; b <= 3; b++)
+        for (b = -pr; b <= pr; b++)
         {
-            if (a * a + b * b <= 6 && GetPx(frame, ex + a, ey + b))
-                SetPx(frame, ex + a, ey + b, c->dark);
+            if (a * a + b * b <= pr * pr - pr + 2 && GetPx(pic, ex + a, ey + b))
+                SetPx(pic, ex + a, ey + b, c->dark);
         }
     }
-    SetPx(frame, ex - 1, ey - 1, c->mid);
+    SetPx(pic, ex - 1, ey - 1, c->mid);
 }
 
-static void DrawScar(u8 *frame, const struct Silhouette *sil, bool32 isFront, const struct InjuryColors *c)
+static void DrawScar(const struct InjuryPic *pic, const struct Silhouette *sil, bool32 isFront, const struct InjuryColors *c, const struct InjuryScale *sc)
 {
-    s32 k, t;
-    for (k = -3; k <= 3; k += 3)
+    s32 k, t, len = sc->scarLen, gap = sc->scarGap;
+    for (k = -gap; k <= gap; k += gap)
     {
-        for (t = -6; t <= 6; t++)
+        for (t = -len; t <= len; t++)
         {
             s32 half = (t >= 0 ? t + 1 : t - 1) / 2;
             s32 x = sil->cx + k + (isFront ? half : -half);
-            s32 y = sil->cy - 4 + t;
-            if (GetPx(frame, x, y) && GetPx(frame, x + 1, y) && GetPx(frame, x - 2, y) && GetPx(frame, x + 3, y))
+            s32 y = sil->cy - len / 2 - 1 + t;
+            if (GetPx(pic, x, y) && GetPx(pic, x + 1, y) && GetPx(pic, x - 1, y) && GetPx(pic, x + 2, y))
             {
-                SetPx(frame, x, y, c->dark);
-                SetPx(frame, x + 1, y, (t % 3) ? c->mid : c->light);
+                SetPx(pic, x, y, c->dark);
+                // Tiny marks are a dark line only: a highlight would blur them.
+                if (sc != &sScaleTiny)
+                    SetPx(pic, x + 1, y, (t % 3) ? c->mid : c->light);
             }
         }
     }
@@ -843,39 +882,252 @@ static void DrawScar(u8 *frame, const struct Silhouette *sil, bool32 isFront, co
 
 static const u8 sDrawOrder[] = { INJURY_PART_TAIL, INJURY_PART_WING, INJURY_PART_HORN, INJURY_PART_LIMB };
 
-void Injury_DrawOnPic(struct BoxPokemon *boxMon, u32 species, void *pic, const u16 *palette, bool32 isFrontPic, u32 frames)
+u32 Injury_GetLooksForSpecies(struct BoxPokemon *boxMon, u32 species)
 {
     struct InjuryState st;
-    struct InjuryColors colors;
-    struct Silhouette sil;
-    u32 f, i, parts;
+    u32 looks;
 
-    if (pic == NULL || palette == NULL || GetBoxMonData(boxMon, MON_DATA_IS_EGG))
-        return;
+    if (boxMon == NULL || species == SPECIES_NONE || species >= NUM_SPECIES || GetBoxMonData(boxMon, MON_DATA_IS_EGG))
+        return 0;
     GetState(boxMon, &st);
-    parts = st.lost & GetSpeciesParts(species);
-    if (parts == 0 && !(st.flags & INJURY_FLAG_SCAR))
-        return;
+    looks = st.lost & GetSpeciesParts(species) & INJURY_LOOKS_LOST_MASK;
+    if (st.flags & INJURY_FLAG_SCAR)
+        looks |= INJURY_LOOKS_SCAR;
+    return looks;
+}
 
+u32 Injury_GetLooks(struct BoxPokemon *boxMon)
+{
+    if (boxMon == NULL || !GetBoxMonData(boxMon, MON_DATA_SANITY_HAS_SPECIES))
+        return 0;
+    return Injury_GetLooksForSpecies(boxMon, GetBoxMonData(boxMon, MON_DATA_SPECIES));
+}
+
+// One frame. minSmall: 0 for battle and summary pics; for icons and
+// overworld sprites (drawn 1:1 on screen), the size from which a Pokémon gets
+// small rather than tiny marks.
+// backView: an overworld frame of the Pokémon walking away, which has no eye
+// to patch.
+static void DrawLooksOnFrame(const struct InjuryPic *pic, u32 looks, bool32 isFront, s32 minSmall, bool32 backView, const struct InjuryColors *colors)
+{
+    const struct InjuryScale *sc;
+    struct Silhouette sil;
+    s32 size;
+    u32 i;
+
+    MeasureSilhouette(pic, &sil);
+    if (sil.empty)
+        return;
+    size = max(sil.x1 - sil.x0, sil.y1 - sil.y0) + 1;
+    if (minSmall == 0)
+        sc = size >= 28 ? &sScaleBig : &sScaleSmall;
+    else
+        sc = size >= minSmall ? &sScaleSmall : &sScaleTiny;
+    if (looks & INJURY_LOOKS_SCAR)
+        DrawScar(pic, &sil, isFront, colors, sc);
+    for (i = 0; i < ARRAY_COUNT(sDrawOrder); i++)
+    {
+        if (looks & INJURY_PART_BIT(sDrawOrder[i]))
+            DrawLostPart(pic, sDrawOrder[i], isFront, colors, sc);
+    }
+    if ((looks & INJURY_PART_BIT(INJURY_PART_EYE)) && !backView)
+    {
+        MeasureSilhouette(pic, &sil);
+        DrawEyePatch(pic, &sil, isFront, colors, sc);
+    }
+}
+
+void Injury_DrawLooks(u32 looks, void *pic, u32 width, u32 height, const u16 *palette, bool32 isFrontPic, u32 frames)
+{
+    struct InjuryColors colors;
+    struct InjuryPic p;
+    u32 f;
+
+    if (looks == 0 || pic == NULL || palette == NULL)
+        return;
     PickColors(palette, &colors);
+    p.w = width;
+    p.h = height;
     for (f = 0; f < frames; f++)
     {
-        u8 *frame = (u8 *)pic + f * MON_PIC_SIZE;
-
-        MeasureSilhouette(frame, &sil);
-        if (sil.empty)
-            continue;
-        if (st.flags & INJURY_FLAG_SCAR)
-            DrawScar(frame, &sil, isFrontPic, &colors);
-        for (i = 0; i < ARRAY_COUNT(sDrawOrder); i++)
-        {
-            if (parts & INJURY_PART_BIT(sDrawOrder[i]))
-                DrawLostPart(frame, sDrawOrder[i], isFrontPic, &colors);
-        }
-        if (parts & INJURY_PART_BIT(INJURY_PART_EYE))
-        {
-            MeasureSilhouette(frame, &sil);
-            DrawEyePatch(frame, &sil, isFrontPic, &colors);
-        }
+        p.frame = (u8 *)pic + f * (width * height / 2);
+        DrawLooksOnFrame(&p, looks, isFrontPic, width < MON_PIC_WIDTH ? 1 : 0, FALSE, &colors);
     }
+}
+
+void Injury_DrawOnPic(struct BoxPokemon *boxMon, u32 species, void *pic, const u16 *palette, bool32 isFrontPic, u32 frames)
+{
+    Injury_DrawLooks(Injury_GetLooksForSpecies(boxMon, species), pic, MON_PIC_WIDTH, MON_PIC_HEIGHT, palette, isFrontPic, frames);
+}
+
+// ---------------------------------------------------------------------------
+// Pokémon icons (party menu, trade screen, PC)
+//
+// An icon sprite's `images` points straight at its two 32x32 frames. A marked
+// Pokémon gets its own copy of them, kept per sprite in extended EWRAM.
+
+#define ICON_FRAME_SIZE (32 * 32 / 2)
+
+static EWRAM_EXT_DATA ALIGNED(4) u8 sIconGfx[MAX_SPRITES][2 * ICON_FRAME_SIZE];
+
+bool32 Injury_DrawOnIconTiles(struct BoxPokemon *boxMon, const u8 *src, u8 *dest, const u16 *palette, u32 frames)
+{
+    u32 looks = Injury_GetLooks(boxMon);
+
+    if (looks == 0 || src == NULL || palette == NULL)
+        return FALSE;
+    memcpy(dest, src, frames * ICON_FRAME_SIZE);
+    Injury_DrawLooks(looks, dest, 32, 32, palette, TRUE, frames);
+    return TRUE;
+}
+
+void Injury_ApplyToMonIcon(u8 spriteId, struct BoxPokemon *boxMon)
+{
+    struct Sprite *sprite;
+    const u16 *palette;
+
+    if (spriteId >= MAX_SPRITES)
+        return;
+    sprite = &gSprites[spriteId];
+    palette = &gPlttBufferUnfaded[OBJ_PLTT_ID(GetSpritePaletteSlot(sprite))];
+    if (!Injury_DrawOnIconTiles(boxMon, (const u8 *)sprite->images, sIconGfx[spriteId], palette, 2))
+        return;
+    sprite->images = (const struct SpriteFrameImage *)sIconGfx[spriteId];
+    // Show the marked frame now, not on the next frame change.
+    sprite->animCmdIndex = 0;
+    sprite->animDelayCounter = 0;
+    UpdateMonIconFrame(sprite);
+}
+
+// ---------------------------------------------------------------------------
+// Following Pokémon (ours, and other players' online)
+//
+// Overworld Pokémon share one tile sheet per species, so a marked one gets its
+// own copy of the sheet under its own tag. Frames 0-1 face the camera, 2-3
+// walk away, 4-5 face left (and are flipped for right).
+
+#define INJURY_OW_TILE_TAG_BASE 0xB800
+#define OW_SHEET_MAX (64 * 64 / 2 * 8)
+
+static EWRAM_EXT_DATA u32 sOwSheet[OW_SHEET_MAX / 4];
+static EWRAM_EXT_DATA u8 sAppliedLooks[OBJECT_EVENTS_COUNT];
+
+static u32 GetObjectEventId(struct ObjectEvent *objectEvent)
+{
+    return objectEvent - gObjectEvents;
+}
+
+// The looks currently drawn on an object event's sprite.
+u32 Injury_GetObjectEventLooks(struct ObjectEvent *objectEvent)
+{
+    u32 id = GetObjectEventId(objectEvent);
+    u16 tileStart;
+
+    if (id >= OBJECT_EVENTS_COUNT || !objectEvent->active || objectEvent->spriteId >= MAX_SPRITES)
+        return 0;
+    tileStart = GetSpriteTileStartByTag(INJURY_OW_TILE_TAG_BASE + id);
+    if (tileStart == TAG_NONE || !gSprites[objectEvent->spriteId].usingSheet
+     || gSprites[objectEvent->spriteId].sheetTileStart != tileStart)
+        return 0;
+    return sAppliedLooks[id];
+}
+
+static u32 GetWantedLooks(struct ObjectEvent *objectEvent)
+{
+    struct Pokemon *mon;
+
+    if (!(objectEvent->graphicsId & OBJ_EVENT_MON))
+        return 0;
+    if (objectEvent->localId == OBJ_EVENT_ID_FOLLOWER)
+    {
+        mon = GetFirstLiveMon();
+        if (mon == NULL)
+            return 0;
+        // Weather and Unown forms keep the base species' body.
+        return Injury_GetLooksForSpecies(&mon->box, OW_SPECIES(objectEvent));
+    }
+    return WorldOnline_GetFollowerInjuryLooks(objectEvent->localId);
+}
+
+void Injury_SetObjectEventLooks(struct ObjectEvent *objectEvent, u32 looks)
+{
+    const struct ObjectEventGraphicsInfo *info;
+    struct Sprite *sprite;
+    u32 id = GetObjectEventId(objectEvent), size, frames, f, sheetSpan, offset;
+    u16 tag, tileStart, oldStart;
+    const u16 *palette;
+    struct InjuryColors colors;
+    struct InjuryPic pic;
+
+    if (id >= OBJECT_EVENTS_COUNT || !objectEvent->active || objectEvent->spriteId >= MAX_SPRITES)
+        return;
+    if (looks == Injury_GetObjectEventLooks(objectEvent))
+        return;
+    sprite = &gSprites[objectEvent->spriteId];
+    info = GetObjectEventGraphicsInfo(objectEvent->graphicsId);
+    if (!OW_GFX_COMPRESS || info == NULL || !info->compressed || !sprite->usingSheet)
+        return;
+    tag = INJURY_OW_TILE_TAG_BASE + id;
+    oldStart = sprite->sheetTileStart;
+
+    if (looks == 0)
+    {
+        // Back to the shared sheet.
+        LoadSheetGraphicsInfo(info, objectEvent->graphicsId, sprite);
+        sprite->oam.tileNum = sprite->sheetTileStart + ((sprite->oam.tileNum - oldStart) & 0x3FF);
+        return;
+    }
+
+    if (!IsCompressedData(info->images->data))
+        return;
+    size = GetDecompressedDataSize(info->images->data);
+    if (size == 0 || size > OW_SHEET_MAX || info->size == 0)
+        return;
+    DecompressDataWithHeaderWram(info->images->data, sOwSheet);
+    frames = size / info->size;
+
+    palette = &gPlttBufferUnfaded[OBJ_PLTT_ID(GetSpritePaletteSlot(sprite))];
+    PickColors(palette, &colors);
+    pic.w = info->width;
+    pic.h = info->height;
+    for (f = 0; f < frames; f++)
+    {
+        pic.frame = (u8 *)sOwSheet + f * info->size;
+        DrawLooksOnFrame(&pic, looks, f < 2 || f >= 4, 40, f == 2 || f == 3, &colors);
+    }
+
+    // Same layout as LoadSheetGraphicsInfo: one empty frame, then the sheet.
+    sheetSpan = GetSpanPerImage(info->oam->shape, info->oam->size);
+    offset = TILE_SIZE_4BPP << sheetSpan;
+    tileStart = GetSpriteTileStartByTag(tag);
+    if (tileStart == TAG_NONE)
+    {
+        struct SpriteFrameImage image = { .data = sOwSheet, .size = size + offset };
+        struct SpriteTemplate template = { .tileTag = tag, .images = &image };
+        tileStart = LoadSpriteSheetByTemplate(&template, 0, offset);
+        if (tileStart == 0 || tileStart == TAG_NONE)
+            return; // no room: keep the shared sheet
+    }
+    else
+    {
+        CpuCopy16(sOwSheet, (u8 *)SpriteTileAddr(tileStart) + offset, size);
+    }
+    sAppliedLooks[id] = looks;
+    if (tileStart != oldStart)
+    {
+        sprite->sheetTileStart = tileStart;
+        // oam.tileNum is the start's low 10 bits plus the frame's offset.
+        sprite->oam.tileNum = tileStart + ((sprite->oam.tileNum - oldStart) & 0x3FF);
+        FieldEffectFreeTilesIfUnused(oldStart);
+    }
+}
+
+// Draws (or clears) the marks of the Pokémon an object event shows.
+void Injury_ApplyToObjectEvent(struct ObjectEvent *objectEvent)
+{
+    if (!objectEvent->active || objectEvent->spriteId >= MAX_SPRITES)
+        return;
+    if (!(objectEvent->graphicsId & OBJ_EVENT_MON) && Injury_GetObjectEventLooks(objectEvent) == 0)
+        return;
+    Injury_SetObjectEventLooks(objectEvent, GetWantedLooks(objectEvent));
 }
