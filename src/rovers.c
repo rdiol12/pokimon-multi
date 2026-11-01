@@ -259,6 +259,7 @@ EWRAM_DATA struct RoverShowcase gRoverShowcase = {0};
 extern const u8 Rovers_EventScript_Talk[];
 extern const u8 Rovers_EventScript_Charger[];
 extern const u8 Rovers_EventScript_Board[];
+extern const u8 Rovers_EventScript_Nothing[];
 extern const u8 Rovers_EventScript_Rival[];
 extern const u8 Rovers_EventScript_BuddyBye[];
 enum Direction GetDirectionToFace(s16 x1, s16 y1, s16 x2, s16 y2);
@@ -2229,10 +2230,48 @@ bool32 Rovers_IsRoverObject(struct ObjectEvent *obj)
     return (misc || actor) && obj->active && OnRoverMap();
 }
 
+// The rover fighting the wild Pokémon (or throwing the Poké Ball) on this map.
+static s32 ActorInWildFight(void)
+{
+    u32 i;
+    for (i = 0; i < ROVERS_MAX_HERE; i++)
+    {
+        if (IsWildState(sRovers.actors[i].state))
+            return i;
+    }
+    return -1;
+}
+
+// The rover in a duel with the map's own trainer, if obj is that trainer.
+static s32 ActorDuelingMapTrainer(struct ObjectEvent *obj)
+{
+    u32 i;
+
+    if (sRovers.foeTrainer == TRAINER_NONE || obj->localId != sRovers.foeLocalId || obj->isPlayer
+     || obj->mapNum != gSaveBlock1Ptr->location.mapNum || obj->mapGroup != gSaveBlock1Ptr->location.mapGroup)
+        return -1;
+    for (i = 0; i < ROVERS_MAX_HERE; i++)
+    {
+        if (sRovers.actors[i].state == RS_DUEL && sRovers.actors[i].partner == FOE_TRAINER)
+            return i;
+    }
+    return -1;
+}
+
 const u8 *Rovers_GetTalkScript(struct ObjectEvent *obj)
 {
     s32 i;
 
+    if (!obj->active || !OnRoverMap())
+        return NULL;
+    // A duel the map's trainer is in: talking to that trainer offers to
+    // watch it, like talking to the rover.
+    i = ActorDuelingMapTrainer(obj);
+    if (i >= 0)
+    {
+        sRovers.talk = i;
+        return Rovers_EventScript_Talk;
+    }
     if (!Rovers_IsRoverObject(obj))
         return NULL;
     if (obj->localId == LOCALID_ROVER_BOARD)
@@ -2243,10 +2282,14 @@ const u8 *Rovers_GetTalkScript(struct ObjectEvent *obj)
         return Rovers_EventScript_Charger;
     }
     i = ActorOfObject(obj);
+    // The wild Pokémon a rover is fighting, or its Poké Ball: talk to that rover.
+    if (i < 0 && (obj->localId == LOCALID_ROVER_WILD || obj->localId == LOCALID_ROVER_BALL))
+        i = ActorInWildFight();
+    // Rover objects are not in the map's object list, so the map has no script
+    // for them: never fall through to it (that read a script from a null
+    // template and crashed with "Incorrect StringVar index").
     if (i < 0)
-        return NULL;
-    // A duel the map's trainer is in: talking to that trainer works too
-    // (GetObjectEventScriptPointer handles it), talking to its Pokémon here.
+        return Rovers_EventScript_Nothing;
     sRovers.talk = i;
     return Rovers_EventScript_Talk;
 }

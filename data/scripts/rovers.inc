@@ -126,6 +126,10 @@ Rovers_EventScript_Busy:
 	release
 	end
 
+@ A rover object with nothing to say (e.g. one leaving the map).
+Rovers_EventScript_Nothing::
+	end
+
 Rovers_EventScript_Duel:
 	msgbox Rovers_Text_DuelAsk, MSGBOX_YESNO
 	goto_if_eq VAR_RESULT, NO, Rovers_EventScript_DuelNo
