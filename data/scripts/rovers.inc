@@ -194,12 +194,13 @@ Rovers_EventScript_Board::
 	callnative Rovers_BoardFetch, waitstate=1
 	callnative Rovers_BoardShowJobs
 	goto_if_eq VAR_RESULT, FALSE, Rovers_EventScript_BoardOffline
+	@ The jobs first: printing the reward message reuses gStringVar4.
+	msgbox gStringVar4, MSGBOX_DEFAULT
 	goto_if_eq VAR_0x8005, 0, Rovers_EventScript_BoardJobs
 	playfanfare MUS_OBTAIN_ITEM
 	msgbox Rovers_Text_BoardReward, MSGBOX_DEFAULT
 	waitfanfare
 Rovers_EventScript_BoardJobs:
-	msgbox gStringVar4, MSGBOX_DEFAULT
 	msgbox Rovers_Text_BoardAskRankings, MSGBOX_YESNO
 	goto_if_eq VAR_RESULT, NO, Rovers_EventScript_BoardDone
 	closemessage
@@ -207,6 +208,8 @@ Rovers_EventScript_BoardJobs:
 	callnative Rovers_BoardShowRankings
 	goto_if_eq VAR_RESULT, FALSE, Rovers_EventScript_BoardOffline
 	msgbox gStringVar4, MSGBOX_DEFAULT
+	callnative Rovers_BoardIsOnline
+	goto_if_eq VAR_RESULT, FALSE, Rovers_EventScript_BoardLeagueOffline
 	msgbox Rovers_Text_LeagueAsk, MSGBOX_YESNO
 	goto_if_eq VAR_RESULT, NO, Rovers_EventScript_BoardDone
 	closemessage
@@ -301,6 +304,11 @@ Rovers_EventScript_LeagueHall::
 	end
 
 Rovers_EventScript_BoardDone:
+	releaseall
+	end
+
+Rovers_EventScript_BoardLeagueOffline:
+	msgbox Rovers_Text_BoardLeagueOffline, MSGBOX_DEFAULT
 	releaseall
 	end
 
@@ -505,6 +513,10 @@ Rovers_Text_BoardReward:
 Rovers_Text_BoardAskRankings:
 	.string "See the traveling trainers'\n"
 	.string "rankings and news?$"
+
+Rovers_Text_BoardLeagueOffline:
+	.string "The Rover League's bracket is posted\n"
+	.string "online. Connect to follow it!$"
 
 Rovers_Text_BoardOffline:
 	.string "The board is updated online.\n"
