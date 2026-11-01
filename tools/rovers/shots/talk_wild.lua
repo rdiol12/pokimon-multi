@@ -1,6 +1,6 @@
 -- A rover fights a wild Pokémon; the player talks to that wild Pokémon
--- (and to the thrown Poké Ball). Before the fix this ran a script from a
--- null pointer: "Incorrect StringVar index" crash screen.
+-- and watches the fight as a real battle. (Before the crash fix, talking
+-- to it ran a script from a null pointer: "Incorrect StringVar index".)
 dofile(INSTANCE_DIR .. "/../driver_lib.lua")
 local D, K = Driver, Driver.KEY
 local OBJ, N = 36, 64
@@ -47,9 +47,19 @@ D.run(function()
     D.shot("talk-wild-1")
     D.press(K.A, 60)
     D.shot("talk-wild-2")
-    D.press(K.A, 60)
-    D.shot("talk-wild-3")
-    D.wait(120)
+    D.press(K.A, 120) -- YES
+    D.shot("watch")
+    D.waitFor("the battle", 1500, D.inBattle, function(i)
+        if i % 40 == 0 then D.press(K.A, 0) end
+    end)
+    local n = 0
+    D.waitFor("the overworld", 20000, D.inOverworld, function(i)
+        if i % 45 == 0 and n < 200 then n = n + 1; D.shot("battle-" .. n) end
+    end)
+    D.wait(60)
     D.shot("after")
+    D.press(K.A, 60)
+    D.wait(90)
+    D.shot("after2")
     D.result(D.inOverworld() and "ok" or "not in overworld")
 end)

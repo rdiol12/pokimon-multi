@@ -5,12 +5,15 @@
 #include "data.h"
 #include "event_data.h"
 #include "event_object_movement.h"
+#include "field_effect.h"
 #include "field_player_avatar.h"
 #include "fieldmap.h"
 #include "injury.h"
 #include "life.h"
 #include "load_save.h"
 #include "main.h"
+#include "menu.h"
+#include "move.h"
 #include "metatile_behavior.h"
 #include "money.h"
 #include "netplay_ext.h"
@@ -24,6 +27,9 @@
 #include "sound.h"
 #include "sprite.h"
 #include "string_util.h"
+#include "task.h"
+#include "text_window.h"
+#include "window.h"
 #include "wild_encounter.h"
 #include "world.h"
 #include "constants/battle.h"
@@ -33,6 +39,7 @@
 #include "constants/battle_ai.h"
 #include "constants/event_object_movement.h"
 #include "constants/event_objects.h"
+#include "constants/field_effects.h"
 #include "constants/map_types.h"
 #include "constants/songs.h"
 #include "constants/trainer_types.h"
@@ -235,6 +242,8 @@ struct RoverState
     bool8 nearPlayer;  // screenshots: put a duel next to the player
     u8 talkCountdown;  // screenshots: talk to an actor after this many frames
     u8 watchA, watchB;
+    bool8 watchWild;   // the watched battle is watchA against its wild Pokémon
+    u8 wildResult;     // a watched wild battle's result, 1 + rover won, for the map
     u32 savedMoney;
     u16 savedPartner;
     u8 savedGender;
@@ -741,7 +750,7 @@ static void MakeOfflineRover(struct RoverActor *a, u32 id, u32 level, u32 teamSi
         if (!PickWild(&species, &wildLevel))
             break;
         a->w.count++;
-        NewMon(&a->w.mons[i], species, max(level - 3 - Random() % 4, 2), c->favType);
+        NewMon(&a->w.mons[i], species, max((s32)level - 3 - (s32)(Random() % 4), 2), c->favType); // signed: low levels wrapped to 100
     }
 }
 
@@ -1652,6 +1661,206 @@ static void Unflicker(struct ObjectEvent *obj)
         obj->invisible = FALSE;
 }
 
+// Moves on the map -------------------------------------------------------------------
+// While Pokémon fight on the map, each hit is a real move: its name in a
+// small caption at the bottom of the screen (when the fight is in view),
+// its sound, and a puff, splash or sparkle on the target by the move's type.
+
+#define CAPTION_FRAMES 70
+
+static const struct WindowTemplate sCaptionWindowTemplate =
+{
+    .bg = 0,
+    .tilemapLeft = 2,
+    .tilemapTop = 17,
+    .width = 26,
+    .height = 2,
+    .paletteNum = 15,
+    .baseBlock = 0x008,
+};
+
+#define tTimer    data[0]
+#define tWindowId data[1]
+
+static void CloseCaption(u8 taskId)
+{
+    struct Task *task = &gTasks[taskId];
+
+    ClearStdWindowAndFrameToTransparent(task->tWindowId, FALSE);
+    ClearWindowTilemap(task->tWindowId);
+    RemoveWindow(task->tWindowId);
+    ScheduleBgCopyTilemapToVram(0);
+    DestroyTask(taskId);
+}
+
+static void Task_MoveCaption(u8 taskId)
+{
+    struct Task *task = &gTasks[taskId];
+
+    // A script, a menu, a battle or a warp closes it at once.
+    if (++task->tTimer > CAPTION_FRAMES || ArePlayerFieldControlsLocked() || gMain.callback2 != CB2_Overworld)
+        CloseCaption(taskId);
+}
+
+static void ShowCaption(const u8 *text)
+{
+    u8 taskId = FindTaskIdByFunc(Task_MoveCaption);
+    struct Task *task;
+
+    if (taskId == TASK_NONE)
+    {
+        taskId = CreateTask(Task_MoveCaption, 91);
+        task = &gTasks[taskId];
+        task->tWindowId = AddWindow(&sCaptionWindowTemplate);
+        DrawStdWindowFrame(task->tWindowId, FALSE);
+    }
+    task = &gTasks[taskId];
+    task->tTimer = 0;
+    FillWindowPixelBuffer(task->tWindowId, PIXEL_FILL(1));
+    AddTextPrinterParameterized(task->tWindowId, FONT_NORMAL, text, 2, 1, TEXT_SKIP_DRAW, NULL);
+    PutWindowTilemap(task->tWindowId);
+    CopyWindowToVram(task->tWindowId, COPYWIN_FULL);
+}
+
+#undef tTimer
+#undef tWindowId
+
+// A random move from the list (MOVE_NONE if it has none).
+static u16 PickMove(const u16 *moves)
+{
+    u16 picks[MAX_MON_MOVES];
+    u32 i, n = 0;
+
+    for (i = 0; i < MAX_MON_MOVES; i++)
+    {
+        if (moves[i] != MOVE_NONE && moves[i] < MOVES_COUNT)
+            picks[n++] = moves[i];
+    }
+    return n == 0 ? MOVE_NONE : picks[Random() % n];
+}
+
+// One of the last four moves the species learns by this level, like a
+// wild Pokémon's moveset.
+static u16 LearnsetMove(u16 species, u32 level)
+{
+    const struct LevelUpMove *learnset = GetSpeciesLevelUpLearnset(species);
+    u16 last[MAX_MON_MOVES] = {MOVE_NONE};
+    u32 i, n = 0;
+
+    if (learnset == NULL)
+        return MOVE_NONE;
+    for (i = 0; learnset[i].move != LEVEL_UP_MOVE_END && learnset[i].level <= level; i++)
+        last[n++ % MAX_MON_MOVES] = learnset[i].move;
+    return PickMove(last);
+}
+
+static u16 FoeMove(u32 slot, u32 level);
+static u8 FoeLevel(u32 slot);
+
+static const u16 sTypeSounds[NUMBER_OF_MON_TYPES] =
+{
+    [TYPE_NORMAL]   = SE_M_HEADBUTT,
+    [TYPE_FIGHTING] = SE_M_VITAL_THROW,
+    [TYPE_FLYING]   = SE_M_GUST,
+    [TYPE_POISON]   = SE_M_POISON_POWDER,
+    [TYPE_GROUND]   = SE_M_DIG,
+    [TYPE_ROCK]     = SE_M_ROCK_THROW,
+    [TYPE_BUG]      = SE_M_STRING_SHOT,
+    [TYPE_GHOST]    = SE_M_CONFUSE_RAY,
+    [TYPE_STEEL]    = SE_M_STRENGTH,
+    [TYPE_FIRE]     = SE_M_EMBER,
+    [TYPE_WATER]    = SE_M_BUBBLE,
+    [TYPE_GRASS]    = SE_M_CUT,
+    [TYPE_ELECTRIC] = SE_M_THUNDERBOLT,
+    [TYPE_PSYCHIC]  = SE_M_PSYBEAM,
+    [TYPE_ICE]      = SE_M_ICY_WIND,
+    [TYPE_DRAGON]   = SE_M_DRAGON_RAGE,
+    [TYPE_DARK]     = SE_M_BITE,
+    [TYPE_FAIRY]    = SE_M_MOONLIGHT,
+};
+
+// A puff of fire, a splash, dust or a sparkle where the move lands.
+static void MoveEffect(struct ObjectEvent *obj, enum Type type)
+{
+    if (obj == NULL || obj->offScreen)
+        return;
+    gFieldEffectArguments[0] = obj->currentCoords.x;
+    gFieldEffectArguments[1] = obj->currentCoords.y;
+    switch (type)
+    {
+    case TYPE_FIRE:
+        gFieldEffectArguments[2] = 0x48; // subpriority
+        gFieldEffectArguments[3] = 1;    // oam priority
+        FieldEffectStart(FLDEFF_ASH_PUFF);
+        break;
+    case TYPE_WATER:
+    case TYPE_ICE:
+        gFieldEffectArguments[2] = obj->previousElevation;
+        gFieldEffectArguments[3] = 1;
+        FieldEffectStart(FLDEFF_JUMP_SMALL_SPLASH);
+        break;
+    case TYPE_NORMAL:
+    case TYPE_FIGHTING:
+    case TYPE_GROUND:
+    case TYPE_ROCK:
+    case TYPE_STEEL:
+        gFieldEffectArguments[2] = obj->previousElevation;
+        gFieldEffectArguments[3] = 1;
+        FieldEffectStart(FLDEFF_DUST);
+        break;
+    default:
+        // FldEff_Sparkle adds the map offset itself.
+        gFieldEffectArguments[0] -= MAP_OFFSET;
+        gFieldEffectArguments[1] -= MAP_OFFSET;
+        gFieldEffectArguments[2] = 1;
+        FieldEffectStart(FLDEFF_SPARKLE);
+        break;
+    }
+}
+
+static bool32 InView(struct ObjectEvent *obj)
+{
+    struct ObjectEvent *player = &gObjectEvents[gPlayerAvatar.objectEventId];
+    return obj != NULL && abs(obj->currentCoords.x - player->currentCoords.x) <= 7
+        && abs(obj->currentCoords.y - player->currentCoords.y) <= 5;
+}
+
+// The attacker uses a move on the target. With no move known, a plain hit.
+static void UseMove(struct ObjectEvent *attacker, struct ObjectEvent *target, u16 species, u16 move, u16 fallbackSE)
+{
+    enum Type type;
+    bool32 status;
+
+    if (move == MOVE_NONE)
+    {
+        Hit(attacker, target);
+        PlaySE(fallbackSE);
+        return;
+    }
+    type = GetMoveType(move);
+    status = (GetMoveCategory(move) == DAMAGE_CATEGORY_STATUS);
+    if (status)
+    {
+        // Growl, Leer, Swords Dance...: no hit, a sparkle on whoever it's for.
+        Hit(attacker, NULL);
+        MoveEffect(GetMoveTarget(move) == TARGET_USER ? attacker : target, TYPE_PSYCHIC);
+    }
+    else
+    {
+        Hit(attacker, target);
+        MoveEffect(target, type);
+    }
+    PlaySE(type < NUMBER_OF_MON_TYPES && sTypeSounds[type] != 0 ? sTypeSounds[type] : fallbackSE);
+    if (InView(attacker) || InView(target))
+    {
+        u8 text[48];
+        StringCopy(gStringVar1, GetSpeciesName(species));
+        StringCopy(gStringVar2, GetMoveName(move));
+        StringExpandPlaceholders(text, COMPOUND_STRING("{STR_VAR_1} used {STR_VAR_2}!"));
+        ShowCaption(text);
+    }
+}
+
 static void LevelUp(u32 i, u32 slot)
 {
     struct RoverActor *a = &sRovers.actors[i];
@@ -1727,10 +1936,14 @@ static void UpdateWild(u32 i)
         if (a->hits < 4 + Random() % 3)
         {
             if (a->hits % 2 == 0)
-                Hit(mon != NULL ? mon : t, wild);
+            {
+                const struct RoverMon *m = &a->w.mons[LeadSlot(&a->w)];
+                UseMove(mon != NULL ? mon : t, wild, m->species, PickMove(m->moves), SE_M_COMET_PUNCH);
+            }
             else
-                Hit(wild, mon);
-            PlaySE(a->hits % 2 == 0 ? SE_M_COMET_PUNCH : SE_M_DOUBLE_SLAP);
+            {
+                UseMove(wild, mon, a->wildSpecies, LearnsetMove(a->wildSpecies, a->wildLevel), SE_M_DOUBLE_SLAP);
+            }
             a->hits++;
             a->timer = 40;
             break;
@@ -1834,6 +2047,20 @@ static u16 FoeSpecies(u32 slot)
     return trainer->party[slot].species;
 }
 
+// One of the map trainer's Pokémon's moves: its set ones, or its learnset's.
+static u16 FoeMove(u32 slot, u32 level)
+{
+    const struct Trainer *trainer = GetTrainerStructFromId(sRovers.foeTrainer);
+    u16 moves[MAX_MON_MOVES], move;
+    u32 i;
+    if (slot >= trainer->partySize)
+        return MOVE_NONE;
+    for (i = 0; i < MAX_MON_MOVES; i++)
+        moves[i] = trainer->party[slot].moves[i];
+    move = PickMove(moves);
+    return move != MOVE_NONE ? move : LearnsetMove(trainer->party[slot].species, level);
+}
+
 static u8 FoeLevel(u32 slot)
 {
     const struct Trainer *trainer = GetTrainerStructFromId(sRovers.foeTrainer);
@@ -1922,10 +2149,19 @@ static void UpdateDuel(u32 i)
     if (a->hits < 3 + Random() % 3)
     {
         if (a->hits % 2 == 0)
-            Hit(mine, theirs);
+        {
+            const struct RoverMon *m = &a->w.mons[a->out];
+            UseMove(mine, theirs, m->species, PickMove(m->moves), SE_M_COMET_PUNCH);
+        }
+        else if (b != NULL)
+        {
+            const struct RoverMon *m = &b->w.mons[b->out];
+            UseMove(theirs, mine, m->species, PickMove(m->moves), SE_M_MEGA_KICK);
+        }
         else
-            Hit(theirs, mine);
-        PlaySE(a->hits % 2 == 0 ? SE_M_COMET_PUNCH : SE_M_MEGA_KICK);
+        {
+            UseMove(theirs, mine, FoeSpecies(a->foeOut), FoeMove(a->foeOut, FoeLevel(a->foeOut)), SE_M_MEGA_KICK);
+        }
         a->hits++;
         a->timer = 40;
         return;
@@ -2294,7 +2530,8 @@ const u8 *Rovers_GetTalkScript(struct ObjectEvent *obj)
     return Rovers_EventScript_Talk;
 }
 
-// VAR_RESULT: 0 wandering, 1 in a duel (watchable), 2 busy (catching).
+// VAR_RESULT: 0 wandering, 1 in a duel (watchable), 2 busy (catching),
+// 3 exploring with the player, 4 fighting a wild Pokémon (watchable).
 void Rovers_BufferTalk(void)
 {
     struct RoverActor *a = &sRovers.actors[sRovers.talk];
@@ -2316,6 +2553,12 @@ void Rovers_BufferTalk(void)
     if (a->state == RS_BUDDY)
     {
         gSpecialVar_Result = 3;
+        return;
+    }
+    if (a->state == RS_WILD_APPEAR || a->state == RS_WILD_FIGHT)
+    {
+        StringCopy(gStringVar2, GetSpeciesName(a->wildSpecies));
+        gSpecialVar_Result = 4;
         return;
     }
     if (a->state != RS_WANDER && a->state != RS_DUEL_OVER && a->state != RS_LEAVING)
@@ -2814,7 +3057,8 @@ static void CB2_EndWatch(void)
     struct RoverActor *a = &sRovers.actors[sRovers.watchA];
     bool32 leftWon = (gBattleOutcome == B_OUTCOME_WON);
 
-    ReadInjuries(gParties[B_TRAINER_PLAYER], a);
+    if (!sRovers.watchWild)
+        ReadInjuries(gParties[B_TRAINER_PLAYER], a);
     if (sRovers.watchB != FOE_TRAINER)
         ReadInjuries(gParties[B_TRAINER_OPPONENT_A], &sRovers.actors[sRovers.watchB]);
     LoadPlayerParty();
@@ -2826,27 +3070,27 @@ static void CB2_EndWatch(void)
     sRovers.watching = FALSE;
 
     // The battle on the map ends the same way, once the map is back.
-    sRovers.duelResult = leftWon ? 2 : 1;
+    if (sRovers.watchWild)
+    {
+        sRovers.wildResult = leftWon ? 2 : 1;
+        StringCopy(gStringVar1, Cast(a)->name);
+        StringCopy(gStringVar2, GetSpeciesName(a->wildSpecies));
+    }
+    else
+    {
+        sRovers.duelResult = leftWon ? 2 : 1;
+    }
+    sRovers.watchWild = FALSE;
     gSpecialVar_Result = leftWon;
     SetMainCallback2(CB2_ReturnToFieldContinueScriptPlayMapMusic);
 }
 
-// Watch the duel the talked-to rover is in (waitstate). The left rover
-// takes the player's place, both sides played by the AI; the player's own
-// team, name and money are put back afterwards.
-void Rovers_StartWatch(void)
+// The rover takes the player's place in the battle: its team, name and
+// look. The player's own team, name and money are put back afterwards.
+static void LoadRoverAsPlayer(struct RoverActor *a, u32 lead)
 {
-    u32 left = sRovers.talk;
-    struct RoverActor *a, *b = NULL;
-    const struct RoverLook *look;
-    u32 i;
-
-    if (sRovers.actors[left].timer == 0xFF && sRovers.actors[left].partner != FOE_TRAINER)
-        left = sRovers.actors[left].partner;
-    a = &sRovers.actors[left];
-    look = Look(a);
-    sRovers.watchA = left;
-    sRovers.watchB = a->partner;
+    const struct RoverLook *look = Look(a);
+    u32 i, n = 0;
 
     sRovers.savedMoney = GetMoney(&gSaveBlock1Ptr->money);
     sRovers.savedPartner = gPartnerTrainerId;
@@ -2854,22 +3098,40 @@ void Rovers_StartWatch(void)
     StringCopy(sRovers.savedName, gSaveBlock2Ptr->playerName);
     SavePlayerParty();
 
-    // The left rover's team.
+    // The rover's team, the one fighting on the map first.
     ZeroPlayerPartyMons();
     for (i = 0; i < a->w.count; i++)
     {
-        const struct RoverMon *m = &a->w.mons[i];
-        struct Pokemon *mon = &gParties[B_TRAINER_PLAYER][i];
+        u32 slot = (i == 0) ? lead : (i <= lead ? i - 1 : i);
+        const struct RoverMon *m = &a->w.mons[slot];
+        struct Pokemon *mon = &gParties[B_TRAINER_PLAYER][n++];
         u32 j;
-        CreateMonWithIVsPersonality(mon, m->species, m->level, 12 + (a->w.id + i) % 20, Random32());
+        CreateMonWithIVsPersonality(mon, m->species, m->level, 12 + (a->w.id + slot) % 20, Random32());
         for (j = 0; j < MAX_MON_MOVES; j++)
             SetMonMoveSlot(mon, m->moves[j] < MOVES_COUNT ? m->moves[j] : MOVE_NONE, j);
     }
     gPartiesCount[B_TRAINER_PLAYER] = a->w.count;
-    ApplyInjuries(gParties[B_TRAINER_PLAYER], a);
+    if (lead == 0)
+        ApplyInjuries(gParties[B_TRAINER_PLAYER], a); // by slot, so only in the team's own order
     StringCopyN(gSaveBlock2Ptr->playerName, Cast(a)->name, PLAYER_NAME_LENGTH);
     gSaveBlock2Ptr->playerName[PLAYER_NAME_LENGTH] = EOS;
     gSaveBlock2Ptr->playerGender = look->female ? FEMALE : MALE;
+}
+
+// Watch the duel the talked-to rover is in (waitstate). The left rover
+// takes the player's place, both sides played by the AI.
+void Rovers_StartWatch(void)
+{
+    u32 left = sRovers.talk;
+    struct RoverActor *a, *b = NULL;
+
+    if (sRovers.actors[left].timer == 0xFF && sRovers.actors[left].partner != FOE_TRAINER)
+        left = sRovers.actors[left].partner;
+    a = &sRovers.actors[left];
+    sRovers.watchA = left;
+    sRovers.watchB = a->partner;
+    sRovers.watchWild = FALSE;
+    LoadRoverAsPlayer(a, 0);
 
     memset(&gTrainerBattleParameter, 0, sizeof(gTrainerBattleParameter));
     gBattleTypeFlags = BATTLE_TYPE_TRAINER;
@@ -2890,6 +3152,27 @@ void Rovers_StartWatch(void)
         ApplyInjuries(gParties[B_TRAINER_OPPONENT_A], b);
     }
     TRAINER_BATTLE_PARAM.defeatTextA = (u8 *)COMPOUND_STRING("What a battle!");
+    sRovers.watching = TRUE;
+    BattleSetup_StartRoverWatch(CB2_EndWatch);
+}
+
+// Watch the talked-to rover fight its wild Pokémon (waitstate): a real wild
+// battle, the rover's side played by the AI. VAR_RESULT TRUE if the rover
+// won; STR_VAR_1 the rover, STR_VAR_2 the wild Pokémon.
+void Rovers_StartWildWatch(void)
+{
+    struct RoverActor *a = &sRovers.actors[sRovers.talk];
+
+    sRovers.watchA = sRovers.talk;
+    sRovers.watchB = FOE_TRAINER;
+    sRovers.watchWild = TRUE;
+    LoadRoverAsPlayer(a, LeadSlot(&a->w));
+
+    memset(&gTrainerBattleParameter, 0, sizeof(gTrainerBattleParameter));
+    gBattleTypeFlags = 0;
+    gLifeTrainer = NULL;
+    ZeroEnemyPartyMons();
+    CreateWildMon(a->wildSpecies, a->wildLevel);
     sRovers.watching = TRUE;
     BattleSetup_StartRoverWatch(CB2_EndWatch);
 }
@@ -3400,6 +3683,33 @@ bool32 Rovers_OverworldUpdate(void)
                 Sync(sRovers.watchB, EV_NONE, 0);
         }
         sRovers.duelResult = 0;
+    }
+    if (sRovers.wildResult != 0 && OnRoverMap())
+    {
+        struct RoverActor *a = &sRovers.actors[sRovers.watchA];
+        if (a->state == RS_WILD_APPEAR || a->state == RS_WILD_FIGHT)
+        {
+            struct ObjectEvent *wild = ObjByLocalId(LOCALID_ROVER_WILD);
+            struct ObjectEvent *t = TrainerObj(sRovers.watchA);
+            if (sRovers.wildResult == 2)
+            {
+                // Knocked out: the rover's lead gets the experience.
+                if (wild != NULL)
+                    wild->invisible = TRUE;
+                a->hits = 0;
+            }
+            else
+            {
+                // Too strong: it runs off, no experience.
+                if (t != NULL)
+                    Do(t, MOVEMENT_ACTION_EMOTE_QUESTION_MARK);
+                a->w.hurt++;
+                a->hits = 1;
+            }
+            a->state = RS_KO;
+            a->timer = 40;
+        }
+        sRovers.wildResult = 0;
     }
     if (!OnRoverMap() || ArePlayerFieldControlsLocked() || QuietForTests())
         return FALSE;
