@@ -3723,7 +3723,13 @@ void SetObjectEventDirection(struct ObjectEvent *objectEvent, enum Direction dir
 
 static const u8 *GetObjectEventScriptPointerByLocalIdAndMap(u8 localId, u8 mapNum, u8 mapGroup)
 {
-    return GetObjectEventTemplateByLocalIdAndMap(localId, mapNum, mapGroup)->script;
+    const struct ObjectEventTemplate *template = GetObjectEventTemplateByLocalIdAndMap(localId, mapNum, mapGroup);
+
+    // Objects spawned by code (rovers, netplay players...) have no template on
+    // the map: no script, rather than one read from a null pointer.
+    if (template == NULL)
+        return NULL;
+    return template->script;
 }
 
 const u8 *GetObjectEventScriptPointerByObjectEventId(u8 objectEventId)

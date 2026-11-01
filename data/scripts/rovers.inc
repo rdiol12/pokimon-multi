@@ -7,6 +7,7 @@ Rovers_EventScript_Talk::
 	goto_if_eq VAR_RESULT, 1, Rovers_EventScript_Duel
 	goto_if_eq VAR_RESULT, 2, Rovers_EventScript_Busy
 	goto_if_eq VAR_RESULT, 3, Rovers_EventScript_BuddyTalk
+	goto_if_eq VAR_RESULT, 4, Rovers_EventScript_WildFight
 	faceplayer
 	callnative Rovers_IsFriend
 	goto_if_eq VAR_RESULT, TRUE, Rovers_EventScript_FriendHello
@@ -126,6 +127,10 @@ Rovers_EventScript_Busy:
 	release
 	end
 
+@ A rover object with nothing to say (e.g. one leaving the map).
+Rovers_EventScript_Nothing::
+	end
+
 Rovers_EventScript_Duel:
 	msgbox Rovers_Text_DuelAsk, MSGBOX_YESNO
 	goto_if_eq VAR_RESULT, NO, Rovers_EventScript_DuelNo
@@ -139,6 +144,23 @@ Rovers_EventScript_Duel:
 
 Rovers_EventScript_DuelRightWon:
 	msgbox Rovers_Text_DuelRightWon, MSGBOX_DEFAULT
+	release
+	end
+
+@ A rover fighting a wild Pokémon: watch it as a real battle.
+Rovers_EventScript_WildFight:
+	msgbox Rovers_Text_WildFightAsk, MSGBOX_YESNO
+	goto_if_eq VAR_RESULT, NO, Rovers_EventScript_DuelNo
+	msgbox Rovers_Text_DuelWatch, MSGBOX_DEFAULT
+	closemessage
+	callnative Rovers_StartWildWatch, waitstate=1
+	goto_if_eq VAR_RESULT, FALSE, Rovers_EventScript_WildFightLost
+	msgbox Rovers_Text_WildFightWon, MSGBOX_DEFAULT
+	release
+	end
+
+Rovers_EventScript_WildFightLost:
+	msgbox Rovers_Text_WildFightLost, MSGBOX_DEFAULT
 	release
 	end
 
@@ -441,6 +463,18 @@ Rovers_Text_DuelAsk:
 	.string "{STR_VAR_1} and {STR_VAR_2} are in the\n"
 	.string "middle of a battle!\p"
 	.string "Watch it?$"
+
+Rovers_Text_WildFightAsk:
+	.string "{STR_VAR_1} is battling a wild\n"
+	.string "{STR_VAR_2}!\p"
+	.string "Watch it?$"
+
+Rovers_Text_WildFightWon:
+	.string "{STR_VAR_1} beat the wild {STR_VAR_2}!$"
+
+Rovers_Text_WildFightLost:
+	.string "The wild {STR_VAR_2} was too strong\n"
+	.string "for {STR_VAR_1}!$"
 
 Rovers_Text_DuelWatch:
 	.string "You stop to watch…$"
