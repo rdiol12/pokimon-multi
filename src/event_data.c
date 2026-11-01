@@ -1,5 +1,6 @@
 #include "global.h"
 #include "event_data.h"
+#include "save_ext.h"
 #include "field_ability.h"
 #include "pokedex.h"
 
@@ -214,6 +215,8 @@ u8 *GetFlagPointer(u16 id)
         return &gSaveBlock1Ptr->flags[id / 8];
     else if (id >= AREA_FLAGS_START && id < AREA_FLAGS_START + AREA_FLAGS_COUNT)
         return &gSaveBlock3Ptr->areas.flags[(id - AREA_FLAGS_START) / 8];
+    else if (id >= SOLMARA_FLAGS_START && id < SOLMARA_FLAGS_START + SOLMARA_FLAGS_COUNT)
+        return &gSaveBlockExt.solmara.flags[(id - SOLMARA_FLAGS_START) / 8];
 #if TESTING
     else if (id >= TESTING_FLAGS_START)
         return &sTestFlags[(id - TESTING_FLAGS_START) / 8];

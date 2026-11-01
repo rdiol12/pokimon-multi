@@ -4,6 +4,7 @@
 #include "constants/moves.h"
 #include "constants/trainers.h"
 #include "constants/areas.h"
+#include "constants/solmara.h"
 #include "constants/battle.h"
 #include "constants/pokeball.h"
 #include "difficulty.h"
@@ -286,11 +287,13 @@ extern struct Trainer *gRoverTagTrainers;
 extern u16 gPartnerTrainerId;
 #define ROVER_TAG_FOE_A (MAX_TRAINERS_COUNT - 2)
 #define ROVER_TAG_FOE_B (MAX_TRAINERS_COUNT - 1)
-extern const struct Trainer gAreaTrainers[DIFFICULTY_COUNT][AREA_TRAINERS_COUNT];
+extern const struct Trainer gAreaTrainers[DIFFICULTY_COUNT][AREA_TRAINERS_TABLE_SIZE];
 
 static inline bool32 IsAreaTrainerId(u16 trainerId)
 {
-    return trainerId >= AREA_TRAINERS_START && trainerId < AREA_TRAINERS_START + AREA_TRAINERS_COUNT;
+    return (trainerId >= AREA_TRAINERS_START && trainerId < AREA_TRAINERS_START + AREA_TRAINERS_COUNT)
+        || (trainerId >= AREA_TRAINERS_START + SOLMARA_TRAINERS_FIRST
+         && trainerId < AREA_TRAINERS_START + SOLMARA_TRAINERS_FIRST + SOLMARA_TRAINERS_COUNT);
 }
 
 static inline const struct Trainer *GetTrainerStructFromId(u16 trainerId)
