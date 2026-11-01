@@ -363,7 +363,9 @@ void *SpriteTileAddr(u32 tileNum)
 // The tile bank a sprite draws from: sheet sprites follow their sheet, others keep their own
 u32 GetSpriteTileBank(struct Sprite *sprite)
 {
-    if (sprite->usingSheet)
+    // A sprite made from a tag that was never loaded (the PC's Pokémon icons
+    // set their tile numbers themselves) has no sheet: 0xFFFF would mean bank 63.
+    if (sprite->usingSheet && sprite->sheetTileStart != TAG_NONE)
         return sprite->sheetTileStart / TOTAL_OBJ_TILE_COUNT;
     return sprite->tileBank;
 }

@@ -1,4 +1,5 @@
 #include "global.h"
+#include "injury.h"
 #include "breed_fusion.h"
 #include "malloc.h"
 #include "netplay.h"
@@ -1918,6 +1919,7 @@ static u8 TrySetupObjectEventSprite(const struct ObjectEventTemplate *objectEven
     SetObjectSubpriorityByElevation(objectEvent->previousElevation, sprite, 1);
     UpdateObjectEventVisibility(objectEvent, sprite);
     TrainerLook_ApplyToObjectEvent(objectEvent);
+    Injury_ApplyToObjectEvent(objectEvent);
     return objectEventId;
 }
 
@@ -2283,6 +2285,7 @@ static void FollowerSetGraphics(struct ObjectEvent *objEvent, enum Species speci
         sprite->inUse = TRUE;
         SetSpritePaletteSlot(sprite, LoadDynamicFollowerPalette(species, shiny, female));
     }
+    Injury_ApplyToObjectEvent(objEvent);
 }
 
 // Like FollowerSetGraphics, but does not recenter sprite on a metatile
@@ -2329,6 +2332,7 @@ static void RefreshFollowerGraphics(struct ObjectEvent *objEvent)
         if (gWeatherPtr->currWeather != WEATHER_FOG_HORIZONTAL) // don't want to weather blend in fog
             UpdateSpritePaletteWithWeather(GetSpritePaletteSlot(sprite), FALSE);
     }
+    Injury_ApplyToObjectEvent(objEvent);
 }
 
 enum Species GetOverworldWeatherSpecies(enum Species species)
@@ -2439,6 +2443,11 @@ void UpdateFollowingPokemon(void)
                                    gObjectEvents[gPlayerAvatar.objectEventId].currentCoords.y);
         FollowerSetGraphics(objEvent, species, shiny, female);
         objEvent->invisible = TRUE;
+    }
+    else
+    {
+        // Same Pokémon, but it may have a new scar or a lost part.
+        Injury_ApplyToObjectEvent(objEvent);
     }
     sprite->data[6] = 0; // set animation data
 }
@@ -3094,6 +3103,7 @@ static void SpawnObjectEventOnReturnToField(u8 objectEventId, s16 x, s16 y)
         SetObjectSubpriorityByElevation(objectEvent->previousElevation, sprite, 1);
         RestoreSavedOWEBehaviorState(objectEvent, sprite);
         TrainerLook_ApplyToObjectEvent(objectEvent);
+        Injury_ApplyToObjectEvent(objectEvent);
     }
 }
 

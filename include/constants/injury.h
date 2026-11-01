@@ -17,6 +17,12 @@
 #define INJURY_FLAG_NOTIFY  (1 << 1) // Tell the trainer about the injury on the next step.
 #define INJURY_FLAG_NEW_SCAR (1 << 2) // Tell the trainer about a new scar on the next step.
 
+// What a Pokémon's sprites show (Injury_GetLooks): the lost parts it has
+// (INJURY_PART_BIT) and the scar. Also sent to other players online with the
+// follower.
+#define INJURY_LOOKS_LOST_MASK 0x1F
+#define INJURY_LOOKS_SCAR      (1 << 5)
+
 // MON_DATA_INJURY_DAMAGE is stored in 2% units.
 #define INJURY_DAMAGE_UNIT  2
 #define INJURY_DAMAGE_MAX   (100 / INJURY_DAMAGE_UNIT)
