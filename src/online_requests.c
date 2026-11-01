@@ -1,5 +1,6 @@
 #include "global.h"
 #include "online.h"
+#include "hoenn_multi.h"
 
 // Every request the sixth-batch features make (Online_Request, VAR_0x8004).
 // The server routes each by its first word to a module in server/online_*.py.
@@ -95,4 +96,15 @@ const struct OnlineRequest gOnlineRequests[ONL_REQ_COUNT] =
     [ONL_REQ_ECO_AREA]   = {"ECO AREA"},
     [ONL_REQ_ECO_MOVES]  = {"ECO MOVES"},
     [ONL_REQ_RESEARCH_BOARD] = {"RESEARCH BOARD", 1},
+    [ONL_REQ_HREC]       = {"HREC", 1},
+    [ONL_REQ_HREC_ALL]   = {"HREC ALL"},
+    [ONL_REQ_QM_JOIN]    = {"QM JOIN", 1, .after = HoennMulti_AfterQuickMatch},
+    [ONL_REQ_QM_LEAVE]   = {"QM LEAVE"},
+    [ONL_REQ_HTEAM_VIEW] = {"TEAMUP VIEW"},
+    [ONL_REQ_HTEAM_WHO]  = {"TEAMUP WHO"},
+    [ONL_REQ_HTEAM_ASK]  = {"TEAMUP ASK", .flags = ONL_ARG_CHOSEN},
+    [ONL_REQ_HTEAM_YES]  = {"TEAMUP YES", .build = Online_AddTeamRecord},
+    [ONL_REQ_HTEAM_NO]   = {"TEAMUP NO"},
+    [ONL_REQ_HTEAM_GET]  = {"TEAMUP GET", .after = HoennMulti_StoreTeam},
+    [ONL_REQ_HTEAM_END]  = {"TEAMUP END", .after = HoennMulti_DropTeam},
 };

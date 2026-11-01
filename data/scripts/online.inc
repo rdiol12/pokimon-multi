@@ -39,6 +39,8 @@ Online_EventScript_Hub::
 	dynmultipush Online_Text_HubHide, ONLINE_HUB_HIDE
 	dynmultipush Online_Text_HubWildlife, ONLINE_HUB_WILDLIFE
 	dynmultipush Online_Text_HubResearch, ONLINE_HUB_RESEARCH
+	dynmultipush Online_Text_HubRecords, ONLINE_HUB_RECORDS
+	dynmultipush Online_Text_HubTeamUp, ONLINE_HUB_TEAMUP
 	dynmultipush Online_Text_HubClose, ONLINE_HUB_CLOSE
 	dynmultistack 0, 0, FALSE, 6, FALSE, 0, DYN_MULTICHOICE_CB_NONE
 	switch VAR_RESULT
@@ -59,6 +61,8 @@ Online_EventScript_Hub::
 	case ONLINE_HUB_HIDE, Online_EventScript_Hide
 	case ONLINE_HUB_WILDLIFE, Online_EventScript_Wildlife
 	case ONLINE_HUB_RESEARCH, Online_EventScript_ResearchLeaders
+	case ONLINE_HUB_RECORDS, HoennMulti_EventScript_HubRecords
+	case ONLINE_HUB_TEAMUP, HoennMulti_EventScript_TeamUp
 	releaseall
 	end
 
@@ -141,11 +145,18 @@ Online_Text_HubWildlife:
 Online_Text_HubResearch:
 	.string "RESEARCH LEADERS$"
 
+Online_Text_HubRecords:
+	.string "HOENN RECORDS$"
+
+Online_Text_HubTeamUp:
+	.string "TEAM UP$"
+
 Online_Text_HubClose:
 	.string "CLOSE$"
 
 	.include "data/scripts/online/goals.inc"
 	.include "data/scripts/online/sightings.inc"
+	.include "data/scripts/online/hoenn.inc"
 	.include "data/scripts/online/fishing.inc"
 	.include "data/scripts/online/coop_fishing.inc"
 	.include "data/scripts/online/shops.inc"
