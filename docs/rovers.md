@@ -8,7 +8,15 @@ heal at Pokémon Centers. The player meets them anywhere and can:
 
 - **watch** two of them (or one of them and a route trainer) battle: walk up
   to the fight on the map and press A. YES opens a real battle with both
-  sides played by the AI. The result counts for both trainers.
+  sides played by the AI. The result counts for both trainers. A rover
+  fighting a wild Pokémon can be watched the same way (talk to the rover or
+  the wild Pokémon): a real wild battle, the rover's side played by the AI.
+  If the rover wins, its lead gets the experience; if not, the Pokémon runs
+  off.
+- fights on the map use real moves: each hit is a move the Pokémon knows
+  (wild ones: their last four level-up moves), shown as "X used MOVE!" at
+  the bottom of the screen while the fight is in view, with the move type's
+  sound and a puff, splash, dust or sparkle on the target.
 - **talk** to a wandering one to see its badges, record and team, and
   **battle** it.
 - **trade** with one: say no to a battle and it offers its weakest Pokémon

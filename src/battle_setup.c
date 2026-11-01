@@ -1611,7 +1611,10 @@ void BattleSetup_StartRoverWatch(void (*endCallback)(void))
     FreezeObjectEvents();
     StopPlayerAvatar();
     gMain.savedCallback = endCallback;
-    CreateBattleStartTask(GetTrainerBattleTransition(), 0);
+    if (gBattleTypeFlags & BATTLE_TYPE_TRAINER)
+        CreateBattleStartTask(GetTrainerBattleTransition(), 0);
+    else
+        CreateBattleStartTask(GetWildBattleTransition(), 0); // a rover against a wild Pokémon
 }
 
 void BattleSetup_StartTrainerBattle_Debug(void)
