@@ -23,6 +23,7 @@
 #include "text.h"
 #include "intro.h"
 #include "main.h"
+#include "qol.h"
 #include "trainer_hill.h"
 #include "netplay.h"
 #include "netplay_ext.h"
@@ -293,7 +294,8 @@ void InitKeys(void)
 
 static void ReadKeys(void)
 {
-    u16 keyInput = REG_KEYINPUT ^ KEYS_MASK;
+    // OPTION > CONTROLS can give the buttons other jobs (src/qol.c).
+    u16 keyInput = QoL_RemapKeys(REG_KEYINPUT ^ KEYS_MASK);
     gMain.newKeysRaw = keyInput & ~gMain.heldKeysRaw;
     gMain.newKeys = gMain.newKeysRaw;
     gMain.newAndRepeatedKeys = gMain.newKeysRaw;

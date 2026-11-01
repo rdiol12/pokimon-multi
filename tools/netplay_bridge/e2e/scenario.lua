@@ -173,15 +173,16 @@ D.run(function()
     -- Emotes: player 1 sends LOVE, then the phrase GG!; player 2 sees both.
     if INSTANCE == 1 then
         D.wait(30)
+        -- The emote wheel (src/emote_wheel.c): LOVE is up-right on the first page.
         D.press(K.L, 30)
-        D.press(K.RIGHT, 20) -- LOVE
+        D.hold(K.UP | K.RIGHT, 6) -- LOVE
+        D.wait(14)
         D.shot("emote-menu")
         D.press(K.A, 16)
         D.shot("emote-love")
         D.wait(120)
-        D.press(K.L, 30)
-        D.press(K.RIGHT, 12)
-        for _ = 1, 4 do D.press(K.DOWN, 12) end -- GG!
+        D.press(K.L, 30) -- opens on the same page and slot
+        D.press(K.L, 20) -- back a page: PHRASES, where up-right is GG!
         D.press(K.A, 20)
         D.shot("chat-gg")
         D.wait(200)
@@ -477,8 +478,10 @@ D.run(function()
     seq = D.mb8(0x0C8)
     if INSTANCE == 2 then
         D.wait(200)
+        -- Already facing player 1; another UP would walk onto their tile now
+        -- that players don't block each other.
         walk("back below player 1", K.UP, function() return select(2, D.pos()) <= 3 end)
-        D.press(K.UP, 20) -- face player 1
+        D.wait(20)
         talkToOtherPlayer(TALK.COOP)
     else
         acceptInvite(seq)

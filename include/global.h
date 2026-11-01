@@ -620,8 +620,10 @@ struct SaveBlock2
              u16 optionsBattleStyle:1; // OPTIONS_BATTLE_STYLE_[SHIFT/SET]
              u16 optionsBattleSceneOff:1; // whether battle animations are disabled
              u16 regionMapZoom:1; // whether the map is zoomed in
-             //u16 padding1:4;
-             //u16 padding2;
+             u16 optionsAutoRun:1; // run without holding B (B walks)
+             u16 optionsAutosave:1; // save when entering a new area (src/qol.c)
+             u16 optionsColorMode:2; // COLOR_MODE_* (colour-blind palettes)
+    /*0x16*/ u16 optionsKeyMap; // remapped buttons, see QoL_DecodeKeyMap; 0 = the usual layout
     /*0x18*/ struct Pokedex pokedex;
     /*0x90*/ u8 playerStyle; // PLAYER_STYLE_* + 1, or 0 to follow playerGender
     /*0x91*/ u8 trainerLook[4]; // include/trainer_look.h, little-endian

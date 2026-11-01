@@ -1742,6 +1742,74 @@
     {
       "id": "MAPSEC_LAUREL_CITY",
       "name": "LAUREL CITY"
+    },
+    {
+      "id": "MAPSEC_PORT_SOLACE",
+      "name": "PORT SOLACE"
+    },
+    {
+      "id": "MAPSEC_GEARHOLT",
+      "name": "GEARHOLT"
+    },
+    {
+      "id": "MAPSEC_ASHCOMBE",
+      "name": "ASHCOMBE"
+    },
+    {
+      "id": "MAPSEC_SILKWOOD",
+      "name": "SILKWOOD"
+    },
+    {
+      "id": "MAPSEC_ROSEMEAD",
+      "name": "ROSEMEAD"
+    },
+    {
+      "id": "MAPSEC_DUSKMERE",
+      "name": "DUSKMERE"
+    },
+    {
+      "id": "MAPSEC_FROSTHOLM",
+      "name": "FROSTHOLM"
+    },
+    {
+      "id": "MAPSEC_DRAKESPIRE",
+      "name": "DRAKESPIRE"
+    },
+    {
+      "id": "MAPSEC_SOLMARA_ROUTE_201",
+      "name": "ROUTE 201"
+    },
+    {
+      "id": "MAPSEC_SOLMARA_ROUTE_202",
+      "name": "ROUTE 202"
+    },
+    {
+      "id": "MAPSEC_SOLMARA_ROUTE_203",
+      "name": "ROUTE 203"
+    },
+    {
+      "id": "MAPSEC_SOLMARA_ROUTE_204",
+      "name": "ROUTE 204"
+    },
+    {
+      "id": "MAPSEC_SOLMARA_ROUTE_205",
+      "name": "ROUTE 205"
+    },
+    {
+      "id": "MAPSEC_SOLMARA_ROUTE_206",
+      "name": "ROUTE 206"
+    },
+    {
+      "id": "MAPSEC_SOLMARA_ROUTE_207",
+      "name": "ROUTE 207"
+    },
+    {
+      "id": "MAPSEC_SOLMARA_ROUTE_208",
+      "name": "ROUTE 208"
+    },
+    {
+      "id": "MAPSEC_SOLMARA_LEAGUE",
+      "name": "SOLMARA LEAGUE"
     }
   ]
 }

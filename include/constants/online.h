@@ -101,7 +101,22 @@
 #define ONL_REQ_HIDE_END      84
 #define ONL_REQ_HIDE_QUIT     85
 #define ONL_REQ_HIDE_BOARD    86
-#define ONL_REQ_COUNT         87
+#define ONL_REQ_ECO_AREA      87
+#define ONL_REQ_ECO_MOVES     88
+#define ONL_REQ_RESEARCH_BOARD 89 // VAR_0x8005: species the player completed
+// Original Hoenn for many players (src/hoenn_multi.c, server/online_hoenn.py).
+#define ONL_REQ_HREC          90 // VAR_0x8005: gym 0-7, or 8 the League
+#define ONL_REQ_HREC_ALL      91
+#define ONL_REQ_QM_JOIN       92 // VAR_0x8005: 0 battle, 1 trade
+#define ONL_REQ_QM_LEAVE      93
+#define ONL_REQ_HTEAM_VIEW    94
+#define ONL_REQ_HTEAM_WHO     95
+#define ONL_REQ_HTEAM_ASK     96 // the player picked from HTEAM_WHO
+#define ONL_REQ_HTEAM_YES     97
+#define ONL_REQ_HTEAM_NO      98
+#define ONL_REQ_HTEAM_GET     99
+#define ONL_REQ_HTEAM_END     100
+#define ONL_REQ_COUNT         101
 
 // The hub's rows (VAR_RESULT of its menu).
 #define ONLINE_HUB_GOALS    0
@@ -119,6 +134,10 @@
 #define ONLINE_HUB_GUILD    12
 #define ONLINE_HUB_RACING   13
 #define ONLINE_HUB_HIDE     14
+#define ONLINE_HUB_WILDLIFE 15
+#define ONLINE_HUB_RESEARCH 16
+#define ONLINE_HUB_RECORDS  17
+#define ONLINE_HUB_TEAMUP   18
 #define ONLINE_HUB_CLOSE    127
 
 // VAR_0x800B of the co-op fishing requests.
@@ -150,6 +169,17 @@
 #define GUILD_NONE   0
 #define GUILD_MEMBER 1
 #define GUILD_LEADER 2
+
+// VAR_0x800B of QM_JOIN.
+#define QM_WAITING 0 // on the list now
+#define QM_MATCHED 1 // gStringVar1 is who, VAR_0x8007 their id
+
+// VAR_0x800B of HTEAM_VIEW.
+#define HTEAM_NONE    0
+#define HTEAM_INVITED 1 // someone asked for the player's team; gStringVar1 is who
+#define HTEAM_ASKED   2 // the player asked someone
+#define HTEAM_READY   3 // gStringVar1 lent the player their team
+#define HTEAM_LENT    4 // the player lent their team to gStringVar1
 
 // Mount racing (src/online_racing.c).
 #define RACE_COURSES 3

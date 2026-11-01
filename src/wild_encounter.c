@@ -1,4 +1,5 @@
 #include "global.h"
+#include "online.h"
 #include "battle_setup.h"
 #include "battle_pike.h"
 #include "battle_pyramid.h"
@@ -538,6 +539,7 @@ bool8 TryGenerateWildMon(const struct WildPokemonInfo *wildMonInfo, enum WildPok
 {
     u8 wildMonIndex = 0;
     u8 level;
+    enum Species species;
 
     switch (area)
     {
@@ -555,7 +557,7 @@ bool8 TryGenerateWildMon(const struct WildPokemonInfo *wildMonInfo, enum WildPok
         if (OW_STORM_DRAIN >= GEN_8 && TRY_GET_ABILITY_INFLUENCED_WILD_MON_INDEX(wildMonInfo->wildPokemon, TYPE_WATER, ABILITY_STORM_DRAIN, &wildMonIndex, NUM_LAND_MONS_ENCOUNTER_SLOTS))
             break;
 
-        wildMonIndex = DayNight_PickSlot(wildMonInfo->wildPokemon, ChooseWildMonIndex_Land(), RerollLand, 0);
+        wildMonIndex = DayNight_PickSlot(wildMonInfo->wildPokemon, Eco_PickSlot(wildMonInfo->wildPokemon, ChooseWildMonIndex_Land(), RerollLand, 0), RerollLand, 0);
         break;
     case WILD_AREA_WATER:
         if (TRY_GET_ABILITY_INFLUENCED_WILD_MON_INDEX(wildMonInfo->wildPokemon, TYPE_STEEL, ABILITY_MAGNET_PULL, &wildMonIndex, NUM_WATER_MONS_ENCOUNTER_SLOTS))
@@ -571,10 +573,10 @@ bool8 TryGenerateWildMon(const struct WildPokemonInfo *wildMonInfo, enum WildPok
         if (OW_STORM_DRAIN >= GEN_8 && TRY_GET_ABILITY_INFLUENCED_WILD_MON_INDEX(wildMonInfo->wildPokemon, TYPE_WATER, ABILITY_STORM_DRAIN, &wildMonIndex, NUM_WATER_MONS_ENCOUNTER_SLOTS))
             break;
 
-        wildMonIndex = DayNight_PickSlot(wildMonInfo->wildPokemon, ChooseWildMonIndex_Water(), RerollWater, 0);
+        wildMonIndex = DayNight_PickSlot(wildMonInfo->wildPokemon, Eco_PickSlot(wildMonInfo->wildPokemon, ChooseWildMonIndex_Water(), RerollWater, 0), RerollWater, 0);
         break;
     case WILD_AREA_ROCKS:
-        wildMonIndex = DayNight_PickSlot(wildMonInfo->wildPokemon, ChooseWildMonIndex_Rocks(), RerollRocks, 0);
+        wildMonIndex = DayNight_PickSlot(wildMonInfo->wildPokemon, Eco_PickSlot(wildMonInfo->wildPokemon, ChooseWildMonIndex_Rocks(), RerollRocks, 0), RerollRocks, 0);
         break;
     default:
     case WILD_AREA_FISHING:
@@ -588,13 +590,16 @@ bool8 TryGenerateWildMon(const struct WildPokemonInfo *wildMonInfo, enum WildPok
     if (gMapHeader.mapLayoutId != LAYOUT_BATTLE_FRONTIER_BATTLE_PIKE_ROOM_WILD_MONS && flags & WILD_CHECK_KEEN_EYE && !IsAbilityAllowingEncounter(level))
         return FALSE;
 
-    CreateWildMon(Life_ModifyWildSpecies(World_ModifyWildSpecies(wildMonInfo->wildPokemon[wildMonIndex].species, level), level), level);
+    species = wildMonInfo->wildPokemon[wildMonIndex].species;
+    if (area == WILD_AREA_LAND)
+        species = Eco_ModifyWildSpecies(species); // migrants (src/online_eco.c)
+    CreateWildMon(Life_ModifyWildSpecies(World_ModifyWildSpecies(species, level), level), level);
     return TRUE;
 }
 
 static u16 GenerateFishingWildMon(const struct WildPokemonInfo *wildMonInfo, u8 rod)
 {
-    u8 wildMonIndex = DayNight_PickSlot(wildMonInfo->wildPokemon, ChooseWildMonIndex_Fishing(rod), RerollFishing, rod);
+    u8 wildMonIndex = DayNight_PickSlot(wildMonInfo->wildPokemon, Eco_PickSlot(wildMonInfo->wildPokemon, ChooseWildMonIndex_Fishing(rod), RerollFishing, rod), RerollFishing, rod);
     enum Species wildMonSpecies = wildMonInfo->wildPokemon[wildMonIndex].species;
     u8 level = ChooseWildMonLevel(wildMonInfo->wildPokemon, wildMonIndex, WILD_AREA_FISHING);
 

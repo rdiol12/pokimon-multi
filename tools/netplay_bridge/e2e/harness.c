@@ -41,6 +41,7 @@ typedef mColor color_t;
 #define MAX_INSTANCES 4
 #define GBA_WIDTH 240
 #define GBA_HEIGHT 160
+#define GBA_WIDE_WIDTH 320
 
 struct Instance {
 	struct mCore* core;
@@ -109,8 +110,16 @@ int main(int argc, char** argv) {
 			return 1;
 		}
 		mCoreInitConfig(inst->core, NULL);
-		inst->video = calloc(GBA_WIDTH * GBA_HEIGHT, sizeof(color_t));
-		inst->core->setVideoBuffer(inst->core, inst->video, GBA_WIDTH);
+		// NETPLAY_WIDE=1: widescreen on (our emulator fork, extended hardware v6)
+		int width = GBA_WIDTH;
+		const char* wide = getenv("NETPLAY_WIDE");
+		if (wide && atoi(wide)) {
+			mCoreConfigSetIntValue(&inst->core->config, "pkxWidescreen", 1);
+			inst->core->loadConfig(inst->core, &inst->core->config);
+			width = GBA_WIDE_WIDTH;
+		}
+		inst->video = calloc(width * GBA_HEIGHT, sizeof(color_t));
+		inst->core->setVideoBuffer(inst->core, inst->video, width);
 		if (!mCoreLoadFile(inst->core, rom)) {
 			fprintf(stderr, "cannot load %s\n", rom);
 			return 1;

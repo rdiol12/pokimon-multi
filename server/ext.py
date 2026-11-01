@@ -108,6 +108,7 @@ def install(server):
     import adventure_hof, bases, bounties, dexrace, draft, guilds, mail, replays, titles, tower, wondertrade
     import life_auction, life_ghosts
     import rovers
+    import alive
 
     return Ext(server, [guilds, titles, dexrace, wondertrade, bounties, mail, bases, tower, draft, replays, adventure_hof,
-                        life_auction, life_ghosts, rovers])
+                        life_auction, life_ghosts, rovers, alive])

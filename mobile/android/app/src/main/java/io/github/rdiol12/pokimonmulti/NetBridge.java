@@ -49,10 +49,22 @@ public class NetBridge {
             call("PokimonNet.opened(" + id + ")");
             InputStream in = socket.getInputStream();
             byte[] buf = new byte[8192];
+            StringBuilder line = new StringBuilder();
             int n;
             while ((n = in.read(buf)) > 0) {
                 String b64 = Base64.encodeToString(buf, 0, n, Base64.NO_WRAP);
                 call("PokimonNet.data(" + id + ",'" + b64 + "')");
+                // Notifications ride on the game connection (Notifier); this
+                // keeps working while the page is paused in the background.
+                for (int i = 0; i < n; i++) {
+                    char ch = (char) (buf[i] & 0xFF);
+                    if (ch == '\n') {
+                        serverLine(id, line.toString(), host, port);
+                        line.setLength(0);
+                    } else if (line.length() < 512) {
+                        line.append(ch);
+                    }
+                }
             }
             call("PokimonNet.closed(" + id + ",'server closed the connection')");
         } catch (IOException e) {
@@ -61,6 +73,26 @@ public class NetBridge {
             sockets.remove(id);
             try { socket.close(); } catch (IOException ignored) { }
         }
+    }
+
+    private void serverLine(int id, String line, String host, int port) {
+        if (line.startsWith("WELCOME ")) {
+            String hello = Notifier.helloLine(activity);
+            if (hello != null) send(id, hello);
+        } else if (line.startsWith("NOTE") && Notifier.onServerLine(activity, line, host, port)) {
+            activity.runOnUiThread(activity::askNotificationPermission);
+        }
+    }
+
+    /** The notification settings for the page's menu, as JSON (see Notifier.settingsJson). */
+    @JavascriptInterface
+    public String notifySettings() {
+        return Notifier.settingsJson(activity);
+    }
+
+    @JavascriptInterface
+    public void setNotifySettings(String json) {
+        Notifier.setSettings(activity, json);
     }
 
     @JavascriptInterface

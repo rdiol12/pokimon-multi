@@ -45,8 +45,10 @@ export class Emulator {
         this.playRate = 0; // the rate the audio player is told: the core's rate times speed
     }
 
-    boot(rom) {
+    // wide: widescreen (our emulator's extended hardware v6), a 320x160 overworld
+    boot(rom, { wide = false } = {}) {
         const mod = this.mod;
+        mod._mgbawasm_set_widescreen?.(wide ? 1 : 0);
         const ptr = mod._malloc(rom.length);
         mod.HEAPU8.set(rom, ptr);
         const ok = mod._mgbawasm_load(ptr, rom.length, 0, 0, 0, 0, 1);

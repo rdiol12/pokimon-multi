@@ -72,6 +72,10 @@ qt)
 wasm)
     source_tree
     fetch "$WASM_REPO" "$WASM_COMMIT" "$OUT/wasm"
+    # Our changes to its shim (patches/wasm): widescreen frames
+    for p in "$HERE"/patches/wasm/*.patch; do
+        git -C "$OUT/wasm" apply --whitespace=nowarn "$p"
+    done
     MGBA_REPO="$SRC" MGBA_REF="$(git -C "$SRC" rev-parse HEAD)" bash "$OUT/wasm/scripts/build-mgba.sh"
     ls -l "$OUT/wasm/dist/mgba/mgba.js" "$OUT/wasm/dist/mgba/mgba.wasm"
     ;;

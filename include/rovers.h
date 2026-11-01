@@ -69,4 +69,7 @@ u16 Rovers_AiVsAiTrainerPic(void);
 bool32 Rovers_InjuresBattler(u32 battler);
 void Rovers_OnLifeBattleEnd(const struct Trainer *trainer, bool32 playerWon);
 
+// A fight caption is on screen (src/alive.c shares its window tiles).
+bool32 Rovers_IsCaptionShown(void);
+
 #endif // GUARD_ROVERS_H

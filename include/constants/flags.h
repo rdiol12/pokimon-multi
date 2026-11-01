@@ -2450,5 +2450,7 @@
 
 // Flags of the new areas live in SaveBlock3 (constants/areas.h).
 #include "constants/areas.h"
+// Solmara's flags live in the extended save (constants/solmara.h).
+#include "constants/solmara.h"
 
 #endif // GUARD_CONSTANTS_FLAGS_H

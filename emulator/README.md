@@ -30,12 +30,15 @@ tests link the harness against `build/emulator/headless/libmgba.so`.
 | Address      | Access | Value                                                        |
 | ------------ | ------ | ------------------------------------------------------------ |
 | `0x04FFF7F0` | read   | `0x504B` ("PK") on our hardware                              |
-| `0x04FFF7F2` | read   | hardware version, currently `5`                              |
+| `0x04FFF7F2` | read   | hardware version, currently `6`                              |
 | `0x04FFF7F4` | write  | `0x4558` ("EX") unlocks extended EWRAM until the next reset  |
 | `0x04FFF7F4` | write  | `0x4F41` turns extended sprites on, `0x4F40` turns them off  |
 | `0x04FFF7F4` | write  | `0x4300` + n (n = 1 to 8) runs the CPU n times faster        |
 | `0x04FFF7F4` | read   | bit 0: extended EWRAM unlocked; bit 1: extended sprites on; bits 8–11: CPU multiplier |
 | `0x04FFF7F6` | both   | background palette banks: 2 bits per background (BG0 in bits 0–1), 0 = normal |
+| `0x04FFF7F8` | read   | frame width: `320` when the player runs widescreen, else `240` |
+| `0x04FFF7F8` | write  | layers drawn in the widescreen side areas: bits 0–3 BG0–BG3, bit 4 sprites |
+| `0x04FFF7FA` | both   | wide maps: bits 0–3 make that text background 64 tiles wide (see version 6) |
 
 These sit next to mGBA's own debug registers (`0x04FFF600`–`0x04FFF780`), in I/O space a
 real GBA leaves unused, so writes there are harmless elsewhere.
@@ -160,7 +163,36 @@ every save and loaded with the save. To save new data, add a field at the end of
   tint, follow weather and time of day together with normal BG palette n. `ResetBgs` puts every
   layer back on the normal palettes, so a new screen always starts clean.
 
+### Widescreen (version 6)
+
+The player can show a 320×160 frame instead of 240×160 (on by default; see Player defaults).
+The GBA's 240 columns sit in the middle, with a 40 pixel side area left and right.
+
+- A game sees it by reading `0x04FFF7F8`. A game that never writes the register gets black
+  side areas, so every screen still looks right.
+- Writing a layer mask to `0x04FFF7F8` draws those layers in the side areas too: game x runs
+  from −40 to 279. Windows that touch a GBA screen edge stretch to the frame edge; other
+  layers are masked out of the side areas.
+- Sprites: with bit 4 set, OAM x 256–279 is the right side area (not off the left), and x
+  −40…−1 (OAM 472–511) shows in the left one.
+- Wide maps: a 32×32 text background with its bit set in `0x04FFF7FA` becomes 64×32. Its right
+  half (32×32 entries, 0x800 bytes) lives at `0x01004000 + bg * 0x800`, so normal VRAM stays
+  as it is.
+- In the game: `include/widescreen.h`. The overworld turns it on for BG1–BG3 and sprites
+  (`AllocOverworldTilemapBuffers`, src/overworld.c). The field camera draws a 64 tile ring
+  starting 8 metatiles left of the camera, and object events spawn and stay 3 metatiles
+  further out on each side. `ResetBgs` turns widescreen off, so menus, battles and other
+  screens stay 240 wide and centred with black bars.
+- Savestates keep the wide maps; older states still load.
+- Known gaps: weather sprites and battle transitions only cover the GBA area.
+
 ## Player defaults
+
+Widescreen is on unless the player turns it off:
+
+- Qt: Audio/Video > Widescreen (from the next game start).
+- SDL: `-C pkxWidescreen=0` for the normal 240×160 frame.
+- Phone apps: ☰ > Widescreen (the app restarts the game).
 
 Fast forward plays the sound sped up instead of dropping it, on every player:
 

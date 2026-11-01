@@ -1,4 +1,5 @@
 #include "global.h"
+#include "hoenn_multi.h"
 #include "battle.h"
 #include "battle_ai_switch.h"
 #include "battle_ai_util.h"
@@ -227,7 +228,7 @@ static void PlayerPartnerHandleDrawTrainerPic(enum BattlerId battler)
         xPos = 90;
         yPos = (8 - GetTrainerBackPicCoords(trainerPicId)->size) * 4 + 80;
     }
-    else if (gRoverTagTrainers != NULL)
+    else if (gRoverTagTrainers != NULL && !HoennMulti_PartnerInBattle())
     {
         // A roaming trainer has only a front picture, like the Frontier's
         // tag partners.
@@ -332,7 +333,7 @@ static void PlayerPartnerHandleIntroTrainerBallThrow(enum BattlerId battler)
 {
     const u16 *trainerPal;
 
-    if (gRoverTagTrainers != NULL)
+    if (gRoverTagTrainers != NULL && !HoennMulti_PartnerInBattle())
         trainerPal = GetTrainerFrontPicPalette(gRoverTagTrainers[0].trainerPic);
     else if (gPartnerTrainerId > TRAINER_PARTNER(PARTNER_NONE))
         trainerPal = GetTrainerBackPicPalette(GetTrainerStructFromId(gPartnerTrainerId)->trainerPic);

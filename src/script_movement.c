@@ -66,6 +66,25 @@ bool32 ScriptMovement_IsAllObjectMovementFinished(void)
     return TRUE;
 }
 
+// Whether a movement script is running on an object other than these two.
+bool32 ScriptMovement_IsMovingOtherThan(u8 objEventIdA, u8 objEventIdB)
+{
+    u8 taskId = GetMoveObjectsTaskId();
+
+    if (taskId != TASK_NONE)
+    {
+        u32 finishedMovements = gTasks[taskId].data[0];
+        const u8 *objEventIds = (u8 *)&gTasks[taskId].data[1];
+        for (u32 i = 0; i < MOVEMENT_SCRIPTS_COUNT; i++)
+        {
+            if (objEventIds[i] != 0xFF && !(finishedMovements & (1 << i))
+             && objEventIds[i] != objEventIdA && objEventIds[i] != objEventIdB)
+                return TRUE;
+        }
+    }
+    return FALSE;
+}
+
 void ScriptMovement_UnfreezeObjectEvents(void)
 {
     u8 taskId;

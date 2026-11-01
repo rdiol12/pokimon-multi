@@ -58,10 +58,23 @@
   <h2>Menu</h2>
   <button data-action="export">Export save</button>
   <label class="as-button">Import save<input type="file" id="save-file" hidden></label>
+  <button data-action="widescreen">Widescreen: <span id="widescreen-state">on</span></button>
+  <button data-action="notify">Notifications</button>
   <button data-action="reset">Restart game</button>
   <button data-action="change-rom">Change ROM</button>
   <p class="small" id="about"></p>
   <button data-action="close" class="primary">Back to game</button>
+</dialog>
+
+<dialog id="notify">
+  <h2>Notifications</h2>
+  <p class="small">For online play, also while the app is closed.</p>
+  <label class="check"><input type="checkbox" data-kind="on"> Notifications on</label>
+  <label class="check sub"><input type="checkbox" data-kind="trade"> Trade offers</label>
+  <label class="check sub"><input type="checkbox" data-kind="friend"> Friends coming online</label>
+  <label class="check sub"><input type="checkbox" data-kind="tour"> Tournaments starting</label>
+  <label class="check sub"><input type="checkbox" data-kind="fishing"> Fishing tournaments (every 2 hours)</label>
+  <button data-action="close" class="primary">Done</button>
 </dialog>
 
 <dialog id="ask">
