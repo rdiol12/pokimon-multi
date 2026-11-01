@@ -5,6 +5,8 @@ EventScript_TV::
 	specialvar VAR_RESULT, CheckForPlayersHouseNews
 	goto_if_eq VAR_RESULT, PLAYERS_HOUSE_TV_MOVIE, EventScript_PlayersHouseMovie
 	goto_if_eq VAR_RESULT, PLAYERS_HOUSE_TV_LATI, EventScript_PlayersHouseLatiNewsFlash
+	callnative AliveNews_BufferHeadline
+	goto_if_eq VAR_RESULT, TRUE, Alive_EventScript_TvNews
 	goto_if_unset FLAG_SYS_TV_START, EventScript_MomDadMightLikeThis1
 	goto_if_set FLAG_SYS_TV_WATCH, EventScript_MomDadMightLikeThis1
 	specialvar VAR_RESULT, IsGabbyAndTyShowOnTheAir

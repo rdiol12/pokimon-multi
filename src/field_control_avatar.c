@@ -1,4 +1,5 @@
 #include "global.h"
+#include "alive.h"
 #include "injury.h"
 #include "battle_setup.h"
 #include "bike.h"
@@ -440,7 +441,7 @@ static const u8 *GetInteractedObjectEventScript(struct MapPosition *position, u8
     else if (InTrainerHill() == TRUE)
         script = GetTrainerHillTrainerScript();
     else
-        script = GetObjectEventScriptPointerByObjectEventId(objectEventId);
+        script = Alive_GetTalkScript(&gObjectEvents[objectEventId], GetObjectEventScriptPointerByObjectEventId(objectEventId));
 
     script = GetRamScript(gSpecialVar_LastTalked, script);
     return script;
@@ -934,6 +935,11 @@ static bool32 ShouldDisableRandomEncounters(void)
 {
     if (FlagGet(WE_FLAG_NO_ENCOUNTER))
         return TRUE;
+
+    // The living world: wild Pokémon walk on the map instead, unless the
+    // player chose classic encounters (src/alive_wild.c).
+    if (WE_OW_ENCOUNTERS && Alive_ClassicEncounters())
+        return FALSE;
 
     if (!WE_VANILLA_RANDOM && WE_OW_ENCOUNTERS)
     {

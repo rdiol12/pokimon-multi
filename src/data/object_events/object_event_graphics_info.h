@@ -7376,6 +7376,25 @@ const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_FieldDigSpot = {
     .images = sPicTable_FieldDigSpot,
 };
 
+// A snow drift (src/alive_weather.c), in the field ability palette.
+const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_SnowDrift = {
+    .tileTag = TAG_NONE,
+    .paletteTag = OBJ_EVENT_PAL_TAG_FIELD_ABILITY,
+    .reflectionPaletteTag = OBJ_EVENT_PAL_TAG_NONE,
+    .size = 128,
+    .width = 16,
+    .height = 16,
+    .paletteSlot = PALSLOT_NPC_1,
+    .shadowSize = SHADOW_SIZE_S,
+    .inanimate = TRUE,
+    .compressed = FALSE,
+    .tracks = TRACKS_NONE,
+    .oam = &gObjectEventBaseOam_16x16,
+    .subspriteTables = sOamTables_16x16,
+    .anims = sAnimTable_Inanimate,
+    .images = sPicTable_SnowDrift,
+};
+
 // The Market Hall and Auction House keepers (tools/markets/): the fat man's
 // and the gentleman's frames in their own colours (graphics/markets/).
 

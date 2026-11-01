@@ -156,7 +156,7 @@
                                             // Overworld Wild Encounters will play ambient cries based on their location relative to the player.
 
 // Configuration
-#define OW_AMBIENT_CRIES                OW_AMBIENT_CRIES_VANILLA // Selects how ambient cries are played, if at all. As in vanilla, no matter what is chosen, cries will not play if the player is not on a map with Land or Water encounter tables.
+#define OW_AMBIENT_CRIES                OW_AMBIENT_CRIES_OWE_PRIORITY // Selects how ambient cries are played, if at all. As in vanilla, no matter what is chosen, cries will not play if the player is not on a map with Land or Water encounter tables.
 
 
 // Daily Seed

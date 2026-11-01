@@ -35,6 +35,7 @@
 #include "window.h"
 #include "wild_encounter.h"
 #include "world.h"
+#include "alive.h"
 #include "constants/battle.h"
 #include "constants/characters.h"
 #include "constants/script_commands.h"
@@ -1710,10 +1711,17 @@ static void Task_MoveCaption(u8 taskId)
         CloseCaption(taskId);
 }
 
+bool32 Rovers_IsCaptionShown(void)
+{
+    return FindTaskIdByFunc(Task_MoveCaption) != TASK_NONE;
+}
+
 static void ShowCaption(const u8 *text)
 {
     u8 taskId = FindTaskIdByFunc(Task_MoveCaption);
     struct Task *task;
+
+    Alive_CloseCaption(); // the living world's captions share the window's tiles
 
     if (taskId == TASK_NONE)
     {

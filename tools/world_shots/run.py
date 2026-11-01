@@ -28,7 +28,7 @@ e2e = os.path.join(root, "tools", "netplay_bridge", "e2e")
 SYMBOLS = ["gNetplayMailbox", "gMain", "gParties", "gPartiesCount", "CB2_Overworld", "BattleMainCB2", "sLockFieldControls",
            "gLink", "gLinkStatus", "gReceivedRemoteLinkPlayers", "gLinkCallback", "gReadyToCloseLink",
            "gBattleMons", "gSaveBlock1Ptr", "gSaveBlock2Ptr", "gWorldShowcase", "gObjectEvents",
-           "gSpecialVar_Result", "gWorldMailbox", "gWorldTimingMeter"]
+           "gSpecialVar_Result", "gWorldMailbox", "gWorldTimingMeter", "gAliveShowcase"]
 
 HELPERS = """
 function Driver.read8(addr) return E.read8(addr) end

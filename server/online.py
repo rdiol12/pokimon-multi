@@ -189,8 +189,12 @@ def install(server, ext_obj):
     online_teams.install(server)
     online_guilds.install(server)
     online_hide.install(server)
-    return Online(server, ext_obj, [online_goals, online_sightings, online_web, online_fishing, online_coopfish,
+    import alive
+
+    online = Online(server, ext_obj, [online_goals, online_sightings, online_web, online_fishing, online_coopfish,
                                        online_shops, online_pageant, online_duo,
                                        online_mentors, online_pquests,
                                        online_betting, online_doubles, online_teams, online_guilds, online_racing,
                                        online_hide, guide_social])
+    alive.install(online)  # announcements go in the news too
+    return online

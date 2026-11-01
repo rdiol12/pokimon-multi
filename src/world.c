@@ -17,6 +17,7 @@
 #include "field_weather.h"
 #include "constants/weather.h"
 #include "world.h"
+#include "alive.h"
 #include "online.h"
 #include "field_ability.h"
 
@@ -51,6 +52,7 @@ void World_OnMapTransition(void)
 {
     DayNight_UpdateFlags();
     RoamingWeather_ApplyToCurrentMap();
+    Alive_OnMapTransition();
 }
 
 static void RunShowcase(void)
@@ -134,6 +136,8 @@ bool32 World_OverworldUpdate(void)
     Mechanics_Update();
     Pastime_Update();
     FieldAbility_Update();
+    if (Alive_OverworldUpdate())
+        return TRUE;
     if (Guide_OverworldUpdate())
         return TRUE;
     if (Online_OverworldUpdate())

@@ -1,4 +1,5 @@
 #include "global.h"
+#include "alive.h"
 #include "script.h"
 #include "event_data.h"
 #include "field_screen_effect.h"
@@ -454,6 +455,7 @@ const u8 *MapHeaderCheckScriptTable(u8 tag)
 void RunOnLoadMapScript(void)
 {
     MapHeaderRunScriptType(MAP_SCRIPT_ON_LOAD);
+    Alive_OnMapLoad(); // town projects, floods and dry ponds change metatiles
 }
 
 void RunOnTransitionMapScript(void)
