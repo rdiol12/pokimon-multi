@@ -3308,16 +3308,13 @@ static void FillBattleSide(struct NetplayBattleSide *side, u32 position, u32 par
     }
 }
 
-static void ReportBattle(void)
+static void ReportBattle(void);
+
+static void ReportSides(struct NetplayBattleReport *report)
 {
-    struct NetplayBattleReport *report = &gNetplayMailbox.battleReport;
     struct NetplayBattleSide sides[2];
     u8 text[NETPLAY_BATTLE_TEXT_LENGTH];
     u32 i;
-
-    if (!sSession.active || (sSession.kind != NETPLAY_KIND_BATTLE && sSession.kind != NETPLAY_KIND_DOUBLE)
-     || sSession.role != 0 || !gMain.inBattle || gBattleMons[0].species == SPECIES_NONE)
-        return;
 
     memset(sides, 0, sizeof(sides));
     FillBattleSide(&sides[0], B_POSITION_PLAYER_LEFT, B_TRAINER_PLAYER);
@@ -3344,7 +3341,52 @@ static void ReportBattle(void)
     report->seq++;
 }
 
+// The player's own battle against a gym leader, the Elite Four or the
+// Champion (src/hoenn_multi.c): reported like a PvP host's, with
+// filler[0] set, so others can watch it from WATCH or a gym statue.
+static void ReportSoloBattle(void)
+{
+    struct NetplayBattleReport *report = &gNetplayMailbox.battleReport;
+    bool32 on = IsOnline() && gMain.inBattle && gBattleMons[0].species != SPECIES_NONE
+             && HoennMulti_IsWatchableBattle();
+
+    if (!on)
+    {
+        if (report->filler[0] != 0)
+        {
+            report->filler[0] = 0;
+            report->seq++;
+        }
+        return;
+    }
+    if (report->filler[0] == 0)
+    {
+        HoennMulti_GetWatchableOpponent(gNetplayMailbox.soloOpponent);
+        memset(report->sides, 0, sizeof(report->sides));
+        report->text[0] = EOS;
+        report->filler[0] = 1;
+    }
+    ReportSides(report);
+}
+
+static void ReportBattle(void)
+{
+    struct NetplayBattleReport *report = &gNetplayMailbox.battleReport;
+
+    if (!sSession.active)
+    {
+        ReportSoloBattle();
+        return;
+    }
+    if ((sSession.kind != NETPLAY_KIND_BATTLE && sSession.kind != NETPLAY_KIND_DOUBLE)
+     || sSession.role != 0 || !gMain.inBattle || gBattleMons[0].species == SPECIES_NONE)
+        return;
+    ReportSides(report);
+}
+
 #define WATCH_REFRESH (2 * 60)
+
+static EWRAM_DATA bool8 sWatchFromScript = FALSE;
 
 enum
 {
@@ -3537,9 +3579,22 @@ static void Task_Watch(u8 taskId)
         RemoveWindow(task->tWindowId);
         ScheduleBgCopyTilemapToVram(0);
         DestroyTask(taskId);
+        if (sWatchFromScript)
+        {
+            // A gym statue's WATCH LIVE: back to its script.
+            sWatchFromScript = FALSE;
+            ScriptContext_Enable();
+            return;
+        }
         ScriptUnfreezeObjectEvents();
         UnlockPlayerFieldControls();
     }
+}
+
+void Netplay_WatchFromScript(void)
+{
+    sWatchFromScript = TRUE;
+    ShowNetplayWatch();
 }
 
 #undef tState

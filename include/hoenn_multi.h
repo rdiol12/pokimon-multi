@@ -20,4 +20,23 @@ bool32 HoennMulti_PassesThrough(const struct ObjectEvent *mover, const struct Ob
 bool32 HoennMulti_HasVisitedMap(u8 mapGroup, u8 mapNum);
 void HoennMulti_SetVisited(u8 mapGroup, u8 mapNum);
 
+// Team up (HUB > TEAM UP): another player's team fights beside the player
+// in big battles. Called as a battle starts.
+void HoennMulti_PrepareBattle(void);
+bool32 HoennMulti_PartnerInBattle(void);
+
+// Live leader battles: whether the battle starting now is one others can
+// watch (a gym leader, the Elite Four or the Champion), and its opponent's
+// name (NETPLAY_SOLO_NAME_LENGTH bytes).
+bool32 HoennMulti_IsWatchableBattle(void);
+void HoennMulti_GetWatchableOpponent(u8 *dest);
+
+// Script natives and request hooks.
+void HoennMulti_IsOnline(void);
+void HoennMulti_AfterQuickMatch(void);
+void HoennMulti_WatchLive(void);
+void HoennMulti_StoreTeam(void);
+void HoennMulti_DropTeam(void);
+void HoennMulti_HasTeam(void);
+
 #endif // GUARD_HOENN_MULTI_H
