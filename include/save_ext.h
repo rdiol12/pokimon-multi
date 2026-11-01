@@ -17,6 +17,7 @@
 #include "breed_fusion_save.h"
 #include "reserve_save.h"
 #include "pokemon_storage_system.h"
+#include "solmara.h"
 
 // The towns' quest boards when playing offline (src/rovers.c): today's
 // rampaging Pokémon the player cleared and the reward not yet collected.
@@ -48,6 +49,7 @@ struct SaveBlockExt
     struct FusionRecipe fusionMoreRecipes[FUSION_RECIPE_TOTAL - FUSION_RECIPE_COUNT]; // fusion colors 13-252
     struct PokemonStorageMore pcMoreBoxes; // PC boxes 15-32
     struct RoverOfflineBoard roverBoard; // offline quest boards
+    struct SolmaraSaveData solmara; // Solmara, the second region (docs/solmara.md)
 };
 
 extern struct SaveBlockExt gSaveBlockExt;

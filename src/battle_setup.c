@@ -1,4 +1,5 @@
 #include "global.h"
+#include "solmara.h"
 #include "world.h"
 #include "online.h"
 #include "pastime.h"
@@ -1088,6 +1089,8 @@ static void TryUpdateGymLeaderRematchFromTrainer(void)
 // Area trainers (constants/areas.h) keep their beaten flags with the area flags.
 static u16 GetTrainerFlagId(u16 trainerId)
 {
+    if (Solmara_IsTrainerId(trainerId))
+        return SOLMARA_TRAINER_FLAGS_START + trainerId - AREA_TRAINERS_START - SOLMARA_TRAINERS_FIRST;
     if (IsAreaTrainerId(trainerId))
         return AREA_TRAINER_FLAGS_START + trainerId - AREA_TRAINERS_START;
     return TRAINER_FLAGS_START + trainerId;
@@ -2349,6 +2352,7 @@ static void CreateNPCTrainerParty(struct Pokemon *party, u16 trainerNum)
     if (!GetTrainerStructFromId(trainerNum)->overrideTrainer)
     {
         CreateNPCTrainerPartyFromTrainer(party, GetTrainerStructFromId(trainerNum));
+        Solmara_ScaleTrainerParty(party, trainerNum);
         return;
     }
 
