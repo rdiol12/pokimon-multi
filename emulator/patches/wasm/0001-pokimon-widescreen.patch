@@ -1,0 +1,38 @@
+diff --git a/scripts/shim/mgba_shim.c b/scripts/shim/mgba_shim.c
+index 173f3a9..60d3cee 100644
+--- a/scripts/shim/mgba_shim.c
++++ b/scripts/shim/mgba_shim.c
+@@ -32,9 +32,11 @@
+  * largest output any of these cores produces. The video buffer is allocated
+  * once at this size and handed to the core with a constant stride, exactly as
+  * the libretro port does, so a mid-game resolution change never reallocates. */
+-#define VIDEO_WIDTH_MAX 256
++#define VIDEO_WIDTH_MAX 320 /* Pokimon: widescreen GBA frames are 320 wide */
+ #define VIDEO_HEIGHT_MAX 224
+ 
++static int pkxWidescreen = 0;
++
+ /* Log levels as the SDK's `options.logLevel` numbers them. */
+ enum {
+ 	LOG_OFF = 0,
+@@ -204,6 +206,8 @@ EXPORT int mgbawasm_load(const void* rom, int romBytes, const void* bios, int bi
+ 	if (gbModel && gbModel[0]) {
+ 		mCoreConfigSetValue(&core->config, "gb.model", gbModel);
+ 	}
++	/* Pokimon: widescreen (extended hardware v6), picked before the game loads */
++	mCoreConfigSetDefaultIntValue(&core->config, "pkxWidescreen", pkxWidescreen);
+ 
+ 	mCoreLoadConfig(core);
+ 
+@@ -413,6 +417,11 @@ EXPORT int mgbawasm_sram_load(const void* data, int bytes) {
+ 
+ /* ---------------------------------------------------------------- options */
+ 
++/** Pokimon: widescreen on (1) or off (0) for the next mgbawasm_load. */
++EXPORT void mgbawasm_set_widescreen(int on) {
++	pkxWidescreen = on ? 1 : 0;
++}
++
+ /*
+  * Everything below writes into the core's own `mCoreConfig` and then asks the
+  * core to re-read that one key. mGBA is built for this — it is how its Qt

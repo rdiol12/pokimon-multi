@@ -610,11 +610,17 @@ import community  # noqa: E402
 
 community.install(Server)
 
+# Phone notifications (trade offers, friends online, tournaments): server/notify.py.
+import notify  # noqa: E402
+
+notify.install(Server)
+
 
 async def serve(host, port, db_path, http_port=0, public_host="", season_days=28):
     server = Server(League(db_path), season_days)
     world.attach(server, db_path)
     community.attach(server, db_path)
+    notify.attach(server)
 
     import ext
     import online

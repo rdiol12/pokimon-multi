@@ -1,6 +1,7 @@
 #include "global.h"
 #include "trainer_look.h"
 #include "overworld.h"
+#include "widescreen.h"
 #include "battle_pyramid.h"
 #include "battle_setup.h"
 #include "battle_util.h"
@@ -1609,18 +1610,34 @@ enum MapBattleScene GetCurrentMapBattleScene(void)
     return Overworld_GetMapHeaderByGroupAndId(gSaveBlock1Ptr->location.mapGroup, gSaveBlock1Ptr->location.mapNum)->battleType;
 }
 
+// The map layers' tilemaps. With widescreen on (include/widescreen.h) they are 64x32 so the map
+// fills the side areas: the right half goes to the emulator's extended map memory.
+static void AllocOverworldTilemapBuffers(void)
+{
+    u32 bg;
+    u32 size = BG_SCREEN_SIZE;
+
+    gFieldWide = Widescreen_Available();
+    if (gFieldWide)
+        size *= 2;
+    gOverworldTilemapBuffer_Bg1 = AllocZeroed(size);
+    gOverworldTilemapBuffer_Bg2 = AllocZeroed(size);
+    gOverworldTilemapBuffer_Bg3 = AllocZeroed(size);
+    SetBgTilemapBuffer(1, gOverworldTilemapBuffer_Bg1);
+    SetBgTilemapBuffer(2, gOverworldTilemapBuffer_Bg2);
+    SetBgTilemapBuffer(3, gOverworldTilemapBuffer_Bg3);
+    for (bg = 1; bg <= 3; bg++)
+        Widescreen_SetBgWideMap(bg, gFieldWide);
+    Widescreen_SetLayers(gFieldWide ? (1 << 1) | (1 << 2) | (1 << 3) | PKX_WIDE_OBJ : 0);
+}
+
 static void InitOverworldBgs(void)
 {
     InitBgsFromTemplates(0, sOverworldBgTemplates, ARRAY_COUNT(sOverworldBgTemplates));
     SetBgAttribute(1, BG_ATTR_MOSAIC, 1);
     SetBgAttribute(2, BG_ATTR_MOSAIC, 1);
     SetBgAttribute(3, BG_ATTR_MOSAIC, 1);
-    gOverworldTilemapBuffer_Bg1 = AllocZeroed(BG_SCREEN_SIZE);
-    gOverworldTilemapBuffer_Bg2 = AllocZeroed(BG_SCREEN_SIZE);
-    gOverworldTilemapBuffer_Bg3 = AllocZeroed(BG_SCREEN_SIZE);
-    SetBgTilemapBuffer(1, gOverworldTilemapBuffer_Bg1);
-    SetBgTilemapBuffer(2, gOverworldTilemapBuffer_Bg2);
-    SetBgTilemapBuffer(3, gOverworldTilemapBuffer_Bg3);
+    AllocOverworldTilemapBuffers();
     InitStandardTextBoxWindows();
 }
 
@@ -1631,12 +1648,7 @@ static void InitOverworldBgs_NoResetHeap(void)
     SetBgAttribute(1, BG_ATTR_MOSAIC, TRUE);
     SetBgAttribute(2, BG_ATTR_MOSAIC, TRUE);
     SetBgAttribute(3, BG_ATTR_MOSAIC, TRUE);
-    gOverworldTilemapBuffer_Bg1 = AllocZeroed(BG_SCREEN_SIZE);
-    gOverworldTilemapBuffer_Bg2 = AllocZeroed(BG_SCREEN_SIZE);
-    gOverworldTilemapBuffer_Bg3 = AllocZeroed(BG_SCREEN_SIZE);
-    SetBgTilemapBuffer(1, gOverworldTilemapBuffer_Bg1);
-    SetBgTilemapBuffer(2, gOverworldTilemapBuffer_Bg2);
-    SetBgTilemapBuffer(3, gOverworldTilemapBuffer_Bg3);
+    AllocOverworldTilemapBuffers();
     InitStandardTextBoxWindows();
     InitTextBoxGfxAndPrinters();
     InitFieldMessageBox();
