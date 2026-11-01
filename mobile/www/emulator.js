@@ -42,7 +42,7 @@ export class Emulator {
         this.audioPtr = 0;
         this.enqueued = 0;
         this.played = 0;
-        this.coreRate = 0;
+        this.playRate = 0; // the rate the audio player is told: the core's rate times speed
     }
 
     boot(rom) {
@@ -320,19 +320,22 @@ export class Emulator {
     }
 
     // Paced by the audio clock while sound plays, by the wall clock
-    // otherwise (no audio device, or fast forward).
+    // otherwise (no audio device, or sound off). Fast forward plays the
+    // sound sped up (higher pitched) instead of dropping it: the player
+    // consumes it `speed` times faster, so the game runs that much faster.
     tick(now) {
         const mod = this.mod;
         const rate = mod._mgbawasm_sample_rate();
-        if (this.audio && rate > 0 && rate !== this.coreRate) {
-            this.coreRate = rate;
-            this.audio.node.port.postMessage({ rate });
+        const playRate = rate * this.speed;
+        if (this.audio && rate > 0 && playRate !== this.playRate) {
+            this.playRate = playRate;
+            this.audio.node.port.postMessage({ rate: playRate });
         }
         let frames;
-        const audioLive = this.audio && this.audio.ctx.state === 'running' && this.speed === 1 && rate > 0;
+        const audioLive = this.audio && this.audio.ctx.state === 'running' && rate > 0;
         if (audioLive) {
             const queued = this.enqueued - this.played;
-            const deficit = rate * AUDIO_TARGET - queued;
+            const deficit = playRate * AUDIO_TARGET - queued;
             frames = deficit > 0 ? Math.ceil(deficit / (rate / this.framerate)) : 0;
             this.wallStart = 0;
         } else {
