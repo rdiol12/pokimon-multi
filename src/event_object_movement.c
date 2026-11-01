@@ -1,6 +1,7 @@
 #include "global.h"
 #include "hoenn_multi.h"
 #include "widescreen.h"
+#include "alive.h"
 #include "injury.h"
 #include "breed_fusion.h"
 #include "malloc.h"
@@ -6626,6 +6627,9 @@ u32 GetObjectObjectCollidesWith(struct ObjectEvent *objectEvent, s16 x, s16 y, b
                 if (AreElevationsCompatible(objectEvent->currentElevation, curObject->currentElevation))
                 {
                     if (DespawnOWEDueToNPCCollision(curObject, objectEvent))
+                        continue;
+                    // The player pushes through a snow drift (src/alive_weather.c).
+                    if (objectEvent->isPlayer && Alive_OnBump(curObject))
                         continue;
 
                     TryTriggerOverworldWildEncounter(objectEvent, curObject);

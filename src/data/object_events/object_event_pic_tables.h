@@ -370,6 +370,10 @@ static const struct SpriteFrameImage sPicTable_FieldGeneratorOn[] = {
     obj_frame_tiles(gObjectEventPic_FieldGeneratorOn),
 };
 
+static const struct SpriteFrameImage sPicTable_SnowDrift[] = {
+    obj_frame_tiles(gObjectEventPic_SnowDrift),
+};
+
 static const struct SpriteFrameImage sPicTable_FieldDigSpot[] = {
     obj_frame_tiles(gObjectEventPic_FieldDigSpot),
 };
