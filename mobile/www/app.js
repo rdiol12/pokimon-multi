@@ -201,6 +201,7 @@ async function startGame(game) {
         lastSaveCrc = crc32(sram);
     }
     emu.attachCanvas($('#screen'));
+    let muted = false; // the sound button's mute, set before any tap handler reads it
     await emu.startAudio('audio-worklet.js');
     // Browsers start sound only from a tap; iOS wants it from the end of
     // one, so try on every kind of touch until the audio is running.
@@ -230,7 +231,7 @@ async function startGame(game) {
     }, 500);
 
     // Phones suspend apps in the background: save first, and pause.
-    const pause = () => { release(); persistSave(true); emu.stop(); emu.audio?.ctx.suspend(); };
+    const pause = () => { release(); persistSave(true); emu.stop(); emu.suspendAudio(); };
     document.addEventListener('visibilitychange', () => {
         if (document.hidden) pause();
         else { emu.start(); if (!muted) emu.resumeAudio(); }
@@ -240,12 +241,11 @@ async function startGame(game) {
     // Shows whether sound is playing; a tap starts it (a sure user gesture
     // for iOS) or mutes it.
     const sound = $('#sound');
-    let muted = false;
     sound.addEventListener('click', () => {
         const ctx = emu.audio?.ctx;
         if (!ctx) return toast('Sound is not available on this device');
         muted = ctx.state === 'running';
-        if (muted) ctx.suspend();
+        if (muted) emu.suspendAudio();
         else emu.resumeAudio();
     });
     setInterval(() => {
