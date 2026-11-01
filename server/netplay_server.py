@@ -158,6 +158,27 @@ class Player:
         return f"PLAYER {self.id} {self.name} {self.map[0]} {self.map[1]} {x} {y} {facing} {elevation} {gfx}"
 
 
+SOLO_SID_BASE = 1_000_000  # session ids of solo battles: this + the player's id
+
+
+class SoloBattle:
+    """A player's battle against a gym leader, the Elite Four or the
+    Champion, which others can watch like a PvP battle (docs/hoenn_multi.md).
+    Only the player reports it."""
+
+    kind = "battle"
+    started = True
+
+    def __init__(self, player, opponent):
+        self.id = SOLO_SID_BASE + player.id
+        self.host = player
+        self.guest = type("Opponent", (), {"name": opponent})()
+        self.members = [player]
+        self.watchers = set()
+        self.state = ""
+        self.text = ""
+
+
 class Session:
     def __init__(self, sid, kind, host, guest, partners=()):
         self.id = sid
@@ -189,6 +210,7 @@ class Server:
         self.market = Market(league.db)
         self.players = {}
         self.sessions = {}
+        self.solos = {}  # player id -> SoloBattle
         # Battles that ended before both players reported a result.
         self.pending = {}
         self._ids = itertools.count(1)
@@ -226,6 +248,7 @@ class Server:
             return
         log.info("player %d (%s) disconnected", player.id, player.name)
         self.stop_watching(player)
+        self.end_solo(player)
         for session in list(self.sessions.values()):
             if player in session.members:
                 self.end_session(session, player)
@@ -538,14 +561,42 @@ class Server:
             player.watching = None
 
     def live_battle(self, sid):
-        session = self.sessions.get(int(sid))
+        sid = int(sid)
+        if sid > SOLO_SID_BASE:
+            return self.solos.get(sid - SOLO_SID_BASE)
+        session = self.sessions.get(sid)
         if session is None or session.kind not in BATTLE_KINDS or not session.started:
             return None
         return session
 
+    def end_solo(self, player):
+        solo = self.solos.pop(player.id, None)
+        if solo is None:
+            return
+        for watcher in solo.watchers:
+            watcher.watching = None
+            if watcher.id in self.players:
+                watcher.send(f"WEND {solo.id}")
+        solo.watchers.clear()
+
+    def cmd_solo(self, player, *args):
+        """SOLO <opponent name>: the player started a battle others may watch.
+        SOLO END: it's over."""
+        if not args:
+            raise ValueError("bad SOLO")
+        self.end_solo(player)
+        if args[0] == "END" and len(args) == 1:
+            return
+        # One word, for the LIVE line: "TATE&LIZA", "WALLACE".
+        name = "".join(c for c in "".join(args) if c.isascii() and (c.isalnum() or c == "&"))[:10]
+        if not name:
+            raise ValueError("bad SOLO")
+        self.solos[player.id] = SoloBattle(player, name)
+
     def cmd_live(self, player):
         """LIVE <session id> <host> <guest> per running battle, then LIVEEND."""
         battles = [s for s in self.sessions.values() if self.live_battle(s.id)]
+        battles += [s for s in self.solos.values() if s.host is not player]
         for session in battles[:MAX_LIVE]:
             player.send(f"LIVE {session.id} {session.host.name} {session.guest.name}")
         player.send("LIVEEND")
@@ -569,6 +620,11 @@ class Server:
 
     def battle_report(self, player, sid):
         """The battle `player` hosts, which only the host reports on."""
+        if int(sid) == 0:  # their solo battle
+            solo = self.solos.get(player.id)
+            if solo is None:
+                raise ValueError("no solo battle")
+            return solo
         session = self.require_session(player, sid, started=True)
         if session.kind not in BATTLE_KINDS or player is not session.host:
             raise ValueError("not the host of a battle")
