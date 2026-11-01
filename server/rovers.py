@@ -53,6 +53,10 @@ try:  # fusion breeding (server/community_fusion.py), if this server has it
 except ImportError:
     community_fusion = None
 
+# The living ecosystem (server/online_eco.py), set by online.install: rovers
+# meet thinned species less and migrants too, and their catches thin them.
+ECO = None
+
 HERE_DIR = os.path.dirname(os.path.abspath(__file__))
 with open(os.path.join(HERE_DIR, "data", "rovers_cast.json")) as f:
     CAST = json.load(f)
@@ -569,7 +573,14 @@ class Sim:
             catch /= 3
         wild = [w for w in here["wild"] if out_now(species_name(w[0]), night, here["kind"] == "cave")]
         if wild and rng.random() < catch:
-            sid, lo, hi = rng.choice(wild)
+            pick = rng.choice(wild)
+            online = getattr(self.server, "online", None)
+            if ECO is not None and online is not None:  # thinned species less, migrants too
+                weights = ECO.rover_weights(online, self.db, r.map, wild)
+                pick = rng.choices([w for w, _ in weights], [max(x, 0.01) for _, x in weights])[0]
+            sid, lo, hi = pick
+            if ECO is not None and online is not None:
+                ECO.rover_catch(online, self.db, r.map, sid, r.name)
             level = rng.randint(lo, hi)
             ball = life.use_ball(r.life, rng)
             with_ball = f" with a {life.item_name(ball)}" if ball else ""

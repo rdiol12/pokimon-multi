@@ -101,7 +101,10 @@
 #define ONL_REQ_HIDE_END      84
 #define ONL_REQ_HIDE_QUIT     85
 #define ONL_REQ_HIDE_BOARD    86
-#define ONL_REQ_COUNT         87
+#define ONL_REQ_ECO_AREA      87
+#define ONL_REQ_ECO_MOVES     88
+#define ONL_REQ_RESEARCH_BOARD 89 // VAR_0x8005: species the player completed
+#define ONL_REQ_COUNT         90
 
 // The hub's rows (VAR_RESULT of its menu).
 #define ONLINE_HUB_GOALS    0
@@ -119,6 +122,8 @@
 #define ONLINE_HUB_GUILD    12
 #define ONLINE_HUB_RACING   13
 #define ONLINE_HUB_HIDE     14
+#define ONLINE_HUB_WILDLIFE 15
+#define ONLINE_HUB_RESEARCH 16
 #define ONLINE_HUB_CLOSE    127
 
 // VAR_0x800B of the co-op fishing requests.

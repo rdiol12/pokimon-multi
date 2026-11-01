@@ -11,6 +11,7 @@
 #define WORLD_MENU_QUESTS        6
 #define WORLD_MENU_BOARDS        7
 #define WORLD_MENU_ADVENTURE     8 // data/scripts/adventure/menu.inc
+#define WORLD_MENU_RESEARCH      40 // the research Pokédex (src/research.c)
 
 // Mount_Toggle results.
 #define MOUNT_RODE_OFF     0
