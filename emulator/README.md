@@ -160,6 +160,15 @@ every save and loaded with the save. To save new data, add a field at the end of
   tint, follow weather and time of day together with normal BG palette n. `ResetBgs` puts every
   layer back on the normal palettes, so a new screen always starts clean.
 
+## Player defaults
+
+Fast forward plays the sound sped up instead of dropping it, on every player:
+
+- Qt: fast forward speed defaults to 3x (stock mGBA: unbounded, which drops the sound).
+  A speed picked in Emulation > Fast forward speed still wins.
+- SDL: holding Tab runs at 3x with sped-up sound (stock: unbounded, no sound sync).
+- Phone apps: the ▶▶ button, 3x, see `mobile/www/emulator.js`.
+
 ## Planned (later versions)
 
 Nothing yet. Ask in the project if something else hits a GBA limit.

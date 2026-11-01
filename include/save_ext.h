@@ -18,6 +18,27 @@
 #include "reserve_save.h"
 #include "pokemon_storage_system.h"
 
+// The towns' quest boards when playing offline (src/rovers.c): today's
+// rampaging Pokémon the player cleared and the reward not yet collected.
+#define ROVER_OFFLINE_CLEARS 6
+struct RoverOfflineClear
+{
+    u16 species;
+    u8 level;
+    u8 mapGroup;
+    u8 mapNum;
+    u8 filler[3];
+};
+
+struct RoverOfflineBoard
+{
+    u16 day;     // 1 + the day these clears are for (0: none yet)
+    u8 count;
+    u8 filler;
+    u32 owed;    // money to collect at a board
+    struct RoverOfflineClear clears[ROVER_OFFLINE_CLEARS];
+};
+
 struct SaveBlockExt
 {
     u32 version;
@@ -26,6 +47,7 @@ struct SaveBlockExt
     struct ReserveLocalMon reserveMoreMons[RESERVE_LOCAL_MAX - RESERVE_LOCAL_SAVED]; // Haven Reserve drop-offs 7-40
     struct FusionRecipe fusionMoreRecipes[FUSION_RECIPE_TOTAL - FUSION_RECIPE_COUNT]; // fusion colors 13-252
     struct PokemonStorageMore pcMoreBoxes; // PC boxes 15-32
+    struct RoverOfflineBoard roverBoard; // offline quest boards
 };
 
 extern struct SaveBlockExt gSaveBlockExt;

@@ -20,6 +20,9 @@
 #include "overworld.h"
 #include "pokemon.h"
 #include "random.h"
+#include "region_map.h"
+#include "rtc.h"
+#include "save_ext.h"
 #include "rovers.h"
 #include "netplay.h"
 #include "script.h"
@@ -1302,12 +1305,17 @@ void Rovers_OnMapTransition(void)
         sRovers.wantHere = TRUE;
 }
 
+#define OFFLINE_MAJOR_ID 0xFFFE // sRovers.majorId of an offline job (see the offline quest boards)
+static void SetUpOfflineMajor(void);
+static void ClearOfflineMajor(void);
+
 static void SpawnOffline(void)
 {
     u32 count = 0, i, room = MaxHere();
     u32 seed = gSaveBlock1Ptr->location.mapGroup * 131 + gSaveBlock1Ptr->location.mapNum * 17 + Random();
 
     sRovers.spawned = TRUE;
+    SetUpOfflineMajor();
     // Divers are common in the Rift Below.
     if (room == 0 || (Random() % (IsRift() ? 2 : 3)) != 0)
         return;
@@ -2429,7 +2437,9 @@ void Rovers_AfterChargerBattle(void)
     RemoveLocal(sRovers.chargerIsMajor ? LOCALID_ROVER_MAJOR : LOCALID_ROVER_CHARGER);
     if (sRovers.chargerIsMajor)
     {
-        if (cleared && sRovers.majorId != 0 && sRovers.majorId != 0xFFFF)
+        if (cleared && sRovers.majorId == OFFLINE_MAJOR_ID)
+            ClearOfflineMajor();
+        else if (cleared && sRovers.majorId != 0 && sRovers.majorId != 0xFFFF)
             QueueRequest(REQ_MAJOR_CLEAR, gBattleOutcome == B_OUTCOME_CAUGHT, 0, 0, sRovers.majorId);
         if (cleared)
             sRovers.majorId = 0;
@@ -3212,11 +3222,354 @@ static void SpawnBoard(void)
     }
 }
 
+// Offline quest boards ----------------------------------------------------------------
+//
+// With no server the game makes the boards itself. Each day some routes get
+// a rampaging Pokémon (the same ones on every board, picked from the day and
+// the map), some of those were already cleared by rovers, and the ones the
+// player clears are kept in the save (gSaveBlockExt.roverBoard) with the
+// reward to collect at any board. The rankings are the rovers' standings,
+// worked out from the player's progress like the offline rovers' teams.
+
+#define BOARD_OK_OFFLINE   2      // sRovers.boardOk: the game made the board
+#define OFFLINE_BOARD_HOPS 4
+#define OFFLINE_BOARD_MAPS 32
+
+static u32 Mix(u32 x)
+{
+    x ^= x >> 16;
+    x *= 0x7FEB352D;
+    x ^= x >> 15;
+    x *= 0x846CA68B;
+    x ^= x >> 16;
+    return x;
+}
+
+static u16 OfflineDay(void)
+{
+    RtcCalcLocalTime();
+    return gLocalTime.days;
+}
+
+static u32 MapSeed(u32 day, u32 group, u32 num)
+{
+    return Mix(day * 0x9E3779B1 + group * 977 + num * 131 + 0x5EED);
+}
+
+static const struct WildPokemonInfo *LandInfoOf(u32 group, u32 num)
+{
+    u32 i, t;
+
+    for (i = 0; gWildMonHeaders[i].mapGroup != MAP_GROUP(MAP_UNDEFINED); i++)
+    {
+        if (gWildMonHeaders[i].mapGroup != group || gWildMonHeaders[i].mapNum != num)
+            continue;
+        for (t = 0; t < TIMES_OF_DAY_COUNT; t++)
+        {
+            const struct WildPokemonInfo *info = gWildMonHeaders[i].encounterTypes[t].landMonsInfo;
+            if (info != NULL && info->wildPokemon != NULL)
+                return info;
+        }
+        return NULL;
+    }
+    return NULL;
+}
+
+// Today's rampaging Pokémon on this map, if it has one (about every other
+// route): its strongest wild Pokémon, 8 to 12 levels up, like the server's.
+static bool32 OfflineMajorOf(u32 day, u32 group, u32 num, u16 *species, u8 *level)
+{
+    const struct WildPokemonInfo *info;
+    const struct MapHeader *header = Overworld_GetMapHeaderByGroupAndId(group, num);
+    u32 seed = MapSeed(day, group, num), i, best = 0, top = 0;
+
+    if (header == NULL || header->mapType == MAP_TYPE_TOWN || header->mapType == MAP_TYPE_CITY
+     || header->mapType == MAP_TYPE_INDOOR || seed % 2 != 0)
+        return FALSE;
+    info = LandInfoOf(group, num);
+    if (info == NULL)
+        return FALSE;
+    for (i = 0; i < NUM_LAND_MONS_ENCOUNTER_SLOTS; i++)
+    {
+        const struct WildPokemon *mon = &info->wildPokemon[(i + (seed >> 8)) % NUM_LAND_MONS_ENCOUNTER_SLOTS];
+        if (mon->species != SPECIES_NONE && mon->species < NUM_SPECIES && mon->maxLevel > top)
+        {
+            top = mon->maxLevel;
+            best = (i + (seed >> 8)) % NUM_LAND_MONS_ENCOUNTER_SLOTS;
+        }
+    }
+    if (top == 0)
+        return FALSE;
+    *species = info->wildPokemon[best].species;
+    *level = min(top + 8 + (seed >> 12) % 5, MAX_LEVEL);
+    return TRUE;
+}
+
+// 1 + the rover who already cleared it today, or 0.
+static u32 OfflineMajorClearedBy(u32 day, u32 group, u32 num)
+{
+    u32 seed = Mix(MapSeed(day, group, num) + 77);
+    return (seed % 4 == 0) ? 1 + (seed >> 8) % ROVER_COUNT : 0;
+}
+
+static struct RoverOfflineBoard *OfflineBoard(void)
+{
+    struct RoverOfflineBoard *b = &gSaveBlockExt.roverBoard;
+    u16 day = OfflineDay() + 1;
+
+    if (b->day != day)
+    {
+        b->day = day;
+        b->count = 0;
+    }
+    return b;
+}
+
+static bool32 PlayerClearedOffline(u32 group, u32 num)
+{
+    struct RoverOfflineBoard *b = OfflineBoard();
+    u32 i;
+
+    for (i = 0; i < b->count && i < ROVER_OFFLINE_CLEARS; i++)
+        if (b->clears[i].mapGroup == group && b->clears[i].mapNum == num)
+            return TRUE;
+    return FALSE;
+}
+
+// The map just entered, offline: its rampaging Pokémon, if it has one left.
+static void SetUpOfflineMajor(void)
+{
+    u32 day = OfflineDay();
+    u32 group = gSaveBlock1Ptr->location.mapGroup, num = gSaveBlock1Ptr->location.mapNum;
+
+    if (sRovers.majorId != 0 || !IsOutdoorsOrCave() || IsTown())
+        return;
+    if (!OfflineMajorOf(day, group, num, &sRovers.majorSpecies, &sRovers.majorLevel))
+        return;
+    if (OfflineMajorClearedBy(day, group, num) || PlayerClearedOffline(group, num))
+        return;
+    sRovers.majorId = OFFLINE_MAJOR_ID;
+    sRovers.majorSpawned = FALSE;
+}
+
+static void ClearOfflineMajor(void)
+{
+    struct RoverOfflineBoard *b = OfflineBoard();
+    struct RoverOfflineClear *c;
+
+    if (b->count >= ROVER_OFFLINE_CLEARS)
+    {
+        memmove(&b->clears[0], &b->clears[1], sizeof(b->clears[0]) * (ROVER_OFFLINE_CLEARS - 1));
+        b->count = ROVER_OFFLINE_CLEARS - 1;
+    }
+    c = &b->clears[b->count++];
+    c->species = sRovers.majorSpecies;
+    c->level = sRovers.majorLevel;
+    c->mapGroup = gSaveBlock1Ptr->location.mapGroup;
+    c->mapNum = gSaveBlock1Ptr->location.mapNum;
+    b->owed += sRovers.majorLevel * 300; // the server's MAJOR_REWARD: 3000 per 10 levels
+}
+
+static u8 *AppendMapName(u8 *s, u32 group, u32 num)
+{
+    const struct MapHeader *header = Overworld_GetMapHeaderByGroupAndId(group, num);
+    return GetMapName(s, header ? header->regionMapSectionId : 0, 0);
+}
+
+static u8 *AppendMajorLine(u8 *s, const u8 *head, u16 species, u8 level)
+{
+    s = StringCopy(s, head);
+    s = StringCopy(s, GetSpeciesName(species));
+    s = StringCopy(s, COMPOUND_STRING(" Lv"));
+    return ConvertIntToDecimalStringN(s, level, STR_CONV_MODE_LEFT_ALIGN, 3);
+}
+
+// The maps up to OFFLINE_BOARD_HOPS connections away from this town, nearest first.
+static u32 NearbyMaps(u8 (*maps)[2])
+{
+    u32 count = 0, from = 0, hop, i, j, k;
+
+    maps[count][0] = gSaveBlock1Ptr->location.mapGroup;
+    maps[count][1] = gSaveBlock1Ptr->location.mapNum;
+    count++;
+    for (hop = 0; hop < OFFLINE_BOARD_HOPS; hop++)
+    {
+        u32 end = count;
+        for (i = from; i < end; i++)
+        {
+            const struct MapHeader *header = Overworld_GetMapHeaderByGroupAndId(maps[i][0], maps[i][1]);
+            if (header == NULL || header->connections == NULL)
+                continue;
+            for (j = 0; j < (u32)header->connections->count && count < OFFLINE_BOARD_MAPS; j++)
+            {
+                const struct MapConnection *c = &header->connections->connections[j];
+                for (k = 0; k < count; k++)
+                    if (maps[k][0] == c->mapGroup && maps[k][1] == c->mapNum)
+                        break;
+                if (k == count)
+                {
+                    maps[count][0] = c->mapGroup;
+                    maps[count][1] = c->mapNum;
+                    count++;
+                }
+            }
+        }
+        from = end;
+    }
+    return count;
+}
+
+static void ShowOfflineJobs(void)
+{
+    struct RoverOfflineBoard *b = OfflineBoard();
+    u8 maps[OFFLINE_BOARD_MAPS][2];
+    u8 *s = gStringVar4;
+    u32 day = OfflineDay(), count = NearbyMaps(maps), i, jobs = 0, cleared = 0;
+    u16 species;
+    u8 level;
+
+    gSpecialVar_0x8005 = 0;
+    if (b->owed != 0)
+    {
+        AddMoney(&gSaveBlock1Ptr->money, b->owed);
+        ConvertIntToDecimalStringN(gStringVar2, b->owed, STR_CONV_MODE_LEFT_ALIGN, 7);
+        b->owed = 0;
+        gSpecialVar_0x8005 = 1;
+    }
+    *s = EOS;
+    // Open jobs first, then up to three that are done.
+    for (i = 1; i < count && jobs < 5; i++)
+    {
+        if (!OfflineMajorOf(day, maps[i][0], maps[i][1], &species, &level)
+         || OfflineMajorClearedBy(day, maps[i][0], maps[i][1]) || PlayerClearedOffline(maps[i][0], maps[i][1]))
+            continue;
+        if (jobs != 0)
+            s = StringCopy(s, COMPOUND_STRING("\p"));
+        s = AppendMajorLine(s, COMPOUND_STRING("WANTED: rampaging "), species, level);
+        s = StringCopy(s, COMPOUND_STRING("\nSeen at: "));
+        s = AppendMapName(s, maps[i][0], maps[i][1]);
+        jobs++;
+    }
+    for (i = 0; i < b->count && cleared < 3; i++, cleared++)
+    {
+        struct RoverOfflineClear *c = &b->clears[b->count - 1 - i];
+        if (jobs + cleared != 0)
+            s = StringCopy(s, COMPOUND_STRING("\p"));
+        s = AppendMajorLine(s, COMPOUND_STRING("CLEARED: "), c->species, c->level);
+        s = StringCopy(s, COMPOUND_STRING("\nby "));
+        s = StringCopy(s, gSaveBlock2Ptr->playerName);
+        s = StringCopy(s, COMPOUND_STRING(" at "));
+        s = AppendMapName(s, c->mapGroup, c->mapNum);
+    }
+    for (i = 1; i < count && cleared < 3; i++)
+    {
+        u32 who = OfflineMajorClearedBy(day, maps[i][0], maps[i][1]);
+        if (who == 0 || !OfflineMajorOf(day, maps[i][0], maps[i][1], &species, &level))
+            continue;
+        if (jobs + cleared != 0)
+            s = StringCopy(s, COMPOUND_STRING("\p"));
+        s = AppendMajorLine(s, COMPOUND_STRING("CLEARED: "), species, level);
+        s = StringCopy(s, COMPOUND_STRING("\nby "));
+        s = StringCopy(s, gRoverCast[who - 1].name);
+        s = StringCopy(s, COMPOUND_STRING(" at "));
+        s = AppendMapName(s, maps[i][0], maps[i][1]);
+        cleared++;
+    }
+    if (jobs + cleared == 0)
+        StringCopy(gStringVar4, COMPOUND_STRING("No dangerous Pokémon nearby.\nThe roads are safe for now."));
+}
+
+// A rover's standing today: badges near the player's, wins growing by the day.
+static void OfflineStanding(u32 id, u32 day, u32 *badges, u32 *won, u32 *lost)
+{
+    u32 seed = Mix(id * 2654435761u + 0xB0A2D);
+    s32 b = (s32)PlayerBadges() + (s32)(seed % 5) - 2;
+
+    *badges = (b < 0) ? 0 : (b > 8 ? 8 : b);
+    *won = *badges * 9 + (seed >> 4) % 12 + (day * (1 + (seed >> 9) % 3)) % 7;
+    *lost = (seed >> 13) % 9 + (day * (1 + (seed >> 17) % 2)) % 5;
+}
+
+static void ShowOfflineRankings(void)
+{
+    u8 *s = gStringVar4;
+    u32 day = OfflineDay(), top[10], score[10], i, j, n = 0;
+    u32 badges, won, lost, shown, cleared;
+    u8 maps[OFFLINE_BOARD_MAPS][2];
+    u16 species;
+    u8 level;
+
+    // The ten best: most badges, then most wins.
+    for (i = 0; i < ROVER_COUNT; i++)
+    {
+        u32 sc;
+        OfflineStanding(i, day, &badges, &won, &lost);
+        sc = badges * 1000 + won;
+        for (j = n; j > 0 && score[j - 1] < sc; j--)
+        {
+            if (j < 10)
+            {
+                top[j] = top[j - 1];
+                score[j] = score[j - 1];
+            }
+        }
+        if (j < 10)
+        {
+            top[j] = i;
+            score[j] = sc;
+            if (n < 10)
+                n++;
+        }
+    }
+    for (shown = 0; shown < n; shown++)
+    {
+        OfflineStanding(top[shown], day, &badges, &won, &lost);
+        s = StringCopy(s, shown == 0 ? COMPOUND_STRING("TOP TRAINERS\n") : (shown % 2 ? COMPOUND_STRING("\n") : COMPOUND_STRING("\p")));
+        s = ConvertIntToDecimalStringN(s, shown + 1, STR_CONV_MODE_LEFT_ALIGN, 2);
+        s = StringCopy(s, COMPOUND_STRING(". "));
+        s = StringCopy(s, gRoverCast[top[shown]].name);
+        s = StringCopy(s, COMPOUND_STRING(": "));
+        s = ConvertIntToDecimalStringN(s, badges, STR_CONV_MODE_LEFT_ALIGN, 1);
+        s = StringCopy(s, badges == 1 ? COMPOUND_STRING(" badge, won ") : COMPOUND_STRING(" badges, won "));
+        s = ConvertIntToDecimalStringN(s, won, STR_CONV_MODE_LEFT_ALIGN, 4);
+        s = StringCopy(s, COMPOUND_STRING(", lost "));
+        s = ConvertIntToDecimalStringN(s, lost, STR_CONV_MODE_LEFT_ALIGN, 4);
+    }
+    // News: who cleared the nearby jobs today.
+    cleared = 0;
+    n = NearbyMaps(maps);
+    for (i = 1; i < n && cleared < 2; i++)
+    {
+        u32 who = OfflineMajorClearedBy(day, maps[i][0], maps[i][1]);
+        if (who == 0 || !OfflineMajorOf(day, maps[i][0], maps[i][1], &species, &level))
+            continue;
+        s = StringCopy(s, cleared == 0 ? COMPOUND_STRING("\pLATEST NEWS\n") : COMPOUND_STRING("\n"));
+        s = StringCopy(s, gRoverCast[who - 1].name);
+        s = StringCopy(s, COMPOUND_STRING(" beat the rampaging "));
+        s = StringCopy(s, GetSpeciesName(species));
+        s = StringCopy(s, COMPOUND_STRING("!"));
+        cleared++;
+    }
+}
+
+// Script: VAR_RESULT TRUE if the game is online (the league is run online).
+void Rovers_BoardIsOnline(void)
+{
+    gSpecialVar_Result = Npx_IsOnline();
+}
+
 // Asks the server for the board (waitstate). VAR_RESULT afterwards: TRUE
-// if it answered.
+// if it answered. Offline the game makes the board itself.
 void Rovers_BoardFetch(void)
 {
-    if (!Npx_IsOnline() || sRovers.waiting != REQ_NONE || !NpxRpc_Begin("MAJOR"))
+    if (!Npx_IsOnline())
+    {
+        sRovers.boardOk = BOARD_OK_OFFLINE;
+        gSpecialVar_Result = TRUE;
+        ScriptContext_Enable();
+        return;
+    }
+    if (sRovers.waiting != REQ_NONE || !NpxRpc_Begin("MAJOR"))
     {
         sRovers.boardOk = FALSE;
         gSpecialVar_Result = FALSE;
@@ -3233,7 +3586,13 @@ void Rovers_BoardFetch(void)
 
 void Rovers_BoardRankingsFetch(void)
 {
-    if (!Npx_IsOnline() || sRovers.waiting != REQ_NONE || !NpxRpc_Begin("ROVER"))
+    if (!Npx_IsOnline())
+    {
+        sRovers.boardOk = BOARD_OK_OFFLINE;
+        ScriptContext_Enable();
+        return;
+    }
+    if (sRovers.waiting != REQ_NONE || !NpxRpc_Begin("ROVER"))
     {
         sRovers.boardOk = FALSE;
         ScriptContext_Enable();
@@ -3259,7 +3618,12 @@ void Rovers_BoardShowJobs(void)
     u8 name[24];
     u32 rows, r, jobs = 0, reward;
 
-    gSpecialVar_Result = sRovers.boardOk;
+    gSpecialVar_Result = (sRovers.boardOk != FALSE);
+    if (sRovers.boardOk == BOARD_OK_OFFLINE)
+    {
+        ShowOfflineJobs();
+        return;
+    }
     if (!sRovers.boardOk)
         return;
     rows = AnswerRows();
@@ -3315,7 +3679,12 @@ void Rovers_BoardShowRankings(void)
     u32 rows, r, shown = 0;
     bool32 newsPart = FALSE;
 
-    gSpecialVar_Result = sRovers.boardOk;
+    gSpecialVar_Result = (sRovers.boardOk != FALSE);
+    if (sRovers.boardOk == BOARD_OK_OFFLINE)
+    {
+        ShowOfflineRankings();
+        return;
+    }
     if (!sRovers.boardOk)
         return;
     rows = AnswerRows();
