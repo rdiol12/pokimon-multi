@@ -8,6 +8,7 @@
 #include "bg.h"
 #include "rtc.h"
 #include "scanline_effect.h"
+#include "sprite.h"
 #include "overworld.h"
 #include "play_time.h"
 #include "random.h"
@@ -91,13 +92,32 @@ void EnableVCountIntrAtLine150(void);
 
 #define B_START_SELECT (B_BUTTON | START_BUTTON | SELECT_BUTTON)
 
+// The game keeps data in the 16 MiB extended EWRAM of our emulator fork (emulator/README.md).
+// On a real GBA or a stock emulator those addresses mirror the first 256 KiB, so running on would
+// corrupt memory. Stop on a red screen instead.
+static void CheckExtendedHardware(void)
+{
+    if (*(vu16 *)REG_ADDR_PKX_ID == PKX_ID && (*(vu16 *)REG_ADDR_PKX_CONTROL & PKX_CONTROL_EWRAM))
+        return;
+    *(vu16 *)BG_PLTT = RGB_RED;
+    REG_DISPCNT = 0;
+    for (;;)
+        ;
+}
+
 void AgbMain(void)
 {
+    CheckExtendedHardware();
+    InitPkxObj();
+    // Run the CPU faster so busy scenes still finish within one frame (60 fps)
+    if (*(vu16 *)REG_ADDR_PKX_VERSION >= 4)
+        *(vu16 *)REG_ADDR_PKX_CONTROL = PKX_SET_OVERCLOCK | PKX_OVERCLOCK;
     *(vu16 *)BG_PLTT = RGB_WHITE; // Set the backdrop to white on startup
     InitGpuRegManager();
     REG_WAITCNT = WAITCNT_PREFETCH_ENABLE
             | WAITCNT_WS0_S_1 | WAITCNT_WS0_N_3
-            | WAITCNT_WS1_S_1 | WAITCNT_WS1_N_3;
+            | WAITCNT_WS1_S_1 | WAITCNT_WS1_N_3
+            | WAITCNT_WS2_S_1 | WAITCNT_WS2_N_3; // the 0x0A000000 mirror (script tags) and big-ROM data at 0x0C000000
     InitKeys();
     InitIntrHandlers();
     m4aSoundInit();
@@ -424,8 +444,17 @@ static void SerialIntr(void)
 static void IntrDummy(void)
 {}
 
+// Frames where the main loop didn't finish in time and the game slowed down
+// (it waits for the next VBlank, so a late loop costs a whole frame). Read it to measure.
+EWRAM_DATA u32 gLagFrames = 0;
+static EWRAM_DATA u32 sLastLoopVBlank = 0;
+
 static void WaitForVBlank(void)
 {
+    u32 elapsed = gMain.vblankCounter1 - sLastLoopVBlank;
+    // A VBlank during the loop means this frame was missed
+    if (elapsed >= 1 && elapsed < 60)
+        gLagFrames += elapsed;
     gMain.intrCheck &= ~INTR_FLAG_VBLANK;
 
     if (gWirelessCommType != 0)
@@ -439,6 +468,7 @@ static void WaitForVBlank(void)
     {
         VBlankIntrWait();
     }
+    sLastLoopVBlank = gMain.vblankCounter1;
 }
 
 void SetTrainerHillVBlankCounter(u32 *counter)

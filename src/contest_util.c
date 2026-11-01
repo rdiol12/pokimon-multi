@@ -2419,16 +2419,16 @@ void LoadLinkContestPlayerPalettes(void)
             if (version == VERSION_RUBY || version == VERSION_SAPPHIRE)
             {
                 if (gLinkPlayers[i].gender == MALE)
-                    sprite->oam.paletteNum = LoadObjectEventPalette(OBJ_EVENT_PAL_TAG_RS_BRENDAN);
+                    SetSpritePaletteSlot(sprite, LoadObjectEventPalette(OBJ_EVENT_PAL_TAG_RS_BRENDAN));
                 else
-                    sprite->oam.paletteNum = LoadObjectEventPalette(OBJ_EVENT_PAL_TAG_RS_MAY);
+                    SetSpritePaletteSlot(sprite, LoadObjectEventPalette(OBJ_EVENT_PAL_TAG_RS_MAY));
             }
             else
             {
                 if (gLinkPlayers[i].gender == MALE)
-                    sprite->oam.paletteNum = LoadObjectEventPalette(OBJ_EVENT_PAL_TAG_BRENDAN);
+                    SetSpritePaletteSlot(sprite, LoadObjectEventPalette(OBJ_EVENT_PAL_TAG_BRENDAN));
                 else
-                    sprite->oam.paletteNum = LoadObjectEventPalette(OBJ_EVENT_PAL_TAG_MAY);
+                    SetSpritePaletteSlot(sprite, LoadObjectEventPalette(OBJ_EVENT_PAL_TAG_MAY));
             }
         }
     }
@@ -2536,7 +2536,7 @@ static void Task_ShowContestEntryMonPic(u8 taskId)
         break;
     case 3:
         sprite = &gSprites[task->data[2]];
-        FreeSpritePaletteByTag(GetSpritePaletteTagByPaletteNum(sprite->oam.paletteNum));
+        FreeSpritePaletteByTag(GetSpritePaletteTagByPaletteNum(GetSpritePaletteSlot(sprite)));
 
         if (sprite->oam.affineMode)
             FreeOamMatrix(sprite->oam.matrixNum);

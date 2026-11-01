@@ -29,7 +29,7 @@ LISTED_MINE = 1
 
 BOX_MON_SIZE = 80
 NICK_SIZE = 12
-SHOWN = 8
+SHOWN = 11  # RESERVE_SERVER_SHOWN: one owner name per community mailbox row
 NUM_SPECIES_MAX = 0x7FFF
 MAX_RESIDENTS = int(os.environ.get("NETPLAY_RESERVE_MAX", "600"))
 CLAIM_SECONDS = float(os.environ.get("NETPLAY_RESERVE_CLAIM_SECONDS", str(10 * 60)))

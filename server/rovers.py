@@ -31,10 +31,13 @@ import json
 import os
 import random
 import struct
+import sys
 import time
 
 from ext import Refused, text
 import rovers_life as life
+import rovers_trade
+import rovers_league
 
 try:  # the shared day/night clock (server/world.py, day/night branch), if this server has it
     import world
@@ -45,6 +48,10 @@ try:  # the Haven Reserve (server/community_reserve.py), if this server has it
     import community_reserve
 except ImportError:
     community_reserve = None
+try:  # fusion breeding (server/community_fusion.py), if this server has it
+    import community_fusion
+except ImportError:
+    community_fusion = None
 
 HERE_DIR = os.path.dirname(os.path.abspath(__file__))
 with open(os.path.join(HERE_DIR, "data", "rovers_cast.json")) as f:
@@ -54,6 +61,7 @@ with gzip.open(os.path.join(HERE_DIR, "data", "rovers_world.json.gz"), "rt") as 
 WORLD = _WORLD["maps"]
 BASE = {int(k): v for k, v in _WORLD["base"].items()}
 NAMES = {int(k): v for k, v in _WORLD["names"].items()}
+ITEMS = _WORLD.get("items", {})  # item name -> ITEM_ id, for gifts
 BY_NAME = {v["name"]: k for k, v in WORLD.items()}
 
 
@@ -87,10 +95,13 @@ def title(mk):
     """A map's name as players read it: "Route 101"."""
     return WORLD[mk].get("title", WORLD[mk]["name"])
 
-MON_SIZE = 16
-ROVER_SIZE = 8 + 6 * MON_SIZE + 8  # + rovers_life.bag_wire()
+MON_SIZE = 18
+OLD_MON_SIZE = 16     # before fusions: teams saved like that still load
+ROVER_SIZE = 8 + 6 * MON_SIZE + 8 + 2  # + rovers_life.bag_wire() + bond_wire()
+FRIEND_AT = 5         # friendship from here on: gifts
+GIFT_EVERY = 86400    # at most one gift a day
 MAX_TEAM = 6
-MAX_HERE = 4          # the game shows at most this many on one map
+MAX_HERE = 10         # the game shows at most this many on one map (ROVERS_MAX_HERE)
 STEP = 600            # seconds of rover life per simulation step
 MAX_STEPS = 72        # catching up after a long quiet spell stops at 12 hours
 TID_BASE = 70000      # rovers' trainer ids (above any real id); they're not on the PvP ladder
@@ -104,12 +115,17 @@ GYMS = [("RustboroCity", 15), ("DewfordTown", 19), ("MauvilleCity", 24), ("Lavar
         ("PetalburgCity", 31), ("FortreeCity", 33), ("MossdeepCity", 42), ("SootopolisCity", 46)]
 LEAGUE_LEVEL = 58
 START_MAP = BY_NAME.get("LittlerootTown")
+LEAGUE_CITY = BY_NAME.get("LaurelCity")  # the Rover League Stadium (tools/areas/laurel.py)
 
 now = time.time  # tests replace this
+if os.environ.get("ROVERS_TIME_OFFSET"):  # screenshot runs: another day of the week
+    _OFFSET = float(os.environ["ROVERS_TIME_OFFSET"])
+    now = lambda: time.time() + _OFFSET  # noqa: E731
 rng = random.Random()
 
 
 def setup(db):
+    rovers_league.setup(db)
     db.execute(
         """
         CREATE TABLE IF NOT EXISTS rovers (
@@ -131,6 +147,18 @@ def setup(db):
         db.execute("ALTER TABLE rovers ADD COLUMN life TEXT NOT NULL DEFAULT ''")
     db.execute(
         """
+        CREATE TABLE IF NOT EXISTS rover_bonds (
+            rover INTEGER NOT NULL, name TEXT NOT NULL, tid INTEGER NOT NULL,
+            rival INTEGER NOT NULL DEFAULT 0,       -- the player beat it; it wants a rematch
+            beaten INTEGER NOT NULL DEFAULT 0, lost INTEGER NOT NULL DEFAULT 0,
+            friendship INTEGER NOT NULL DEFAULT 0,  -- battles and trades together
+            last_gift REAL NOT NULL DEFAULT 0,
+            PRIMARY KEY (rover, name, tid)
+        )
+        """
+    )
+    db.execute(
+        """
         CREATE TABLE IF NOT EXISTS rover_news (
             id INTEGER PRIMARY KEY, at REAL NOT NULL, line TEXT NOT NULL
         )
@@ -150,20 +178,23 @@ def setup(db):
 
 # Teams ----------------------------------------------------------------------
 
-def new_mon(species, level):
+def new_mon(species, level, fusion=0):
+    """fusion: the father's species of a fusion (docs/breed_fusion.md), or 0."""
     return {"species": species, "level": level, "moves_level": 0, "moves": [0, 0, 0, 0],
-            "part": 0, "damage": 0, "lost": 0, "flags": 0}
+            "part": 0, "damage": 0, "lost": 0, "flags": 0, "fusion": fusion}
 
 
 def pack_mon(m):
-    return struct.pack("<HBB4HBBBB", m["species"], m["level"], m["moves_level"], *m["moves"],
-                       m["part"], m["damage"], m["lost"], m["flags"])
+    return struct.pack("<HBB4HBBBBH", m["species"], m["level"], m["moves_level"], *m["moves"],
+                       m["part"], m["damage"], m["lost"], m["flags"], m.get("fusion", 0))
 
 
 def unpack_mon(b):
-    species, level, ml, m1, m2, m3, m4, part, damage, lost, flags = struct.unpack("<HBB4HBBBB", b)
+    if len(b) == OLD_MON_SIZE:
+        b = b + bytes(2)
+    species, level, ml, m1, m2, m3, m4, part, damage, lost, flags, fusion = struct.unpack("<HBB4HBBBBH", b)
     return {"species": species, "level": level, "moves_level": ml, "moves": [m1, m2, m3, m4],
-            "part": part, "damage": damage, "lost": lost, "flags": flags}
+            "part": part, "damage": damage, "lost": lost, "flags": flags, "fusion": fusion}
 
 
 def pack_team(team):
@@ -171,7 +202,26 @@ def pack_team(team):
 
 
 def unpack_team(blob):
-    return [unpack_mon(blob[i:i + MON_SIZE]) for i in range(0, len(blob), MON_SIZE)]
+    size = MON_SIZE if len(blob) % MON_SIZE == 0 else OLD_MON_SIZE
+    return [unpack_mon(blob[i:i + size]) for i in range(0, len(blob), size)]
+
+
+def mon_name(m):
+    """A Pokémon's name for the news: a fusion's is made from both."""
+    if m.get("fusion") and community_fusion is not None:
+        return community_fusion.fusion_name(species_name(m["species"]), species_name(m["fusion"]))
+    return species_name(m["species"])
+
+
+def can_fuse(a, b):
+    """Two of a rover's Pokémon would breed into a fusion (src/breed_fusion.c
+    BreedFusion_CanFuse): different families, both able to breed, no Ditto."""
+    if community_fusion is None or BASE.get(a, a) == BASE.get(b, b):
+        return False
+    try:
+        return community_fusion.can_fuse_with(a) and community_fusion.can_fuse_with(b)
+    except (OSError, ValueError):
+        return False
 
 
 def check_team(team):
@@ -224,11 +274,41 @@ class Rover:
             (self.map, pack_team(self.team), self.badges, self.wins, self.losses, self.hurt, self.egg,
              self.egg_steps, self.tick, life.dump(self.life), self.id))
 
-    def wire(self):
+    def wire(self, bond=None):
         head = struct.pack("<BBBBHH", self.id, len(self.team), self.badges, min(self.hurt, 255),
                            min(self.wins, 0xFFFF), min(self.losses, 0xFFFF))
         team = pack_team(self.team) + bytes(MON_SIZE * (MAX_TEAM - len(self.team)))
-        return head + team + life.bag_wire(self.life)
+        return head + team + life.bag_wire(self.life) + bond_wire(bond)
+
+
+# Rivals and friends: what one rover thinks of one player. ---------------------
+
+def bond(db, rid, key):
+    row = db.execute("SELECT rival, beaten, lost, friendship, last_gift FROM rover_bonds"
+                     " WHERE rover = ? AND name = ? AND tid = ?", (rid, *key)).fetchone()
+    if row is None:
+        return {"rival": 0, "beaten": 0, "lost": 0, "friendship": 0, "last_gift": 0.0}
+    return dict(zip(("rival", "beaten", "lost", "friendship", "last_gift"), row))
+
+
+def save_bond(db, rid, key, b):
+    db.execute("INSERT OR REPLACE INTO rover_bonds (rover, name, tid, rival, beaten, lost, friendship, last_gift)"
+               " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+               (rid, *key, b["rival"], b["beaten"], b["lost"], b["friendship"], b["last_gift"]))
+
+
+def bond_wire(b):
+    """Flags (1 rival, 2 friend, 4 a gift is ready) and friendship."""
+    if not b:
+        return b"\0\0"
+    flags = (1 if b["rival"] else 0) | (2 if b["friendship"] >= FRIEND_AT else 0)
+    if b["friendship"] >= FRIEND_AT and now() - b["last_gift"] >= GIFT_EVERY:
+        flags |= 4
+    return bytes([flags, min(b["friendship"], 255)])
+
+
+def rivals(db):
+    return {row[0] for row in db.execute("SELECT DISTINCT rover FROM rover_bonds WHERE rival = 1")}
 
 
 def news(db, line):
@@ -334,6 +414,9 @@ def fight(db, a, b, winner_a):
 class Sim:
     def __init__(self, db, league, server=None):
         self.db, self.league, self.server = db, league, server
+        self.rivals = set()
+        self.league_bound = set()
+        self.trader = rovers_trade.Trader(db, TID_BASE, news, new_mon, pack_mon, species_name, self.keep)
 
     def keep(self, r, m):
         """A Pokémon the rover can't carry goes to its ranch, or to the
@@ -379,7 +462,7 @@ class Sim:
         if r.egg:
             r.egg_steps -= 1
             if r.egg_steps <= 0:
-                baby = new_mon(r.egg, 1)
+                baby = new_mon(r.egg, 1, r.life.pop("egg_fusion", 0))
                 if len(r.team) < MAX_TEAM:
                     r.team.append(baby)
                 elif r.cast["style"] == "BREEDER":
@@ -388,12 +471,21 @@ class Sim:
                     r.team[weakest] = baby
                 else:
                     self.keep(r, baby)
-                news(self.db, f"{r.name}'s egg hatched into {species_name(r.egg)}!")
+                news(self.db, f"{r.name}'s egg hatched into {mon_name(baby)}!")
                 r.egg = 0
         # After dark most rovers rest where they are (healing if there's a
         # Pokémon Center); night owls carry on.
         if night and r.id % NIGHT_OWL != 0:
             return
+        # In the Rover League this week: off to Laurel City, and staying.
+        at_league = r.id in self.league_bound
+        if at_league and r.map != LEAGUE_CITY:
+            dest = next_hop(r.map, lambda k: k == LEAGUE_CITY)
+            if dest is not None:
+                if dest == LEAGUE_CITY:
+                    news(self.db, f"{r.name} arrived in Laurel City for the Rover League.")
+                r.map = dest
+                return
         # Gyms.
         g = gym_index(r.map)
         target = gym_target(r)
@@ -423,11 +515,25 @@ class Sim:
         if here["daycare"] and not r.egg and len(r.team) >= 2:
             chance = 0.5 if r.cast["style"] == "BREEDER" else 0.08
             if rng.random() < chance:
+                # Two of different kinds make a fusion egg: the mother's shape,
+                # the father's colors (docs/breed_fusion.md).
+                pairs = [(a, b) for a in r.team for b in r.team
+                         if a is not b and can_fuse(a["species"], b["species"])]
+                if pairs and rng.random() < 0.7:
+                    mother, father = rng.choice(pairs)
+                    r.egg, r.egg_steps = BASE.get(mother["species"], mother["species"]), 6
+                    r.life["egg_fusion"] = father["species"]
+                    news(self.db, f"{r.name} got a fusion egg at the Day Care: "
+                                  f"{species_name(mother['species'])} + {species_name(father['species'])}!")
+                    return
                 parent = rng.choice(r.team)["species"]
                 r.egg, r.egg_steps = BASE.get(parent, parent), 6
+                r.life.pop("egg_fusion", None)
                 news(self.db, f"{r.name} got an egg at the Day Care.")
                 return
         # Moving on.
+        if at_league and r.map == LEAGUE_CITY:
+            return
         dest = None
         if r.hurt >= 2:
             dest = next_hop(r.map, lambda k: WORLD[k]["center"])
@@ -447,8 +553,11 @@ class Sim:
         cap = r.cap()
         lead = max(r.team, key=lambda m: m["level"])
         gained = 0
+        driven = r.id in self.rivals  # beaten by a player: training for the rematch
+        if driven:
+            cap += 4
         for m in r.team:
-            chance = (0.9 if style == "TRAINER" else 0.6) if m is lead else 0.3
+            chance = (0.9 if style == "TRAINER" or driven else 0.6) if m is lead else (0.5 if driven else 0.3)
             if m["level"] < cap and rng.random() < chance:
                 m["level"] += 1
                 gained += 1
@@ -516,6 +625,9 @@ class Sim:
                 news(self.db, f"{r.name}'s {species_name(mon['species'])} came back from a job with {pay} money.")
         if here["center"]:
             life.shop(r.life)
+            # The market board and the auction house, like players.
+            self.trader.market_errands(r, rng, MAX_TEAM)
+            self.trader.auction_errands(r, rng, MAX_TEAM)
         town = life.QUEST_TOWNS.get(here["name"])
         if town and not r.life["quest"] and rng.random() < 0.5:
             q = life.take_quest(r.life, town, rng)
@@ -534,8 +646,12 @@ class Sim:
     def run(self):
         """Brings every rover up to now."""
         ensure_rovers(self.db)
-        rovers = load_all(self.db)
+        self.rivals = rivals(self.db)
         t = now()
+        # This week's league rovers head for Laurel City.
+        rovers_league.League(self.db, sys.modules[__name__]).advance(t)
+        self.league_bound = rovers_league.bound(self.db, t) if LEAGUE_CITY else set()
+        rovers = load_all(self.db)
         for r in rovers:
             steps = int((t - r.tick) // STEP)
             if steps <= 0:
@@ -582,6 +698,9 @@ def hops(a, b, limit):
 
 # Commands -----------------------------------------------------------------------
 
+RIFT = "75.1"  # MAP_ADVENTURE_DUNGEON, dug out anew each floor (src/dungeon.c)
+
+
 def map_key(args, i):
     return "%d.%d" % (int(args[i]), int(args[i + 1]))
 
@@ -594,6 +713,15 @@ def cmd_here(ctx, args, data):
     rovers = Sim(ctx.db, ctx.league, ctx.server).run()
     here = [r for r in rovers if r.map == key]
     if key in WORLD and WORLD[key]["kind"] != "sea":
+        # A rival two maps away or closer comes looking for the player.
+        mine = {row[0] for row in ctx.db.execute(
+            "SELECT rover FROM rover_bonds WHERE rival = 1 AND name = ? AND tid = ?", ctx.key)}
+        close = set(WORLD[key]["links"]) | {k2 for k1 in WORLD[key]["links"] for k2 in WORLD.get(k1, {}).get("links", [])}
+        for r in rovers:
+            if r.id in mine and r.map in close and len(here) < most and rng.random() < 0.6:
+                r.map = key
+                r.save(ctx.db)
+                here.append(r)
         nearby = [r for r in rovers if r.map in WORLD[key]["links"]]
         rng.shuffle(nearby)
         pull = 0.15 if is_night(now()) else 0.45  # fewer on the road after dark
@@ -603,11 +731,16 @@ def cmd_here(ctx, args, data):
             r.map = key
             r.save(ctx.db)
             here.append(r)
+    if key == RIFT and not here:
+        # Divers in the Rift Below: a rover with a badge or more, now and then.
+        divers = [r for r in rovers if r.badges >= 1]
+        if divers and rng.random() < 0.5:
+            here.append(rng.choice(divers))  # visiting; it stays on its own map
     here = here[:most]
     major = ctx.db.execute("SELECT id, species, level FROM majors WHERE map = ? AND cleared_by IS NULL",
                            (key,)).fetchone() or (0, 0, 0)
     head = text([(len(here), *major)])
-    return head + b"\0" + b"".join(r.wire() for r in here)
+    return head + b"\0" + b"".join(r.wire(bond(ctx.db, r.id, ctx.key)) for r in here)
 
 
 def cmd_sync(ctx, args, data):
@@ -631,6 +764,9 @@ def cmd_sync(ctx, args, data):
         news(ctx.db, f"{r.name}'s Pokémon evolved into {species_name(arg)}!")
     elif event == 5:
         news(ctx.db, f"{r.name} traded with {ctx.key[0]} for a {species_name(arg)}.")
+        b = bond(ctx.db, r.id, ctx.key)
+        b["friendship"] += 3
+        save_bond(ctx.db, r.id, ctx.key, b)
     r.save(ctx.db)
     return b""
 
@@ -660,8 +796,41 @@ def cmd_beat(ctx, args, data):
     # Rovers stay off the PvP ladder (ron, 2026-10-31): their own record only.
     if who == 1:
         news(ctx.db, f"{ctx.key[0]} {'lost to' if won else 'beat'} {r.name}.")
+        # Beat it and it becomes your rival until it wins one back.
+        b = bond(ctx.db, r.id, ctx.key)
+        b["friendship"] += 1
+        if won:
+            b["lost"] += 1
+            if b["rival"]:
+                news(ctx.db, f"{r.name} finally beat {ctx.key[0]}!")
+            b["rival"] = 0
+        else:
+            b["beaten"] += 1
+            b["rival"] = 1
+        save_bond(ctx.db, r.id, ctx.key, b)
     r.save(ctx.db)
     return b""
+
+
+def cmd_gift(ctx, args, data):
+    """ROVER GIFT <id>: a friend's present, once a day: item id|count, or
+    0|0. It's the best thing it crafted, else something from its bag."""
+    r = load(ctx.db, int(args[1]))
+    b = bond(ctx.db, r.id, ctx.key)
+    if b["friendship"] < FRIEND_AT or now() - b["last_gift"] < GIFT_EVERY:
+        return text([(0, 0)])
+    crafted = [i for i, _, _ in life.RECIPES if r.life["bag"].get(i) and i in ITEMS]
+    pool = crafted or [i for i in r.life["bag"] if i in ITEMS]
+    item = pool[0] if pool else "POTION"
+    count = 1
+    if item in r.life["bag"]:
+        count = min(r.life["bag"][item], 3 if item in life.BALLS else 1)
+        life.take(r.life, item, count)
+    b["last_gift"] = now()
+    save_bond(ctx.db, r.id, ctx.key, b)
+    r.save(ctx.db)
+    news(ctx.db, f"{r.name} gave {ctx.key[0]} a present.")
+    return text([(ITEMS.get(item, ITEMS.get("POTION", 0)), count)])
 
 
 def cmd_leave(ctx, args, data):
@@ -672,6 +841,19 @@ def cmd_leave(ctx, args, data):
     if r.map == key and key in WORLD and WORLD[key]["links"]:
         r.map = rng.choice(WORLD[key]["links"])
         r.save(ctx.db)
+    return b""
+
+
+def cmd_explored(ctx, args, data):
+    """ROVER EXPLORED <id> <group> <num>: the rover explored a cave floor
+    with the player; they're a little closer friends."""
+    r = load(ctx.db, int(args[1]))
+    key = map_key(args, 2)
+    b = bond(ctx.db, r.id, ctx.key)
+    b["friendship"] += 2
+    save_bond(ctx.db, r.id, ctx.key, b)
+    where = "the Rift Below" if key == RIFT else title(key) if key in WORLD else "a cave"
+    news(ctx.db, f"{r.name} explored {where} with {ctx.key[0]}.")
     return b""
 
 
@@ -738,8 +920,9 @@ def cmd_major_clear(ctx, args, data):
     return b""
 
 
-ROVER = {"HERE": cmd_here, "SYNC": cmd_sync, "FIGHT": cmd_fight, "BEAT": cmd_beat, "LEAVE": cmd_leave,
-         "BOARD": cmd_board, "INFO": cmd_ask}
+ROVER = {"GIFT": cmd_gift, "HERE": cmd_here, "SYNC": cmd_sync, "FIGHT": cmd_fight, "BEAT": cmd_beat, "LEAVE": cmd_leave, "EXPLORED": cmd_explored,
+         "BOARD": cmd_board, "INFO": cmd_ask,
+         "LEAGUE": lambda ctx, args, data: rovers_league.cmd_league(ctx, args, data, sys.modules[__name__])}
 MAJOR = {"LIST": cmd_majors, "CLEAR": cmd_major_clear}
 
 

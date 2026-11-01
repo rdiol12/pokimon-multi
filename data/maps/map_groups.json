@@ -199,7 +199,12 @@
     "IronmoorPrison",
     "IronmoorPrison_Solitary",
     "HavenReserve",
-    "HavenReserve_Lodge"
+    "HavenReserve_Lodge",
+    "LaurelCity",
+    "LaurelCity_Stadium",
+    "LaurelCity_HallOfChampions",
+    "LaurelCity_RoversLodge",
+    "LaurelCity_LeagueShop"
   ],
   "gMapGroup_IndoorLittleroot": [
     "LittlerootTown_BrendansHouse_1F",
@@ -288,7 +293,8 @@
     "SlateportCity_House",
     "SlateportCity_PokemonCenter_1F",
     "SlateportCity_PokemonCenter_2F",
-    "SlateportCity_Mart"
+    "SlateportCity_Mart",
+    "SlateportCity_MarketHall"
   ],
   "gMapGroup_IndoorMauville": [
     "MauvilleCity_Gym",
@@ -351,6 +357,7 @@
     "LilycoveCity_House3",
     "LilycoveCity_House4",
     "LilycoveCity_DepartmentStore_1F",
+    "LilycoveCity_AuctionHouse",
     "LilycoveCity_DepartmentStore_2F",
     "LilycoveCity_DepartmentStore_3F",
     "LilycoveCity_DepartmentStore_4F",

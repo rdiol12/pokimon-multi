@@ -692,7 +692,7 @@ static void Task_FossilFallAndSink(u8 taskId)
         if (gSprites[sFallingFossil->spriteId].callback != SpriteCallbackDummy)
             return;
         gSprites[sFallingFossil->spriteId].inUse = FALSE;
-        FieldEffectFreePaletteIfUnused(gSprites[sFallingFossil->spriteId].oam.paletteNum);
+        FieldEffectFreePaletteIfUnused(GetSpritePaletteSlot(&gSprites[sFallingFossil->spriteId]));
         gSprites[sFallingFossil->spriteId].inUse = TRUE;
         DestroySprite(&gSprites[sFallingFossil->spriteId]);
         FREE_AND_SET_NULL(sFallingFossil->disintegrateRand);

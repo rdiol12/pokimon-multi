@@ -602,6 +602,8 @@ static const struct SpritePalette sObjectEventSpritePalettes[] = {
     {gObjectEventPaletteNeonLight,          OBJ_EVENT_PAL_TAG_NEON_LIGHT},
     {gObjectEventPal_Eclipse,               OBJ_EVENT_PAL_TAG_ECLIPSE},
     {gObjectEventPal_FieldAbility,          OBJ_EVENT_PAL_TAG_FIELD_ABILITY},
+    {gObjectEventPal_MarketMaster,          OBJ_EVENT_PAL_TAG_MARKET_MASTER},
+    {gObjectEventPal_Auctioneer,            OBJ_EVENT_PAL_TAG_AUCTIONEER},
 #ifdef BUGFIX
     {NULL,                                  OBJ_EVENT_PAL_TAG_NONE},
 #else
@@ -1475,13 +1477,27 @@ u8 GetObjectEventIdByXY(s16 x, s16 y)
     return i;
 }
 
+// The last slot each local id was found in. Looked up many times a frame
+// (every shadow, rover, other player...), and with 64 objects a full scan
+// each time made the overworld lag, so the hint is checked first. It's only
+// a hint: a stale one fails the check and the scan runs as before.
+static EWRAM_DATA u8 sLocalIdHint[256] = {0};
+
 static u8 GetObjectEventIdByLocalIdAndMapInternal(u8 localId, u8 mapNum, u8 mapGroupId)
 {
-    u8 i;
+    u32 i = sLocalIdHint[localId];
+    const struct ObjectEvent *obj = &gObjectEvents[i];
+
+    if (i < OBJECT_EVENTS_COUNT && obj->active && obj->localId == localId && obj->mapNum == mapNum && obj->mapGroup == mapGroupId)
+        return i;
     for (i = 0; i < OBJECT_EVENTS_COUNT; i++)
     {
-        if (gObjectEvents[i].active && gObjectEvents[i].localId == localId && gObjectEvents[i].mapNum == mapNum && gObjectEvents[i].mapGroup == mapGroupId)
+        obj = &gObjectEvents[i];
+        if (obj->active && obj->localId == localId && obj->mapNum == mapNum && obj->mapGroup == mapGroupId)
+        {
+            sLocalIdHint[localId] = i;
             return i;
+        }
     }
 
     return OBJECT_EVENTS_COUNT;
@@ -1718,14 +1734,14 @@ static void RemoveObjectEventInternal(struct ObjectEvent *objectEvent)
     // It's possible that this function is called while the sprite pointed to `== sDummySprite`, i.e during map resume;
     // In this case, don't free the palette as `paletteNum` is likely blank dummy data
     if (!gSprites[objectEvent->spriteId].inUse &&
-        !gSprites[objectEvent->spriteId].oam.paletteNum &&
+        !GetSpritePaletteSlot(&gSprites[objectEvent->spriteId]) &&
         gSprites[objectEvent->spriteId].callback == SpriteCallbackDummy)
     {
         DestroySprite(&gSprites[objectEvent->spriteId]);
     }
     else
     {
-        u32 paletteNum = gSprites[objectEvent->spriteId].oam.paletteNum;
+        u32 paletteNum = GetSpritePaletteSlot(&gSprites[objectEvent->spriteId]);
         u16 tileStart;
         if (OW_GFX_COMPRESS)
             tileStart = gSprites[objectEvent->spriteId].sheetTileStart;
@@ -1753,8 +1769,9 @@ static s16 ReallocSpriteTiles(struct Sprite *sprite, u32 byteSize)
         {
             // Fill the allocated area with zeroes
             // To avoid visual glitches if the frame hasn't been copied yet
-            CpuFastFill16(0, (u8 *)OBJ_VRAM0 + TILE_SIZE_4BPP * i, byteSize);
+            CpuFastFill16(0, SpriteTileAddr(i), byteSize);
             sprite->oam.tileNum = i;
+            sprite->tileBank = i / TOTAL_OBJ_TILE_COUNT;
         }
     }
     else
@@ -1835,6 +1852,7 @@ u16 LoadSheetGraphicsInfo(const struct ObjectEventGraphicsInfo *info, u16 uuid, 
     else if (sprite && sprite->usingSheet)
     {
         sprite->oam.tileNum = sprite->sheetTileStart;
+        sprite->tileBank = sprite->sheetTileStart / TOTAL_OBJ_TILE_COUNT;
         sprite->usingSheet = FALSE;
 
     }
@@ -1882,7 +1900,7 @@ static u8 TrySetupObjectEventSprite(const struct ObjectEventTemplate *objectEven
     sprite = &gSprites[spriteId];
     // Use palette from species palette table
     if (spriteTemplate->paletteTag == OBJ_EVENT_PAL_TAG_DYNAMIC)
-        sprite->oam.paletteNum = LoadDynamicFollowerPalette(OW_SPECIES(objectEvent), OW_SHINY(objectEvent), OW_FEMALE(objectEvent));
+        SetSpritePaletteSlot(sprite, LoadDynamicFollowerPalette(OW_SPECIES(objectEvent), OW_SHINY(objectEvent), OW_FEMALE(objectEvent)));
     if (OW_GFX_COMPRESS && sprite->usingSheet)
         sprite->sheetSpan = GetSpanPerImage(sprite->oam.shape, sprite->oam.size);
     GetMapCoordsFromSpritePos(objectEvent->currentCoords.x + cameraX, objectEvent->currentCoords.y + cameraY, &sprite->x, &sprite->y);
@@ -2261,9 +2279,9 @@ static void FollowerSetGraphics(struct ObjectEvent *objEvent, enum Species speci
         struct Sprite *sprite = &gSprites[objEvent->spriteId];
         // Free palette if otherwise unused
         sprite->inUse = FALSE;
-        FieldEffectFreePaletteIfUnused(sprite->oam.paletteNum);
+        FieldEffectFreePaletteIfUnused(GetSpritePaletteSlot(sprite));
         sprite->inUse = TRUE;
-        sprite->oam.paletteNum = LoadDynamicFollowerPalette(species, shiny, female);
+        SetSpritePaletteSlot(sprite, LoadDynamicFollowerPalette(species, shiny, female));
     }
 }
 
@@ -2301,15 +2319,15 @@ static void RefreshFollowerGraphics(struct ObjectEvent *objEvent)
     if (graphicsInfo->paletteTag == OBJ_EVENT_PAL_TAG_DYNAMIC)
     {
         sprite->inUse = FALSE;
-        FieldEffectFreePaletteIfUnused(sprite->oam.paletteNum);
+        FieldEffectFreePaletteIfUnused(GetSpritePaletteSlot(sprite));
         sprite->inUse = TRUE;
-        sprite->oam.paletteNum = LoadDynamicFollowerPalette(species, shiny, female);
+        SetSpritePaletteSlot(sprite, LoadDynamicFollowerPalette(species, shiny, female));
     }
     else if (i != 0xFF)
     {
         UpdateSpritePalette(&sObjectEventSpritePalettes[i], sprite);
         if (gWeatherPtr->currWeather != WEATHER_FOG_HORIZONTAL) // don't want to weather blend in fog
-            UpdateSpritePaletteWithWeather(sprite->oam.paletteNum, FALSE);
+            UpdateSpritePaletteWithWeather(GetSpritePaletteSlot(sprite), FALSE);
     }
 }
 
@@ -2779,7 +2797,7 @@ void UpdateLightSprite(struct Sprite *sprite)
     if (!(x >= left && x <= right && y >= top && y <= bottom))
     {
         sheetTileStart = sprite->sheetTileStart;
-        paletteNum = sprite->oam.paletteNum;
+        paletteNum = GetSpritePaletteSlot(sprite);
         DestroySprite(sprite);
         FieldEffectFreeTilesIfUnused(sheetTileStart);
         FieldEffectFreePaletteIfUnused(paletteNum);
@@ -2802,14 +2820,14 @@ void UpdateLightSprite(struct Sprite *sprite)
         else if (gPlayerAvatar.tileTransitionState)
         {
             sprite->invisible = FALSE;
-            if (GetSpritePaletteTagByPaletteNum(sprite->oam.paletteNum) == OBJ_EVENT_PAL_TAG_LIGHT_2)
-                LoadSpritePaletteInSlot(&sObjectEventSpritePalettes[FindObjectEventPaletteIndexByTag(OBJ_EVENT_PAL_TAG_LIGHT)], sprite->oam.paletteNum);
+            if (GetSpritePaletteTagByPaletteNum(GetSpritePaletteSlot(sprite)) == OBJ_EVENT_PAL_TAG_LIGHT_2)
+                LoadSpritePaletteInSlot(&sObjectEventSpritePalettes[FindObjectEventPaletteIndexByTag(OBJ_EVENT_PAL_TAG_LIGHT)], GetSpritePaletteSlot(sprite));
         }
         else if ((sprite->invisible = gTimeUpdateCounter & 1))
         {
             sprite->invisible = FALSE;
-            if (GetSpritePaletteTagByPaletteNum(sprite->oam.paletteNum) == OBJ_EVENT_PAL_TAG_LIGHT_2)
-                LoadSpritePaletteInSlot(&sObjectEventSpritePalettes[FindObjectEventPaletteIndexByTag(OBJ_EVENT_PAL_TAG_LIGHT)], sprite->oam.paletteNum);
+            if (GetSpritePaletteTagByPaletteNum(GetSpritePaletteSlot(sprite)) == OBJ_EVENT_PAL_TAG_LIGHT_2)
+                LoadSpritePaletteInSlot(&sObjectEventSpritePalettes[FindObjectEventPaletteIndexByTag(OBJ_EVENT_PAL_TAG_LIGHT)], GetSpritePaletteSlot(sprite));
         }
     } else {
         sprite->invisible = FALSE;
@@ -2835,7 +2853,7 @@ static void SpawnLightSprite(s16 x, s16 y, s16 camX, s16 camY, u32 lightType)
     LoadSpriteSheetByTemplate(template, 0, 0);
     sprite = &gSprites[CreateSprite(template, 0, 0, 0)];
     if (lightType == 0 && (i = IndexOfSpritePaletteTag(template->paletteTag + 1)) < 16)
-        sprite->oam.paletteNum = i;
+        SetSpritePaletteSlot(sprite, i);
     else
         UpdateSpritePaletteByTemplate(template, sprite);
     GetMapCoordsFromSpritePos(x + camX, y + camY, &sprite->x, &sprite->y);
@@ -3105,19 +3123,19 @@ static u8 UpdateSpritePalette(const struct SpritePalette *spritePalette, struct 
 {
     // Free palette if otherwise unused
     sprite->inUse = FALSE;
-    FieldEffectFreePaletteIfUnused(sprite->oam.paletteNum);
+    FieldEffectFreePaletteIfUnused(GetSpritePaletteSlot(sprite));
     sprite->inUse = TRUE;
     if (IndexOfSpritePaletteTag(spritePalette->tag) == 0xFF)
     {
-        sprite->oam.paletteNum = LoadSpritePalette(spritePalette);
-        UpdateSpritePaletteWithWeather(sprite->oam.paletteNum, FALSE);
+        SetSpritePaletteSlot(sprite, LoadSpritePalette(spritePalette));
+        UpdateSpritePaletteWithWeather(GetSpritePaletteSlot(sprite), FALSE);
     }
     else
     {
-        sprite->oam.paletteNum = LoadSpritePalette(spritePalette);
+        SetSpritePaletteSlot(sprite, LoadSpritePalette(spritePalette));
     }
 
-    return sprite->oam.paletteNum;
+    return GetSpritePaletteSlot(sprite);
 }
 
 // Find and update based on template's paletteTag

@@ -30,6 +30,10 @@ FENCE_Y = 20         # the tree line: rows 20-21
 # meadow, clear of the pond and the trees).
 ROAMERS = [(6, 6, 2, 2), (12, 4, 2, 1), (17, 7, 3, 2), (9, 12, 2, 2),
            (15, 14, 3, 2), (26, 13, 2, 2), (30, 9, 1, 3), (22, 17, 3, 1)]
+# 12 more since the extended GBA (64 objects): objects 14-25.
+MORE_ROAMERS = [(5, 10, 2, 2), (8, 16, 2, 1), (11, 14, 1, 2), (14, 11, 2, 1),
+                (20, 13, 2, 2), (21, 5, 1, 1), (27, 16, 2, 1), (32, 9, 1, 3),
+                (4, 14, 1, 2), (28, 11, 1, 1), (9, 3, 2, 1), (14, 18, 2, 1)]
 
 st = copy.copy(town())
 st.exclude = set(st.exclude) | {0x129, 0x087, 0x0C6, 0x1D4, 0x1E7, 0x1D9, 0x1D1, 0x1E0, 0x1E1, 0x1E2}  # worn sand, fences, signs, worn grass
@@ -70,7 +74,7 @@ for i, (x, y) in enumerate(FLOWERS):
             a.tile(x + dx, y + dy, 0x004, collision=0)
 
 # --- events -------------------------------------------------------------------
-# Object order = local ids 1.. (the roamers are 1-8, see include/constants/reserve.h).
+# Object order = local ids 1.. (the roamers are 1-8 and 14-25, see include/constants/reserve.h).
 for i, (x, y, rx, ry) in enumerate(ROAMERS):
     a.obj(f'OBJ_EVENT_GFX_VAR_{i:X}', x, y, f'HavenReserve_EventScript_Roamer{i + 1}',
           'MOVEMENT_TYPE_WANDER_AROUND', f'FLAG_TEMP_{0x11 + i:X}', rx=rx, ry=ry)
@@ -79,6 +83,10 @@ a.obj('OBJ_EVENT_GFX_POLICEMAN', GATE_X + 2, 22, 'HavenReserve_EventScript_Guard
 a.obj('OBJ_EVENT_GFX_WOMAN_5', 13, 24, 'HavenReserve_EventScript_Warden', 'MOVEMENT_TYPE_FACE_DOWN')
 a.obj('OBJ_EVENT_GFX_POLICEMAN', 5, 4, 'HavenReserve_EventScript_Patrol', 'MOVEMENT_TYPE_WALK_LEFT_AND_RIGHT', rx=4)
 a.obj('OBJ_EVENT_GFX_PICNICKER', 21, 15, 'HavenReserve_EventScript_Visitor', 'MOVEMENT_TYPE_FACE_LEFT')
+# Roamers 9-20 (local ids 14-25, after the people above).
+for i, (x, y, rx, ry) in enumerate(MORE_ROAMERS):
+    a.obj('OBJ_EVENT_GFX_VAR_0', x, y, f'HavenReserve_EventScript_Roamer{i + 9}',
+          'MOVEMENT_TYPE_WANDER_AROUND', f'FLAG_TEMP_{0x1 + i:X}', rx=rx, ry=ry)
 a.sign(21, 23, 'HavenReserve_EventScript_Board')
 a.sign(15, 28, 'HavenReserve_EventScript_Sign')
 a.warp(LODGE_DOOR[0], LODGE_DOOR[1], 'MAP_HAVEN_RESERVE_LODGE', 0)

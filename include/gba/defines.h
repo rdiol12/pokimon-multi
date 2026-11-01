@@ -10,6 +10,10 @@
 #define EWRAM_DATA __attribute__((section(".sbss")))
 #define IWRAM_INIT __attribute__((section(".iwram")))
 #define EWRAM_INIT __attribute__((section(".ewram")))
+// Zero-initialised data in the 16 MiB extended EWRAM of our emulator fork (emulator/README.md).
+// Never use it for anything the netplay bridge scans for (mailboxes): those stay in EWRAM_DATA,
+// inside the first 256 KiB, where the bridge and the phone app look.
+#define EWRAM_EXT_DATA __attribute__((section(".pkx_ewram")))
 #define COMMON_DATA __attribute__((section("common_data")))
 #define UNUSED __attribute__((unused))
 #define USED __attribute__((used))
@@ -39,6 +43,52 @@
 
 #define EWRAM_START 0x02000000
 #define EWRAM_END   (EWRAM_START + 0x40000)
+#define EWRAM_EXT_START EWRAM_END
+#define EWRAM_EXT_END   (EWRAM_START + 0x1000000)
+
+// Pokimon extended hardware registers (emulator/README.md)
+#define REG_ADDR_PKX_ID      0x04FFF7F0
+#define REG_ADDR_PKX_VERSION 0x04FFF7F2
+#define REG_ADDR_PKX_CONTROL 0x04FFF7F4
+#define PKX_ID               0x504B
+#define PKX_UNLOCK_EWRAM     0x4558
+#define PKX_CONTROL_EWRAM    0x0001
+// Version 2: extra sprite palettes and sprite slots, in the extended video region
+#define PKX_ENABLE_OBJ       0x4F41
+#define PKX_DISABLE_OBJ      0x4F40
+#define PKX_CONTROL_OBJ      0x0002
+#define PKX_VIDEO            0x1000000
+#define PKX_OBJ_PLTT         (PKX_VIDEO + 0x0000) // sprite palettes 16..63
+#define PKX_OAM              (PKX_VIDEO + 0x1000) // 512 OAM entries; 0..127 are ignored (the normal OAM is used)
+#define PKX_OAM_ATTR         (PKX_VIDEO + 0x2000) // one byte per OAM entry 0..511: bits 0-1 = palette bank
+#define PKX_OBJ_PALETTES     64
+#define PKX_OAM_ENTRIES      512
+// Version 5: three more 32 KiB banks of sprite tiles. Attribute bits 2-3 pick the bank
+// (0 = normal OBJ VRAM). Write to them with the CPU or DMA; read them with the CPU.
+#define PKX_OBJ_TILES        (PKX_VIDEO + 0x10000)
+#define PKX_OBJ_TILE_BANKS   3
+#define PKX_OBJ_TILE_COUNT_ALL (1024 * (PKX_OBJ_TILE_BANKS + 1))
+// Version 5: 48 more background palettes, and a register that picks a palette bank for
+// each background (2 bits per BG; 0 = the normal 16 palettes, 1-3 = PKX_BG_PLTT banks).
+// Text-mode backgrounds only.
+#define PKX_BG_PLTT          (PKX_VIDEO + 0x3000)
+#define PKX_EXT_BG_PALETTES  48
+#define REG_ADDR_PKX_BG_PALETTE_BANKS 0x4FFF7F6
+// Version 3: 1 MiB of battery-backed RAM saved with the flash save. CPU access only (no DMA).
+#define PKX_SAVE             (PKX_VIDEO + 0x100000)
+#define PKX_SAVE_SIZE        0x100000
+// Version 4: CPU overclock. Write PKX_SET_OVERCLOCK | n (n = 1..8) to the control register;
+// control bits 8-11 read back the current multiplier.
+#define PKX_SET_OVERCLOCK    0x4300
+#ifndef PKX_OVERCLOCK
+#define PKX_OVERCLOCK        4 // the game's multiplier
+#endif
+// Version 4: ROMs up to 64 MiB. The first 32 MiB stay at ROM_START (and its 0x0A000000 mirror,
+// which script function tags use); the rest shows at PKX_ROM2. Put big read-only data there with
+// ROM2_DATA. Only valid on extended hardware v4.
+#define PKX_ROM2             0x0C000000
+#define PKX_ROM2_SIZE        0x2000000
+#define ROM2_DATA            __attribute__((section(".rom2")))
 #define IWRAM_START 0x03000000
 #define IWRAM_END   (IWRAM_START + 0x8000)
 

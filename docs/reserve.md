@@ -17,7 +17,7 @@ roaming NPC trainers.
   lodge) takes any Pokémon from your party except an egg or your last one
   that can battle. It runs off into the meadow at once. Online it goes to
   the server and every player can meet it; offline it is kept in your save
-  (up to six) and roams your own reserve.
+  (up to 40) and roams your own reserve.
 - **Meeting one**: walk up to a roaming Pokémon and talk to it to see what
   it is, its level and who left it. Challenge it to a wild battle with the
   Pokémon exactly as its trainer left it (moves, nickname, original
@@ -42,16 +42,20 @@ roaming NPC trainers.
 | Server | `server/community_reserve.py` (a community feature), tests in `server/test_community_reserve.py` |
 | Screenshots | `tools/reserve_shots/` |
 
-The meadow has eight spots: objects 1-8 of the map, drawn with
-`VAR_OBJ_GFX_ID_0`-`7` and hidden with `FLAG_TEMP_11`-`18`, so the reserve
-needs no saved flags or vars. The list of who's in each spot lives in EWRAM
-(160 bytes) and is rebuilt when you come in through the Verdanturf guard. If
+The meadow has twenty spots (eight on the GBA, before the extended GBA's 64
+objects): objects 1-8 and 14-25 of the map, hidden with `FLAG_TEMP_11`-`18`
+and `FLAG_TEMP_1`-`C`, so the reserve needs no saved flags or vars. Each
+spot's look is written into the map's object templates when you arrive.
+Up to 11 spots hold shared Pokémon from the server (one owner name per
+community mailbox row), the rest your own offline ones and the day's strays.
+The list of who's in each spot lives in EWRAM (400 bytes) and is rebuilt when you come in through the Verdanturf guard. If
 you continue a save inside the reserve it is rebuilt from what's known
 offline.
 
-Offline Pokémon are saved compactly in `SaveBlock3.reserve` (80 bytes: six
-Pokémon as species, level, personality and IVs, plus the day's strays and a
-couple of counters). Making one again keeps its species, level, nature,
+Offline Pokémon are saved compactly: the first six in `SaveBlock3.reserve`
+(80 bytes, with the day's strays and a couple of counters), the other 34 in
+`SaveBlockExt.reserveMoreMons` (the extended save, include/save_ext.h; without
+it the limit stays six). Each is species, level, personality and IVs. Making one again keeps its species, level, nature,
 gender, shininess and IVs.
 
 ### Server requests
@@ -61,13 +65,13 @@ The reserve uses the community request channel (`gCommunityMailbox`,
 
 | Type | Name | In | Out |
 |---|---|---|---|
-| 75 | `RESERVE_LIST` | | up to 8 roaming: 12 bytes each (id u32, personality u32, species u16, level u8, flags u8: 1 yours, 2 shiny, 4 female); row 1+n = who left each; args: count, residents |
+| 75 | `RESERVE_LIST` | | up to 11 roaming: 12 bytes each (id u32, personality u32, species u16, level u8, flags u8: 1 yours, 2 shiny, 4 female); row 1+n = who left each; args: count, residents |
 | 76 | `RESERVE_LEAVE` | args species, level, flags; data: the Pokémon's 80 bytes + 12-byte nickname | args[0] its id; status 3 if the reserve is full |
 | 77 | `RESERVE_CLAIM` | args[0] id | its 80 bytes (none for an NPC trainer's), args species, level, personality; status 2 if gone or someone else is battling it |
 | 78 | `RESERVE_RESULT` | args id, end (0 still here, 1 caught, 2 knocked out) | |
 | 79 | `RESERVE_LOG` | | rows: the latest news |
 
-The eight shown are picked fresh every 5 minutes (`NETPLAY_RESERVE_ROTATE_SECONDS`)
+The 11 shown are picked fresh every 5 minutes (`NETPLAY_RESERVE_ROTATE_SECONDS`)
 from the residents nobody is battling, the same for everyone. A claim lasts
 10 minutes (`NETPLAY_RESERVE_CLAIM_SECONDS`) if the game never reports
 back. The reserve holds at most 600 (`NETPLAY_RESERVE_MAX`).

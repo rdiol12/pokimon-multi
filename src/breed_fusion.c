@@ -1,4 +1,5 @@
 #include "global.h"
+#include "save_ext.h"
 #include "breed_fusion.h"
 #include "community.h"
 #include "main.h"
@@ -17,7 +18,7 @@
 
 // Fusion breeding. See include/breed_fusion.h for the rules. Nothing here
 // needs save data beyond the partner species kept in each Pokémon, and
-// the only EWRAM is a few small caches.
+// the only EWRAM is a few caches.
 //
 // Colors: both parents' front sprites are measured (how many pixels use
 // each palette color) and each palette is split into color families:
@@ -33,8 +34,11 @@
 #define HUE_NEAR         160  // hues closer than this (about 37°) join one family
 #define DARK_LIMIT       44   // lightness below this is an outline, kept as is
 #define GREY_LIMIT       40   // saturation below this is a grey/white
-#define PALETTE_SLOTS    3
-#define PARTNER_SLOTS    4
+// Caches: blended palettes made (each needs a sprite decompressed and
+// measured) and partners looked up in the party and boxes. 3 and 4 on the
+// GBA; extended EWRAM fits enough for a full double battle, party and box.
+#define PALETTE_SLOTS    32
+#define PARTNER_SLOTS    48
 #define FUSION_FOLLOWER_PAL_TAG  0xF000 // + a hash of the pair, below TAG_NONE
 #define FUSION_FOLLOWER_PAL_TAGS 0x0F00
 
@@ -66,9 +70,9 @@ struct PartnerCacheEntry
 
 static void CountPicPixels(const u8 *pic, u32 size, u16 *counts);
 
-static EWRAM_DATA struct FusionPalette sPalettes[PALETTE_SLOTS] = {0};
+static EWRAM_EXT_DATA struct FusionPalette sPalettes[PALETTE_SLOTS] = {0};
 static EWRAM_DATA u8 sNextPalette = 0;
-static EWRAM_DATA struct PartnerCacheEntry sPartners[PARTNER_SLOTS] = {0};
+static EWRAM_EXT_DATA struct PartnerCacheEntry sPartners[PARTNER_SLOTS] = {0};
 static EWRAM_DATA u8 sNextPartner = 0;
 static EWRAM_DATA u8 sRequestState = 0;   // REQUEST_*
 static EWRAM_DATA u8 sRequestFailures = 0;
@@ -332,15 +336,30 @@ u32 BreedFusion_GetIconPalIndex(u32 species, u32 personality, u32 palIndex)
 // ---------------------------------------------------------------------------
 // Fusions built by the server
 
+// The saved recipes: the first few in SaveBlock3, the rest in the extended
+// save, which only an emulator with hardware v3 keeps.
+static u32 RecipeCount(void)
+{
+    return SaveExt_IsAvailable() ? FUSION_RECIPE_TOTAL : FUSION_RECIPE_COUNT;
+}
+
+static struct FusionRecipe *Recipe(u32 i)
+{
+    if (i < FUSION_RECIPE_COUNT)
+        return &gSaveBlock3Ptr->breedFusion.recipes[i];
+    return &gSaveBlockExt.fusionMoreRecipes[i - FUSION_RECIPE_COUNT];
+}
+
 static struct FusionRecipe *FindRecipe(u32 species, u32 partner)
 {
-    struct BreedFusionSaveData *save = &gSaveBlock3Ptr->breedFusion;
-    u32 i;
+    u32 i, n = RecipeCount();
 
-    for (i = 0; i < FUSION_RECIPE_COUNT; i++)
+    for (i = 0; i < n; i++)
     {
-        if (save->recipes[i].count != 0 && save->recipes[i].species == species && save->recipes[i].partner == partner)
-            return &save->recipes[i];
+        struct FusionRecipe *r = Recipe(i);
+
+        if (r->count != 0 && r->species == species && r->partner == partner)
+            return r;
     }
     return NULL;
 }
@@ -363,7 +382,7 @@ static void SaveRecipe(const u8 *data, u32 len)
 {
     struct BreedFusionSaveData *save = &gSaveBlock3Ptr->breedFusion;
     struct FusionRecipe *recipe;
-    u32 species, partner, count, i;
+    u32 species, partner, count, i, n = RecipeCount(), slot = 0;
 
     if (len < 4 + 2 + FUSION_RECIPE_COLORS * 4)
         return;
@@ -376,21 +395,30 @@ static void SaveRecipe(const u8 *data, u32 len)
     if (recipe == NULL)
     {
         // An empty slot, else the next one whose fusion isn't in the party.
-        for (i = 0; i < FUSION_RECIPE_COUNT && recipe == NULL; i++)
+        for (i = 0; i < n && recipe == NULL; i++)
         {
-            if (save->recipes[i].count == 0)
-                recipe = &save->recipes[i];
+            if (Recipe(i)->count == 0)
+            {
+                recipe = Recipe(i);
+                slot = i;
+            }
         }
-        for (i = 0; i < FUSION_RECIPE_COUNT && recipe == NULL; i++)
+        for (i = 0; i < n && recipe == NULL; i++)
         {
-            struct FusionRecipe *r = &save->recipes[(save->nextSlot + i) % FUSION_RECIPE_COUNT];
+            struct FusionRecipe *r = Recipe((save->nextSlot + i) % n);
 
             if (!PartyNeedsRecipe(r->species, r->partner))
+            {
                 recipe = r;
+                slot = (save->nextSlot + i) % n;
+            }
         }
         if (recipe == NULL)
-            recipe = &save->recipes[save->nextSlot % FUSION_RECIPE_COUNT];
-        save->nextSlot = (recipe - save->recipes + 1) % FUSION_RECIPE_COUNT;
+        {
+            slot = save->nextSlot % n;
+            recipe = Recipe(slot);
+        }
+        save->nextSlot = (slot + 1) % n;
     }
     recipe->species = species;
     recipe->partner = partner;

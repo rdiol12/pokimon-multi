@@ -24,8 +24,20 @@ const copy = (from, to) => {
     if (!existsSync(from)) throw new Error(`missing ${from} (run npm install in mobile/)`);
     cpSync(from, join(vendor, to));
 };
-copy(join(modules, '@wasm-gaming/mgba-wasm/dist/mgba/mgba.js'), 'mgba.js');
-copy(join(modules, '@wasm-gaming/mgba-wasm/dist/mgba/mgba.wasm'), 'mgba.wasm');
+// The game needs our mGBA fork's extended hardware (emulator/README.md), built by
+// `emulator/build.sh wasm`. MGBA_WASM_DIR points at its mgba.js + mgba.wasm; the
+// stock npm build is only a fallback for working on the app itself, and the game
+// stops on a red screen under it.
+const wasmDir = process.env.MGBA_WASM_DIR
+    || (existsSync(join(repo, 'build/emulator/wasm/dist/mgba/mgba.wasm')) ? join(repo, 'build/emulator/wasm/dist/mgba') : null);
+if (wasmDir) {
+    copy(join(wasmDir, 'mgba.js'), 'mgba.js');
+    copy(join(wasmDir, 'mgba.wasm'), 'mgba.wasm');
+} else {
+    console.warn('warning: no MGBA_WASM_DIR, using the stock mGBA build; the game will not boot in it');
+    copy(join(modules, '@wasm-gaming/mgba-wasm/dist/mgba/mgba.js'), 'mgba.js');
+    copy(join(modules, '@wasm-gaming/mgba-wasm/dist/mgba/mgba.wasm'), 'mgba.wasm');
+}
 copy(join(modules, 'wasmoon/dist/index.js'), 'wasmoon.js');
 copy(join(modules, 'wasmoon/dist/glue.wasm'), 'glue.wasm');
 
@@ -45,9 +57,10 @@ console.log(`mobile/dist ready (version ${version}, ${patch ? 'patch bundled' : 
 
 // Keep the licenses of what we ship next to it.
 writeFileSync(join(vendor, 'NOTICE.txt'), [
-    'mgba.js, mgba.wasm: mGBA (https://mgba.io) built by @wasm-gaming/mgba-wasm,',
-    'Mozilla Public License 2.0. Source: https://github.com/mgba-emu/mgba and',
-    'https://www.npmjs.com/package/@wasm-gaming/mgba-wasm',
+    'mgba.js, mgba.wasm: mGBA (https://mgba.io) with the Pokimon extended hardware',
+    'patches (emulator/ in the Pokimon Multi repository), built with the scripts of',
+    '@wasm-gaming/mgba-wasm. Mozilla Public License 2.0. Source: https://github.com/mgba-emu/mgba,',
+    'https://github.com/wasm-gaming/mGBA-wasm and emulator/patches/ in this project.',
     '',
     'wasmoon.js, glue.wasm: wasmoon (Lua 5.4 in WebAssembly), MIT license:',
     '',

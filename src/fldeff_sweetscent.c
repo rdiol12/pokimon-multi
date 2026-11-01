@@ -56,7 +56,7 @@ void StartSweetScentFieldEffect(void)
 {
     void *palBuffer;
     u32 taskId;
-    u32 palettes = ~(1 << (gSprites[GetPlayerAvatarSpriteId()].oam.paletteNum + 16) | (1 << 13) | (1 << 14) | (1 << 15));
+    u32 palettes = ~(1 << (GetSpritePaletteSlot(&gSprites[GetPlayerAvatarSpriteId()]) + 16) | (1 << 13) | (1 << 14) | (1 << 15));
 
     PlaySE(SE_M_SWEET_SCENT);
     palBuffer = Alloc(PLTT_SIZE);
@@ -99,7 +99,7 @@ static void TrySweetScentEncounter(u8 taskId)
             else
             {
                 gTasks[taskId].func = FailSweetScentEncounter;
-                BeginNormalPaletteFade(~(1 << (gSprites[GetPlayerAvatarSpriteId()].oam.paletteNum + 16)), 4, 8, 0, RGB_RED);
+                BeginNormalPaletteFade(~(1 << (GetSpritePaletteSlot(&gSprites[GetPlayerAvatarSpriteId()]) + 16)), 4, 8, 0, RGB_RED);
                 TryStartMirageTowerPulseBlendEffect();
             }
         }

@@ -18,7 +18,7 @@ community_run = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(community_run)
 world_run = community_run.world_run
 
-world_run.SYMBOLS += ["gObjectEvents", "gLifeShowcase"]
+world_run.SYMBOLS += ["gObjectEvents", "gLifeShowcase", "gSaveBlock3Ptr", "sShownCount"]
 world_run.HELPERS += """
 -- Summer, whatever the clock says (gLifeShowcase.season, src/life_seasons.c).
 function Driver.summer() E.write8(Driver.SYM.gLifeShowcase + 2, 2) end
@@ -30,14 +30,14 @@ local function objAt(i)
 end
 
 function Driver.playerXY()
-    for i = 0, 15 do
+    for i = 0, 63 do -- OBJECT_EVENTS_COUNT
         local _, active, _, x, y, isPlayer = objAt(i)
         if active == 1 and isPlayer == 1 then return x, y end
     end
 end
 
 function Driver.objectXY(localId)
-    for i = 0, 15 do
+    for i = 0, 63 do -- OBJECT_EVENTS_COUNT
         local _, active, id, x, y, isPlayer = objAt(i)
         if active == 1 and isPlayer == 0 and id == localId then return x, y end
     end
@@ -53,7 +53,7 @@ function Driver.approach(localId)
         local dx, dy = mx - px, my - py
         if math.abs(dx) + math.abs(dy) == 1 then
             local dir = dx == 1 and K.RIGHT or dx == -1 and K.LEFT or dy == 1 and K.DOWN or K.UP
-            -- The Pokémon's script sets VAR_0x8004 to its spot (0-7).
+            -- The Pokémon's script sets VAR_0x8004 to its spot (0-19).
             local var = Driver.SYM.gSpecialVar_0x8004
             E.write8(var, 0xFF); E.write8(var + 1, 0xFF)
             Driver.hold(dir, 2)

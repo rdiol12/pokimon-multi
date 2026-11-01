@@ -1872,7 +1872,7 @@ void CheckSaveBlock3Size(struct ScriptContext *ctx)
 
 void CheckPokemonStorageSize(struct ScriptContext *ctx)
 {
-    u32 currPkmnStorageSize = sizeof(struct PokemonStorage);
+    u32 currPkmnStorageSize = sizeof(struct PokemonStorageSave);
     u32 maxPkmnStorageSize = SECTOR_DATA_SIZE * (SECTOR_ID_PKMN_STORAGE_END - SECTOR_ID_PKMN_STORAGE_START + 1);
     ConvertIntToDecimalStringN(gStringVar1, currPkmnStorageSize, STR_CONV_MODE_LEFT_ALIGN, 6);
     ConvertIntToDecimalStringN(gStringVar2, maxPkmnStorageSize, STR_CONV_MODE_LEFT_ALIGN, 6);
@@ -2262,7 +2262,7 @@ static void Debug_CreateTrainerIcon(u8 taskId)
     gTasks[taskId].tSpriteId = CreateObjectGraphicsSpriteWithTag(graphicsId, SpriteCallbackDummy, DEBUG_NUMBER_ICON_X, DEBUG_NUMBER_ICON_Y, 4, DEBUG_ICON_TAG);
     StartSpriteAnim(&gSprites[gTasks[taskId].tSpriteId], ANIM_STD_GO_SOUTH);
     gSprites[gTasks[taskId].tSpriteId].oam.priority = 0;
-    gSprites[gTasks[taskId].tSpriteId].oam.paletteNum =  LoadObjectEventPaletteCopy(gSprites[gTasks[taskId].tSpriteId].template->paletteTag, DEBUG_ICON_TAG);
+    SetSpritePaletteSlot(&gSprites[gTasks[taskId].tSpriteId], LoadObjectEventPaletteCopy(gSprites[gTasks[taskId].tSpriteId].template->paletteTag, DEBUG_ICON_TAG));
 }
 
 static void DebugSelectionStep_UpdateMapTrainer(u8 taskId, u8 digits, u32 min, u32 max)

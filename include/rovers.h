@@ -37,6 +37,10 @@ struct RoverShowcase
     u8 offline;   // 1: don't ask the server
     u8 talk;      // actor + 1: talk to it after a moment
     u8 levelB;    // if not 0, the second and later rovers' level
+    u8 bond;      // ROVER_BOND_* for the first rover (rival, friend)
+    u8 unused;
+    u16 leadSpecies;  // if not 0, the first rover's lead is this species,
+    u16 leadFusion;   // fused with this one
 };
 extern struct RoverShowcase gRoverShowcase;
 
@@ -56,6 +60,10 @@ const u8 *Rovers_GetTalkScript(struct ObjectEvent *objectEvent);
 bool32 Rovers_IsRoverObject(struct ObjectEvent *objectEvent);
 bool32 Rovers_IsWatching(void);
 bool32 Rovers_IsTrading(void);
+bool32 Rovers_HasBuddy(void);
+bool32 Rovers_FromListing(struct Pokemon *mon);
+void Rovers_PrepareBuddyBattle(void);
+void Rovers_AfterBuddyBattle(void);
 const u8 *Rovers_TradeName(void);
 u16 Rovers_AiVsAiTrainerPic(void);
 bool32 Rovers_InjuresBattler(u32 battler);

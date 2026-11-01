@@ -1508,7 +1508,7 @@ static void LoadPlayerOrRivalSprite(u8 whichScene)
         sprTemplate = sPlayerOrRivalSpriteTemplate;
         sprTemplate.tileTag = data->characterTilesTag;
         data->characterSpriteId = CreateSprite(&sprTemplate, x, y, 0);
-        gSprites[data->characterSpriteId].oam.paletteNum = 15;
+        SetSpritePaletteSlot(&gSprites[data->characterSpriteId], 15);
         gSprites[data->characterSpriteId].subpriority = 0;
 
         data->groundTilesTag = GFXTAG_GROUND;
@@ -1550,7 +1550,7 @@ static void LoadPlayerOrRivalSprite(u8 whichScene)
         }
         sprTemplate.tileTag = data->groundTilesTag;
         data->groundSpriteId = CreateSprite(&sprTemplate, x, y + 38, 0);
-        gSprites[data->groundSpriteId].oam.paletteNum = 14;
+        SetSpritePaletteSlot(&gSprites[data->groundSpriteId], 14);
         gSprites[data->groundSpriteId].subpriority = 1;
     }
 }

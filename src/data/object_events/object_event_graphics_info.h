@@ -7375,3 +7375,42 @@ const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_FieldDigSpot = {
     .anims = sAnimTable_Inanimate,
     .images = sPicTable_FieldDigSpot,
 };
+
+// The Market Hall and Auction House keepers (tools/markets/): the fat man's
+// and the gentleman's frames in their own colours (graphics/markets/).
+
+const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_MarketMaster = {
+    .tileTag = TAG_NONE,
+    .paletteTag = OBJ_EVENT_PAL_TAG_MARKET_MASTER,
+    .reflectionPaletteTag = OBJ_EVENT_PAL_TAG_NONE,
+    .size = 256,
+    .width = 16,
+    .height = 32,
+    .paletteSlot = PALSLOT_NPC_1,
+    .shadowSize = SHADOW_SIZE_M,
+    .inanimate = FALSE,
+    .compressed = FALSE,
+    .tracks = TRACKS_FOOT,
+    .oam = &gObjectEventBaseOam_16x32,
+    .subspriteTables = sOamTables_16x32,
+    .anims = sAnimTable_Standard,
+    .images = sPicTable_FatMan,
+};
+
+const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_Auctioneer = {
+    .tileTag = TAG_NONE,
+    .paletteTag = OBJ_EVENT_PAL_TAG_AUCTIONEER,
+    .reflectionPaletteTag = OBJ_EVENT_PAL_TAG_NONE,
+    .size = 256,
+    .width = 16,
+    .height = 32,
+    .paletteSlot = PALSLOT_NPC_3,
+    .shadowSize = SHADOW_SIZE_M,
+    .inanimate = FALSE,
+    .compressed = FALSE,
+    .tracks = TRACKS_FOOT,
+    .oam = &gObjectEventBaseOam_16x32,
+    .subspriteTables = sOamTables_16x32,
+    .anims = sAnimTable_Standard,
+    .images = sPicTable_Gentleman,
+};

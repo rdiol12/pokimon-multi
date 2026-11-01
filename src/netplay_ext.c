@@ -985,7 +985,7 @@ static void PollTitles(void)
                     sMyBadge = title + 1;
                 for (slot = 0; slot < NETPLAY_MAX_REMOTES; slot++)
                 {
-                    if (gNetplayMailbox.remotes[slot].id == pid)
+                    if (Netplay_GetRemoteSlot(slot)->id == pid)
                     {
                         sTitleIds[slot] = pid;
                         sTitleBadges[slot] = title + 1;
@@ -1004,9 +1004,9 @@ static void PollTitles(void)
     NpxRpc_Num(gNetplayMailbox.localId);
     for (i = 0; i < NETPLAY_MAX_REMOTES; i++)
     {
-        if (gNetplayMailbox.remotes[i].id != 0)
+        if (Netplay_GetRemoteSlot(i)->id != 0)
         {
-            NpxRpc_Num(gNetplayMailbox.remotes[i].id);
+            NpxRpc_Num(Netplay_GetRemoteSlot(i)->id);
             any = TRUE;
         }
     }
@@ -1021,7 +1021,7 @@ static void UpdateBadges(void)
 
     for (slot = 0; slot < NETPLAY_MAX_REMOTES; slot++)
     {
-        const struct NetplayRemotePlayer *remote = &gNetplayMailbox.remotes[slot];
+        const struct NetplayRemotePlayer *remote = Netplay_GetRemoteSlot(slot);
         bool32 known = remote->id != 0 && remote->id == sTitleIds[slot] && BadgeOwner(slot) != NULL;
         SetBadge(slot, known && Npx_IsOnline() ? sTitleBadges[slot] : 0);
     }

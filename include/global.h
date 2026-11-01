@@ -648,6 +648,7 @@ struct SaveBlock2
 extern struct SaveBlock2 *gSaveBlock2Ptr;
 
 extern u8 UpdateSpritePaletteWithTime(u8);
+extern void UpdateExtBgPaletteWithTime(u32);
 
 struct SecretBaseParty
 {
@@ -1148,7 +1149,7 @@ struct SaveBlock1
     /*0x9CA*/ u8 trainerRematches[MAX_REMATCH_ENTRIES];
 #endif //FREE_MATCH_CALL
     /*0xA2E*/ //u8 padding3[2];
-    /*0xA30*/ struct ObjectEvent objectEvents[OBJECT_EVENTS_COUNT];
+    /*0xA30*/ struct ObjectEvent objectEvents[OBJECT_EVENTS_SAVED];
     /*0xC70*/ struct ObjectEventTemplate objectEventTemplates[OBJECT_EVENT_TEMPLATES_COUNT];
     /*0x1270*/ u8 flags[NUM_FLAG_BYTES];
     /*0x139C*/ u16 vars[VARS_COUNT];

@@ -10,6 +10,7 @@
 #include "pokemon.h"
 #include "pokemon_storage_system.h"
 #include "random.h"
+#include "save_ext.h"
 #include "save_location.h"
 #include "script_pokemon_util.h"
 #include "trainer_hill.h"
@@ -34,7 +35,10 @@ struct LoadedSaveData
 EWRAM_DATA struct SaveBlock3 gSaveblock3 = {};
 EWRAM_DATA struct SaveBlock2ASLR gSaveblock2 = {0};
 EWRAM_DATA struct SaveBlock1ASLR gSaveblock1 = {0};
-EWRAM_DATA struct PokemonStorageASLR gPokemonStorage = {0};
+EWRAM_EXT_DATA struct PokemonStorageASLR gPokemonStorage; // 32 boxes: too big for the GBA's 256 KiB
+// MoveSaveBlocks_ResetHeap copies all three into gHeap.
+STATIC_ASSERT(sizeof(struct SaveBlock2) + sizeof(struct SaveBlock1) + sizeof(struct PokemonStorage) <= HEAP_SIZE, SaveBlocksFitInHeap);
+EWRAM_EXT_DATA struct PokemonStorageSave gPokemonStorageSave; // what the flash save holds (14 boxes)
 
 EWRAM_DATA struct LoadedSaveData gLoadedSaveData = {0};
 EWRAM_DATA u32 gLastEncryptionKey = 0;
@@ -196,23 +200,45 @@ void LoadPlayerParty(void)
     }
 }
 
+// The save keeps OBJECT_EVENTS_SAVED of the OBJECT_EVENTS_COUNT objects:
+// the player first, then the follower, then the rest in order. Anything left
+// out is a map object that respawns from its template, or a temporary one
+// (rovers, other players) that its system puts back.
+static bool32 IsSaveFirstObject(const struct ObjectEvent *objectEvent, u32 pass)
+{
+    if (pass == 0)
+        return objectEvent->active && objectEvent->isPlayer;
+    if (pass == 1)
+        return objectEvent->localId == OBJ_EVENT_ID_FOLLOWER && objectEvent->graphicsId != 0 && !objectEvent->isPlayer;
+    return objectEvent->active && !objectEvent->isPlayer && objectEvent->localId != OBJ_EVENT_ID_FOLLOWER;
+}
+
 void SaveObjectEvents(void)
 {
-    int i;
+    int i, pass, n = 0;
     u16 graphicsId;
 
-    for (i = 0; i < OBJECT_EVENTS_COUNT; i++)
+    memset(gSaveBlock1Ptr->objectEvents, 0, sizeof(gSaveBlock1Ptr->objectEvents));
+    for (pass = 0; pass < 3; pass++)
     {
-        gSaveBlock1Ptr->objectEvents[i] = gObjectEvents[i];
-        // Swap graphicsId bytes when saving and loading
-        // This keeps compatibility with vanilla,
-        // since the lower graphicsIds will be in the same place as vanilla
-        graphicsId = gObjectEvents[i].graphicsId;
-        gSaveBlock1Ptr->objectEvents[i].graphicsId = (graphicsId >> 8) | (graphicsId << 8);
-        gSaveBlock1Ptr->objectEvents[i].spriteId = 127; // magic number
-        // To avoid crash on vanilla, save follower as inactive
-        if (gObjectEvents[i].localId == OBJ_EVENT_ID_FOLLOWER)
-            gSaveBlock1Ptr->objectEvents[i].active = FALSE;
+        for (i = 0; i < OBJECT_EVENTS_COUNT && n < OBJECT_EVENTS_SAVED; i++)
+        {
+            struct ObjectEvent *saved;
+
+            if (!IsSaveFirstObject(&gObjectEvents[i], pass))
+                continue;
+            saved = &gSaveBlock1Ptr->objectEvents[n++];
+            *saved = gObjectEvents[i];
+            // Swap graphicsId bytes when saving and loading
+            // This keeps compatibility with vanilla,
+            // since the lower graphicsIds will be in the same place as vanilla
+            graphicsId = gObjectEvents[i].graphicsId;
+            saved->graphicsId = (graphicsId >> 8) | (graphicsId << 8);
+            saved->spriteId = 127; // magic number
+            // To avoid crash on vanilla, save follower as inactive
+            if (gObjectEvents[i].localId == OBJ_EVENT_ID_FOLLOWER)
+                saved->active = FALSE;
+        }
     }
 }
 
@@ -221,7 +247,8 @@ void LoadObjectEvents(void)
     int i;
     u16 graphicsId;
 
-    for (i = 0; i < OBJECT_EVENTS_COUNT; i++)
+    memset(gObjectEvents, 0, sizeof(gObjectEvents));
+    for (i = 0; i < OBJECT_EVENTS_SAVED; i++)
     {
         gObjectEvents[i] = gSaveBlock1Ptr->objectEvents[i];
         // Swap graphicsId bytes when saving and loading
@@ -241,16 +268,73 @@ void LoadObjectEvents(void)
     SetMinimumOWESpawnTimer();
 }
 
+// The PC: boxes 1-14 go to the flash save in their old layout, 15-32 to the
+// extended save (written right after this, with every save).
+static void SavePcBoxes(void)
+{
+    struct PokemonStorage *pc = gPokemonStoragePtr;
+    struct PokemonStorageSave *save = &gPokemonStorageSave;
+    struct PokemonStorageMore *more = &gSaveBlockExt.pcMoreBoxes;
+
+    save->currentBox = pc->currentBox < SAVED_BOXES_COUNT ? pc->currentBox : 0;
+    memcpy(save->boxes, pc->boxes, sizeof(save->boxes));
+    memcpy(save->boxNames, pc->boxNames, sizeof(save->boxNames));
+    memcpy(save->boxWallpapers, pc->boxWallpapers, sizeof(save->boxWallpapers));
+    memcpy(save->fusions, pc->fusions, sizeof(save->fusions));
+
+    more->saved = TRUE;
+    more->currentBox = pc->currentBox;
+    memcpy(more->boxes, pc->boxes[SAVED_BOXES_COUNT], sizeof(more->boxes));
+    memcpy(more->boxNames, pc->boxNames[SAVED_BOXES_COUNT], sizeof(more->boxNames));
+    memcpy(more->boxWallpapers, &pc->boxWallpapers[SAVED_BOXES_COUNT], sizeof(more->boxWallpapers));
+}
+
+static void LoadPcBoxes(void)
+{
+    struct PokemonStorage *pc = gPokemonStoragePtr;
+    const struct PokemonStorageSave *save = &gPokemonStorageSave;
+
+    pc->currentBox = save->currentBox;
+    memcpy(pc->boxes, save->boxes, sizeof(save->boxes));
+    memcpy(pc->boxNames, save->boxNames, sizeof(save->boxNames));
+    memcpy(pc->boxWallpapers, save->boxWallpapers, sizeof(save->boxWallpapers));
+    memcpy(pc->fusions, save->fusions, sizeof(save->fusions));
+}
+
+// After the extended save loaded: boxes 15-32, or empty ones for a save
+// from before they existed (or without the extended save).
+void LoadMorePcBoxes(void)
+{
+    struct PokemonStorage *pc = gPokemonStoragePtr;
+    const struct PokemonStorageMore *more = &gSaveBlockExt.pcMoreBoxes;
+    u32 i;
+
+    if (!more->saved)
+    {
+        memset(pc->boxes[SAVED_BOXES_COUNT], 0, sizeof(more->boxes));
+        for (i = SAVED_BOXES_COUNT; i < TOTAL_BOXES_COUNT; i++)
+            ResetBoxNameAndWallpaper(i);
+        return;
+    }
+    memcpy(pc->boxes[SAVED_BOXES_COUNT], more->boxes, sizeof(more->boxes));
+    memcpy(pc->boxNames[SAVED_BOXES_COUNT], more->boxNames, sizeof(more->boxNames));
+    memcpy(&pc->boxWallpapers[SAVED_BOXES_COUNT], more->boxWallpapers, sizeof(more->boxWallpapers));
+    if (more->currentBox < TOTAL_BOXES_COUNT)
+        pc->currentBox = more->currentBox;
+}
+
 void CopyPartyAndObjectsToSave(void)
 {
     SavePlayerParty();
     SaveObjectEvents();
+    SavePcBoxes();
 }
 
 void CopyPartyAndObjectsFromSave(void)
 {
     LoadPlayerParty();
     LoadObjectEvents();
+    LoadPcBoxes();
 }
 
 void LoadPlayerBag(void)

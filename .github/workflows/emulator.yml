@@ -1,0 +1,150 @@
+name: Build emulator
+
+# Builds our mGBA fork (emulator/README.md): the desktop player for Linux,
+# Windows and macOS, and mgba.js/mgba.wasm for the phone apps. "Build game"
+# calls this and attaches the results to its release; it also runs on its own
+# whenever emulator/ changes, so a broken patch shows up before a release.
+# Everything here is mGBA (MPL-2.0) plus our patches: no Nintendo code or data.
+on:
+  workflow_call:
+  workflow_dispatch:
+  push:
+    paths:
+      - "emulator/**"
+      - ".github/workflows/emulator.yml"
+
+env:
+  BRIDGE_FILES: tools/netplay_bridge/netplay_bridge.lua tools/netplay_bridge/netplay_world.lua tools/netplay_bridge/netplay_ext.lua tools/netplay_bridge/netplay_community.lua tools/netplay_bridge/extensions.txt
+
+jobs:
+  linux:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends cmake qtbase5-dev qtmultimedia5-dev qttools5-dev-tools \
+            libsdl2-dev liblua5.4-dev libpng-dev zlib1g-dev libsqlite3-dev libelf-dev libedit-dev
+      - name: Headless (tests) and Qt player
+        run: |
+          emulator/build.sh headless
+          emulator/build.sh qt
+      - name: Package
+        run: |
+          P=pokimon-emulator-linux
+          mkdir -p $P/lib $P/lua
+          cp build/emulator/qt/qt/mgba-qt $P/ 2>/dev/null || cp "$(find build/emulator/qt -name mgba-qt -type f | head -1)" $P/
+          cp -P build/emulator/qt/libmgba.so* $P/lib/
+          cp $BRIDGE_FILES $P/lua/
+          cat > $P/pokimon-multi.sh <<'EOF'
+          #!/bin/sh
+          # Starts the Pokimon emulator with the online bridge loaded.
+          # Pick your patched ROM with File > Load ROM, or pass it as an argument.
+          HERE="$(cd "$(dirname "$0")" && pwd)"
+          LD_LIBRARY_PATH="$HERE/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" exec "$HERE/mgba-qt" --script "$HERE/lua/netplay_bridge.lua" "$@"
+          EOF
+          chmod +x $P/pokimon-multi.sh
+          cp emulator/README.md $P/README-emulator.md
+          tar czf $P.tar.gz $P
+      - uses: actions/upload-artifact@v4
+        with:
+          name: emulator-linux
+          path: pokimon-emulator-linux.tar.gz
+      - uses: actions/upload-artifact@v4
+        with:
+          name: emulator-headless-linux
+          path: |
+            build/emulator/headless/mgba-headless
+            build/emulator/headless/libmgba.so*
+
+  windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            git zip
+            mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-ninja mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-qt5-base mingw-w64-ucrt-x86_64-qt5-multimedia mingw-w64-ucrt-x86_64-qt5-tools
+            mingw-w64-ucrt-x86_64-SDL2 mingw-w64-ucrt-x86_64-lua mingw-w64-ucrt-x86_64-libpng
+            mingw-w64-ucrt-x86_64-zlib mingw-w64-ucrt-x86_64-libzip mingw-w64-ucrt-x86_64-sqlite3
+            mingw-w64-ucrt-x86_64-libelf mingw-w64-ucrt-x86_64-libepoxy mingw-w64-ucrt-x86_64-ntldd
+      - name: Qt player
+        run: CMAKE_GENERATOR=Ninja emulator/build.sh qt
+      - name: Package
+        run: |
+          P=pokimon-emulator-windows
+          mkdir -p $P/lua
+          EXE="$(find build/emulator/qt -name mGBA.exe -o -name mgba-qt.exe | head -1)"
+          cp "$EXE" $P/mgba-qt.exe
+          cp "$(find build/emulator/qt -name 'libmgba*.dll' | head -1)" $P/ 2>/dev/null || true
+          # windeployqt exits non-zero over the optional ANGLE libGLESv2.dll; check what matters instead
+          windeployqt-qt5 --no-translations --no-angle $P/mgba-qt.exe || true
+          if [ ! -f $P/platforms/qwindows.dll ]; then
+            mkdir -p $P/platforms
+            cp /ucrt64/share/qt5/plugins/platforms/qwindows.dll $P/platforms/
+          fi
+          for dll in $(ntldd -R $P/mgba-qt.exe $P/*.dll | grep -io '[A-Z]:\\msys64\\ucrt64\\bin\\[^ ]*\.dll' | sort -u); do
+            cp "$(cygpath -u "$dll")" $P/
+          done
+          cp $BRIDGE_FILES $P/lua/
+          printf '@echo off\r\nrem Starts the Pokimon emulator with the online bridge loaded.\r\nstart "" "%%~dp0mgba-qt.exe" --script "%%~dp0lua\\netplay_bridge.lua" %%*\r\n' > "$P/Pokimon Multi.bat"
+          cp emulator/README.md $P/README-emulator.md
+          zip -qr $P.zip $P
+      - uses: actions/upload-artifact@v4
+        with:
+          name: emulator-windows
+          path: pokimon-emulator-windows.zip
+
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dependencies
+        run: brew install cmake qt@5 sdl2 lua libpng libzip sqlite
+      - name: Qt player
+        run: |
+          export CMAKE_PREFIX_PATH="$(brew --prefix qt@5)"
+          emulator/build.sh qt
+      - name: Package
+        run: |
+          P=pokimon-emulator-macos
+          mkdir -p $P/lua
+          APP="$(find build/emulator/qt -maxdepth 3 -name '*.app' -type d | head -1)"
+          "$(brew --prefix qt@5)/bin/macdeployqt" "$APP"
+          cp -R "$APP" "$P/Pokimon Emulator.app"
+          cp $BRIDGE_FILES $P/lua/
+          cat > "$P/Pokimon Multi.command" <<'EOF'
+          #!/bin/sh
+          # Starts the Pokimon emulator with the online bridge loaded.
+          HERE="$(cd "$(dirname "$0")" && pwd)"
+          exec "$HERE/Pokimon Emulator.app/Contents/MacOS/"* --script "$HERE/lua/netplay_bridge.lua" "$@"
+          EOF
+          chmod +x "$P/Pokimon Multi.command"
+          cp emulator/README.md $P/README-emulator.md
+          ditto -c -k --keepParent $P $P.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: emulator-macos
+          path: pokimon-emulator-macos.zip
+
+  wasm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: mymindstorm/setup-emsdk@v14
+      - name: mgba.js + mgba.wasm
+        run: emulator/build.sh wasm
+      - uses: actions/upload-artifact@v4
+        with:
+          name: emulator-wasm
+          path: |
+            build/emulator/wasm/dist/mgba/mgba.js
+            build/emulator/wasm/dist/mgba/mgba.wasm

@@ -1698,6 +1698,14 @@ static s16 UNUSED StorageSystemGetNextMonIndex(struct BoxPokemon *box, s8 startI
     return -1;
 }
 
+// "BOX n" and the default wallpaper for its number.
+void ResetBoxNameAndWallpaper(u32 boxId)
+{
+    u8 *dest = StringCopy(GetBoxNamePtr(boxId), gText_Box);
+    ConvertIntToDecimalStringN(dest, boxId + 1, STR_CONV_MODE_LEFT_ALIGN, 2);
+    SetBoxWallpaper(boxId, boxId % (MAX_DEFAULT_WALLPAPER + 1));
+}
+
 void ResetPokemonStorageSystem(void)
 {
     u16 boxId, boxPosition;
@@ -1709,13 +1717,7 @@ void ResetPokemonStorageSystem(void)
             ZeroBoxMonAt(boxId, boxPosition);
     }
     for (boxId = 0; boxId < TOTAL_BOXES_COUNT; boxId++)
-    {
-        u8 *dest = StringCopy(GetBoxNamePtr(boxId), gText_Box);
-        ConvertIntToDecimalStringN(dest, boxId + 1, STR_CONV_MODE_LEFT_ALIGN, 2);
-    }
-
-    for (boxId = 0; boxId < TOTAL_BOXES_COUNT; boxId++)
-        SetBoxWallpaper(boxId, boxId % (MAX_DEFAULT_WALLPAPER + 1));
+        ResetBoxNameAndWallpaper(boxId);
 
     ResetWaldaWallpaper();
 }
@@ -7963,7 +7965,7 @@ static void CreateCursorSprites(void)
     if (spriteId != MAX_SPRITES)
     {
         sStorage->cursorSprite = &gSprites[spriteId];
-        sStorage->cursorSprite->oam.paletteNum = sStorage->cursorPalNums[sAutoActionOn];
+        SetSpritePaletteSlot(sStorage->cursorSprite, sStorage->cursorPalNums[sAutoActionOn]);
         sStorage->cursorSprite->oam.priority = 1;
         if (sIsMonBeingMoved)
             StartSpriteAnim(sStorage->cursorSprite, CURSOR_ANIM_FIST);
@@ -8001,7 +8003,7 @@ static void CreateCursorSprites(void)
 static void ToggleCursorAutoAction(void)
 {
     sAutoActionOn = !sAutoActionOn;
-    sStorage->cursorSprite->oam.paletteNum = sStorage->cursorPalNums[sAutoActionOn];
+    SetSpritePaletteSlot(sStorage->cursorSprite, sStorage->cursorPalNums[sAutoActionOn]);
 }
 
 static u8 GetCursorPosition(void)

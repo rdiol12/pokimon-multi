@@ -146,8 +146,13 @@ D.run(function()
         D.shot("style-menu")
         D.press(K.START, 0) -- save and go back to the start menu
         D.waitFor("the overworld", 600, D.inOverworld)
+        -- Close the start menu. It takes input once the field has faded
+        -- back in, which takes longer the more people are on the map.
         D.wait(40)
-        D.press(K.B, 20) -- close the start menu
+        for _ = 1, 20 do
+            D.press(K.B, 20)
+            if emu:read8(D.SYM.sLockFieldControls) == 0 then break end
+        end
         if D.mb16(0x01E) == gfx then D.fail("the style didn't change") end
         D.wait(30)
         D.shot("style-red")

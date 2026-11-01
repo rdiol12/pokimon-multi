@@ -1,4 +1,5 @@
 #include "global.h"
+#include "save_ext.h"
 #include "clock.h"
 #include "new_game.h"
 #include "random.h"
@@ -170,6 +171,7 @@ void NewGameInitData(void)
     StringCopy(rivalName, gSaveBlock1Ptr->rivalName);
 #endif
     gDifferentSaveFile = TRUE;
+    SaveExt_Clear();
     gSaveBlock2Ptr->encryptionKey = 0;
     ZeroPlayerPartyMons();
     ZeroEnemyPartyMons();

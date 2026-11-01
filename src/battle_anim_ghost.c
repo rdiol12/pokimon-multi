@@ -653,7 +653,7 @@ static void AnimTask_SpiteTargetShadow_Step1(u8 taskId)
             else
             {
                 s16 mask2;
-                gSprites[task->data[0]].oam.paletteNum = task->data[14];
+                SetSpritePaletteSlot(&gSprites[task->data[0]], task->data[14]);
                 gSprites[task->data[0]].oam.objMode = ST_OAM_OBJ_NORMAL;
                 gSprites[task->data[0]].oam.priority = 3;
                 gSprites[task->data[0]].invisible = (gBattleSpritesDataPtr->battlerData[gBattleAnimTarget].invisible);
@@ -661,7 +661,7 @@ static void AnimTask_SpiteTargetShadow_Step1(u8 taskId)
                 task->data[2] = 0;
                 task->data[3] = 16;
                 task->data[13] = GetAnimBattlerSpriteId(ANIM_TARGET);
-                task->data[4] = OBJ_PLTT_ID2(gSprites[task->data[13]].oam.paletteNum);
+                task->data[4] = OBJ_PLTT_ID2(GetSpritePaletteSlot(&gSprites[task->data[13]]));
                 if (position == 1)
                 {
                     u16 mask = DISPCNT_BG1_ON;
@@ -1615,7 +1615,7 @@ static void AnimTask_GhostGetOut_Step1(u8 taskId)
         task->data[3] = 16;
         task->data[4] = GetAnimBattlerSpriteId(ANIM_ATTACKER);
         task->data[5] = gSprites[task->data[4]].oam.priority;
-        task->data[6] = OBJ_PLTT_ID2(gSprites[task->data[4]].oam.paletteNum);
+        task->data[6] = OBJ_PLTT_ID2(GetSpritePaletteSlot(&gSprites[task->data[4]]));
         gSprites[task->data[4]].oam.objMode = ST_OAM_OBJ_BLEND;
         gSprites[task->data[4]].oam.priority = 3;
         task->data[7] = BG_PLTT_ID(8);

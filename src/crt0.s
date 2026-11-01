@@ -6,6 +6,11 @@
 
 	.align 2, 0
 Init::
+@ Unlock the 16 MiB extended EWRAM of our emulator fork before the RAM reset,
+@ so the reset clears all of it (emulator/README.md). Harmless on other hardware.
+	ldr r0, =0x04FFF7F4 @ REG_ADDR_PKX_CONTROL
+	ldr r1, =0x4558 @ PKX_UNLOCK_EWRAM
+	strh r1, [r0]
 @ Set up location for IRQ stack
 	mov r0, #PSR_IRQ_MODE
 	msr cpsr_cf, r0

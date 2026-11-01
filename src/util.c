@@ -211,7 +211,7 @@ void BlendPalette(u16 palOffset, u16 numEntries, u8 coeff, u32 blendColor)
 {
     u16 i;
     struct PlttData *data2 = (struct PlttData *) & blendColor;
-    assertf(palOffset + numEntries <= PLTT_BUFFER_SIZE, "BlendPalette out of bounds: palOffset=%d numEntries=%d", palOffset, numEntries)
+    assertf(palOffset + numEntries <= PLTT_BUFFER_SIZE_ALL, "BlendPalette out of bounds: palOffset=%d numEntries=%d", palOffset, numEntries)
     {
         return;
     }

@@ -1738,6 +1738,10 @@
     {
       "id": "MAPSEC_HAVEN_RESERVE",
       "name": "HAVEN RESERVE"
+    },
+    {
+      "id": "MAPSEC_LAUREL_CITY",
+      "name": "LAUREL CITY"
     }
   ]
 }

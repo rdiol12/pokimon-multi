@@ -78,13 +78,13 @@ class ReserveTest(CommunityCase):
         _, status, _, _ = await self.ask(may, reserve.REQ_CLAIM, (mon,))
         self.assertEqual(status, community.OK)
 
-    async def test_roaming_shows_at_most_eight_and_rotates(self):
+    async def test_roaming_shows_at_most_shown_and_rotates(self):
         ash = await self.connect("ASH", 1)
         for i in range(20):
             await self.ask(ash, reserve.REQ_LEAVE, (1 + i, 5, 0), left(i, f"M{i}"))
         r = reserve._reserve(self.server)
         _, _, args, data = await self.ask(ash, reserve.REQ_LIST)
-        self.assertEqual((args[0], args[1], len(data)), (8, 20, 8 * 12))
+        self.assertEqual((args[0], args[1], len(data)), (reserve.SHOWN, 20, reserve.SHOWN * 12))
         first = {m["id"] for m in r.roaming(0)}
         self.assertEqual(first, {m["id"] for m in r.roaming(reserve.ROTATE_SECONDS - 1)})
         self.assertNotEqual(first, {m["id"] for m in r.roaming(reserve.ROTATE_SECONDS * 7)})

@@ -42,7 +42,7 @@ local function setup()
     local mem, net = fakeMemory(), fakeNet()
     mem.write32(BASE, 0x4E4D4B50)
     mem.write32(BASE + 4, 0x3154454E)
-    mem.write8(BASE + 0x08, 3)
+    mem.write8(BASE + 0x08, 4)
     mem.write8(BASE + 0x0D2, 1) -- JOIN ONLINE picked
     for i, c in ipairs({ string.byte("play.example.org", 1, -1) }) do mem.write8(BASE + 0x35C + i - 1, c) end
     mem.write16(BASE + 0x384, 7000)
@@ -368,6 +368,23 @@ function tests.players_keep_their_slot()
     net.push("PLAYER 9 Brock 0 9 1 2 1 0 1")
     bridge:onFrame()
     eq(mem.read16(BASE + 0x20), first, "slot 0 unchanged")
+end
+
+function tests.shows_up_to_24_players()
+    local bridge, mem, net = online()
+    for id = 100, 129 do
+        net.push(string.format("PLAYER %d P%d 0 9 %d 7 2 0 1", id, id, id - 100))
+    end
+    bridge:onFrame()
+    local seen = {}
+    local function take(off)
+        local id = mem.read16(BASE + off)
+        if id ~= 0 then seen[#seen + 1] = id end
+    end
+    for slot = 0, 7 do take(0x20 + slot * 20) end
+    for slot = 0, 15 do take(0x700 + slot * 20) end
+    eq(#seen, 24, "24 slots filled (8 in remotes, 16 in moreRemotes)")
+    eq(mem.read16(BASE + 0x700 + 15 * 20 + 4) < 30, true, "last extra slot has an x")
 end
 
 function tests.forwards_requests_once_per_seq()

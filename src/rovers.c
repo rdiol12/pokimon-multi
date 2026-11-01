@@ -1,4 +1,5 @@
 #include "global.h"
+#include "breed_fusion.h"
 #include "battle.h"
 #include "battle_setup.h"
 #include "data.h"
@@ -17,6 +18,7 @@
 #include "pokemon.h"
 #include "random.h"
 #include "rovers.h"
+#include "netplay.h"
 #include "script.h"
 #include "script_pokemon_util.h"
 #include "sound.h"
@@ -74,6 +76,7 @@ enum
     RS_DUEL,
     RS_DUEL_OVER,
     RS_LEAVING,
+    RS_BUDDY,          // exploring a cave floor with the player
 };
 
 enum
@@ -97,6 +100,10 @@ enum
     REQ_BOARD,
     REQ_MAJORS,
     REQ_MAJOR_CLEAR,
+    REQ_GIFT,
+    REQ_EXPLORED,
+    REQ_LEAGUE_RESULT,
+    REQ_LEAGUE_SEEN,
 };
 
 enum
@@ -118,7 +125,8 @@ struct RoverMon
     u8 injuryDamage; // 2% units
     u8 lostParts;
     u8 injuryFlags;
-}; // 16 bytes
+    u16 fusion;      // a fusion's father species (docs/breed_fusion.md), or 0
+} __attribute__((packed, aligned(2))); // 18 bytes (packed: GBA structs round up to 4)
 
 struct RoverWire
 {
@@ -135,7 +143,16 @@ struct RoverWire
     u8 balls;
     u8 ranch;
     u16 money;
-}; // 112 bytes
+    // What it thinks of this player (server/rovers.py bond_wire()).
+    u8 bond;       // ROVER_BOND_*
+    u8 friendship;
+} __attribute__((packed, aligned(2))); // 126 bytes
+STATIC_ASSERT(sizeof(struct RoverMon) == 18, RoverMonSize);
+STATIC_ASSERT(sizeof(struct RoverWire) == 126, RoverWireSize);
+
+#define ROVER_BOND_RIVAL  (1 << 0) // the player beat it; it wants a rematch
+#define ROVER_BOND_FRIEND (1 << 1)
+#define ROVER_BOND_GIFT   (1 << 2) // a present is waiting
 
 struct RoverActor
 {
@@ -155,6 +172,7 @@ struct RoverActor
     u8 missing;        // frames the object has been gone
     u8 leaveTimer;     // minutes-ish on this map
     bool8 duelLeft;    // TRUE: this side of the duel won
+    u8 rival;          // 0, 1 spotted the player, 2 challenged them (this map)
 };
 
 struct RoverRequest
@@ -195,6 +213,22 @@ struct RoverState
     // A trade with the player.
     bool8 trading;
     u8 tradeSlot;
+    u8 startRival;     // 1 + the actor walking up to challenge the player
+    u8 tagA, tagB;     // the two rovers a tag battle is against
+    // A cave floor explored together.
+    u8 buddy;          // 1 + the actor exploring with the player
+    u8 farewellId;     // 1 + the rover id that just parted ways
+    u16 farewellItem;
+    u8 farewellDelay;  // frames, so the map's name shows first
+    // The weekly Rover League (server/rovers_league.py).
+    u16 leagueMatch;   // the player's match
+    u16 leagueWatch;   // a match to watch
+    u8 leagueRound;
+    bool8 leagueFighting;
+    bool8 leagueWon;
+    u8 leagueAsk;      // 1 + a LEAGUE request waiting for the channel
+    u16 leagueAskArg;
+    u16 leagueAskWait; // frames it has waited
     // Watching.
     bool8 watching;
     u8 duelResult;     // a watched duel's result, 1 + left won, for the map
@@ -207,9 +241,17 @@ struct RoverState
     u8 savedName[PLAYER_NAME_LENGTH + 1];
 };
 
-static EWRAM_DATA struct RoverState sRovers = {0};
+static EWRAM_EXT_DATA struct RoverState sRovers = {0};
 static EWRAM_DATA struct TrainerMon sRoverParty[PARTY_SIZE] = {0};
 static EWRAM_DATA struct Trainer sRoverTrainer = {0};
+// Tag battles: allocated for the battle (struct RoverTag), NULL otherwise.
+EWRAM_DATA struct Trainer *gRoverTagTrainers = NULL;
+
+// A tag battle's three trainers: partner, opponent A, opponent B. Not on
+// the heap, which battle start resets. Their parties are sRoverParty's two
+// halves and sTagParty.
+static EWRAM_DATA struct Trainer sTagTrainers[3] = {0};
+static EWRAM_DATA struct TrainerMon sTagParty[MULTI_PARTY_SIZE] = {0};
 EWRAM_DATA struct RoverShowcase gRoverShowcase = {0};
 
 #include "data/rovers_cast.h"
@@ -217,6 +259,8 @@ EWRAM_DATA struct RoverShowcase gRoverShowcase = {0};
 extern const u8 Rovers_EventScript_Talk[];
 extern const u8 Rovers_EventScript_Charger[];
 extern const u8 Rovers_EventScript_Board[];
+extern const u8 Rovers_EventScript_Rival[];
+extern const u8 Rovers_EventScript_BuddyBye[];
 enum Direction GetDirectionToFace(s16 x1, s16 y1, s16 x2, s16 y2);
 
 static void Actor_Remove(u32 i);
@@ -296,6 +340,20 @@ static bool32 IsOutdoorsOrCave(void)
     default:
         return FALSE;
     }
+}
+
+// The automated tests (Netplay_TryTestBoot) walk set routes: no rovers,
+// chargers, rampaging Pokémon or boards turn up to get in their way, unless
+// a screenshot scene asked for rovers (gRoverShowcase).
+static bool32 QuietForTests(void)
+{
+    return Netplay_IsTestBoot() && gRoverShowcase.scene == 0;
+}
+
+static bool32 IsRift(void)
+{
+    return gSaveBlock1Ptr->location.mapGroup == MAP_GROUP(MAP_ADVENTURE_DUNGEON)
+        && gSaveBlock1Ptr->location.mapNum == MAP_NUM(MAP_ADVENTURE_DUNGEON);
 }
 
 static bool32 IsTown(void)
@@ -400,6 +458,20 @@ static u32 CountFreeObjects(void)
     return n;
 }
 
+// Sprites left for battle transitions, weather and field effects.
+#define SPRITE_HEADROOM 24
+
+static u32 CountFreeSprites(void)
+{
+    u32 i, n = 0;
+    for (i = 0; i < MAX_SPRITES; i++)
+    {
+        if (!gSprites[i].inUse)
+            n++;
+    }
+    return n;
+}
+
 // Busy maps (the Haven Reserve's roamers, crowds) are left alone.
 static bool32 RoomForAMon(void)
 {
@@ -411,6 +483,11 @@ static void Toast(const u8 *title, const u8 *fmt)
     u8 text[64];
     StringExpandPlaceholders(text, fmt);
     World_ShowToast(title, text);
+}
+
+static bool32 IsWildState(u32 state)
+{
+    return state == RS_WILD_APPEAR || state == RS_WILD_FIGHT || state == RS_THROW || state == RS_SHAKE || state == RS_KO;
 }
 
 // Teams --------------------------------------------------------------------------
@@ -837,10 +914,13 @@ static void StartDuel(u32 i, u32 j)
 
 static u32 MaxHere(void)
 {
-    u32 objs = CountFreeObjects(), pals = CountFreePaletteSlots(), n;
-    if (objs < 6 || pals < 3)
+    u32 objs = CountFreeObjects(), pals = CountFreePaletteSlots(), sprites = CountFreeSprites(), n;
+    if (objs < 6 || pals < 3 || sprites < SPRITE_HEADROOM + 6)
         return 0;
+    // Each rover is a trainer and a Pokémon, and each of those can bring a
+    // shadow or a reflection.
     n = min((objs - 3) / 2, (pals - 2) / 2);
+    n = min(n, (sprites - SPRITE_HEADROOM) / 4);
     return min(n, ROVERS_MAX_HERE);
 }
 
@@ -895,7 +975,8 @@ static void SetUpScene(u32 count, u32 scene)
 static void QueueRequest(u8 type, u8 a, u8 b, u8 c, u16 d)
 {
     struct RoverRequest *r;
-    if (!Npx_IsOnline() || gRoverShowcase.offline)
+    // A showcase's rovers stay off the server; league results don't.
+    if (!Npx_IsOnline() || (gRoverShowcase.offline && type != REQ_LEAGUE_RESULT && type != REQ_LEAGUE_SEEN))
         return;
     if (sRovers.queued >= QUEUE_SIZE)
         return;
@@ -1072,6 +1153,23 @@ static bool32 SendRequest(const struct RoverRequest *r)
         NpxRpc_Num(r->b);
         NpxRpc_Num(r->c);
         break;
+    case REQ_EXPLORED:
+        if (!NpxRpc_Begin("ROVER"))
+            return FALSE;
+        NpxRpc_Word("EXPLORED");
+        NpxRpc_Num(r->a);
+        NpxRpc_Num(gSaveBlock1Ptr->location.mapGroup);
+        NpxRpc_Num(gSaveBlock1Ptr->location.mapNum);
+        break;
+    case REQ_LEAGUE_RESULT:
+    case REQ_LEAGUE_SEEN:
+        if (!NpxRpc_Begin("ROVER"))
+            return FALSE;
+        NpxRpc_Word("LEAGUE");
+        NpxRpc_Word(r->type == REQ_LEAGUE_RESULT ? "RESULT" : "SEEN");
+        NpxRpc_Num(r->d);
+        NpxRpc_Num(r->b);
+        break;
     case REQ_MAJOR_CLEAR:
         if (!NpxRpc_Begin("MAJOR"))
             return FALSE;
@@ -1086,6 +1184,8 @@ static bool32 SendRequest(const struct RoverRequest *r)
     sRovers.waiting = r->type;
     return TRUE;
 }
+
+static void SendLeagueAsk(void);
 
 static void UpdateRequests(void)
 {
@@ -1102,6 +1202,12 @@ static void UpdateRequests(void)
                 AfterHere();
             else
                 sRovers.spawned = TRUE;
+        }
+        else if (sRovers.waiting == REQ_GIFT)
+        {
+            gSpecialVar_0x8004 = ok ? AnswerNum(0, 0) : ITEM_NONE;
+            gSpecialVar_0x8005 = ok ? AnswerNum(0, 1) : 0;
+            ScriptContext_Enable();
         }
         else if (sRovers.waiting == REQ_BOARD || sRovers.waiting == REQ_MAJORS)
         {
@@ -1120,6 +1226,11 @@ static void UpdateRequests(void)
     if (!Npx_IsOnline())
     {
         sRovers.queued = 0;
+        return;
+    }
+    if (sRovers.leagueAsk != 0)
+    {
+        SendLeagueAsk();
         return;
     }
     if (sRovers.wantHere && !ArePlayerFieldControlsLocked())
@@ -1149,6 +1260,18 @@ static void UpdateRequests(void)
 
 void Rovers_OnMapTransition(void)
 {
+    // A floor explored together ends here; the rover shares a find.
+    if (sRovers.buddy != 0)
+    {
+        static const u16 sFinds[] = {ITEM_RED_SHARD, ITEM_BLUE_SHARD, ITEM_YELLOW_SHARD, ITEM_GREEN_SHARD,
+                                     ITEM_TINY_MUSHROOM, ITEM_BIG_MUSHROOM, ITEM_STARDUST, ITEM_ESCAPE_ROPE};
+        struct RoverActor *a = &sRovers.actors[sRovers.buddy - 1];
+        sRovers.farewellId = a->w.id + 1;
+        sRovers.farewellItem = (Random() % 8 == 0) ? ITEM_STAR_PIECE : sFinds[Random() % ARRAY_COUNT(sFinds)];
+        sRovers.farewellDelay = 40;
+        QueueRequest(REQ_EXPLORED, a->w.id, 0, 0, 0);
+        sRovers.buddy = 0;
+    }
     memset(sRovers.actors, 0, sizeof(sRovers.actors));
     sRovers.queued = 0;
     sRovers.spawned = FALSE;
@@ -1160,7 +1283,7 @@ void Rovers_OnMapTransition(void)
     sRovers.majorId = 0;
     sRovers.majorSpawned = FALSE;
     sRovers.foeTrainer = TRAINER_NONE;
-    if (!IsOutdoorsOrCave())
+    if (!IsOutdoorsOrCave() || QuietForTests())
     {
         sRovers.spawned = TRUE;
         return;
@@ -1175,7 +1298,8 @@ static void SpawnOffline(void)
     u32 seed = gSaveBlock1Ptr->location.mapGroup * 131 + gSaveBlock1Ptr->location.mapNum * 17 + Random();
 
     sRovers.spawned = TRUE;
-    if (room == 0 || (Random() % 3) != 0)
+    // Divers are common in the Rift Below.
+    if (room == 0 || (Random() % (IsRift() ? 2 : 3)) != 0)
         return;
     count = 1 + (Random() % 3 == 0);
     count = min(count, room);
@@ -1199,6 +1323,19 @@ static void RunShowcase(void)
         MakeOfflineRover(&sRovers.actors[i], gRoverShowcase.ids[i],
                          (i != 0 && gRoverShowcase.levelB) ? gRoverShowcase.levelB : (gRoverShowcase.level ? gRoverShowcase.level : 20),
                          gRoverShowcase.teamSize ? gRoverShowcase.teamSize : 3);
+    if (count != 0)
+    {
+        struct RoverActor *a = &sRovers.actors[0];
+        a->w.bond = gRoverShowcase.bond;
+        if (gRoverShowcase.leadSpecies != SPECIES_NONE && gRoverShowcase.leadSpecies < NUM_SPECIES)
+        {
+            a->w.mons[0].species = gRoverShowcase.leadSpecies;
+            a->w.mons[0].fusion = gRoverShowcase.leadFusion;
+            a->w.mons[0].movesLevel = 0;
+            memset(a->w.mons[0].moves, 0, sizeof(a->w.mons[0].moves));
+            NormalizeTeam(a);
+        }
+    }
     sRovers.spawned = TRUE;
     sRovers.nearPlayer = TRUE;
     if (gRoverShowcase.talk != 0)
@@ -1274,12 +1411,59 @@ static void Actor_Remove(u32 i)
 
 static void StartWild(u32 i, bool32 forceCatch);
 
+// A rival the player beat walks up to them for a rematch.
+static bool32 UpdateRivalApproach(u32 i)
+{
+    struct RoverActor *a = &sRovers.actors[i];
+    struct ObjectEvent *t = TrainerObj(i);
+    struct ObjectEvent *player = &gObjectEvents[gPlayerAvatar.objectEventId];
+    s32 dx, dy;
+    u32 k;
+
+    if (!(a->w.bond & ROVER_BOND_RIVAL) || a->rival == 2 || sRovers.startRival != 0)
+        return FALSE;
+    dx = player->currentCoords.x - t->currentCoords.x;
+    dy = player->currentCoords.y - t->currentCoords.y;
+    if (abs(dx) + abs(dy) > 9)
+        return FALSE;
+    if (abs(dx) + abs(dy) == 1)
+    {
+        ObjectEventTurn(t, GetDirectionToFace(t->currentCoords.x, t->currentCoords.y,
+                                              player->currentCoords.x, player->currentCoords.y));
+        a->rival = 2;
+        sRovers.startRival = i + 1;
+        return TRUE;
+    }
+    if (a->rival == 0)
+    {
+        Do(t, MOVEMENT_ACTION_EMOTE_EXCLAMATION_MARK);
+        PlaySE(SE_PIN);
+        a->rival = 1;
+        return TRUE;
+    }
+    for (k = 0; k < 2; k++)
+    {
+        u32 dir;
+        if ((abs(dx) >= abs(dy)) == (k == 0) && dx != 0)
+            dir = dx > 0 ? DIR_EAST : DIR_WEST;
+        else if (dy != 0)
+            dir = dy > 0 ? DIR_SOUTH : DIR_NORTH;
+        else
+            continue;
+        if (TryWalk(i, dir))
+            return TRUE;
+    }
+    return FALSE;
+}
+
 static void UpdateWander(u32 i)
 {
     struct RoverActor *a = &sRovers.actors[i];
     struct ObjectEvent *t = TrainerObj(i);
 
     if (t == NULL || Busy(t))
+        return;
+    if (UpdateRivalApproach(i))
         return;
     if (a->timer != 0)
     {
@@ -1317,6 +1501,79 @@ static void UpdateWander(u32 i)
             dir = dir % 4 + 1;
         }
     }
+}
+
+// Next to the player, where nobody stands, if there's such a tile.
+static bool32 SpotNextToPlayer(s16 *outX, s16 *outY)
+{
+    struct ObjectEvent *player = &gObjectEvents[gPlayerAvatar.objectEventId];
+    u32 k, back = Opposite(player->facingDirection);
+
+    for (k = 0; k < 4; k++)
+    {
+        u32 dir = (back + k - 1) % 4 + 1;
+        s16 x = player->currentCoords.x, y = player->currentCoords.y;
+        Step(&x, &y, dir);
+        if (CanStandAt(x, y, TRUE))
+        {
+            *outX = x;
+            *outY = y;
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+// Exploring with the player: keep up, a step behind.
+static void UpdateBuddy(u32 i)
+{
+    struct ObjectEvent *t = TrainerObj(i);
+    struct ObjectEvent *player = &gObjectEvents[gPlayerAvatar.objectEventId];
+    s16 dx, dy;
+    u32 dir, other;
+
+    if (t == NULL || Busy(t) || Busy(MonObj(i)))
+        return;
+    dx = player->currentCoords.x - t->currentCoords.x;
+    dy = player->currentCoords.y - t->currentCoords.y;
+    if (abs(dx) + abs(dy) <= 1)
+    {
+        // In the way of where the player faces: step aside.
+        s16 fx = player->currentCoords.x, fy = player->currentCoords.y;
+        Step(&fx, &fy, player->facingDirection);
+        if (fx == t->currentCoords.x && fy == t->currentCoords.y)
+        {
+            u32 face = player->facingDirection;
+            u32 side = (face == DIR_NORTH || face == DIR_SOUTH) ? DIR_WEST : DIR_NORTH;
+            if (!TryWalk(i, side) && !TryWalk(i, Opposite(side)))
+                TryWalk(i, face);
+        }
+        return;
+    }
+    if (abs(dx) + abs(dy) > 6)
+    {
+        s16 x, y;
+        if (SpotNextToPlayer(&x, &y))
+        {
+            MoveObjectEventToMapCoords(t, x, y);
+            FollowerStep(i, x, y);
+            sRovers.actors[i].x = x;
+            sRovers.actors[i].y = y;
+        }
+        return;
+    }
+    if (abs(dx) >= abs(dy))
+    {
+        dir = dx > 0 ? DIR_EAST : DIR_WEST;
+        other = dy > 0 ? DIR_SOUTH : DIR_NORTH;
+    }
+    else
+    {
+        dir = dy > 0 ? DIR_SOUTH : DIR_NORTH;
+        other = dx > 0 ? DIR_EAST : DIR_WEST;
+    }
+    if (!TryWalk(i, dir) && (dx == 0 || dy == 0 || !TryWalk(i, other)))
+        ObjectEventTurn(t, dir);
 }
 
 static void UpdateLeaving(u32 i)
@@ -1967,8 +2224,9 @@ static s32 ActorOfObject(struct ObjectEvent *obj)
 
 bool32 Rovers_IsRoverObject(struct ObjectEvent *obj)
 {
-    return obj->localId >= LOCALID_ROVER_FIRST && obj->localId <= LOCALID_ROVER_LAST && obj->active
-        && OnRoverMap();
+    bool32 misc = obj->localId >= LOCALID_ROVER_FIRST && obj->localId <= LOCALID_ROVER_MISC_LAST;
+    bool32 actor = obj->localId >= LOCALID_ROVER_TRAINER && obj->localId <= LOCALID_ROVER_LAST;
+    return (misc || actor) && obj->active && OnRoverMap();
 }
 
 const u8 *Rovers_GetTalkScript(struct ObjectEvent *obj)
@@ -2012,6 +2270,11 @@ void Rovers_BufferTalk(void)
         gSpecialVar_Result = 1;
         return;
     }
+    if (a->state == RS_BUDDY)
+    {
+        gSpecialVar_Result = 3;
+        return;
+    }
     if (a->state != RS_WANDER && a->state != RS_DUEL_OVER && a->state != RS_LEAVING)
     {
         gSpecialVar_Result = 2;
@@ -2019,6 +2282,17 @@ void Rovers_BufferTalk(void)
     }
     ConvertIntToDecimalStringN(gStringVar3, a->w.badges, STR_CONV_MODE_LEFT_ALIGN, 1);
     gSpecialVar_Result = 0;
+}
+
+// A team member's name: a fusion's is made from both.
+static const u8 *MonName(const struct RoverMon *m)
+{
+    if (m->fusion != SPECIES_NONE && m->fusion < NUM_SPECIES && BreedFusion_CanFuse(m->species, m->fusion))
+    {
+        BreedFusion_BufferName(gStringVar3, m->species, m->fusion);
+        return gStringVar3;
+    }
+    return GetSpeciesName(m->species);
 }
 
 // After the hello (which the message box expands into gStringVar4): the
@@ -2050,7 +2324,7 @@ void Rovers_BufferTalkStats(void)
             s = StringCopy(s, COMPOUND_STRING("\p"));
         else if (i != 0)
             s = StringCopy(s, COMPOUND_STRING(", "));
-        s = StringCopy(s, GetSpeciesName(a->w.mons[i].species));
+        s = StringCopy(s, MonName(&a->w.mons[i]));
         s = StringCopy(s, COMPOUND_STRING(" Lv"));
         s = ConvertIntToDecimalStringN(s, a->w.mons[i].level, STR_CONV_MODE_LEFT_ALIGN, 3);
     }
@@ -2059,16 +2333,17 @@ void Rovers_BufferTalkStats(void)
 
 // Battles -------------------------------------------------------------------------------------
 
-static void BuildTrainer(const struct RoverActor *a)
+static void BuildTrainerInto(const struct RoverActor *a, struct Trainer *trainer, struct TrainerMon *party, u32 most)
 {
     u32 i;
     const struct RoverLook *look = Look(a);
+    u32 count = min(a->w.count, most);
 
-    memset(sRoverParty, 0, sizeof(sRoverParty));
-    for (i = 0; i < a->w.count; i++)
+    memset(party, 0, sizeof(struct TrainerMon) * most);
+    for (i = 0; i < count; i++)
     {
         const struct RoverMon *m = &a->w.mons[i];
-        struct TrainerMon *mon = &sRoverParty[i];
+        struct TrainerMon *mon = &party[i];
         u32 j, iv = 12 + (a->w.id + i) % 20;
         mon->species = m->species;
         mon->lvl = m->level;
@@ -2080,42 +2355,63 @@ static void BuildTrainer(const struct RoverActor *a)
         mon->ball = POKEBALL_COUNT;
         mon->dynamaxLevel = MAX_DYNAMAX_LEVEL;
     }
-    memset(&sRoverTrainer, 0, sizeof(sRoverTrainer));
-    sRoverTrainer.aiFlags = AI_FLAG_BASIC_TRAINER;
-    sRoverTrainer.party = sRoverParty;
-    sRoverTrainer.partySize = a->w.count;
-    sRoverTrainer.trainerClass = look->trainerClass;
-    sRoverTrainer.encounterMusic = look->music;
-    sRoverTrainer.gender = look->female ? TRAINER_GENDER_FEMALE : TRAINER_GENDER_MALE;
-    sRoverTrainer.trainerPic = look->pic;
+    memset(trainer, 0, sizeof(*trainer));
+    trainer->aiFlags = AI_FLAG_BASIC_TRAINER;
+    trainer->party = party;
+    trainer->partySize = count;
+    trainer->trainerClass = look->trainerClass;
+    trainer->encounterMusic = look->music;
+    trainer->gender = look->female ? TRAINER_GENDER_FEMALE : TRAINER_GENDER_MALE;
+    trainer->trainerPic = look->pic;
     // Its crafted and bought medicine, best first.
     {
         static const u16 sMedicine[] = {ITEM_REVIVE, ITEM_SUPER_POTION, ITEM_FULL_HEAL, ITEM_POTION};
         const u8 counts[] = {a->w.revives, a->w.superPotions, a->w.fullHeals, a->w.potions};
         u32 k, n = 0;
-        memset(sRoverTrainer.items, 0, sizeof(sRoverTrainer.items));
         for (k = 0; k < ARRAY_COUNT(sMedicine) && n < MAX_TRAINER_ITEMS; k++)
         {
             u32 c;
             for (c = 0; c < counts[k] && n < MAX_TRAINER_ITEMS; c++)
-                sRoverTrainer.items[n++] = sMedicine[k];
+                trainer->items[n++] = sMedicine[k];
         }
     }
-    StringCopyN(sRoverTrainer.trainerName, Cast(a)->name, TRAINER_NAME_LENGTH);
-    sRoverTrainer.trainerName[TRAINER_NAME_LENGTH] = EOS;
+    StringCopyN(trainer->trainerName, Cast(a)->name, TRAINER_NAME_LENGTH);
+    trainer->trainerName[TRAINER_NAME_LENGTH] = EOS;
 }
 
+static void BuildTrainer(const struct RoverActor *a)
+{
+    BuildTrainerInto(a, &sRoverTrainer, sRoverParty, PARTY_SIZE);
+}
+
+// A fusion bred at the Day Care: its father's species, so its colors,
+// types, stats and name come out (src/breed_fusion.c).
+static void SetFusion(struct Pokemon *mon, const struct RoverMon *m)
+{
+    u32 partner = m->fusion;
+    if (partner == SPECIES_NONE || partner >= NUM_SPECIES || !BreedFusion_CanFuse(m->species, partner))
+        return;
+    SetMonData(mon, MON_DATA_FUSION_PARTNER, &partner);
+    BreedFusion_SetHatchedName(mon);
+    CalculateMonStats(mon);
+}
+
+// Injuries and fusions, which the trainer party data can't carry.
 static void ApplyInjuries(struct Pokemon *party, const struct RoverActor *a)
 {
     u32 i;
     for (i = 0; i < a->w.count; i++)
     {
         const struct RoverMon *m = &a->w.mons[i];
+        if (GetMonData(&party[i], MON_DATA_SPECIES) != m->species)
+            continue;
+        SetFusion(&party[i], m);
         if (m->injuryPart || m->lostParts || m->injuryFlags)
             Injury_Set(&party[i], m->injuryPart, m->injuryDamage * INJURY_DAMAGE_UNIT, m->lostParts,
                        m->injuryFlags & INJURY_FLAG_SCAR);
     }
 }
+
 
 static void ReadInjuries(struct Pokemon *party, struct RoverActor *a)
 {
@@ -2130,6 +2426,156 @@ static void ReadInjuries(struct Pokemon *party, struct RoverActor *a)
         m->lostParts = GetMonData(&party[i], MON_DATA_LOST_PARTS);
         m->injuryFlags = GetMonData(&party[i], MON_DATA_INJURY_FLAGS) & INJURY_FLAG_SCAR;
     }
+}
+
+// Tag battles ---------------------------------------------------------------------------------
+
+// Two other rovers wandering here to team up against. VAR_RESULT TRUE if
+// there are; STR_VAR_2 and STR_VAR_3 are their names.
+void Rovers_TagOffer(void)
+{
+    u32 i, found = 0;
+
+    gSpecialVar_Result = FALSE;
+    for (i = 0; i < ROVERS_MAX_HERE && found < 2; i++)
+    {
+        if (i == sRovers.talk || TrainerObj(i) == NULL
+         || (sRovers.actors[i].state != RS_WANDER && !IsWildState(sRovers.actors[i].state)))
+            continue;
+        if (found++ == 0)
+            sRovers.tagA = i;
+        else
+            sRovers.tagB = i;
+    }
+    if (found < 2)
+        return;
+    StringCopy(gStringVar2, Cast(&sRovers.actors[sRovers.tagA])->name);
+    StringCopy(gStringVar3, Cast(&sRovers.actors[sRovers.tagB])->name);
+    gSpecialVar_Result = TRUE;
+}
+
+static void CB2_EndRoverTag(void)
+{
+    bool32 won = (gBattleOutcome == B_OUTCOME_WON);
+
+    gRoverTagTrainers = NULL;
+    gPartnerTrainerId = 0;
+    QueueRequest(REQ_BEAT, sRovers.actors[sRovers.tagA].w.id, !won, 1, 0);
+    QueueRequest(REQ_BEAT, sRovers.actors[sRovers.tagB].w.id, !won, 1, 0);
+    gSpecialVar_Result = won;
+    if (gBattleOutcome == B_OUTCOME_LOST || gBattleOutcome == B_OUTCOME_DREW)
+        SetMainCallback2(CB2_WhiteOut);
+    else
+        SetMainCallback2(CB2_ReturnToFieldContinueScriptPlayMapMusic);
+}
+
+// The player and the rover talked to against the other two (waitstate).
+void Rovers_StartTag(void)
+{
+    struct TrainerMon *parties[3] = {sRoverParty, sRoverParty + MULTI_PARTY_SIZE, sTagParty};
+    const struct RoverActor *side[3] = {&sRovers.actors[sRovers.talk], &sRovers.actors[sRovers.tagA],
+                                        &sRovers.actors[sRovers.tagB]};
+    u32 i;
+
+    for (i = 0; i < 3; i++)
+        BuildTrainerInto(side[i], &sTagTrainers[i], parties[i], MULTI_PARTY_SIZE);
+    // Whatever wild Pokémon they were busy with runs off.
+    for (i = 1; i < 3; i++)
+    {
+        struct RoverActor *a = (struct RoverActor *)side[i];
+        if (IsWildState(a->state))
+        {
+            RemoveLocal(LOCALID_ROVER_WILD);
+            RemoveLocal(LOCALID_ROVER_BALL);
+            a->state = RS_WANDER;
+            a->timer = 30;
+        }
+    }
+    gRoverTagTrainers = sTagTrainers;
+    gPartnerTrainerId = TRAINER_PARTNER(PARTNER_STEVEN);
+    memset(&gTrainerBattleParameter, 0, sizeof(gTrainerBattleParameter));
+    TRAINER_BATTLE_PARAM.opponentA = ROVER_TAG_FOE_A;
+    TRAINER_BATTLE_PARAM.opponentB = ROVER_TAG_FOE_B;
+    TRAINER_BATTLE_PARAM.defeatTextA = (u8 *)COMPOUND_STRING("We'll get you next time!");
+    TRAINER_BATTLE_PARAM.defeatTextB = (u8 *)COMPOUND_STRING("Good teamwork...");
+    gBattleTypeFlags = BATTLE_TYPE_TRAINER | BATTLE_TYPE_DOUBLE | BATTLE_TYPE_TWO_OPPONENTS
+                     | BATTLE_TYPE_MULTI | BATTLE_TYPE_INGAME_PARTNER;
+    CreateNPCTrainerPartyFromTrainer(gParties[B_TRAINER_OPPONENT_A], &sTagTrainers[1]);
+    CreateNPCTrainerPartyFromTrainer(gParties[B_TRAINER_OPPONENT_B], &sTagTrainers[2]);
+    CreateNPCTrainerPartyFromTrainer(gParties[B_TRAINER_PARTNER], &sTagTrainers[0]);
+    ApplyInjuries(gParties[B_TRAINER_OPPONENT_A], side[1]);
+    ApplyInjuries(gParties[B_TRAINER_OPPONENT_B], side[2]);
+    ApplyInjuries(gParties[B_TRAINER_PARTNER], side[0]);
+    BattleSetup_StartRoverWatch(CB2_EndRoverTag);
+}
+
+// Caves and the Rift Below: the rover talked to may explore this floor
+// with the player. VAR_RESULT TRUE if it would.
+void Rovers_BuddyOffer(void)
+{
+    struct RoverActor *a = &sRovers.actors[sRovers.talk];
+    gSpecialVar_Result = gMapHeader.mapType == MAP_TYPE_UNDERGROUND && sRovers.buddy == 0
+                      && a->state == RS_WANDER && a->w.count != 0 && a->w.hurt < 3;
+}
+
+void Rovers_StartBuddy(void)
+{
+    struct RoverActor *a = &sRovers.actors[sRovers.talk];
+    a->state = RS_BUDDY;
+    a->timer = 0;
+    sRovers.buddy = sRovers.talk + 1;
+}
+
+// Wild Pokémon met while exploring together: two of them, against the
+// player and the rover (src/battle_setup.c, src/wild_encounter.c).
+bool32 Rovers_HasBuddy(void)
+{
+    return sRovers.buddy != 0 && OnRoverMap() && sRovers.actors[sRovers.buddy - 1].state == RS_BUDDY;
+}
+
+void Rovers_PrepareBuddyBattle(void)
+{
+    BuildTrainerInto(&sRovers.actors[sRovers.buddy - 1], &sTagTrainers[0], sRoverParty, MULTI_PARTY_SIZE);
+    gRoverTagTrainers = sTagTrainers;
+    gPartnerTrainerId = TRAINER_PARTNER(PARTNER_STEVEN);
+    CreateNPCTrainerPartyFromTrainer(gParties[B_TRAINER_PARTNER], &sTagTrainers[0]);
+    ApplyInjuries(gParties[B_TRAINER_PARTNER], &sRovers.actors[sRovers.buddy - 1]);
+}
+
+void Rovers_AfterBuddyBattle(void)
+{
+    if (gRoverTagTrainers == NULL)
+        return;
+    if (sRovers.buddy != 0)
+        ReadInjuries(gParties[B_TRAINER_PARTNER], &sRovers.actors[sRovers.buddy - 1]);
+    gRoverTagTrainers = NULL;
+    gPartnerTrainerId = 0;
+}
+
+// Friends' presents (waitstate): VAR_0x8004 the item, VAR_0x8005 how many,
+// ITEM_NONE if there's none today.
+void Rovers_GiftFetch(void)
+{
+    struct RoverActor *a = &sRovers.actors[sRovers.talk];
+
+    gSpecialVar_0x8004 = ITEM_NONE;
+    gSpecialVar_0x8005 = 0;
+    if (!(a->w.bond & ROVER_BOND_GIFT) || !Npx_IsOnline() || sRovers.waiting != REQ_NONE || !NpxRpc_Begin("ROVER"))
+    {
+        ScriptContext_Enable();
+        return;
+    }
+    NpxRpc_Word("GIFT");
+    NpxRpc_Num(a->w.id);
+    NpxRpc_Send();
+    sRovers.waiting = REQ_GIFT;
+    a->w.bond &= ~ROVER_BOND_GIFT;
+}
+
+// VAR_RESULT: TRUE if the rover talked to is the player's friend.
+void Rovers_IsFriend(void)
+{
+    gSpecialVar_Result = (sRovers.actors[sRovers.talk].w.bond & ROVER_BOND_FRIEND) != 0;
 }
 
 // Trading -----------------------------------------------------------------------------------
@@ -2187,31 +2633,64 @@ void Rovers_TradeCheck(void)
 }
 
 // Puts the rover's Pokémon where the in-game trade scene looks for it.
-void Rovers_PrepareTrade(void)
+// A rover's Pokémon as a real one: the rover is its trainer.
+static void MakeRoverMon(struct Pokemon *mon, u32 roverId, const struct RoverMon *m, metloc_u8_t met)
 {
-    struct RoverActor *a = &sRovers.actors[sRovers.talk];
-    const struct RoverMon *m = &a->w.mons[sRovers.tradeSlot];
-    struct Pokemon *mon = &gParties[B_TRAINER_OPPONENT_A][0];
-    metloc_u8_t met = METLOC_IN_GAME_TRADE;
-    u8 gender = Look(a)->female ? FEMALE : MALE;
+    const struct RoverCast *c = &gRoverCast[roverId % ROVER_COUNT];
+    u8 gender = sRoverLooks[c->look % ARRAY_COUNT(sRoverLooks)].female ? FEMALE : MALE;
     u32 i;
 
-    CreateMon(mon, m->species, m->level, Random32(), OTID_STRUCT_PRESET(ROVER_OT_ID_BASE + a->w.id));
-    for (i = 0; i < MAX_MON_MOVES; i++)
+    CreateMon(mon, m->species, m->level, Random32(), OTID_STRUCT_PRESET(ROVER_OT_ID_BASE + roverId));
+    if (m->moves[0] == MOVE_NONE)
+        GiveMonInitialMoveset(mon);
+    else
     {
-        u16 move = m->moves[i] < MOVES_COUNT ? m->moves[i] : MOVE_NONE;
-        u8 pp = move != MOVE_NONE ? GetMovePP(move) : 0;
-        SetMonData(mon, MON_DATA_MOVE1 + i, &move);
-        SetMonData(mon, MON_DATA_PP1 + i, &pp);
+        for (i = 0; i < MAX_MON_MOVES; i++)
+        {
+            u16 move = m->moves[i] < MOVES_COUNT ? m->moves[i] : MOVE_NONE;
+            u8 pp = move != MOVE_NONE ? GetMovePP(move) : 0;
+            SetMonData(mon, MON_DATA_MOVE1 + i, &move);
+            SetMonData(mon, MON_DATA_PP1 + i, &pp);
+        }
     }
-    SetMonData(mon, MON_DATA_OT_NAME, Cast(a)->name);
+    SetMonData(mon, MON_DATA_OT_NAME, c->name);
     SetMonData(mon, MON_DATA_OT_GENDER, &gender);
     SetMonData(mon, MON_DATA_MET_LOCATION, &met);
     if (m->injuryPart || m->lostParts || m->injuryFlags)
         Injury_Set(mon, m->injuryPart, m->injuryDamage * INJURY_DAMAGE_UNIT, m->lostParts, m->injuryFlags & INJURY_FLAG_SCAR);
     CalculateMonStats(mon);
+    SetFusion(mon, m);
+}
+
+void Rovers_PrepareTrade(void)
+{
+    struct RoverActor *a = &sRovers.actors[sRovers.talk];
+
+    MakeRoverMon(&gParties[B_TRAINER_OPPONENT_A][0], a->w.id, &a->w.mons[sRovers.tradeSlot], METLOC_IN_GAME_TRADE);
     gSpecialVar_0x8005 = 0;
     sRovers.trading = TRUE;
+}
+
+// A Pokémon a rover sold on the market or at the auction house comes as a
+// short note instead of a real one (server/rovers_trade.py): "RVR", 1, the
+// rover id, then its RoverMon. Turns it into the real Pokémon.
+bool32 Rovers_FromListing(struct Pokemon *mon)
+{
+    const u8 *raw = (const u8 *)mon;
+    struct RoverMon m;
+    u32 id;
+
+    if (raw[0] != 'R' || raw[1] != 'V' || raw[2] != 'R' || raw[3] != 1)
+        return FALSE;
+    id = raw[4];
+    memcpy(&m, raw + 5, sizeof(m));
+    if (id >= ROVER_COUNT || m.species == SPECIES_NONE || m.species >= NUM_SPECIES || m.level == 0 || m.level > MAX_LEVEL)
+    {
+        ZeroMonData(mon);
+        return FALSE;
+    }
+    MakeRoverMon(mon, id, &m, METLOC_IN_GAME_TRADE);
+    return TRUE;
 }
 
 // The trade scene uses these instead of its own table's names.
@@ -2264,6 +2743,15 @@ void Rovers_OnLifeBattleEnd(const struct Trainer *trainer, bool32 playerWon)
     if (trainer != &sRoverTrainer)
         return;
     a = &sRovers.actors[sRovers.talk];
+    if (sRovers.leagueFighting)
+    {
+        // A league match: the server keeps the rover's record.
+        sRovers.leagueFighting = FALSE;
+        sRovers.leagueWon = playerWon;
+        QueueRequest(REQ_LEAGUE_RESULT, 0, playerWon, 0, sRovers.leagueMatch);
+        a->state = RS_NONE;
+        return;
+    }
     ReadInjuries(gParties[B_TRAINER_OPPONENT_A], a);
     if (playerWon)
         a->w.losses++, a->w.hurt++;
@@ -2536,6 +3024,287 @@ void Rovers_BoardShowRankings(void)
     FinishBoardRead();
 }
 
+// The weekly Rover League ------------------------------------------------------------------------
+//
+// On the quest boards (server/rovers_league.py): the bracket, entering,
+// playing the player's match, and watching a match still to be played.
+// The rovers in a league match are loaded into the last two actor slots
+// (whoever was there walks off) and never spawned on the map.
+
+#define LEAGUE_A (ROVERS_MAX_HERE - 2)
+#define LEAGUE_B (ROVERS_MAX_HERE - 1)
+
+static const char *const sLeagueWords[] = {"INFO", "ENTER", "FIGHT", "WATCH", "HALL"};
+enum { LEAGUE_INFO, LEAGUE_ENTER, LEAGUE_FIGHT, LEAGUE_WATCH, LEAGUE_HALL };
+
+// The request goes out when the channel is free (other features share it);
+// the script waits for the answer.
+static void LeagueAsk(u32 word, u16 arg)
+{
+    if (!Npx_IsOnline())
+    {
+        sRovers.boardOk = FALSE;
+        ScriptContext_Enable();
+        return;
+    }
+    sRovers.leagueAsk = word + 1;
+    sRovers.leagueAskArg = arg;
+    sRovers.leagueAskWait = 0;
+}
+
+static void SendLeagueAsk(void)
+{
+    u32 word = sRovers.leagueAsk - 1;
+
+    if (sRovers.waiting != REQ_NONE || !NpxRpc_Begin("ROVER"))
+    {
+        if (++sRovers.leagueAskWait > 60 * 20)
+        {
+            sRovers.leagueAsk = 0;
+            sRovers.boardOk = FALSE;
+            ScriptContext_Enable();
+        }
+        return;
+    }
+    sRovers.leagueAsk = 0;
+    NpxRpc_Word("LEAGUE");
+    NpxRpc_Word(sLeagueWords[word]);
+    if (word == LEAGUE_WATCH)
+        NpxRpc_Num(sRovers.leagueAskArg);
+    NpxRpc_Send();
+    sRovers.waiting = REQ_BOARD;
+    sRovers.boardWaiting = TRUE;
+}
+
+void Rovers_LeagueInfoFetch(void)  { LeagueAsk(LEAGUE_INFO, 0); }
+void Rovers_LeagueEnterFetch(void) { LeagueAsk(LEAGUE_ENTER, 0); }
+void Rovers_LeagueFightFetch(void) { LeagueAsk(LEAGUE_FIGHT, 0); }
+void Rovers_LeagueWatchFetch(void) { LeagueAsk(LEAGUE_WATCH, sRovers.leagueWatch); }
+void Rovers_LeagueHallFetch(void)  { LeagueAsk(LEAGUE_HALL, 0); }
+
+// After Rovers_LeagueHallFetch: the champions, newest first, in gStringVar4.
+// First row: how many; then each: weeks ago (0 this week)|name.
+void Rovers_LeagueHallShow(void)
+{
+    u8 *s = gStringVar4;
+    u8 name[16];
+    u32 rows, r;
+
+    gSpecialVar_Result = sRovers.boardOk;
+    if (!sRovers.boardOk)
+        return;
+    rows = min(AnswerNum(0, 0) + 1, AnswerRows());
+    if (rows <= 1)
+        s = StringCopy(s, COMPOUND_STRING("No champions yet. This week's\nwinner will be the first!"));
+    for (r = 1; r < rows; r++)
+    {
+        u32 ago = AnswerNum(r, 0);
+        AnswerText(name, r, 1, PLAYER_NAME_LENGTH);
+        if (r != 1)
+            s = StringCopy(s, r % 2 ? COMPOUND_STRING("\p") : COMPOUND_STRING("\n"));
+        if (ago == 0)
+            s = StringCopy(s, COMPOUND_STRING("This week: "));
+        else if (ago == 1)
+            s = StringCopy(s, COMPOUND_STRING("Last week: "));
+        else
+        {
+            s = ConvertIntToDecimalStringN(s, ago, STR_CONV_MODE_LEFT_ALIGN, 3);
+            s = StringCopy(s, COMPOUND_STRING(" weeks ago: "));
+        }
+        s = StringCopy(s, name);
+    }
+    FinishBoardRead();
+}
+
+static const u8 *const sRoundNames[] = {
+    COMPOUND_STRING("QUARTERFINALS"), COMPOUND_STRING("SEMIFINALS"), COMPOUND_STRING("FINAL"),
+};
+
+// After Rovers_LeagueInfoFetch: the bracket in gStringVar4. VAR_RESULT FALSE
+// if the server didn't answer; VAR_0x8004 the player can enter, VAR_0x8005
+// their match is waiting (STR_VAR_3 the opponent), VAR_0x8006 a match can
+// be watched (STR_VAR_1 and STR_VAR_2 its rovers).
+void Rovers_LeagueShow(void)
+{
+    u8 *s = gStringVar4;
+    u8 a[16], b[16];
+    u32 rows, r, round, state, lastRound = 0xFF, n = 0;
+
+    gSpecialVar_Result = sRovers.boardOk;
+    gSpecialVar_0x8004 = gSpecialVar_0x8005 = gSpecialVar_0x8006 = 0;
+    if (!sRovers.boardOk)
+        return;
+    round = AnswerNum(0, 1);
+    state = AnswerNum(0, 3);
+    sRovers.leagueMatch = AnswerNum(0, 4);
+    AnswerText(gStringVar3, 0, 5, PLAYER_NAME_LENGTH);
+    gSpecialVar_0x8004 = AnswerNum(0, 6);
+    gSpecialVar_0x8005 = (state == 1);
+    s = StringCopy(s, COMPOUND_STRING("ROVER LEAGUE, this week\n"));
+    if (round < 3)
+    {
+        s = StringCopy(s, sRoundNames[round]);
+        s = StringCopy(s, COMPOUND_STRING(": "));
+        s = ConvertIntToDecimalStringN(s, AnswerNum(0, 2), STR_CONV_MODE_LEFT_ALIGN, 3);
+        s = StringCopy(s, COMPOUND_STRING(" hours left"));
+    }
+    else
+    {
+        s = StringCopy(s, COMPOUND_STRING("It's over until next week!"));
+    }
+    rows = AnswerRows();
+    for (r = 1; r < rows; r++)
+    {
+        u32 rnd = AnswerNum(r, 0), winner = AnswerNum(r, 4);
+        AnswerText(a, r, 2, PLAYER_NAME_LENGTH);
+        AnswerText(b, r, 3, PLAYER_NAME_LENGTH);
+        if (rnd != lastRound)
+        {
+            s = StringCopy(s, COMPOUND_STRING("\p"));
+            s = StringCopy(s, sRoundNames[rnd % 3]);
+            s = StringCopy(s, COMPOUND_STRING("\n"));
+            lastRound = rnd;
+            n = 0;
+        }
+        else
+        {
+            s = StringCopy(s, n % 2 ? COMPOUND_STRING("\p") : COMPOUND_STRING("\n"));
+        }
+        n++;
+        s = StringCopy(s, a);
+        s = StringCopy(s, COMPOUND_STRING(" vs "));
+        s = StringCopy(s, b);
+        if (winner != 0)
+        {
+            s = StringCopy(s, COMPOUND_STRING(": "));
+            s = StringCopy(s, winner == 1 ? a : b);
+            s = StringCopy(s, COMPOUND_STRING(" won"));
+        }
+        if (AnswerNum(r, 6) && !gSpecialVar_0x8006)
+        {
+            gSpecialVar_0x8006 = TRUE;
+            sRovers.leagueWatch = AnswerNum(r, 5);
+            StringCopy(gStringVar1, a);
+            StringCopy(gStringVar2, b);
+        }
+    }
+    if (state == 3)
+        s = StringCopy(s, COMPOUND_STRING("\pYou're out this week. Next time!"));
+    else if (state == 4)
+        s = StringCopy(s, COMPOUND_STRING("\pAnd you're this week's champion!"));
+    else if (state == 2)
+        s = StringCopy(s, COMPOUND_STRING("\pYour next match comes when this\nround is over."));
+    FinishBoardRead();
+}
+
+// After Rovers_LeagueEnterFetch: STR_VAR_3 the first opponent.
+void Rovers_LeagueEntered(void)
+{
+    gSpecialVar_Result = sRovers.boardOk;
+    if (!sRovers.boardOk)
+        return;
+    sRovers.leagueMatch = AnswerNum(0, 0);
+    AnswerText(gStringVar3, 0, 1, PLAYER_NAME_LENGTH);
+    FinishBoardRead();
+}
+
+static bool32 LoadLeagueRover(u32 slot, const u8 *wire)
+{
+    struct RoverActor *a = &sRovers.actors[slot];
+    struct RoverActor *other;
+
+    // Whoever stood in this slot walks off; a duel it was in ends.
+    if (a->state == RS_DUEL || a->state == RS_DUEL_OVER)
+    {
+        if (a->partner < ROVERS_MAX_HERE)
+        {
+            other = &sRovers.actors[a->partner];
+            if (other->state == RS_DUEL || other->state == RS_DUEL_OVER)
+                other->state = RS_WANDER;
+        }
+    }
+    Actor_Remove(slot);
+    memset(a, 0, sizeof(*a));
+    memcpy(&a->w, wire, sizeof(a->w));
+    if (a->w.id >= ROVER_COUNT || a->w.count == 0)
+        return FALSE;
+    NormalizeTeam(a);
+    return TRUE;
+}
+
+// After Rovers_LeagueFightFetch: the opponent, ready for
+// Rovers_StartChallenge. VAR_RESULT FALSE if it couldn't be loaded.
+void Rovers_LeagueLoadFight(void)
+{
+    u32 size;
+    const u8 *data;
+
+    gSpecialVar_Result = FALSE;
+    if (!sRovers.boardOk)
+        return;
+    data = AnswerBinary(&size);
+    sRovers.leagueMatch = AnswerNum(0, 0);
+    sRovers.leagueRound = AnswerNum(0, 1);
+    if (data != NULL && size >= sizeof(struct RoverWire) && LoadLeagueRover(LEAGUE_A, data))
+    {
+        sRovers.talk = LEAGUE_A;
+        sRovers.leagueFighting = TRUE;
+        StringCopy(gStringVar3, Cast(&sRovers.actors[LEAGUE_A])->name);
+        gSpecialVar_Result = TRUE;
+    }
+    FinishBoardRead();
+}
+
+// After the match: VAR_RESULT TRUE if the player won (the prize is paid,
+// STR_VAR_2), and whether that made them champion (VAR_0x8004).
+void Rovers_LeagueAfterFight(void)
+{
+    u32 prize = 2000 * (sRovers.leagueRound + 1);
+
+    gSpecialVar_Result = sRovers.leagueWon;
+    gSpecialVar_0x8004 = sRovers.leagueWon && sRovers.leagueRound == 2;
+    if (gSpecialVar_0x8004)
+        prize += 10000;
+    if (sRovers.leagueWon)
+    {
+        AddMoney(&gSaveBlock1Ptr->money, prize);
+        ConvertIntToDecimalStringN(gStringVar2, prize, STR_CONV_MODE_LEFT_ALIGN, 6);
+    }
+    sRovers.leagueWon = FALSE;
+}
+
+// After Rovers_LeagueWatchFetch: both rovers, ready for Rovers_StartWatch.
+void Rovers_LeagueLoadWatch(void)
+{
+    u32 size;
+    const u8 *data;
+
+    gSpecialVar_Result = FALSE;
+    if (!sRovers.boardOk)
+        return;
+    data = AnswerBinary(&size);
+    sRovers.leagueWatch = AnswerNum(0, 0);
+    if (data != NULL && size >= 2 * sizeof(struct RoverWire)
+     && LoadLeagueRover(LEAGUE_A, data) && LoadLeagueRover(LEAGUE_B, data + sizeof(struct RoverWire)))
+    {
+        sRovers.actors[LEAGUE_A].partner = LEAGUE_B;
+        sRovers.actors[LEAGUE_B].partner = LEAGUE_A;
+        sRovers.talk = LEAGUE_A;
+        gSpecialVar_Result = TRUE;
+    }
+    FinishBoardRead();
+}
+
+// After watching: what the player saw is the result. STR_VAR_1 the winner.
+void Rovers_LeagueAfterWatch(void)
+{
+    bool32 leftWon = gSpecialVar_Result;
+    StringCopy(gStringVar1, Cast(&sRovers.actors[leftWon ? LEAGUE_A : LEAGUE_B])->name);
+    QueueRequest(REQ_LEAGUE_SEEN, 0, leftWon, 0, sRovers.leagueWatch);
+    sRovers.actors[LEAGUE_A].state = RS_NONE;
+    sRovers.actors[LEAGUE_B].state = RS_NONE;
+}
+
 // Every frame ------------------------------------------------------------------------------------
 
 static void RespawnMissing(void)
@@ -2549,9 +3318,16 @@ static void RespawnMissing(void)
             a->missing = 0;
             continue;
         }
-        if (++a->missing < 60)
+        if (++a->missing < (a->state == RS_BUDDY ? 2 : 60))
             continue;
         a->missing = 0;
+        if (a->state == RS_BUDDY)
+        {
+            s16 x, y;
+            if (SpotNextToPlayer(&x, &y))
+                SpawnActor(i, x, y, DIR_SOUTH);
+            continue;
+        }
         if (a->state == RS_DUEL || a->state == RS_DUEL_OVER)
             a->state = RS_WANDER;
         {
@@ -2561,11 +3337,6 @@ static void RespawnMissing(void)
             a->state = RS_WANDER;
         }
     }
-}
-
-static bool32 IsWildState(u32 state)
-{
-    return state == RS_WILD_APPEAR || state == RS_WILD_FIGHT || state == RS_THROW || state == RS_SHAKE || state == RS_KO;
 }
 
 bool32 Rovers_OverworldUpdate(void)
@@ -2587,7 +3358,7 @@ bool32 Rovers_OverworldUpdate(void)
         }
         sRovers.duelResult = 0;
     }
-    if (!OnRoverMap() || ArePlayerFieldControlsLocked())
+    if (!OnRoverMap() || ArePlayerFieldControlsLocked() || QuietForTests())
         return FALSE;
     if (!sRovers.spawned)
     {
@@ -2603,6 +3374,14 @@ bool32 Rovers_OverworldUpdate(void)
         sRovers.talk = (gRoverShowcase.talk - 1) % ROVERS_MAX_HERE;
         gRoverShowcase.talk = 0;
         ScriptContext_SetupScript(Rovers_EventScript_Talk);
+        return TRUE;
+    }
+    if (sRovers.farewellId != 0 && (sRovers.farewellDelay == 0 || --sRovers.farewellDelay == 0))
+    {
+        StringCopy(gStringVar1, gRoverCast[sRovers.farewellId - 1].name);
+        gSpecialVar_0x8004 = sRovers.farewellItem;
+        sRovers.farewellId = 0;
+        ScriptContext_SetupScript(Rovers_EventScript_BuddyBye);
         return TRUE;
     }
     if (ObjByLocalId(LOCALID_ROVER_BOARD) == NULL && IsTown())
@@ -2631,7 +3410,18 @@ bool32 Rovers_OverworldUpdate(void)
         case RS_LEAVING:
             UpdateLeaving(i);
             break;
+        case RS_BUDDY:
+            UpdateBuddy(i);
+            break;
         }
+    }
+    if (sRovers.startRival != 0)
+    {
+        sRovers.talk = sRovers.startRival - 1;
+        sRovers.startRival = 0;
+        StringCopy(gStringVar1, Cast(&sRovers.actors[sRovers.talk])->name);
+        ScriptContext_SetupScript(Rovers_EventScript_Rival);
+        return TRUE;
     }
     // The rampaging Pokémon, if this map has one.
     if (sRovers.majorId != 0 && !sRovers.majorSpawned && sRovers.chargerState == CHARGER_NONE)

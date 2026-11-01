@@ -1844,6 +1844,14 @@ void UpdatePalettesWithTime(u32 palettes)
         return;
     u32 i;
     u32 mask = 1 << 16;
+    // Extended sprite palettes 16..63 follow the sprite palettes when all of them are blended
+    if ((palettes & PALETTES_OBJECTS) == PALETTES_OBJECTS)
+    {
+        u64 ext = GetExtSpritePalettesInUse();
+        for (i = 16; ext != 0; i++, ext >>= 1)
+            if (ext & 1)
+                UpdateSpritePaletteWithTime(i);
+    }
     if (palettes >= (1 << 16))
         for (i = 0; i < 16; i++, mask <<= 1)
         {
@@ -1852,6 +1860,14 @@ void UpdatePalettesWithTime(u32 palettes)
         }
 
     palettes &= PALETTES_MAP | PALETTES_OBJECTS; // Don't blend UI pals
+    // Extended BG palettes follow the map palette with the same number
+    if (palettes & PALETTES_MAP)
+    {
+        u64 ext = GetExtBgPalettesInUse();
+        for (i = 0; ext != 0; i++, ext >>= 1)
+            if ((ext & 1) && (palettes & (1u << (i % 16))))
+                UpdateExtBgPaletteWithTime(i);
+    }
     if (!palettes)
         return;
     TimeMixPalettes(palettes, gPlttBufferUnfaded, gPlttBufferFaded, &gTimeBlend.startBlend, &gTimeBlend.endBlend, gTimeBlend.weight);
@@ -1863,6 +1879,13 @@ u8 UpdateSpritePaletteWithTime(u8 paletteNum)
      && !IS_BLEND_IMMUNE_TAG(GetSpritePaletteTagByPaletteNum(paletteNum)))
         TimeMixPalettes(1, &gPlttBufferUnfaded[OBJ_PLTT_ID(paletteNum)], &gPlttBufferFaded[OBJ_PLTT_ID(paletteNum)], &gTimeBlend.startBlend, &gTimeBlend.endBlend, gTimeBlend.weight);
     return paletteNum;
+}
+
+// Extended BG palette i (bank i / 16 + 1, palette i % 16), see LoadExtBgPalette
+void UpdateExtBgPaletteWithTime(u32 i)
+{
+    if (MapHasNaturalLight(gMapHeader.mapType))
+        TimeMixPalettes(1, &gPlttBufferUnfaded[EXT_BG_PLTT_ID(i / 16 + 1, i % 16)], &gPlttBufferFaded[EXT_BG_PLTT_ID(i / 16 + 1, i % 16)], &gTimeBlend.startBlend, &gTimeBlend.endBlend, gTimeBlend.weight);
 }
 
 static void OverworldBasic(void)

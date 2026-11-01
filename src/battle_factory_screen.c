@@ -1032,7 +1032,7 @@ static const struct SwapScreenAction sSwap_EnemyScreenActions[] =
 
 static void SpriteCB_Pokeball(struct Sprite *sprite)
 {
-    if (sprite->oam.paletteNum == IndexOfSpritePaletteTag(PALTAG_BALL_SELECTED))
+    if (GetSpritePaletteSlot(sprite) == IndexOfSpritePaletteTag(PALTAG_BALL_SELECTED))
     {
         // Poké Ball selected, do rocking animation
         if (sprite->animEnded)
@@ -1412,7 +1412,7 @@ static void Select_HandleMonSelectionChange(void)
         sFactorySelectScreen->selectingMonsState++;
     }
 
-    gSprites[sFactorySelectScreen->mons[cursorPos].ballSpriteId].oam.paletteNum = paletteNum;
+    SetSpritePaletteSlot(&gSprites[sFactorySelectScreen->mons[cursorPos].ballSpriteId], paletteNum);
 }
 
 static void Select_SetBallSpritePaletteNum(u8 id)
@@ -1424,7 +1424,7 @@ static void Select_SetBallSpritePaletteNum(u8 id)
     else
         palNum = IndexOfSpritePaletteTag(PALTAG_BALL_GRAY);
 
-    gSprites[sFactorySelectScreen->mons[id].ballSpriteId].oam.paletteNum = palNum;
+    SetSpritePaletteSlot(&gSprites[sFactorySelectScreen->mons[id].ballSpriteId], palNum);
 }
 
 static void Select_Task_OpenSummaryScreen(u8 taskId)
@@ -2805,9 +2805,9 @@ static void Swap_Task_SlideCycleBalls(u8 taskId)
                 lastX = gSprites[sFactorySwapScreen->ballSpriteIds[i]].x;
                 gSprites[sFactorySwapScreen->ballSpriteIds[i]].x = -16;
                 if (sFactorySwapScreen->inEnemyScreen == TRUE)
-                    gSprites[sFactorySwapScreen->ballSpriteIds[i]].oam.paletteNum = IndexOfSpritePaletteTag(PALTAG_BALL_SELECTED);
+                    SetSpritePaletteSlot(&gSprites[sFactorySwapScreen->ballSpriteIds[i]], IndexOfSpritePaletteTag(PALTAG_BALL_SELECTED));
                 else
-                    gSprites[sFactorySwapScreen->ballSpriteIds[i]].oam.paletteNum = IndexOfSpritePaletteTag(PALTAG_BALL_GRAY);
+                    SetSpritePaletteSlot(&gSprites[sFactorySwapScreen->ballSpriteIds[i]], IndexOfSpritePaletteTag(PALTAG_BALL_GRAY));
 
                 gTasks[taskId].tBallCycled(i) = TRUE;
             }

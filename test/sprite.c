@@ -271,7 +271,7 @@ static void CopyMatricesToOamBuffer(void)
 static void AddSpritesToOamBuffer(void)
 {
     u8 i = 0;
-    u8 oamIndex = 0;
+    u16 oamIndex = 0;
 
     while (i < MAX_SPRITES)
     {

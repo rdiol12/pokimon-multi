@@ -1,4 +1,5 @@
 #include "global.h"
+#include "save_ext.h"
 #include "battle_setup.h"
 #include "community.h"
 #include "new_game.h"
@@ -59,6 +60,20 @@ static EWRAM_DATA u32 sBattlingId = 0; // and its id
 
 #define sSave (gSaveBlock3Ptr->reserve)
 
+// The player's offline drop-offs: the first few in SaveBlock3, the rest in the
+// extended save, which only an emulator with hardware v3 keeps.
+static struct ReserveLocalMon *LocalMon(u32 i)
+{
+    if (i < RESERVE_LOCAL_SAVED)
+        return &sSave.mons[i];
+    return &gSaveBlockExt.reserveMoreMons[i - RESERVE_LOCAL_SAVED];
+}
+
+static u32 LocalMax(void)
+{
+    return SaveExt_IsAvailable() ? RESERVE_LOCAL_MAX : RESERVE_LOCAL_SAVED;
+}
+
 // Strays by badges: two badges per tier.
 static const u16 sStraySpecies[4][8] =
 {
@@ -106,6 +121,32 @@ static void ResetStraysIfNewDay(void)
     {
         sSave.strayDay = today;
         sSave.straysGone = 0;
+    }
+}
+
+static u32 RoamerLocalId(u32 i)
+{
+    return i < RESERVE_SHOWN_FIRST ? RESERVE_FIRST_LOCALID + i : RESERVE_MORE_LOCALID + i - RESERVE_SHOWN_FIRST;
+}
+
+static u32 RoamerHideFlag(u32 i)
+{
+    return i < RESERVE_SHOWN_FIRST ? FLAG_RESERVE_HIDE_1 + i : FLAG_RESERVE_HIDE_9 + i - RESERVE_SHOWN_FIRST;
+}
+
+// Gives spot i's object the look of its Pokémon, in the map's object
+// templates (the GBA only had 16 VAR_OBJ_GFX_ID vars for this).
+static void SetRoamerGfx(u32 i, u32 gfx)
+{
+    u32 j, localId = RoamerLocalId(i);
+
+    for (j = 0; j < OBJECT_EVENT_TEMPLATES_COUNT; j++)
+    {
+        if (gSaveBlock1Ptr->objectEventTemplates[j].localId == localId)
+        {
+            gSaveBlock1Ptr->objectEventTemplates[j].graphicsId = gfx;
+            return;
+        }
     }
 }
 
@@ -160,9 +201,9 @@ static void AddLocalAndStrays(void)
 {
     u32 i;
 
-    for (i = 0; i < sSave.count && i < RESERVE_LOCAL_MAX; i++)
+    for (i = 0; i < sSave.count && i < LocalMax(); i++)
     {
-        struct ReserveLocalMon *mon = &sSave.mons[i];
+        struct ReserveLocalMon *mon = LocalMon(i);
         AddShown(ID_LOCAL + i, mon->species, mon->level, mon->personality, LISTED_MINE, gSaveBlock2Ptr->playerName);
     }
     ResetStraysIfNewDay();
@@ -194,7 +235,7 @@ void Reserve_BuildList(void)
     sShownCount = 0;
     if (gSpecialVar_Result == COMMUNITY_OK)
         count = min(gCommunityMailbox.respArgs[0], gCommunityMailbox.respLen / LIST_RECORD_SIZE);
-    for (i = 0; i < count && i < RESERVE_SHOWN; i++)
+    for (i = 0; i < count && i < RESERVE_SERVER_SHOWN; i++)
     {
         const u8 *r = gCommunityMailbox.respData + i * LIST_RECORD_SIZE;
         u32 id = r[0] | (r[1] << 8) | (r[2] << 16) | ((u32)r[3] << 24);
@@ -232,12 +273,12 @@ void Reserve_SetupMap(void)
     {
         if (i < sShownCount && sShown[i].id != 0xFFFFFFFF)
         {
-            VarSet(VAR_OBJ_GFX_ID_0 + i, GfxFor(&sShown[i]));
-            FlagClear(FLAG_RESERVE_HIDE_1 + i);
+            SetRoamerGfx(i, GfxFor(&sShown[i]));
+            FlagClear(RoamerHideFlag(i));
         }
         else
         {
-            FlagSet(FLAG_RESERVE_HIDE_1 + i);
+            FlagSet(RoamerHideFlag(i));
         }
     }
 }
@@ -249,9 +290,9 @@ static void ShowNew(u32 i)
     gSpecialVar_0x8006 = 0;
     if (i >= RESERVE_SHOWN)
         return;
-    VarSet(VAR_OBJ_GFX_ID_0 + i, GfxFor(&sShown[i]));
-    FlagClear(FLAG_RESERVE_HIDE_1 + i);
-    gSpecialVar_0x8006 = RESERVE_FIRST_LOCALID + i;
+    SetRoamerGfx(i, GfxFor(&sShown[i]));
+    FlagClear(RoamerHideFlag(i));
+    gSpecialVar_0x8006 = RoamerLocalId(i);
 }
 
 static enum Species ShownSpecies(u32 i)
@@ -259,7 +300,7 @@ static enum Species ShownSpecies(u32 i)
     return sShown[i].species;
 }
 
-// Script: VAR_0x8004 = which roaming Pokémon (0-7). Its cry; STR_VAR_1 =
+// Script: VAR_0x8004 = which roaming Pokémon (0-19). Its cry; STR_VAR_1 =
 // species, STR_VAR_2 = level, STR_VAR_3 = who left it. VAR_RESULT =
 // RESERVE_KIND_*, VAR_0x8006 = its object's local id.
 void Reserve_DescribeRoamer(void)
@@ -267,7 +308,7 @@ void Reserve_DescribeRoamer(void)
     u32 i = gSpecialVar_0x8004;
     struct ReserveShown *s;
 
-    gSpecialVar_0x8006 = RESERVE_FIRST_LOCALID + i;
+    gSpecialVar_0x8006 = RoamerLocalId(i);
     if (i >= sShownCount || sShown[i].id == 0xFFFFFFFF)
     {
         gSpecialVar_Result = RESERVE_KIND_NONE;
@@ -339,7 +380,7 @@ void Reserve_StartBattle(void)
     {
         CreateMon(mon, s->species, s->level, s->personality, OTID_STRUCT_RANDOM_NO_SHINY);
         if (s->id & ID_LOCAL)
-            SetIvs(mon, sSave.mons[s->id - ID_LOCAL].ivs);
+            SetIvs(mon, LocalMon(s->id - ID_LOCAL)->ivs);
         else
             SetIvs(mon, RandomIvs(s->personality));
         HealPokemon(mon);
@@ -355,9 +396,9 @@ static void RemoveLocal(u32 index)
     if (index >= sSave.count)
         return;
     for (i = index; i + 1 < sSave.count; i++)
-        sSave.mons[i] = sSave.mons[i + 1];
+        *LocalMon(i) = *LocalMon(i + 1);
     sSave.count--;
-    memset(&sSave.mons[sSave.count], 0, sizeof(sSave.mons[0]));
+    memset(LocalMon(sSave.count), 0, sizeof(struct ReserveLocalMon));
     // The others moved down one.
     for (i = 0; i < sShownCount; i++)
     {
@@ -391,7 +432,7 @@ void Reserve_AfterBattle(void)
     }
     gSpecialVar_Result = end;
     gSpecialVar_0x8005 = end;
-    gSpecialVar_0x8006 = RESERVE_FIRST_LOCALID + sBattling;
+    gSpecialVar_0x8006 = RoamerLocalId(sBattling);
     StringCopy(gStringVar1, GetSpeciesName(s->species));
     if (end == RESERVE_END_STILL_HERE || s->id != sBattlingId)
         return;
@@ -405,7 +446,7 @@ void Reserve_AfterBattle(void)
         RemoveLocal(s->id - ID_LOCAL);
     }
     s->id = 0xFFFFFFFF;
-    FlagSet(FLAG_RESERVE_HIDE_1 + sBattling);
+    FlagSet(RoamerHideFlag(sBattling));
 }
 
 // Script: VAR_RESULT = TRUE if the one just battled is on the server.
@@ -426,7 +467,7 @@ void Reserve_ForgetRoamer(void)
 {
     if (sBattling < sShownCount)
         sShown[sBattling].id = 0xFFFFFFFF;
-    FlagSet(FLAG_RESERVE_HIDE_1 + sBattling);
+    FlagSet(RoamerHideFlag(sBattling));
 }
 
 // --- Leaving a Pokémon --------------------------------------------------------
@@ -486,12 +527,12 @@ void Reserve_LeaveOffline(void)
     struct ReserveLocalMon *local;
     u32 i, ivs = 0;
 
-    if (sSave.count >= RESERVE_LOCAL_MAX)
+    if (sSave.count >= LocalMax())
     {
         gSpecialVar_Result = RESERVE_LEAVE_LOCAL_FULL;
         return;
     }
-    local = &sSave.mons[sSave.count];
+    local = LocalMon(sSave.count);
     local->species = GetMonData(mon, MON_DATA_SPECIES);
     local->level = GetMonData(mon, MON_DATA_LEVEL);
     local->personality = GetMonData(mon, MON_DATA_PERSONALITY);

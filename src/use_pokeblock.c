@@ -1584,9 +1584,9 @@ static void SpriteCB_SelectionIconPokeball(struct Sprite *sprite)
 static void SpriteCB_SelectionIconCancel(struct Sprite *sprite)
 {
     if (sMenu->info.curSelection == sMenu->info.numSelections - 1)
-        sprite->oam.paletteNum = IndexOfSpritePaletteTag(TAG_CONDITION_BALL);
+        SetSpritePaletteSlot(sprite, IndexOfSpritePaletteTag(TAG_CONDITION_BALL));
     else
-        sprite->oam.paletteNum = IndexOfSpritePaletteTag(TAG_CONDITION_CANCEL);
+        SetSpritePaletteSlot(sprite, IndexOfSpritePaletteTag(TAG_CONDITION_CANCEL));
 }
 
 // Calculate the max id for sparkles/stars that appear around the Pokémon on the condition screen

@@ -3,6 +3,7 @@
 #include "bg.h"
 #include "dma3.h"
 #include "gpu_regs.h"
+#include "palette.h"
 #include "malloc.h"
 #include "menu.h"
 #include "decompress.h"
@@ -55,6 +56,7 @@ void ResetBgs(void)
     ResetBgControlStructs();
     sGpuBgConfigs.bgVisibilityAndMode = 0;
     SetTextModeAndHideBgs();
+    ResetExtBgPalettes();
 }
 
 static void SetBgModeInternal(u32 bgMode)

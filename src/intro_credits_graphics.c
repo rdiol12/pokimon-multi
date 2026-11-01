@@ -1057,7 +1057,7 @@ static void CreateMovingScenerySprites(bool8 hasVerticalMove, const struct Intro
         gSprites[sprite].oam.priority = 3;
         gSprites[sprite].oam.shape = metadata[i].shape;
         gSprites[sprite].oam.size = metadata[i].size;
-        gSprites[sprite].oam.paletteNum = 0;
+        SetSpritePaletteSlot(&gSprites[sprite], 0);
         gSprites[sprite].anims = anims;
         StartSpriteAnim(&gSprites[sprite], metadata[i].animNum);
         gSprites[sprite].tHasVerticalMove = hasVerticalMove;

@@ -7,8 +7,13 @@ gInitialMainCB2 = CB2_InitCopyrightScreenAfterBootup;
 MEMORY
 {
     EWRAM (rwx) : ORIGIN = 0x2000000, LENGTH = 256K
+    EWRAM_EXT (rwx) : ORIGIN = 0x2040000, LENGTH = 16M - 256K
     IWRAM (rwx) : ORIGIN = 0x3000000, LENGTH = 32K
-    ROM    (rx) : ORIGIN = 0x8000000, LENGTH = 32M
+    ROM               (rx) : ORIGIN = 0x8000000, LENGTH = 32M
+    /* Extended GBA v4 big ROM (emulator/README.md): bytes past 32 MiB show at 0xC000000.
+       ROM2_LOAD is only where they sit in the .gba file, right after the first 32 MiB. */
+    ROM2              (rx) : ORIGIN = 0xC000000, LENGTH = 32M
+    ROM2_LOAD         (rx) : ORIGIN = 0xA000000, LENGTH = 32M
 }
 
 SECTIONS {
@@ -28,6 +33,18 @@ SECTIONS {
     {
         *.o(.sbss);
     } > EWRAM
+
+    /* Extended EWRAM: only exists on our own emulator fork (emulator/README.md).
+       Zeroed by the RegisterRamReset in crt0, never loaded from ROM.
+       Its input section must not start with ".ewram", or .ewram above takes it. */
+    .ewram_ext (NOLOAD) :
+    ALIGN(4)
+    {
+        __ewram_ext_start = .;
+        *.o(.pkx_ewram);
+        . = ALIGN(4);
+        __ewram_ext_end = .;
+    } > EWRAM_EXT
 
     .iwram ORIGIN(IWRAM) : AT (__iwram_lma)
     ALIGN(4)
@@ -104,6 +121,13 @@ SECTIONS {
     } > ROM = 0
 
     __rom_end = .;
+
+    /* Big data marked ROM2_DATA (include/gba/defines.h). Empty unless the ROM outgrows 32 MiB. */
+    .rom2 :
+    ALIGN(4)
+    {
+        *(.rom2 .rom2.*);
+    } > ROM2 AT> ROM2_LOAD
 
     /* DWARF debug sections.
        Symbols in the DWARF debugging sections are relative to the beginning

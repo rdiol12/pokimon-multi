@@ -1669,7 +1669,7 @@ void AnimTask_BlendMonInAndOut(u8 task)
         DestroyAnimVisualTask(task);
         return;
     }
-    gTasks[task].data[0] = OBJ_PLTT_ID(gSprites[spriteId].oam.paletteNum) + 1;
+    gTasks[task].data[0] = OBJ_PLTT_ID(GetSpritePaletteSlot(&gSprites[spriteId])) + 1;
     AnimTask_BlendPalInAndOutSetup(&gTasks[task]);
 }
 
@@ -2334,7 +2334,7 @@ void AnimTask_AttackerPunchWithTrace(u8 taskId)
     task->tNumTracesActive = 0;
 
     dest = OBJ_PLTT_ID2(task->tPaletteNum);
-    src = OBJ_PLTT_ID2(gSprites[task->tBattlerSpriteId].oam.paletteNum);
+    src = OBJ_PLTT_ID2(GetSpritePaletteSlot(&gSprites[task->tBattlerSpriteId]));
 
     // Set trace's priority based on battler's subpriority
     task->tPriority = GetBattlerSpriteSubpriority(gBattleAnimAttacker);
@@ -2389,7 +2389,7 @@ static void CreateBattlerTrace(struct Task *task, u8 taskId)
     if (spriteId >= 0)
     {
         gSprites[spriteId].oam.priority = task->tPriority;
-        gSprites[spriteId].oam.paletteNum = task->tPaletteNum;
+        SetSpritePaletteSlot(&gSprites[spriteId], task->tPaletteNum);
         gSprites[spriteId].sActiveTime = 8;
         gSprites[spriteId].sTaskId = taskId;
         gSprites[spriteId].sSpriteId = spriteId;

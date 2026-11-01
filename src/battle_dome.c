@@ -4671,7 +4671,7 @@ static void DisplayMatchInfoOnCard(u8 flags, u8 matchNo)
     if (flags & MOVE_CARD)
         gSprites[sInfoCard->spriteIds[arrId]].invisible = TRUE;
     if (lost[0])
-        gSprites[sInfoCard->spriteIds[arrId]].oam.paletteNum = 3;
+        SetSpritePaletteSlot(&gSprites[sInfoCard->spriteIds[arrId]], 3);
 
     // Draw right trainer sprite.
     if (trainerIds[1] == TRAINER_PLAYER)
@@ -4684,7 +4684,7 @@ static void DisplayMatchInfoOnCard(u8 flags, u8 matchNo)
     if (flags & MOVE_CARD)
         gSprites[sInfoCard->spriteIds[1 + arrId]].invisible = TRUE;
     if (lost[1])
-        gSprites[sInfoCard->spriteIds[1 + arrId]].oam.paletteNum = 3;
+        SetSpritePaletteSlot(&gSprites[sInfoCard->spriteIds[1 + arrId]], 3);
 
     // Draw left trainer's Pokémon icons.
     for (i = 0; i < FRONTIER_PARTY_SIZE; i++)
@@ -4721,7 +4721,7 @@ static void DisplayMatchInfoOnCard(u8 flags, u8 matchNo)
             gSprites[sInfoCard->spriteIds[2 + i + arrId]].invisible = TRUE;
         if (lost[0])
         {
-            gSprites[sInfoCard->spriteIds[2 + i + arrId]].oam.paletteNum = 3;
+            SetSpritePaletteSlot(&gSprites[sInfoCard->spriteIds[2 + i + arrId]], 3);
             gSprites[sInfoCard->spriteIds[2 + i + arrId]].sMonIconStill = TRUE;
         }
     }
@@ -4761,7 +4761,7 @@ static void DisplayMatchInfoOnCard(u8 flags, u8 matchNo)
             gSprites[sInfoCard->spriteIds[5 + i + arrId]].invisible = TRUE;
         if (lost[1])
         {
-            gSprites[sInfoCard->spriteIds[5 + i + arrId]].oam.paletteNum = 3;
+            SetSpritePaletteSlot(&gSprites[sInfoCard->spriteIds[5 + i + arrId]], 3);
             gSprites[sInfoCard->spriteIds[5 + i + arrId]].sMonIconStill = TRUE;
         }
     }
