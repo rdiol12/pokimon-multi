@@ -142,6 +142,7 @@ bool8 ScrCmd_special(struct ScriptContext *ctx)
     Script_RequestEffects(SCREFF_V1);
     Script_CheckEffectInstrumentedSpecial(index);
 
+    ScriptContext_ClearEarlyEnable();
     gSpecials[index]();
     return FALSE;
 }
@@ -168,6 +169,7 @@ bool8 ScrCmd_callnative(struct ScriptContext *ctx)
     Script_CheckEffectInstrumentedCallNative(func);
 
     ctx->waitAfterCallNative = FALSE;
+    ScriptContext_ClearEarlyEnable();
     func(ctx);
     return ctx->waitAfterCallNative;
 }
@@ -176,6 +178,9 @@ bool8 ScrCmd_waitstate(struct ScriptContext *ctx)
 {
     Script_RequestEffects(SCREFF_V1 | SCREFF_HARDWARE);
 
+    // The special before this already finished and enabled the script.
+    if (ScriptContext_TakeEarlyEnable())
+        return FALSE;
     ScriptContext_Stop();
     return TRUE;
 }
