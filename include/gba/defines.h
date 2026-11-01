@@ -74,6 +74,17 @@
 #define PKX_BG_PLTT          (PKX_VIDEO + 0x3000)
 #define PKX_EXT_BG_PALETTES  48
 #define REG_ADDR_PKX_BG_PALETTE_BANKS 0x4FFF7F6
+// Version 6: widescreen. Reading REG_ADDR_PKX_WIDE gives the frame width: 240, or PKX_WIDE_WIDTH when
+// the player turned widescreen on. The GBA's 240 columns sit in the middle; writing the register picks
+// the layers that also draw in the PKX_WIDE_MARGIN side areas (bits 0-3 BG0-BG3, bit 4 sprites).
+// REG_ADDR_PKX_WIDE_MAPS bits 0-3 turn a 32x32 text background into a 64x32 one whose right half
+// (columns 32-63) is at PKX_WIDE_MAP(bg) instead of the next screen block.
+#define REG_ADDR_PKX_WIDE      0x4FFF7F8
+#define REG_ADDR_PKX_WIDE_MAPS 0x4FFF7FA
+#define PKX_WIDE_WIDTH         320
+#define PKX_WIDE_MARGIN        40
+#define PKX_WIDE_OBJ           0x10
+#define PKX_WIDE_MAP(bg)       (PKX_VIDEO + 0x4000 + (bg) * 0x800)
 // Version 3: 1 MiB of battery-backed RAM saved with the flash save. CPU access only (no DMA).
 #define PKX_SAVE             (PKX_VIDEO + 0x100000)
 #define PKX_SAVE_SIZE        0x100000

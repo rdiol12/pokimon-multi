@@ -1,5 +1,6 @@
 #include "global.h"
 #include "hoenn_multi.h"
+#include "widescreen.h"
 #include "injury.h"
 #include "breed_fusion.h"
 #include "malloc.h"
@@ -2796,8 +2797,8 @@ void GetFollowerAction(struct ScriptContext *ctx) // Essentially a big switch fo
 // Sprite callback for light sprites
 void UpdateLightSprite(struct Sprite *sprite)
 {
-    s16 left =   gSaveBlock1Ptr->pos.x - 2;
-    s16 right =  gSaveBlock1Ptr->pos.x + 17;
+    s16 left =   gSaveBlock1Ptr->pos.x - 2 - FIELD_WIDE_EXTRA;
+    s16 right =  gSaveBlock1Ptr->pos.x + 17 + FIELD_WIDE_EXTRA;
     s16 top =    gSaveBlock1Ptr->pos.y;
     s16 bottom = gSaveBlock1Ptr->pos.y + 15;
     s16 x = sprite->sLightXPos;
@@ -2904,8 +2905,8 @@ void TrySpawnLightSprites(s16 camX, s16 camY)
 {
     u32 i;
     u8 objectCount;
-    s16 left = gSaveBlock1Ptr->pos.x - 2;
-    s16 right = gSaveBlock1Ptr->pos.x + MAP_OFFSET_W + 2;
+    s16 left = gSaveBlock1Ptr->pos.x - 2 - FIELD_WIDE_EXTRA;
+    s16 right = gSaveBlock1Ptr->pos.x + MAP_OFFSET_W + 2 + FIELD_WIDE_EXTRA;
     s16 top = gSaveBlock1Ptr->pos.y;
     s16 bottom = gSaveBlock1Ptr->pos.y + MAP_OFFSET_H + 2;
     if (gMapHeader.events == NULL)
@@ -2938,8 +2939,8 @@ void TrySpawnObjectEvents(s16 cameraX, s16 cameraY)
 
     if (gMapHeader.events != NULL)
     {
-        s16 left = gSaveBlock1Ptr->pos.x - 2;
-        s16 right = gSaveBlock1Ptr->pos.x + MAP_OFFSET_W + 2;
+        s16 left = gSaveBlock1Ptr->pos.x - 2 - FIELD_WIDE_EXTRA;
+        s16 right = gSaveBlock1Ptr->pos.x + MAP_OFFSET_W + 2 + FIELD_WIDE_EXTRA;
         s16 top = gSaveBlock1Ptr->pos.y;
         s16 bottom = gSaveBlock1Ptr->pos.y + MAP_OFFSET_H + 2;
 
@@ -3005,8 +3006,8 @@ void RemoveObjectEventsOutsideView(void)
 
 static void RemoveObjectEventIfOutsideView(struct ObjectEvent *objectEvent)
 {
-    s16 left =   gSaveBlock1Ptr->pos.x - 2;
-    s16 right =  gSaveBlock1Ptr->pos.x + 17;
+    s16 left =   gSaveBlock1Ptr->pos.x - 2 - FIELD_WIDE_EXTRA;
+    s16 right =  gSaveBlock1Ptr->pos.x + 17 + FIELD_WIDE_EXTRA;
     s16 top =    gSaveBlock1Ptr->pos.y;
     s16 bottom = gSaveBlock1Ptr->pos.y + 16;
 
@@ -9651,11 +9652,11 @@ static void UpdateObjectEventOffscreen(struct ObjectEvent *objectEvent, struct S
     x2 = x + graphicsInfo->width;
     y2 = y + graphicsInfo->height;
 
-    s32 minX = -16;
+    s32 minX = -16 - Widescreen_FieldMargin();
     if (objectEvent->graphicsId == OBJ_EVENT_GFX_SS_ANNE)
-        minX = -32;
+        minX -= 16;
 
-    if (x >= DISPLAY_WIDTH + 16 || x2 < minX)
+    if (x >= DISPLAY_WIDTH + 16 + Widescreen_FieldMargin() || x2 < minX)
         objectEvent->offScreen = TRUE;
 
     if (y >= DISPLAY_HEIGHT + 16 || y2 < -16)
@@ -11025,7 +11026,7 @@ void UpdateObjectEventSpriteInvisibility(struct Sprite *sprite, bool8 invisible)
     x2 = x - (sprite->centerToCornerVecX >> 1);
     y2 = y - (sprite->centerToCornerVecY >> 1);
 
-    if ((s16)x >= DISPLAY_WIDTH + 16 || x2 < -16)
+    if ((s16)x >= DISPLAY_WIDTH + 16 + Widescreen_FieldMargin() || x2 < -16 - Widescreen_FieldMargin())
         sprite->invisible = TRUE;
     if ((s16)y >= DISPLAY_HEIGHT + 16 || y2 < -16)
         sprite->invisible = TRUE;

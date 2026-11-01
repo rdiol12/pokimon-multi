@@ -42,7 +42,16 @@ the phone for the landscape layout. ▶▶ is fast forward (offline is best for
 it). The game saves to the phone whenever it saves in game. ☰ opens the
 menu: **Export save** (a `.sav` file, to keep or move), **Import save** (a
 `.sav` from mGBA, Delta, Pizza Boy and others), **Restart game** and
-**Change ROM**.
+**Change ROM**, **Widescreen** (on by default, see emulator/README.md) and
+**Notifications** (see below).
+
+### Notifications
+
+When you play online, the app tells you about trade offers, friends coming
+online and tournaments you signed up for starting, also when the app is
+closed (Android checks every 15 minutes or so, iOS when the system lets it).
+☰ > **Notifications** turns each kind on or off; fishing tournaments are off
+unless you turn them on. How it works: docs/notifications.md.
 
 ## How it works
 
