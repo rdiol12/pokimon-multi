@@ -1130,11 +1130,15 @@ PetalburgCity_Gym_EventScript_RightGymStatue::
 
 PetalburgCity_Gym_EventScript_GymStatueCertified::
 	msgbox PetalburgCity_Gym_Text_GymStatueCertified, MSGBOX_DEFAULT
+	setvar VAR_0x8005, 4
+	call HoennMulti_EventScript_GymStatue
 	releaseall
 	end
 
 PetalburgCity_Gym_EventScript_GymStatue::
 	msgbox PetalburgCity_Gym_Text_GymStatue, MSGBOX_DEFAULT
+	setvar VAR_0x8005, 4
+	call HoennMulti_EventScript_GymStatue
 	releaseall
 	end
 

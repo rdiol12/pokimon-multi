@@ -1718,10 +1718,11 @@ Common_EventScript_UnionRoomAttendant::
 Common_EventScript_WirelessClubAttendant::
 #if IS_FRLG
 	call CableClub_EventScript_WirelessClubAttendant_Frlg
-#else
-	call CableClub_EventScript_WirelessClubAttendant
-#endif
 	end
+#else
+	@ No link cables online: this desk finds a trainer over the internet.
+	goto HoennMulti_EventScript_QuickMatchDesk
+#endif
 
 Common_EventScript_DirectCornerAttendant::
 #if IS_FRLG

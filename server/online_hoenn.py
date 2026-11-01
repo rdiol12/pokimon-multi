@@ -107,7 +107,7 @@ def on_milestone(ctx, args):
             msg = f"{ctx.player.name} beat {leader} and earned the {badge}!"
         if first:
             msg += " The first trainer ever!"
-        ctx.online.announce(msg)
+        ctx.online.announce(msg, exclude=ctx.key)
     db.commit()
 
 
@@ -121,7 +121,7 @@ def on_catch(ctx, args):
     msg = f"{ctx.player.name} caught {species_name(species)}!"
     if first:
         msg += " Nobody had caught one before!"
-    ctx.online.announce(msg)
+    ctx.online.announce(msg, exclude=ctx.key)
 
 
 def clears(db, idx):
@@ -145,12 +145,12 @@ def cmd_hrec(ctx, args, data):
     got = clears(db, idx)
     title = "CHAMPIONS OF HOENN" if idx == CHAMPION else f"{GYMS[idx][0]}: {GYMS[idx][1]}"
     if not got:
-        return answer("Nobody has cleared it yet.~Be the first!", rows=board(title, [(6, "#"), (24, "TRAINER")], []))
+        return answer("Nobody has cleared it yet.~Be the first!", rows=board(title, [(6, "NO."), (30, "TRAINER")], []))
     lines = []
     for i, (name, at) in enumerate(got[:BOARD_LINES], 1):
         lines.append([("*" if name == ctx.player.name else "") + str(i), name, date(at)])
     message = f"{len(got)} trainer{'s' if len(got) != 1 else ''} cleared it.~{got[0][0]} was the first."
-    return answer(message, rows=board(title, [(6, "#"), (24, "TRAINER"), (150, "WHEN")], lines))
+    return answer(message, rows=board(title, [(6, "NO."), (30, "TRAINER"), (150, "WHEN")], lines))
 
 
 # --- quick match --------------------------------------------------------

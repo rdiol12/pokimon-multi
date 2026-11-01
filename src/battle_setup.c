@@ -1,4 +1,5 @@
 #include "global.h"
+#include "hoenn_multi.h"
 #include "world.h"
 #include "online.h"
 #include "pastime.h"
@@ -268,6 +269,7 @@ static void Task_BattleStart(u8 taskId)
         if (IsBattleTransitionDone() == TRUE)
         {
             PrepareForFollowerNPCBattle();
+            HoennMulti_PrepareBattle();
             CleanupOverworldWindowsAndTilemaps();
             SetMainCallback2(CB2_InitBattle);
             RestartWildEncounterImmunitySteps();
