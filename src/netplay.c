@@ -1,6 +1,7 @@
 #include "global.h"
 #include "trainer_look.h"
 #include "netplay.h"
+#include "hoenn_multi.h"
 #include "rovers.h"
 #include "battle.h"
 #include "battle_frontier.h"
@@ -344,6 +345,7 @@ static bool32 IsRemoteHere(const struct NetplayRemotePlayer *remote)
 {
     return remote->id != 0
         && IsOnline()
+        && HoennMulti_ShowOtherPlayers()
         && remote->mapGroup == gSaveBlock1Ptr->location.mapGroup
         && remote->mapNum == gSaveBlock1Ptr->location.mapNum;
 }
@@ -428,6 +430,7 @@ bool32 Netplay_OverworldUpdate(void)
 {
     u32 i;
 
+    HoennMulti_OverworldUpdate();
     PublishLocalPlayer();
     for (i = 0; i < NETPLAY_MAX_REMOTES; i++)
         SyncAvatar(i);
@@ -956,6 +959,9 @@ static void CB2_TestNewGame(void)
     FlagSet(FLAG_SYS_POKEMON_GET);
     ScriptGiveMon(n & 1 ? SPECIES_MUDKIP : SPECIES_TREECKO, 30, ITEM_NONE);
     ScriptGiveMon(n & 1 ? SPECIES_POOCHYENA : SPECIES_ZIGZAGOON, 30, ITEM_NONE);
+    // They've been around Oldale, so friend travel can go there.
+    HoennMulti_SetVisited(MAP_GROUP(MAP_ROUTE101), MAP_NUM(MAP_ROUTE101));
+    HoennMulti_SetVisited(MAP_GROUP(MAP_OLDALE_TOWN), MAP_NUM(MAP_OLDALE_TOWN));
 
     // Players 1 and 2 meet outside; any more (spectators) wait indoors.
     if (n <= 2)
@@ -2328,6 +2334,8 @@ static const u8 *CantTravelReason(const struct NetplayFriend *friend)
     header = Overworld_GetMapHeaderByGroupAndId(friend->mapGroup, friend->mapNum);
     if (header->mapType != MAP_TYPE_TOWN && header->mapType != MAP_TYPE_CITY && header->mapType != MAP_TYPE_ROUTE)
         return COMPOUND_STRING("You can only travel to friends\nwho are outdoors.");
+    if (!HoennMulti_HasVisitedMap(friend->mapGroup, friend->mapNum))
+        return COMPOUND_STRING("You haven't been there yet.");
     return NULL;
 }
 
