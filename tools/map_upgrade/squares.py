@@ -4,8 +4,8 @@ players meet. Each square has a guide (online HUB and PLAZA), a matchmaker
 (the QUICK MATCH desk's battle/trade finder), a notice board, a local with
 something to say, and a hidden item.
 
-    python3 tools/map_upgrade/squares.py [TOWN ...]   # all towns by default
-    python3 tools/map_upgrade/squares.py --preview DIR [TOWN ...]
+    python3 tools/map_upgrade/squares.py                       # rebuilds every square
+    python3 tools/map_upgrade/squares.py --preview DIR [TOWN ...]  # and saves pictures
 
 The first run saves each town's original layout and map.json under
 tools/map_upgrade/orig/; later runs start from those, so the tool can be
@@ -22,6 +22,9 @@ from styles import town, jungle, volcanic, TREES, PLAZA, POND
 from tiles import layouts
 
 ORIG = f'{HERE}/orig'
+# maps that swap in another layout of the same size later in the story: it
+# grows the same way (the new ground is shared, the old part stays its own)
+ALT_LAYOUTS = {'Route111': ['LAYOUT_ROUTE111_NO_MIRAGE_TOWER']}
 SCRIPTS = f'{ROOT}/data/scripts/town_squares.inc'
 FLAGS_H = f'{ROOT}/include/constants/map_upgrade.h'
 TAG = 'Square_'   # every event the tool adds has a script starting with this
@@ -44,6 +47,14 @@ def style(kind):
     elif kind == 'mauville':
         st = Style('gTileset_General', 'gTileset_Mauville', ['LAYOUT_MAUVILLE_CITY', 'LAYOUT_VERDANTURF_TOWN',
                    'LAYOUT_ROUTE110', 'LAYOUT_ROUTE117', 'LAYOUT_ROUTE118'], wall_classes={'T': TREES}, colors=True)
+    elif kind == 'desert':
+        st = Style('gTileset_General', 'gTileset_Mauville', ['LAYOUT_ROUTE111', 'LAYOUT_ROUTE110', 'LAYOUT_MAUVILLE_CITY'],
+                   wall_classes={'T': TREES}, colors=True)
+    elif kind == 'lilycove':
+        st = Style('gTileset_General', 'gTileset_Lilycove', ['LAYOUT_ROUTE121', 'LAYOUT_ROUTE122', 'LAYOUT_ROUTE123'],
+                   wall_classes={'T': TREES}, colors=True)
+    elif kind == 'pacifidlog':
+        st = Style('gTileset_General', 'gTileset_Pacifidlog', ['LAYOUT_PACIFIDLOG_TOWN'])
     elif kind == 'rustboro':
         st = Style('gTileset_General', 'gTileset_Rustboro', ['LAYOUT_RUSTBORO_CITY', 'LAYOUT_ROUTE104',
                    'LAYOUT_ROUTE116'], wall_classes={'T': TREES}, colors=True)
@@ -90,6 +101,9 @@ def restore(folder):
         if l.get('id') == m['layout']:
             l['width'], l['height'] = size['width'], size['height']
             shutil.copy(f'{d}/map.bin', f"{ROOT}/{l['blockdata_filepath']}")
+        if l.get('id') in ALT_LAYOUTS.get(folder, []):
+            l['width'], l['height'] = size['width'], size['height']
+            shutil.copy(f"{d}/{l['id']}.bin", f"{ROOT}/{l['blockdata_filepath']}")
     write_json(lay_json, data)
     shutil.copy(f'{d}/map.json', f'{ROOT}/data/maps/{folder}/map.json')
 
@@ -155,6 +169,9 @@ class Square:
     def guide(self, x, y, gfx='OBJ_EVENT_GFX_WOMAN_2', move='MOVEMENT_TYPE_FACE_DOWN'):
         self.ext.obj(gfx, x, y, f'{TAG}{self.key}_EventScript_Guide', move)
 
+    def healer(self, x, y, gfx='OBJ_EVENT_GFX_WOMAN_4', move='MOVEMENT_TYPE_FACE_DOWN'):
+        self.ext.obj(gfx, x, y, 'Square_EventScript_Healer', move)
+
     def matchmaker(self, x, y, gfx='OBJ_EVENT_GFX_COOLTRAINER_M', move='MOVEMENT_TYPE_FACE_DOWN'):
         self.ext.obj(gfx, x, y, f'{TAG}{self.key}_EventScript_Matchmaker', move)
 
@@ -183,6 +200,25 @@ class Square:
         return '\n'.join(out)
 
 
+def write_alts(folder, e, b):
+    import numpy as np
+    d = f'{ORIG}/{folder}'
+    lay_json = f'{ROOT}/data/layouts/layouts.json'
+    data = json.load(open(lay_json))
+    for alt in ALT_LAYOUTS.get(folder, []):
+        old = np.fromfile(f'{d}/{alt}.bin', '<u2').reshape(e.oh, e.ow)
+        out = b.copy()
+        for (x, y), v in e.area.fixed.items():
+            ox, oy = x - e.dx, y - e.dy
+            if 0 <= ox < e.ow and 0 <= oy < e.oh and v == int(e.old[oy, ox]):
+                out[y, x] = old[oy, ox]
+        for l in data['layouts']:
+            if l.get('id') == alt:
+                l['width'], l['height'] = e.w, e.h
+                out.astype('<u2').tofile(f"{ROOT}/{l['blockdata_filepath']}")
+    write_json(lay_json, data)
+
+
 def check_reachable(e, b):
     """Every new person, sign and hidden item must be reachable on foot from
     the town's first warp (collision, elevation and water respected)."""
@@ -190,23 +226,40 @@ def check_reachable(e, b):
     water = {0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x50, 0x51, 0x52, 0x53}
     def beh(x, y):
         return e.style.pair.attr(int(b[y, x]) & 0x3FF) & 0xFF
+    from mapdata import behaviours
+    jumps = {v for k, v in behaviours().items() if k.startswith('MB_JUMP_')}
     def ok(x, y):
-        return 0 <= x < e.w and 0 <= y < e.h and not (int(b[y, x]) >> 10) & 3 and beh(x, y) not in water
-    w = e.map['warp_events'][0]
-    start = (w['x'] + e.dx, w['y'] + e.dy + 1)
-    seen, q = {start}, deque([start])
-    while q:
-        x, y = q.popleft()
-        z = int(b[y, x]) >> 12
-        for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
-            n = (x + dx, y + dy)
-            if n in seen or not ok(*n):
-                continue
-            nz = int(b[n[1], n[0]]) >> 12
-            if z and nz and z != 15 and nz != 15 and z != nz:
-                continue
-            seen.add(n)
-            q.append(n)
+        if not (0 <= x < e.w and 0 <= y < e.h) or beh(x, y) in water:
+            return False
+        return not (int(b[y, x]) >> 10) & 3 or beh(x, y) in jumps  # ledges: you can jump down them
+    def flood(start):
+        seen, q = {start}, deque([start])
+        while q:
+            x, y = q.popleft()
+            z = int(b[y, x]) >> 12
+            for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                n = (x + dx, y + dy)
+                if n in seen or not ok(*n):
+                    continue
+                nz = int(b[n[1], n[0]]) >> 12
+                if z and nz and z != 15 and nz != 15 and z != nz:
+                    continue
+                seen.add(n)
+                q.append(n)
+        return seen
+    if e.map.get('warp_events'):
+        w = e.map['warp_events'][0]
+        seen = flood((w['x'] + e.dx, w['y'] + e.dy + 1))
+    else:  # a route: the biggest area reachable from its edges
+        edge = [(x, 0) for x in range(e.ow)] + [(0, y) for y in range(e.oh)] + \
+               [(x, e.oh - 1) for x in range(e.ow)] + [(e.ow - 1, y) for y in range(e.oh)]
+        seen = set()
+        for x, y in edge:
+            c = (x + e.dx, y + e.dy)
+            if ok(*c) and c not in seen:
+                f = flood(c)
+                if len(f) > len(seen):
+                    seen = f
     bad = []
     for o in e.new_objects:
         if not any((o['x'] + dx, o['y'] + dy) in seen for dx, dy in ((0, 1), (0, -1), (1, 0), (-1, 0))):
@@ -273,6 +326,47 @@ Square_Text_GuideOffline:
 	.string "all over meet up here.\p"
 	.string "Choose JOIN ONLINE on the title screen\n"
 	.string "and I can show you the HUB and PLAZA.$"
+
+@ Meeting spots in the new areas' and Solmara's towns
+@ (tools/map_upgrade/meeting_spots.py).
+Square_EventScript_AreaGuide::
+	goto Square_EventScript_Guide
+
+Square_EventScript_AreaMatchmaker::
+	goto HoennMulti_EventScript_QuickMatchDesk
+
+@ Rest stops on the long routes: a keeper who lets the party rest.
+Square_EventScript_Healer::
+	lock
+	faceplayer
+	msgbox Square_Text_HealerAsk, MSGBOX_YESNO
+	goto_if_eq VAR_RESULT, NO, Square_EventScript_HealerNo
+	closemessage
+	fadescreen FADE_TO_BLACK
+	special HealPlayerParty
+	playfanfare MUS_HEAL
+	waitfanfare
+	fadescreen FADE_FROM_BLACK
+	msgbox Square_Text_HealerDone, MSGBOX_DEFAULT
+	release
+	end
+
+Square_EventScript_HealerNo:
+	msgbox Square_Text_HealerNo, MSGBOX_DEFAULT
+	release
+	end
+
+Square_Text_HealerAsk:
+	.string "Welcome to the rest stop! It's a long\n"
+	.string "road, and your POKéMON look tired.\p"
+	.string "Would you like them to rest a while?$"
+
+Square_Text_HealerDone:
+	.string "There! Everyone is rested and ready.\n"
+	.string "Safe travels, and good battles!$"
+
+Square_Text_HealerNo:
+	.string "Come back any time you need a rest.$"
 
 Square_Text_Hub:
 	.string "ONLINE HUB$"
@@ -580,6 +674,205 @@ def rustboro():
         'matchmaker finds you a battle or trade.'
 
 
+def rest_common(s, x, y, w):
+    """A rest stop's people along the top of its clearing: board, keeper
+    (heals), matchmaker."""
+    s.board(x, y - 1)
+    s.healer(x + 2, y)
+    s.matchmaker(x + w - 3, y)
+
+
+def route102():
+    e = Extension('Route102', style('town'), down=12, fill='g')
+    a, W, H = e.area, e.w, e.h
+    s = Square('Route102', 'Route 102', e)
+    e.reopen(24, 18, 8, 2)
+    a.rect(24, 18, 8, 2, 'g')
+    border(a, 0, 20, W, H, sides='lrb')
+    a.rect(0, 20, 22, 3, 'T')
+    a.rect(34, 20, 16, 3, 'T')
+    a.rect(2, 23, 8, 5, 'T')
+    a.rect(40, 23, 8, 5, '"')
+    s.plaza(18, 23, 14, 5, 's')
+    a.ellipse(13.5, 25.5, 3, 2, 'W')
+    a.autotile3('W', POND)
+    a.snap_trees(ground='g')
+    flowers(a, 0x004, 8, 2, 20, 48, 30, seed=12)
+    rest_common(s, 19, 23, 13)
+    s.local(30, 27, 'OBJ_EVENT_GFX_YOUNGSTER',
+            'I battle everyone who passes by on\\n'
+            'their way to Petalburg.\\p'
+            'Then I rest up here and do it again!', move='MOVEMENT_TYPE_FACE_LEFT')
+    s.hidden(45, 27, 'ITEM_ORAN_BERRY')
+    return e, s, 'ROUTE 102 REST STOP\\nRest, meet and battle.\\p'\
+        'The keeper lets your POKéMON rest.\\n'\
+        'The matchmaker finds you a battle or trade.'
+
+
+def route111():
+    """A desert camp east of Route 111's sand, through a gap in the cliffs."""
+    e = Extension('Route111', style('desert'), right=10, fill='s')
+    a, W, H = e.area, e.w, e.h
+    s = Square('Route111', 'Route 111', e)
+    e.reopen(36, 74, 4, 6)
+    a.rect(36, 74, 4, 6, 's')
+    a.rect(40, 0, 10, 73, '#')
+    a.rect(40, 81, 10, H - 81, '#')
+    a.rect(48, 73, 2, 8, '#')
+    s.plaza(41, 75, 7, 4, 'g')
+    s.board(41, 74)
+    s.healer(43, 75)
+    s.matchmaker(46, 75)
+    s.local(47, 79, 'OBJ_EVENT_GFX_HIKER',
+            'The sandstorm stops at these rocks.\\n'
+            'It\'s the only calm spot in the desert!\\p'
+            'Trainers wait here for the wind to\\n'
+            'die down, and battle while they wait.', move='MOVEMENT_TYPE_FACE_LEFT')
+    s.hidden(41, 79, 'ITEM_STARDUST')
+    return e, s, 'DESERT REST CAMP\\nShelter from the sandstorm.\\p'\
+        'The keeper lets your POKéMON rest.\\n'\
+        'The matchmaker finds you a battle or trade.'
+
+
+def route117():
+    e = Extension('Route117', style('mauville'), down=12, fill='g')
+    a, W, H = e.area, e.w, e.h
+    s = Square('Route117', 'Route 117', e)
+    e.reopen(32, 18, 4, 2)
+    a.rect(32, 18, 4, 2, 'g')
+    border(a, 0, 20, W, H, sides='lrb')
+    a.rect(0, 20, 30, 3, 'T')
+    a.rect(38, 20, 22, 3, 'T')
+    a.rect(4, 23, 10, 5, 'T')
+    s.plaza(26, 23, 16, 5)
+    a.autotile3('P', PLAZA)
+    a.ellipse(48.5, 25.5, 3.5, 2, 'W')
+    a.autotile3('W', POND)
+    a.snap_trees(ground='g')
+    flowers(a, 0x004, 10, 2, 20, 58, 30, seed=13)
+    rest_common(s, 27, 23, 15)
+    s.local(18, 26, 'OBJ_EVENT_GFX_OLD_WOMAN',
+            'The Day Care up the road raises\\n'
+            'POKéMON for trainers from all over.\\p'
+            'Sometimes they meet up right here to\\n'
+            'swap stories about their EGGS.', move='MOVEMENT_TYPE_FACE_RIGHT')
+    s.hidden(55, 27, 'ITEM_PECHA_BERRY')
+    return e, s, 'ROUTE 117 REST STOP\\nBetween Verdanturf and Mauville.\\p'\
+        'The keeper lets your POKéMON rest.\\n'\
+        'The matchmaker finds you a battle or trade.'
+
+
+def route123():
+    e = Extension('Route123', style('lilycove'), down=12, fill='g')
+    a, W, H = e.area, e.w, e.h
+    s = Square('Route123', 'Route 123', e)
+    e.reopen(72, 18, 8, 2)
+    a.rect(72, 18, 8, 2, 'g')
+    border(a, 0, 20, W, H, sides='lrb')
+    a.rect(0, 20, 64, 3, 'T')
+    a.rect(88, 20, 52, 3, 'T')
+    a.rect(2, 23, 54, 7, 'T')
+    a.rect(100, 23, 38, 7, 'T')
+    s.plaza(66, 23, 18, 5, 's')
+    a.ellipse(92, 26, 4, 2, 'W')
+    a.autotile3('W', POND)
+    a.snap_trees(ground='g')
+    flowers(a, 0x004, 10, 56, 20, 100, 30, seed=14)
+    rest_common(s, 67, 23, 17)
+    s.local(60, 26, 'OBJ_EVENT_GFX_POKEFAN_M',
+            'The Berry Master\'s garden is just up\\n'
+            'the road. I come here to rest after.\\p'
+            'Picking berries is hard work!', move='MOVEMENT_TYPE_FACE_RIGHT')
+    s.hidden(58, 28, 'ITEM_SITRUS_BERRY')
+    return e, s, 'ROUTE 123 REST STOP\\nThe last rest before Mt. Pyre.\\p'\
+        'The keeper lets your POKéMON rest.\\n'\
+        'The matchmaker finds you a battle or trade.'
+
+
+PAC_DIR = f'{ROOT}/data/tilesets/secondary/pacifidlog'
+PAC_BASE = 203   # Game Freak's Pacifidlog metatiles; ours follow
+
+
+def pacifidlog_metatiles():
+    """Raft top edges: Pacifidlog only has rafts' bottom edges (the houses
+    sit on their top), so the top pieces are the bottom ones turned upside
+    down, made from the same 8x8 tiles. Returns {name: metatile id}."""
+    import numpy as np
+    mt = np.fromfile(f'{PAC_DIR}/metatiles.bin', '<u2').reshape(-1, 8)
+    at = np.fromfile(f'{PAC_DIR}/metatile_attributes.bin', '<u2')
+    mt, at = mt[:PAC_BASE].copy(), at[:PAC_BASE].copy()
+    def vflip(m):
+        e = mt[m - 0x200]
+        out = []
+        for layer in (e[:4], e[4:]):
+            t = [int(v) for v in layer]
+            if layer is e[:4]:
+                out += [int(v) for v in mt[0x221 - 0x200][:4]]   # open water under it, no shadow
+            else:
+                out += [v ^ 0x800 if v else 0 for v in (t[2], t[3], t[0], t[1])]
+        return out, int(at[m - 0x200])
+    new = {'top_left': 0x228, 'top': 0x229, 'top_right': 0x22C, 'left2': 0x220, 'right2': 0x224, 'steps': 0x22A}
+    ids, rows, attrs = {}, [], []
+    for i, (name, src) in enumerate(new.items()):
+        e, a = vflip(src)
+        ids[name] = 0x200 + PAC_BASE + i
+        rows.append(e)
+        attrs.append(a)
+    np.concatenate([mt, np.array(rows, '<u2')]).astype('<u2').tofile(f'{PAC_DIR}/metatiles.bin')
+    np.concatenate([at, np.array(attrs, '<u2')]).astype('<u2').tofile(f'{PAC_DIR}/metatile_attributes.bin')
+    return ids
+
+
+def pacifidlog():
+    """A raft square south of the town, at the end of the log bridge that
+    used to stop at the water. The rocks along the south edge move 8 rows
+    down to make room."""
+    ids = pacifidlog_metatiles()
+    e = Extension('PacifidlogTown', style('pacifidlog'), down=8, fill='~')
+    a, W, H = e.area, e.w, e.h
+    s = Square('Pacifidlog', 'Pacifidlog Town', e)
+    e.copy_old(0, 31, 20, 9, 0, 39)
+    WATER, DECK, LAND = 0x170 | (1 << 12), 3 << 12, 1 << 12
+    for y in range(31, 39):
+        for x in range(W):
+            a.fixed[(x, y)] = WATER
+    x0, x1, y0, y1 = 3, 15, 29, 37    # raft: x0..x1-1, y0..y1-1
+    for y in range(y0, y1):
+        for x in range(x0, x1):
+            edge_l, edge_r = x == x0, x == x1 - 1
+            if y == y0:
+                m, z = (ids['top_left'] if edge_l else ids['top_right'] if edge_r else ids['top']), LAND
+            elif y == y0 + 1:
+                m, z = (ids['left2'] if edge_l else ids['right2'] if edge_r else 0x221), DECK
+            elif y == y1 - 2:
+                m, z = (0x220 if edge_l else 0x224 if edge_r else 0x221), DECK
+            elif y == y1 - 1:
+                m, z = (0x228 if edge_l else 0x22C if edge_r else 0x229), LAND
+            else:
+                m, z = (0x218 if edge_l else 0x21C if edge_r else 0x221), DECK
+            a.fixed[(x, y)] = m | z
+    a.fixed[(8, y0)] = ids['steps'] | DECK     # the log bridge comes down here
+    for x, y in ((16, 30), (17, 30), (16, 39), (17, 39)):   # the rock the move cut in half
+        a.fixed[(x, y)] = WATER
+    s.rect = (x0, y0 + 1, x1 - x0, y1 - y0 - 2)
+    s.board(4, 30)
+    a.fixed[(4, 30)] = 0x003 | (1 << 10)
+    s.guide(6, 31, 'OBJ_EVENT_GFX_SWIMMER_F_LAND')
+    s.matchmaker(11, 31, 'OBJ_EVENT_GFX_SAILOR')
+    s.local(13, 34, 'OBJ_EVENT_GFX_OLD_MAN',
+            'When I was a boy, the whole town was\\n'
+            'one raft, tied to the backs of Corsola.\\p'
+            'Now we\'ve built a new one, just for\\n'
+            'trainers to gather on. Isn\'t it fine?', move='MOVEMENT_TYPE_FACE_LEFT')
+    s.local(9, 34, 'OBJ_EVENT_GFX_TUBER_M_LAND',
+            'You can surf here from anywhere in\\n'
+            'Hoenn, and everyone does!', move='MOVEMENT_TYPE_WANDER_AROUND', n=2, rx=2, ry=1)
+    s.hidden(4, 35, 'ITEM_HEART_SCALE')
+    return e, s, 'PACIFIDLOG RAFT SQUARE\\nThe town that floats together.\\p'\
+        'The guide has the HUB and PLAZA. The\\n'\
+        'matchmaker finds you a battle or trade.'
+
+
 # name: (map folder, hidden item flag number, builder). Never renumber flags.
 TOWNS = {
     'littleroot': ('LittlerootTown', 0, littleroot),
@@ -593,6 +886,11 @@ TOWNS = {
     'fortree': ('FortreeCity', 7, fortree),
     'mauville': ('MauvilleCity', 8, mauville),
     'rustboro': ('RustboroCity', 9, rustboro),
+    'route102': ('Route102', 10, route102),
+    'route111': ('Route111', 11, route111),
+    'route117': ('Route117', 12, route117),
+    'route123': ('Route123', 13, route123),
+    'pacifidlog': ('PacifidlogTown', 14, pacifidlog),
 }
 
 
@@ -609,25 +907,23 @@ def main():
         os.makedirs(preview, exist_ok=True)
     names = args or list(TOWNS)
     scripts, flags = [COMMON], []
-    for name, (folder, flag_no, build) in TOWNS.items():
-        if name not in names:
-            continue
+    # every grown map goes back to its original first: the synthesiser
+    # learns from these layouts too (Route 102 teaches the small towns)
+    for folder, _, _ in TOWNS.values():
         restore(folder)
+    for name, (folder, flag_no, build) in TOWNS.items():
         e, s, board = build()
         b = s.finish(e.blocks())
         bad = check_reachable(e, b)
         if bad:
             print(f'{folder}: can\'t reach {bad}')
-        if preview:
+        e.write(b)
+        write_alts(folder, e, b)
+        if preview and name in names:
             e.preview(f'{preview}/{name}.png', b)
-            restore_after = True
-        else:
-            e.write(b)
-            print(f'{folder}: {e.ow}x{e.oh} -> {e.w}x{e.h}')
+        print(f'{folder}: {e.ow}x{e.oh} -> {e.w}x{e.h}')
         scripts.append(s.script(board))
         flags.append((s.key, flag_no))
-    if preview or names != list(TOWNS):
-        return
     open(SCRIPTS, 'w').write('\n'.join(scripts))
     with open(FLAGS_H, 'w') as f:
         f.write('#ifndef GUARD_CONSTANTS_MAP_UPGRADE_H\n#define GUARD_CONSTANTS_MAP_UPGRADE_H\n\n'

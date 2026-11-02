@@ -20,6 +20,44 @@ Ten towns and cities grew a new district with a square where players meet:
 | Lavaridge Town | 14 rows south (20x34) | Lavaridge Hot Square, below the cliff |
 | Fortree City | 14 rows south (40x34) | Fortree Clearing, the one open place on the ground |
 | Rustboro City | 16 rows in the south (40x76) | Rustboro Stone Park, between the city and Route 104 |
+| Pacifidlog Town | 8 rows south (20x48) | Pacifidlog Raft Square, a big new raft at the end of the log bridge that used to stop at the water; the rocks on the south edge moved down |
+
+Pacifidlog only had the bottom edges of rafts (the houses sit on their top
+edges), so the raft square's top edge, its corners and the steps up from
+the log bridge are six new metatiles at the end of the Pacifidlog tileset:
+the bottom pieces turned upside down, made from the same 8x8 tiles, so no
+new pixel art was needed (`pacifidlog_metatiles()` in `squares.py`).
+
+## Rest stops
+
+Four routes grew a rest stop beside the road, through a gap in the trees or
+rocks:
+
+| Route | Grew | Rest stop |
+| --- | --- | --- |
+| Route 102 | 12 rows south (50x32) | a clearing with a pond |
+| Route 111 | 10 columns east (50x140) | the Desert Rest Camp, a grassy hollow out of the sandstorm (both Route 111 layouts, with and without the Mirage Tower) |
+| Route 117 | 12 rows south (60x32) | a paved square by a pond, near the Day Care |
+| Route 123 | 12 rows south (140x32) | a clearing below the Berry Master's road |
+
+Each has a notice board, a keeper who lets the party rest (heals it, like a
+Pokémon Center), the matchmaker, a local and a hidden berry or item.
+
+## Meeting spots in the new areas and Solmara
+
+The new areas and Solmara were drawn with wide paths from the start, and
+the audit found nothing cramped there (Mt. Frostcrown's one-tile strip is
+the sled run, which is meant to be narrow). What they lacked was a place to
+meet: every town of theirs (Cobblerock, Ember Springs, Hollowmere, Laurel
+City, Mirage Oasis, Nimbus City, Snowdrift Village, Sunfair Carnival,
+Wonderwild Park, and Solmara's Port Solace, Gearholt, Ashcombe, Silkwood,
+Rosemead, Duskmere, Frostholm and Drakespire) now has the square guide and
+the matchmaker side by side on its most open ground near the middle of town.
+`tools/map_upgrade/meeting_spots.py` picks the spot (a 6x4 patch reachable
+from the town's first door, clear of everything else) and adds the two;
+run it again after regenerating one of those towns.
+
+## What every square has
 
 Every square has:
 
@@ -62,4 +100,4 @@ new ground (`EXCLUDE` in `squares.py`).
 Map upgrade flags (`MAPUP_FLAG(n)`) use a block of Solmara's extended-save
 flag space that Solmara doesn't use (ids 0x7600 up).
 
-Screenshots: `python3 tools/areas/shots/run.py tools/map_upgrade/shots/squares.lua OUT 300000`.
+Screenshots: `python3 tools/areas/shots/run.py tools/map_upgrade/shots/squares.lua OUT 450000` and `.../meeting_spots.lua OUT 300000`. `tools/map_upgrade/overlay.py MAP_ID out.png` draws a map with the audit's findings on it.
