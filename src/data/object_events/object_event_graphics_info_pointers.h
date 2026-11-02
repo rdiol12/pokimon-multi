@@ -126,6 +126,7 @@ extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_FieldIceBlo
 extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_FieldGenerator;
 extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_FieldGeneratorOn;
 extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_FieldDigSpot;
+extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_SnowDrift;
 extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_MarketMaster;
 extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_Auctioneer;
 extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_MagmaMemberF;
@@ -811,6 +812,7 @@ const struct ObjectEventGraphicsInfo *const gObjectEventGraphicsInfoPointers[NUM
     [OBJ_EVENT_GFX_FIELD_GENERATOR] =         &gObjectEventGraphicsInfo_FieldGenerator,
     [OBJ_EVENT_GFX_FIELD_GENERATOR_ON] =      &gObjectEventGraphicsInfo_FieldGeneratorOn,
     [OBJ_EVENT_GFX_FIELD_DIG_SPOT] =          &gObjectEventGraphicsInfo_FieldDigSpot,
+    [OBJ_EVENT_GFX_SNOW_DRIFT] =              &gObjectEventGraphicsInfo_SnowDrift,
     [OBJ_EVENT_GFX_MARKET_MASTER] =           &gObjectEventGraphicsInfo_MarketMaster,
     [OBJ_EVENT_GFX_AUCTIONEER] =              &gObjectEventGraphicsInfo_Auctioneer,
 };

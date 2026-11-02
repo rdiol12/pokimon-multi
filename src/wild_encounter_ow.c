@@ -1,4 +1,5 @@
 #include "global.h"
+#include "alive.h"
 #include "wild_encounter_ow.h"
 #include "battle_setup.h"
 #include "battle_main.h"
@@ -240,6 +241,7 @@ void UpdateOverworldWildEncounter(void)
 
     if (!WE_OW_ENCOUNTERS
      || FlagGet(WE_OWE_FLAG_DISABLED)
+     || Alive_ClassicEncounters()
      || FlagGet(WE_FLAG_NO_ENCOUNTER)
      || FlagGet(DN_FLAG_SEARCHING)
      || (gMapHeader.mapLayoutId == LAYOUT_BATTLE_FRONTIER_BATTLE_PIKE_ROOM_WILD_MONS && !WE_OWE_BATTLE_PIKE)
@@ -273,9 +275,10 @@ void UpdateOverworldWildEncounter(void)
 
     u32 spawnSlot = GetNextOWESpawnSlot();
     s32 x, y;
+    // Packs: the next spawn may join the last one (src/alive_wild.c).
     if (spawnSlot == OWE_INVALID_SPAWN_SLOT
      || (shouldSpawnWaterMons && AreLegendariesInSootopolisPreventingEncounters())
-     || !TrySelectTileForOWE(&x, &y))
+     || (!Alive_WildTakePackTile(&x, &y) && !TrySelectTileForOWE(&x, &y)))
     {
         SetMinimumOWESpawnTimer();
         return;
@@ -329,6 +332,7 @@ void UpdateOverworldWildEncounter(void)
 
     ObjectEventTurn(owe, gStandardDirections[Random() & 3]);
     SetNewOWESpawnCountdown();
+    Alive_WildOnSpawned(owe, x, y);
 }
 
 bool32 IsOverworldWildEncounter(struct ObjectEvent *owe, enum TypeOWE oweType)
@@ -397,6 +401,7 @@ void StartWildBattleWithOWE(struct ScriptContext *ctx)
     CreateMonWithIVs(&gParties[B_TRAINER_OPPONENT_A][0], speciesId, level, personality, OTID_STRUCT_PLAYER_ID, USE_RANDOM_IVS);
     GiveMonInitialMoveset(&gParties[B_TRAINER_OPPONENT_A][0]);
     SetMonData(&gParties[B_TRAINER_OPPONENT_A][0], MON_DATA_IS_SHINY, &shiny);
+    Alive_WildOnBattleStart(owe); // a sleeping one starts the battle asleep
     
     if (StartWildBattleWithOWE_CheckBattleFrontier(headerId))
         return;
@@ -843,7 +848,7 @@ static void SetSpeciesInfoForOWE(struct InfoOWE *info, u32 x, u32 y)
 {
     u32 personality;
 
-    if (!CreateEnemyPartyOWE(info, x, y))
+    if (!(Alive_WildIsPackSpawn() ? Alive_WildCreatePackMon() : CreateEnemyPartyOWE(info, x, y)))
     {
         ZeroEnemyPartyMons();
         info->speciesId = SPECIES_NONE;

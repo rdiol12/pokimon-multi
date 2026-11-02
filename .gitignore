@@ -68,4 +68,5 @@ __pycache__
 .map_version
 tools/netplay_bridge/photo-*.png
 src/data/area_trainers.h
+src/data/solmara_trainers.h
 tools/areas/__pycache__/

@@ -8,6 +8,7 @@
 #include "gpu_regs.h"
 #include "task.h"
 #include "sprite.h"
+#include "qol.h"
 #include "constants/field_weather.h"
 #include "constants/rgb.h"
 
@@ -147,9 +148,37 @@ void FillPalette(u32 value, u32 offset, u32 size)
     CpuFill16(value, &gPlttBufferFaded[offset], size);
 }
 
+// OPTION > COLORS: every colour goes through the colour-blind table on its way
+// to the screen. The buffers keep the real colours, so fades still work.
+static void CopyFilteredColors(const u16 *table, const u16 *src, vu16 *dest, u32 count)
+{
+    u32 i;
+
+    for (i = 0; i < count; i++)
+        dest[i] = table[src[i] & 0x7FFF];
+}
+
+static void TransferFilteredPlttBuffer(const u16 *table)
+{
+    CopyFilteredColors(table, gPlttBufferFaded, (vu16 *)PLTT, PLTT_SIZE / sizeof(u16));
+    if (GetExtSpritePalettesInUse())
+        CopyFilteredColors(table, &gPlttBufferFaded[PLTT_BUFFER_SIZE], (vu16 *)PKX_OBJ_PLTT, PLTT_EXT_COLORS);
+    if (sExtBgPalettesInUse)
+        CopyFilteredColors(table, &gPlttBufferFaded[EXT_BG_PLTT_INDEX(0)], (vu16 *)PKX_BG_PLTT, PLTT_EXT_BG_COLORS);
+}
+
 void TransferPlttBuffer(void)
 {
-    if (!gPaletteFade.bufferTransferDisabled)
+    const u16 *colorTable;
+
+    if (!gPaletteFade.bufferTransferDisabled && (colorTable = QoL_GetColorTable()) != NULL)
+    {
+        TransferFilteredPlttBuffer(colorTable);
+        sPlttBufferTransferPending = FALSE;
+        if (gPaletteFade.mode == HARDWARE_FADE && gPaletteFade.active)
+            UpdateBlendRegisters();
+    }
+    else if (!gPaletteFade.bufferTransferDisabled)
     {
         DmaCopy16Defvars(3, gPlttBufferFaded, (void *)PLTT, PLTT_SIZE);
         if (GetExtSpritePalettesInUse())

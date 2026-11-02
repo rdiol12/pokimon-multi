@@ -249,11 +249,15 @@ MauvilleCity_Gym_EventScript_RightGymStatue::
 
 MauvilleCity_Gym_EventScript_GymStatueCertified::
 	msgbox MauvilleCity_Gym_Text_GymStatueCertified, MSGBOX_DEFAULT
+	setvar VAR_0x8005, 2
+	call HoennMulti_EventScript_GymStatue
 	releaseall
 	end
 
 MauvilleCity_Gym_EventScript_GymStatue::
 	msgbox MauvilleCity_Gym_Text_GymStatue, MSGBOX_DEFAULT
+	setvar VAR_0x8005, 2
+	call HoennMulti_EventScript_GymStatue
 	releaseall
 	end
 

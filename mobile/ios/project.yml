@@ -41,6 +41,11 @@ targets:
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
         NSLocalNetworkUsageDescription: Lets the game reach a netplay server on your own network.
+        # Notifications for online play: a background check for new ones (Notifier.swift)
+        UIBackgroundModes:
+          - fetch
+        BGTaskSchedulerPermittedIdentifiers:
+          - io.github.rdiol12.pokimonmulti.notify
         ITSAppUsesNonExemptEncryption: false
     settings:
       base:

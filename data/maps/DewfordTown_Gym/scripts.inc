@@ -275,11 +275,15 @@ DewfordTown_Gym_EventScript_RightGymStatue::
 
 DewfordTown_Gym_EventScript_GymStatueCertified::
 	msgbox DewfordTown_Gym_Text_GymStatueCertified, MSGBOX_DEFAULT
+	setvar VAR_0x8005, 1
+	call HoennMulti_EventScript_GymStatue
 	releaseall
 	end
 
 DewfordTown_Gym_EventScript_GymStatue::
 	msgbox DewfordTown_Gym_Text_GymStatue, MSGBOX_DEFAULT
+	setvar VAR_0x8005, 1
+	call HoennMulti_EventScript_GymStatue
 	releaseall
 	end
 

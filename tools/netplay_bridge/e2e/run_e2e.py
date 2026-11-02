@@ -48,9 +48,11 @@ SYMBOLS = ["gNetplayMailbox", "gMain", "gParties", "CB2_Overworld", "BattleMainC
 def server_env():
     """The server's environment for a test run: no fishing tournament, whose
     real-time start notice would otherwise interrupt the scenario depending on
-    the hour (server/online_fishing.py)."""
+    the hour (server/online_fishing.py), and no migrations, whose arrival
+    notice would depending on the day (server/online_eco.py)."""
     now = time.time()
-    return dict(os.environ, NETPLAY_FISHT_START=str(now + 86400), NETPLAY_FISHT_PERIOD=str(10 * 86400))
+    return dict(os.environ, NETPLAY_FISHT_START=str(now + 86400), NETPLAY_FISHT_PERIOD=str(10 * 86400),
+                NETPLAY_ECO_MIGRATIONS="0")
 
 
 def read_symbols(map_path):

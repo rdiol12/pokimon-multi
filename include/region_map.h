@@ -141,6 +141,7 @@ enum RegionMapType GetRegionMapType(u32 mapSecId);
 //Pokenav Fly funcs
 u32 FilterFlyDestination(struct RegionMap* regionMap);
 void SetFlyDestination(struct RegionMap* regionMap);
+bool32 RegionMap_CanFlyToMapsec(u32 mapSecId);
 
 extern const struct RegionMapLocation gRegionMapEntries[];
 extern const struct RegionMapInfo gRegionMapInfos[];

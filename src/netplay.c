@@ -1,6 +1,8 @@
 #include "global.h"
 #include "trainer_look.h"
 #include "netplay.h"
+#include "hoenn_multi.h"
+#include "emote_wheel.h"
 #include "rovers.h"
 #include "battle.h"
 #include "battle_frontier.h"
@@ -344,6 +346,7 @@ static bool32 IsRemoteHere(const struct NetplayRemotePlayer *remote)
 {
     return remote->id != 0
         && IsOnline()
+        && HoennMulti_ShowOtherPlayers()
         && remote->mapGroup == gSaveBlock1Ptr->location.mapGroup
         && remote->mapNum == gSaveBlock1Ptr->location.mapNum;
 }
@@ -428,6 +431,7 @@ bool32 Netplay_OverworldUpdate(void)
 {
     u32 i;
 
+    HoennMulti_OverworldUpdate();
     PublishLocalPlayer();
     for (i = 0; i < NETPLAY_MAX_REMOTES; i++)
         SyncAvatar(i);
@@ -956,6 +960,9 @@ static void CB2_TestNewGame(void)
     FlagSet(FLAG_SYS_POKEMON_GET);
     ScriptGiveMon(n & 1 ? SPECIES_MUDKIP : SPECIES_TREECKO, 30, ITEM_NONE);
     ScriptGiveMon(n & 1 ? SPECIES_POOCHYENA : SPECIES_ZIGZAGOON, 30, ITEM_NONE);
+    // They've been around Oldale, so friend travel can go there.
+    HoennMulti_SetVisited(MAP_GROUP(MAP_ROUTE101), MAP_NUM(MAP_ROUTE101));
+    HoennMulti_SetVisited(MAP_GROUP(MAP_OLDALE_TOWN), MAP_NUM(MAP_OLDALE_TOWN));
 
     // Players 1 and 2 meet outside; any more (spectators) wait indoors.
     if (n <= 2)
@@ -2053,56 +2060,13 @@ static void Task_Ladder(u8 taskId)
 
 // Emotes ------------------------------------------------------------------
 //
-// L in the overworld while online: pick an emote or a quick phrase. Emotes
-// pop up above the player for everyone on the map; phrases show in a small
-// box at the top of the screen with the player's name.
+// L in the overworld while online opens the emote wheel (src/emote_wheel.c).
+// Emotes pop up above the player for everyone on the map; phrases also show
+// in a small box at the top of the screen with the player's name.
 
-#define EMOTE_ICON_COUNT   8
-#define EMOTE_COUNT        14
 #define CHAT_SHOW_FRAMES   (3 * 60)
 
-static const u8 sEmoteEmotions[EMOTE_ICON_COUNT] =
-{
-    FOLLOWER_EMOTION_HAPPY,
-    FOLLOWER_EMOTION_LOVE,
-    FOLLOWER_EMOTION_MUSIC,
-    FOLLOWER_EMOTION_SURPRISE,
-    FOLLOWER_EMOTION_CURIOUS,
-    FOLLOWER_EMOTION_ANGRY,
-    FOLLOWER_EMOTION_SAD,
-    FOLLOWER_EMOTION_PENSIVE,
-};
-
-static const struct MenuAction sEmoteMenuItems[EMOTE_COUNT] =
-{
-    {COMPOUND_STRING("HAPPY")},
-    {COMPOUND_STRING("LOVE")},
-    {COMPOUND_STRING("MUSIC")},
-    {COMPOUND_STRING("WOW!")},
-    {COMPOUND_STRING("HUH?")},
-    {COMPOUND_STRING("ANGRY")},
-    {COMPOUND_STRING("SAD")},
-    {COMPOUND_STRING("HMM…")},
-    {COMPOUND_STRING("HI!")},
-    {COMPOUND_STRING("GG!")},
-    {COMPOUND_STRING("BATTLE?")},
-    {COMPOUND_STRING("TRADE?")},
-    {COMPOUND_STRING("THANKS!")},
-    {COMPOUND_STRING("BYE!")},
-};
-
-static const struct WindowTemplate sEmoteWindowTemplate =
-{
-    .bg = 0,
-    .tilemapLeft = 13,
-    .tilemapTop = 1,
-    .width = 16,
-    .height = EMOTE_COUNT, // two columns of seven
-    .paletteNum = 15,
-    .baseBlock = 0x139,
-};
-
-// Below the emote menu's tiles; the box closes whenever a script or menu
+// Below the emote wheel's tiles; the box closes whenever a script or menu
 // takes over the screen.
 static const struct WindowTemplate sChatWindowTemplate =
 {
@@ -2118,17 +2082,7 @@ static const struct WindowTemplate sChatWindowTemplate =
 static EWRAM_DATA bool8 sChatShowing = FALSE;
 static EWRAM_DATA u8 sChatTaskId = 0;
 
-static void Task_EmoteMenu(u8 taskId);
 static void Task_ChatLine(u8 taskId);
-
-static void ShowEmoteIcon(u8 localId, u8 emote)
-{
-    gFieldEffectArguments[0] = localId;
-    gFieldEffectArguments[1] = gSaveBlock1Ptr->location.mapNum;
-    gFieldEffectArguments[2] = gSaveBlock1Ptr->location.mapGroup;
-    gFieldEffectArguments[7] = sEmoteEmotions[emote];
-    FieldEffectStart(FLDEFF_EMOTE);
-}
 
 #define tWindowId data[0]
 #define tTimer    data[1]
@@ -2150,7 +2104,7 @@ static void ShowChatLine(const u8 *name, u8 emote)
     u8 windowId;
     u8 *str;
 
-    if (ArePlayerFieldControlsLocked() && !FuncIsActiveTask(Task_EmoteMenu))
+    if (ArePlayerFieldControlsLocked() && !EmoteWheel_IsOpen())
         return; // a script or menu owns the screen
     CloseChatLine();
     sChatTaskId = CreateTask(Task_ChatLine, 90);
@@ -2160,7 +2114,7 @@ static void ShowChatLine(const u8 *name, u8 emote)
     gTasks[sChatTaskId].tTimer = CHAT_SHOW_FRAMES;
     str = StringCopy(gStringVar4, name);
     str = StringCopy(str, COMPOUND_STRING(": "));
-    StringCopy(str, sEmoteMenuItems[emote].text);
+    StringCopy(str, EmoteWheel_GetText(emote));
     DrawStdWindowFrame(windowId, FALSE);
     FillWindowPixelBuffer(windowId, PIXEL_FILL(1));
     AddTextPrinterParameterized(windowId, FONT_NORMAL, gStringVar4, 2, 1, TEXT_SKIP_DRAW, NULL);
@@ -2172,7 +2126,7 @@ static void Task_ChatLine(u8 taskId)
 {
     // Leave the screen to scripts and menus.
     if (--gTasks[taskId].tTimer <= 0
-     || (ArePlayerFieldControlsLocked() && !FuncIsActiveTask(Task_EmoteMenu))
+     || (ArePlayerFieldControlsLocked() && !EmoteWheel_IsOpen())
      || gMain.callback2 != CB2_Overworld)
         CloseChatLine();
 }
@@ -2182,9 +2136,8 @@ static void ShowEmote(u8 localId, const u8 *name, u8 emote)
     if (emote >= EMOTE_COUNT || gMain.callback2 != CB2_Overworld)
         return;
     PlaySE(SE_BALL_TRAY_ENTER);
-    if (emote < EMOTE_ICON_COUNT)
-        ShowEmoteIcon(localId, emote);
-    else
+    EmoteWheel_ShowBalloon(localId, emote);
+    if (EmoteWheel_IsPhrase(emote))
         ShowChatLine(name, emote);
 }
 
@@ -2206,49 +2159,26 @@ static void ShowRemoteEmote(u16 peerId, u8 emote)
     }
 }
 
+static void OnEmoteChosen(u8 emote)
+{
+    ScriptUnfreezeObjectEvents();
+    UnlockPlayerFieldControls();
+    if (emote == EMOTE_NONE)
+        return;
+    QueueRequest(NETPLAY_REQ_EMOTE, 0, 0, emote);
+    ShowEmote(LOCALID_PLAYER, gSaveBlock2Ptr->playerName, emote);
+}
+
 bool32 Netplay_TryOpenEmoteMenu(void)
 {
-    u8 taskId;
-    u8 windowId;
-
     if (!IsOnline() || sSession.active)
         return FALSE;
     FreezeObjectEvents();
     PlayerFreeze();
     StopPlayerAvatar();
     LockPlayerFieldControls();
-    PlaySE(SE_WIN_OPEN);
-    taskId = CreateTask(Task_EmoteMenu, 80);
-    windowId = AddWindow(&sEmoteWindowTemplate);
-    gTasks[taskId].tWindowId = windowId;
-    DrawStdWindowFrame(windowId, FALSE);
-    PrintMenuGridTable(windowId, 64, 2, EMOTE_COUNT / 2, sEmoteMenuItems);
-    InitMenuActionGrid(windowId, 64, 2, EMOTE_COUNT / 2, 0);
-    PutWindowTilemap(windowId);
-    ScheduleBgCopyTilemapToVram(0);
+    EmoteWheel_Open(OnEmoteChosen);
     return TRUE;
-}
-
-static void Task_EmoteMenu(u8 taskId)
-{
-    s8 input = Menu_ProcessGridInput();
-
-    if (input == MENU_NOTHING_CHOSEN)
-        return;
-    ClearStdWindowAndFrameToTransparent(gTasks[taskId].tWindowId, FALSE);
-    ClearWindowTilemap(gTasks[taskId].tWindowId);
-    RemoveWindow(gTasks[taskId].tWindowId);
-    ScheduleBgCopyTilemapToVram(0);
-    DestroyTask(taskId);
-    ScriptUnfreezeObjectEvents();
-    UnlockPlayerFieldControls();
-    if (input == MENU_B_PRESSED)
-    {
-        PlaySE(SE_SELECT);
-        return;
-    }
-    QueueRequest(NETPLAY_REQ_EMOTE, 0, 0, input);
-    ShowEmote(LOCALID_PLAYER, gSaveBlock2Ptr->playerName, input);
 }
 
 #undef tWindowId
@@ -2328,6 +2258,8 @@ static const u8 *CantTravelReason(const struct NetplayFriend *friend)
     header = Overworld_GetMapHeaderByGroupAndId(friend->mapGroup, friend->mapNum);
     if (header->mapType != MAP_TYPE_TOWN && header->mapType != MAP_TYPE_CITY && header->mapType != MAP_TYPE_ROUTE)
         return COMPOUND_STRING("You can only travel to friends\nwho are outdoors.");
+    if (!HoennMulti_HasVisitedMap(friend->mapGroup, friend->mapNum))
+        return COMPOUND_STRING("You haven't been there yet.");
     return NULL;
 }
 
@@ -3300,16 +3232,13 @@ static void FillBattleSide(struct NetplayBattleSide *side, u32 position, u32 par
     }
 }
 
-static void ReportBattle(void)
+static void ReportBattle(void);
+
+static void ReportSides(struct NetplayBattleReport *report)
 {
-    struct NetplayBattleReport *report = &gNetplayMailbox.battleReport;
     struct NetplayBattleSide sides[2];
     u8 text[NETPLAY_BATTLE_TEXT_LENGTH];
     u32 i;
-
-    if (!sSession.active || (sSession.kind != NETPLAY_KIND_BATTLE && sSession.kind != NETPLAY_KIND_DOUBLE)
-     || sSession.role != 0 || !gMain.inBattle || gBattleMons[0].species == SPECIES_NONE)
-        return;
 
     memset(sides, 0, sizeof(sides));
     FillBattleSide(&sides[0], B_POSITION_PLAYER_LEFT, B_TRAINER_PLAYER);
@@ -3336,7 +3265,52 @@ static void ReportBattle(void)
     report->seq++;
 }
 
+// The player's own battle against a gym leader, the Elite Four or the
+// Champion (src/hoenn_multi.c): reported like a PvP host's, with
+// filler[0] set, so others can watch it from WATCH or a gym statue.
+static void ReportSoloBattle(void)
+{
+    struct NetplayBattleReport *report = &gNetplayMailbox.battleReport;
+    bool32 on = IsOnline() && gMain.inBattle && gBattleMons[0].species != SPECIES_NONE
+             && HoennMulti_IsWatchableBattle();
+
+    if (!on)
+    {
+        if (report->filler[0] != 0)
+        {
+            report->filler[0] = 0;
+            report->seq++;
+        }
+        return;
+    }
+    if (report->filler[0] == 0)
+    {
+        HoennMulti_GetWatchableOpponent(gNetplayMailbox.soloOpponent);
+        memset(report->sides, 0, sizeof(report->sides));
+        report->text[0] = EOS;
+        report->filler[0] = 1;
+    }
+    ReportSides(report);
+}
+
+static void ReportBattle(void)
+{
+    struct NetplayBattleReport *report = &gNetplayMailbox.battleReport;
+
+    if (!sSession.active)
+    {
+        ReportSoloBattle();
+        return;
+    }
+    if ((sSession.kind != NETPLAY_KIND_BATTLE && sSession.kind != NETPLAY_KIND_DOUBLE)
+     || sSession.role != 0 || !gMain.inBattle || gBattleMons[0].species == SPECIES_NONE)
+        return;
+    ReportSides(report);
+}
+
 #define WATCH_REFRESH (2 * 60)
+
+static EWRAM_DATA bool8 sWatchFromScript = FALSE;
 
 enum
 {
@@ -3529,9 +3503,22 @@ static void Task_Watch(u8 taskId)
         RemoveWindow(task->tWindowId);
         ScheduleBgCopyTilemapToVram(0);
         DestroyTask(taskId);
+        if (sWatchFromScript)
+        {
+            // A gym statue's WATCH LIVE: back to its script.
+            sWatchFromScript = FALSE;
+            ScriptContext_Enable();
+            return;
+        }
         ScriptUnfreezeObjectEvents();
         UnlockPlayerFieldControls();
     }
+}
+
+void Netplay_WatchFromScript(void)
+{
+    sWatchFromScript = TRUE;
+    ShowNetplayWatch();
 }
 
 #undef tState

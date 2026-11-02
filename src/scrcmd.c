@@ -1,4 +1,5 @@
 #include "global.h"
+#include "alive.h"
 #include "frontier_util.h"
 #include "battle_setup.h"
 #include "battle_util.h"
@@ -2516,6 +2517,14 @@ bool8 ScrCmd_pokemart(struct ScriptContext *ctx)
     const void *ptr = (void *)ScriptReadWord(ctx);
 
     Script_RequestEffects(SCREFF_V1 | SCREFF_HARDWARE);
+
+    // Poké Marts close for the night (src/alive_town.c).
+    if (Alive_IsShopClosed())
+    {
+        extern const u8 Alive_EventScript_ShopClosed[];
+        ScriptJump(ctx, Alive_EventScript_ShopClosed);
+        return FALSE;
+    }
 
     CreatePokemartMenu(ptr);
     ScriptContext_Stop();

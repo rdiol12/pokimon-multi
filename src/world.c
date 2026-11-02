@@ -17,8 +17,10 @@
 #include "field_weather.h"
 #include "constants/weather.h"
 #include "world.h"
+#include "alive.h"
 #include "online.h"
 #include "field_ability.h"
+#include "research.h"
 
 extern const u8 World_EventScript_Menu[];
 
@@ -51,6 +53,7 @@ void World_OnMapTransition(void)
 {
     DayNight_UpdateFlags();
     RoamingWeather_ApplyToCurrentMap();
+    Alive_OnMapTransition();
 }
 
 static void RunShowcase(void)
@@ -134,6 +137,9 @@ bool32 World_OverworldUpdate(void)
     Mechanics_Update();
     Pastime_Update();
     FieldAbility_Update();
+    Research_Update();
+    if (Alive_OverworldUpdate())
+        return TRUE;
     if (Guide_OverworldUpdate())
         return TRUE;
     if (Online_OverworldUpdate())
@@ -159,6 +165,7 @@ enum Species World_ModifyWildSpecies(enum Species species, u8 level)
     species = Adventure_ModifyWildSpecies(species);
     species = Pastime_ModifyWildSpecies(species);
     ShinyChain_OnWildSpecies(species);
+    Research_OnWildSpecies(species);
     return species;
 }
 
@@ -173,6 +180,7 @@ void World_OnWildBattleEnd(void)
         Adventure_OnCatch(gBattleResults.caughtMonSpecies);
         Online_OnCatch();
         Pastime_OnCatch();
+        Research_OnCatch();
     }
     FieldAbility_OnWildBattleEnd();
     ShinyChain_OnWildBattleEnd();

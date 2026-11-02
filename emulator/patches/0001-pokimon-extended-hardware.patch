@@ -13,10 +13,10 @@ index 5ef2da9..02c66bb 100644
  	int32_t bankedRegisters[6][7];
  	int32_t bankedSPSRs[6];
 diff --git a/include/mgba/internal/gba/io.h b/include/mgba/internal/gba/io.h
-index 2891c65..93245e6 100644
+index 2891c65..4436082 100644
 --- a/include/mgba/internal/gba/io.h
 +++ b/include/mgba/internal/gba/io.h
-@@ -166,6 +166,12 @@ enum GBAIORegisters {
+@@ -166,6 +166,14 @@ enum GBAIORegisters {
  	GBA_REG_DEBUG_STRING = 0xFFF600,
  	GBA_REG_DEBUG_FLAGS = 0xFFF700,
  	GBA_REG_DEBUG_ENABLE = 0xFFF780,
@@ -26,11 +26,13 @@ index 2891c65..93245e6 100644
 +	GBA_REG_PKX_VERSION = 0xFFF7F2,
 +	GBA_REG_PKX_CONTROL = 0xFFF7F4,
 +	GBA_REG_PKX_BG_PALETTE_BANKS = 0xFFF7F6, // v5
++	GBA_REG_PKX_WIDE = 0xFFF7F8, // v6: read the frame width, write the layers drawn in the side areas
++	GBA_REG_PKX_WIDE_MAPS = 0xFFF7FA, // v6: backgrounds with a 64x32 map whose right half is extended memory
  };
  
  mLOG_DECLARE_CATEGORY(GBA_IO);
 diff --git a/include/mgba/internal/gba/memory.h b/include/mgba/internal/gba/memory.h
-index 0aad912..b6e7bf8 100644
+index 0aad912..b22f55d 100644
 --- a/include/mgba/internal/gba/memory.h
 +++ b/include/mgba/internal/gba/memory.h
 @@ -22,6 +22,7 @@ CXX_GUARD_START
@@ -72,7 +74,7 @@ index 0aad912..b6e7bf8 100644
 +
 +// Pokimon extended hardware
 +#define GBA_PKX_ID 0x504B /* "PK" */
-+#define GBA_PKX_VERSION 5
++#define GBA_PKX_VERSION 6
 +#define GBA_PKX_UNLOCK_EWRAM 0x4558 /* "EX": write to GBA_REG_PKX_CONTROL */
 +#define GBA_PKX_CONTROL_EWRAM 0x0001 /* read from GBA_REG_PKX_CONTROL */
 +#define GBA_PKX_ENABLE_OBJ 0x4F41 /* "OA": draw sprites from the extended OAM */
@@ -107,7 +109,7 @@ index 0aad912..b6e7bf8 100644
  
  uint32_t GBALoad32(struct ARMCore* cpu, uint32_t address, int* cycleCounter);
 diff --git a/include/mgba/internal/gba/renderers/common.h b/include/mgba/internal/gba/renderers/common.h
-index ed16917..b48c99b 100644
+index ed16917..fb66204 100644
 --- a/include/mgba/internal/gba/renderers/common.h
 +++ b/include/mgba/internal/gba/renderers/common.h
 @@ -17,10 +17,12 @@ struct GBAVideoRendererSprite {
@@ -120,15 +122,43 @@ index ed16917..b48c99b 100644
  };
  
  int GBAVideoRendererCleanOAM(struct GBAObj* oam, struct GBAVideoRendererSprite* sprites, int offsetY);
-+int GBAVideoRendererCleanOAMEx(struct GBAObj* oam, const uint8_t* attr, int start, int end, struct GBAVideoRendererSprite* sprites, int offsetY);
++int GBAVideoRendererCleanOAMEx(struct GBAObj* oam, const uint8_t* attr, int start, int end, struct GBAVideoRendererSprite* sprites, int offsetY, int visibleX);
  
  CXX_GUARD_END
  
 diff --git a/include/mgba/internal/gba/renderers/video-software.h b/include/mgba/internal/gba/renderers/video-software.h
-index ce91877..58ca3e5 100644
+index ce91877..9ef080f 100644
 --- a/include/mgba/internal/gba/renderers/video-software.h
 +++ b/include/mgba/internal/gba/renderers/video-software.h
-@@ -100,10 +100,10 @@ struct GBAVideoSoftwareRenderer {
+@@ -72,10 +72,10 @@ struct WindowControl {
+ 	int8_t priority;
+ };
+ 
+-#define MAX_WINDOW 5
++#define MAX_WINDOW 9 // Pokimon v6: two more splits for the side areas
+ 
+ struct Window {
+-	uint8_t endX;
++	uint16_t endX;
+ 	struct WindowControl control;
+ };
+ 
+@@ -89,8 +89,12 @@ struct GBAVideoSoftwareRenderer {
+ 
+ 	GBARegisterDISPCNT dispcnt;
+ 
+-	uint32_t row[GBA_VIDEO_HORIZONTAL_PIXELS];
+-	uint32_t spriteLayer[GBA_VIDEO_HORIZONTAL_PIXELS];
++	uint32_t row[GBA_PKX_WIDE_PIXELS];
++	uint32_t spriteLayer[GBA_PKX_WIDE_PIXELS];
++	int pkxFrameWidth; // v6: columns drawn per line (240, or 320 on a wide frame)
++	int pkxMargin; // v6: columns left of the GBA screen (0, or 40 on a wide frame)
++	uint8_t pkxWideLayers; // v6: layers that draw in the side areas this line
++	uint8_t pkxLastWide;
+ 	int32_t spriteCyclesRemaining;
+ 
+ 	// BLDCNT
+@@ -100,10 +104,10 @@ struct GBAVideoSoftwareRenderer {
  	unsigned target2Bd;
  	bool blendDirty;
  	enum GBAVideoBlendEffect blendEffect;
@@ -143,7 +173,7 @@ index ce91877..58ca3e5 100644
  
  	uint16_t blda;
  	uint16_t bldb;
-@@ -134,7 +134,9 @@ struct GBAVideoSoftwareRenderer {
+@@ -134,7 +138,9 @@ struct GBAVideoSoftwareRenderer {
  	bool forceTarget1;
  	bool oamDirty;
  	int oamMax;
@@ -202,18 +232,19 @@ index 0192cd9..d06d81c 100644
  };
  
 diff --git a/include/mgba/internal/gba/video.h b/include/mgba/internal/gba/video.h
-index 2896894..a64195b 100644
+index 2896894..bc9ca16 100644
 --- a/include/mgba/internal/gba/video.h
 +++ b/include/mgba/internal/gba/video.h
-@@ -201,6 +201,7 @@ struct GBAVideoRenderer {
+@@ -201,6 +201,8 @@ struct GBAVideoRenderer {
  	uint16_t* palette;
  	uint16_t* vram;
  	union GBAOAM* oam;
 +	struct GBAPKXVideo* pkx; // only the software renderer draws it
++	unsigned pkxWidth; // v6: frame width, GBA_VIDEO_HORIZONTAL_PIXELS or GBA_PKX_WIDE_PIXELS (0 means normal)
  	struct mCacheSet* cache;
  
  	bool disableBG[4];
-@@ -214,6 +215,42 @@ struct GBAVideoRenderer {
+@@ -214,6 +216,53 @@ struct GBAVideoRenderer {
  	uint8_t highlightAmount;
  };
  
@@ -235,6 +266,12 @@ index 2896894..a64195b 100644
 +// Renderer palette arrays: normal 512, extended sprite palettes, then extended BG palettes
 +#define GBA_PKX_EXT_BG_PALETTE_BASE (512 + GBA_PKX_EXT_PALETTE_COLORS)
 +#define GBA_PKX_ALL_PALETTE_COLORS (GBA_PKX_EXT_BG_PALETTE_BASE + GBA_PKX_EXT_BG_PALETTE_COLORS)
++// v6: widescreen. A frame can be GBA_PKX_WIDE_PIXELS wide, with the GBA's 240 columns in the middle
++#define GBA_PKX_WIDE_PIXELS 320
++#define GBA_PKX_WIDE_MARGIN ((GBA_PKX_WIDE_PIXELS - GBA_VIDEO_HORIZONTAL_PIXELS) / 2)
++#define GBA_PKX_WIDE_MAP_OFFSET 0x4000
++#define GBA_PKX_WIDE_MAP_SIZE 0x800
++#define GBA_PKX_WIDE_OBJ 0x10
 +DECL_BITFIELD(GBAPKXObjAttr, uint8_t);
 +DECL_BITS(GBAPKXObjAttr, PaletteBank, 0, 2);
 +DECL_BITS(GBAPKXObjAttr, TileBank, 2, 2);
@@ -251,12 +288,17 @@ index 2896894..a64195b 100644
 +	uint16_t objTiles[GBA_PKX_OBJ_TILE_BANKS][GBA_PKX_OBJ_TILE_BANK_SIZE / 2];
 +	uint16_t bgPalette[GBA_PKX_EXT_BG_PALETTE_COLORS];
 +	uint8_t bgPaletteBanks; // 2 bits per background: 0 = normal palettes, 1-3 = extended bank
++	// v6, kept last: savestates from before v6 end here
++	uint16_t wideMaps[4][GBA_PKX_WIDE_MAP_SIZE / 2]; // right halves of 64x32 maps, one per background
++	uint8_t wideLayers; // drawn in the side areas: bits 0-3 BG0-BG3, bit 4 sprites
++	uint8_t wideMapLayers; // bits 0-3: that 32x32 background is 64x32, right half from wideMaps
++	bool wideMapDirty;
 +};
 +
  struct GBAVideo {
  	struct GBA* p;
  	struct GBAVideoRenderer* renderer;
-@@ -225,6 +262,7 @@ struct GBAVideo {
+@@ -225,6 +274,7 @@ struct GBAVideo {
  	uint16_t palette[512];
  	uint16_t* vram;
  	union GBAOAM oam;
@@ -339,7 +381,7 @@ index edb21e2..eb910ff 100644
  	if (registers & 0x02) {
  		memset(gba->memory.iwram, 0, GBA_SIZE_IWRAM - 0x200);
 diff --git a/src/gba/core.c b/src/gba/core.c
-index 8450f0d..cb1e512 100644
+index 8450f0d..0f237e0 100644
 --- a/src/gba/core.c
 +++ b/src/gba/core.c
 @@ -60,7 +60,7 @@ static const struct mCoreChannelInfo _GBAAudioChannels[] = {
@@ -405,7 +447,61 @@ index 8450f0d..cb1e512 100644
  	{ GBA_REGION_IWRAM, "iwram", "IWRAM", "Internal Working RAM (32kiB)", GBA_BASE_IWRAM, GBA_BASE_IWRAM + GBA_SIZE_IWRAM, GBA_SIZE_IWRAM, mCORE_MEMORY_RW | mCORE_MEMORY_MAPPED },
  	{ GBA_REGION_IO, "io", "MMIO", "Memory-Mapped I/O", GBA_BASE_IO, GBA_BASE_IO + GBA_SIZE_IO, GBA_SIZE_IO, mCORE_MEMORY_RW | mCORE_MEMORY_MAPPED },
  	{ GBA_REGION_PALETTE_RAM, "palette", "Palette", "Palette RAM (1kiB)", GBA_BASE_PALETTE_RAM, GBA_BASE_PALETTE_RAM + GBA_SIZE_PALETTE_RAM, GBA_SIZE_PALETTE_RAM, mCORE_MEMORY_RW | mCORE_MEMORY_MAPPED },
-@@ -892,6 +892,36 @@ static bool _GBACoreLoadExtraState(struct mCore* core, const struct mStateExtdat
+@@ -353,6 +353,25 @@ static void _GBACoreSetSync(struct mCore* core, struct mCoreSync* sync) {
+ 	gba->sync = sync;
+ }
+ 
++// Pokimon v6: the frame is GBA_PKX_WIDE_PIXELS wide when the "pkxWidescreen" option is on.
++// Frontends size their video buffer when the game loads, so a change applies on the next start.
++static unsigned _GBACorePKXWidth(const struct mCore* core) {
++	const struct GBACore* gbacore = (const struct GBACore*) core;
++	unsigned width = gbacore->renderer.d.pkxWidth;
++	return width ? width : GBA_VIDEO_HORIZONTAL_PIXELS;
++}
++
++static void _GBACorePKXUpdateWidth(struct mCore* core) {
++	struct GBACore* gbacore = (struct GBACore*) core;
++	int wide = 0;
++	mCoreConfigGetIntValue(&core->config, "pkxWidescreen", &wide);
++	unsigned width = wide ? GBA_PKX_WIDE_PIXELS : GBA_VIDEO_HORIZONTAL_PIXELS;
++	gbacore->renderer.d.pkxWidth = width;
++#ifndef MINIMAL_CORE
++	gbacore->proxyRenderer.d.pkxWidth = width;
++#endif
++}
++
+ static void _GBACoreLoadConfig(struct mCore* core, const struct mCoreConfig* config) {
+ 	struct GBA* gba = core->board;
+ 	if (core->opts.mute) {
+@@ -394,6 +413,8 @@ static void _GBACoreLoadConfig(struct mCore* core, const struct mCoreConfig* con
+ #endif
+ 	mCoreConfigCopyValue(&core->config, config, "hwaccelVideo");
+ 	mCoreConfigCopyValue(&core->config, config, "videoScale");
++	mCoreConfigCopyValue(&core->config, config, "pkxWidescreen");
++	_GBACorePKXUpdateWidth(core);
+ }
+ 
+ static void _GBACoreReloadConfigOption(struct mCore* core, const char* option, const struct mCoreConfig* config) {
+@@ -499,8 +520,7 @@ static void _GBACoreSetOverride(struct mCore* core, const void* override) {
+ }
+ 
+ static void _GBACoreBaseVideoSize(const struct mCore* core, unsigned* width, unsigned* height) {
+-	UNUSED(core);
+-	*width = GBA_VIDEO_HORIZONTAL_PIXELS;
++	*width = _GBACorePKXWidth(core);
+ 	*height = GBA_VIDEO_VERTICAL_PIXELS;
+ }
+ 
+@@ -515,7 +535,7 @@ static void _GBACoreCurrentVideoSize(const struct mCore* core, unsigned* width,
+ 	UNUSED(core);
+ #endif
+ 
+-	*width = GBA_VIDEO_HORIZONTAL_PIXELS * scale;
++	*width = (scale > 1 ? GBA_VIDEO_HORIZONTAL_PIXELS : _GBACorePKXWidth(core)) * scale;
+ 	*height = GBA_VIDEO_VERTICAL_PIXELS * scale;
+ }
+ 
+@@ -892,6 +912,38 @@ static bool _GBACoreLoadExtraState(struct mCore* core, const struct mStateExtdat
  	struct GBA* gba = core->board;
  	struct mStateExtdataItem item;
  	bool ok = true;
@@ -427,13 +523,15 @@ index 8450f0d..cb1e512 100644
 +	if (mStateExtdataGet(extdata, EXTDATA_SUBSYSTEM_START + GBA_SUBSYSTEM_PKX_VIDEO, &item)) {
 +		// States from before v5 stop before the extra sprite tiles
 +		size_t oldSize = offsetof(struct GBAPKXVideo, objTiles);
-+		if ((size_t) item.size == sizeof(gba->video.pkx) || (size_t) item.size == oldSize) {
++		size_t v5Size = offsetof(struct GBAPKXVideo, wideMaps); // and from before v6 before the wide maps
++		if ((size_t) item.size == sizeof(gba->video.pkx) || (size_t) item.size == oldSize || (size_t) item.size == v5Size) {
 +			memset((uint8_t*) &gba->video.pkx + oldSize, 0, sizeof(gba->video.pkx) - oldSize);
 +			memcpy(&gba->video.pkx, item.data, item.size);
 +			gba->video.pkx.paletteDirty = true;
 +			gba->cpu->overclock = gba->video.pkx.overclock ? gba->video.pkx.overclock : 1;
 +			gba->cpu->overclockRemainder = 0;
 +			gba->video.pkx.oamDirty = true;
++			gba->video.pkx.wideMapDirty = true;
 +			gba->video.renderer->writeOAM(gba->video.renderer, 0);
 +		} else {
 +			ok = false;
@@ -442,7 +540,7 @@ index 8450f0d..cb1e512 100644
  	if (mStateExtdataGet(extdata, EXTDATA_SUBSYSTEM_START + GBA_SUBSYSTEM_VIDEO_RENDERER, &item)) {
  		if ((uint32_t) item.size > sizeof(uint32_t)) {
  			uint32_t type;
-@@ -926,6 +956,30 @@ static bool _GBACoreSaveExtraState(struct mCore* core, struct mStateExtdata* ext
+@@ -926,6 +978,30 @@ static bool _GBACoreSaveExtraState(struct mCore* core, struct mStateExtdata* ext
  	struct GBA* gba = core->board;
  	void* buffer = NULL;
  	size_t size = 0;
@@ -462,7 +560,7 @@ index 8450f0d..cb1e512 100644
 +		memcpy((uint8_t*) item.data + sizeof(length), ext, length);
 +		mStateExtdataPut(extdata, EXTDATA_SUBSYSTEM_START + GBA_SUBSYSTEM_PKX_EWRAM, &item);
 +	}
-+	if (gba->video.pkx.objEnabled || gba->video.pkx.overclock > 1 || gba->video.pkx.bgPaletteBanks) {
++	if (gba->video.pkx.objEnabled || gba->video.pkx.overclock > 1 || gba->video.pkx.bgPaletteBanks || gba->video.pkx.wideLayers || gba->video.pkx.wideMapLayers) {
 +		struct mStateExtdataItem item;
 +		item.size = sizeof(gba->video.pkx);
 +		item.data = malloc(item.size);
@@ -473,7 +571,7 @@ index 8450f0d..cb1e512 100644
  	gba->video.renderer->saveState(gba->video.renderer, &buffer, &size);
  	if (size > 0 && buffer) {
  		struct mStateExtdataItem item;
-@@ -1168,7 +1222,7 @@ void* _GBACoreGetMemoryBlock(struct mCore* core, size_t id, size_t* sizeOut) {
+@@ -1168,7 +1244,7 @@ void* _GBACoreGetMemoryBlock(struct mCore* core, size_t id, size_t* sizeOut) {
  		*sizeOut = GBA_SIZE_BIOS;
  		return gba->memory.bios;
  	case GBA_REGION_EWRAM:
@@ -482,7 +580,7 @@ index 8450f0d..cb1e512 100644
  		return gba->memory.wram;
  	case GBA_REGION_IWRAM:
  		*sizeOut = GBA_SIZE_IWRAM;
-@@ -1468,7 +1522,7 @@ static struct mCheatDevice* _GBACoreCheatDevice(struct mCore* core) {
+@@ -1468,7 +1544,7 @@ static struct mCheatDevice* _GBACoreCheatDevice(struct mCore* core) {
  
  static size_t _GBACoreSavedataClone(struct mCore* core, void** sram) {
  	struct GBA* gba = core->board;
@@ -583,10 +681,10 @@ index c30bd94..c0ec84d 100644
  			gba->romVf->unmap(gba->romVf, gba->memory.rom, gba->pristineRomSize);
  		}
 diff --git a/src/gba/io.c b/src/gba/io.c
-index 658036e..3d20ebf 100644
+index 658036e..b35bcaa 100644
 --- a/src/gba/io.c
 +++ b/src/gba/io.c
-@@ -551,6 +551,15 @@ void GBAIOWrite(struct GBA* gba, uint32_t address, uint16_t value) {
+@@ -551,6 +551,22 @@ void GBAIOWrite(struct GBA* gba, uint32_t address, uint16_t value) {
  	case GBA_REG_DEBUG_ENABLE:
  		gba->debug = value == 0xC0DE;
  		return;
@@ -596,13 +694,20 @@ index 658036e..3d20ebf 100644
 +	case GBA_REG_PKX_BG_PALETTE_BANKS:
 +		gba->video.pkx.bgPaletteBanks = value;
 +		return;
++	case GBA_REG_PKX_WIDE:
++		gba->video.pkx.wideLayers = value & 0x1F;
++		return;
++	case GBA_REG_PKX_WIDE_MAPS:
++		gba->video.pkx.wideMapLayers = value & 0xF;
++		gba->video.pkx.wideMapDirty = true;
++		return;
 +	case GBA_REG_PKX_ID:
 +	case GBA_REG_PKX_VERSION:
 +		return;
  	case GBA_REG_DEBUG_FLAGS:
  		if (gba->debug) {
  			GBADebug(gba, value);
-@@ -993,6 +1002,18 @@ uint16_t GBAIORead(struct GBA* gba, uint32_t address) {
+@@ -993,6 +1009,26 @@ uint16_t GBAIORead(struct GBA* gba, uint32_t address) {
  		}
  		// Fall through
  	default:
@@ -618,11 +723,19 @@ index 658036e..3d20ebf 100644
 +		if (address == GBA_REG_PKX_BG_PALETTE_BANKS) {
 +			return gba->video.pkx.bgPaletteBanks;
 +		}
++		if (address == GBA_REG_PKX_WIDE) {
++			// v6: how wide the frame is: 240, or 320 when the player turned widescreen on
++			unsigned width = gba->video.renderer ? gba->video.renderer->pkxWidth : 0;
++			return width ? width : GBA_VIDEO_HORIZONTAL_PIXELS;
++		}
++		if (address == GBA_REG_PKX_WIDE_MAPS) {
++			return gba->video.pkx.wideMapLayers;
++		}
  		mLOG(GBA_IO, GAME_ERROR, "Read from unused I/O register: %03X", address);
  		return GBALoadBad(gba->cpu);
  	}
 diff --git a/src/gba/memory.c b/src/gba/memory.c
-index 45cf666..bf79126 100644
+index 45cf666..56cbb70 100644
 --- a/src/gba/memory.c
 +++ b/src/gba/memory.c
 @@ -90,8 +90,9 @@ void GBAMemoryInit(struct GBA* gba) {
@@ -646,7 +759,7 @@ index 45cf666..bf79126 100644
  	if (gba->memory.rom) {
  		mappedMemoryFree(gba->memory.rom, gba->memory.romSize);
  	}
-@@ -116,10 +117,153 @@ void GBAMemoryDeinit(struct GBA* gba) {
+@@ -116,10 +117,160 @@ void GBAMemoryDeinit(struct GBA* gba) {
  	GBACartEReaderDeinit(&gba->memory.ereader);
  }
  
@@ -722,6 +835,11 @@ index 45cf666..bf79126 100644
 +		*part = 0;
 +		return (uint8_t*) pkx->bgPalette + offset - GBA_PKX_BG_PALETTE_OFFSET;
 +	}
++	// v6: right halves of wide background maps
++	if (offset >= GBA_PKX_WIDE_MAP_OFFSET && offset + width <= GBA_PKX_WIDE_MAP_OFFSET + sizeof(pkx->wideMaps)) {
++		*part = 5;
++		return (uint8_t*) pkx->wideMaps + offset - GBA_PKX_WIDE_MAP_OFFSET;
++	}
 +	// v5: extra sprite tile banks
 +	if (offset >= GBA_PKX_OBJ_TILE_OFFSET && offset + width <= GBA_PKX_OBJ_TILE_OFFSET + sizeof(pkx->objTiles)) {
 +		*part = 4;
@@ -787,6 +905,8 @@ index 45cf666..bf79126 100644
 +		gba->video.pkx.paletteDirty = true;
 +	} else if (part == 4) {
 +		// Tiles are read straight from memory while drawing
++	} else if (part == 5) {
++		gba->video.pkx.wideMapDirty = true;
 +	} else {
 +		gba->video.pkx.oamDirty = true;
 +	}
@@ -801,7 +921,7 @@ index 45cf666..bf79126 100644
  
  	if (gba->memory.iwram) {
  		memset(gba->memory.iwram, 0, GBA_SIZE_IWRAM);
-@@ -290,7 +434,7 @@ static void GBASetActiveRegion(struct ARMCore* cpu, uint32_t address) {
+@@ -290,7 +441,7 @@ static void GBASetActiveRegion(struct ARMCore* cpu, uint32_t address) {
  		} else {
  			cpu->memory.activeMask &= -WORD_SIZE_ARM;
  		}
@@ -810,7 +930,7 @@ index 45cf666..bf79126 100644
  			return;
  		}
  	}
-@@ -308,7 +452,7 @@ static void GBASetActiveRegion(struct ARMCore* cpu, uint32_t address) {
+@@ -308,7 +459,7 @@ static void GBASetActiveRegion(struct ARMCore* cpu, uint32_t address) {
  	case GBA_REGION_EWRAM:
  		cpu->memory.accessSource = mACCESS_PROGRAM;
  		cpu->memory.activeRegion = memory->wram;
@@ -819,7 +939,7 @@ index 45cf666..bf79126 100644
  		break;
  	case GBA_REGION_IWRAM:
  		cpu->memory.accessSource = mACCESS_PROGRAM;
-@@ -344,7 +488,15 @@ static void GBASetActiveRegion(struct ARMCore* cpu, uint32_t address) {
+@@ -344,7 +495,15 @@ static void GBASetActiveRegion(struct ARMCore* cpu, uint32_t address) {
  		cpu->memory.accessSource = mACCESS_PROGRAM;
  		cpu->memory.activeRegion = memory->rom;
  		cpu->memory.activeMask = memory->romMask;
@@ -836,7 +956,7 @@ index 45cf666..bf79126 100644
  			break;
  		}
  		if ((address & 0x00FFFFFE) == AGB_PRINT_FLUSH_ADDR && memory->agbPrintProtect == 0x20) {
-@@ -394,7 +546,7 @@ static void GBASetActiveRegion(struct ARMCore* cpu, uint32_t address) {
+@@ -394,7 +553,7 @@ static void GBASetActiveRegion(struct ARMCore* cpu, uint32_t address) {
  	}
  
  #define LOAD_EWRAM \
@@ -845,7 +965,7 @@ index 45cf666..bf79126 100644
  	wait += waitstatesRegion[GBA_REGION_EWRAM];
  
  #define LOAD_IWRAM LOAD_32(value, address & (GBA_SIZE_IWRAM - 4), memory->iwram);
-@@ -424,8 +576,8 @@ static void GBASetActiveRegion(struct ARMCore* cpu, uint32_t address) {
+@@ -424,8 +583,8 @@ static void GBASetActiveRegion(struct ARMCore* cpu, uint32_t address) {
  
  #define LOAD_CART \
  	wait += waitstatesRegion[address >> BASE_OFFSET]; \
@@ -856,7 +976,7 @@ index 45cf666..bf79126 100644
  	} else if (memory->unl.type == GBA_UNL_CART_VFAME) { \
  		value = GBAVFameGetPatternValue(address, 32); \
  	} else { \
-@@ -481,6 +633,9 @@ uint32_t GBALoad32(struct ARMCore* cpu, uint32_t address, int* cycleCounter) {
+@@ -481,6 +640,9 @@ uint32_t GBALoad32(struct ARMCore* cpu, uint32_t address, int* cycleCounter) {
  	char* waitstatesRegion = memory->waitstatesNonseq32;
  
  	switch (address >> BASE_OFFSET) {
@@ -866,7 +986,7 @@ index 45cf666..bf79126 100644
  	case GBA_REGION_BIOS:
  		LOAD_BIOS;
  		break;
-@@ -539,6 +694,9 @@ uint32_t GBALoad16(struct ARMCore* cpu, uint32_t address, int* cycleCounter) {
+@@ -539,6 +701,9 @@ uint32_t GBALoad16(struct ARMCore* cpu, uint32_t address, int* cycleCounter) {
  	int wait = 0;
  
  	switch (address >> BASE_OFFSET) {
@@ -876,7 +996,7 @@ index 45cf666..bf79126 100644
  	case GBA_REGION_BIOS:
  		if (address < GBA_SIZE_BIOS) {
  			if (memory->activeRegion == GBA_REGION_BIOS) {
-@@ -553,7 +711,7 @@ uint32_t GBALoad16(struct ARMCore* cpu, uint32_t address, int* cycleCounter) {
+@@ -553,7 +718,7 @@ uint32_t GBALoad16(struct ARMCore* cpu, uint32_t address, int* cycleCounter) {
  		}
  		break;
  	case GBA_REGION_EWRAM:
@@ -885,7 +1005,7 @@ index 45cf666..bf79126 100644
  		wait = memory->waitstatesNonseq16[GBA_REGION_EWRAM];
  		break;
  	case GBA_REGION_IWRAM:
-@@ -589,8 +747,8 @@ uint32_t GBALoad16(struct ARMCore* cpu, uint32_t address, int* cycleCounter) {
+@@ -589,8 +754,8 @@ uint32_t GBALoad16(struct ARMCore* cpu, uint32_t address, int* cycleCounter) {
  	case GBA_REGION_ROM1_EX:
  	case GBA_REGION_ROM2:
  		wait = memory->waitstatesNonseq16[address >> BASE_OFFSET];
@@ -896,7 +1016,7 @@ index 45cf666..bf79126 100644
  		} else if (memory->unl.type == GBA_UNL_CART_VFAME) {
  			value = GBAVFameGetPatternValue(address, 16);
  		} else if ((address & (GBA_SIZE_ROM0 - 2)) >= AGB_PRINT_BASE) {
-@@ -614,8 +772,8 @@ uint32_t GBALoad16(struct ARMCore* cpu, uint32_t address, int* cycleCounter) {
+@@ -614,8 +779,8 @@ uint32_t GBALoad16(struct ARMCore* cpu, uint32_t address, int* cycleCounter) {
  			value = GBASavedataReadEEPROM(&memory->savedata);
  		} else if ((address & 0x0DFC0000) >= 0x0DF80000 && memory->hw.devices & HW_EREADER) {
  			value = GBACartEReaderRead(&memory->ereader, address);
@@ -907,7 +1027,7 @@ index 45cf666..bf79126 100644
  		} else if (memory->unl.type == GBA_UNL_CART_VFAME) {
  			value = GBAVFameGetPatternValue(address, 16);
  		} else {
-@@ -654,6 +812,9 @@ uint32_t GBALoad8(struct ARMCore* cpu, uint32_t address, int* cycleCounter) {
+@@ -654,6 +819,9 @@ uint32_t GBALoad8(struct ARMCore* cpu, uint32_t address, int* cycleCounter) {
  	int wait = 0;
  
  	switch (address >> BASE_OFFSET) {
@@ -917,7 +1037,7 @@ index 45cf666..bf79126 100644
  	case GBA_REGION_BIOS:
  		if (address < GBA_SIZE_BIOS) {
  			if (memory->activeRegion == GBA_REGION_BIOS) {
-@@ -668,7 +829,7 @@ uint32_t GBALoad8(struct ARMCore* cpu, uint32_t address, int* cycleCounter) {
+@@ -668,7 +836,7 @@ uint32_t GBALoad8(struct ARMCore* cpu, uint32_t address, int* cycleCounter) {
  		}
  		break;
  	case GBA_REGION_EWRAM:
@@ -926,7 +1046,7 @@ index 45cf666..bf79126 100644
  		wait = memory->waitstatesNonseq16[GBA_REGION_EWRAM];
  		break;
  	case GBA_REGION_IWRAM:
-@@ -705,8 +866,8 @@ uint32_t GBALoad8(struct ARMCore* cpu, uint32_t address, int* cycleCounter) {
+@@ -705,8 +873,8 @@ uint32_t GBALoad8(struct ARMCore* cpu, uint32_t address, int* cycleCounter) {
  	case GBA_REGION_ROM2:
  	case GBA_REGION_ROM2_EX:
  		wait = memory->waitstatesNonseq16[address >> BASE_OFFSET];
@@ -937,7 +1057,7 @@ index 45cf666..bf79126 100644
  		} else if (memory->unl.type == GBA_UNL_CART_VFAME) {
  			value = GBAVFameGetPatternValue(address, 8);
  		} else {
-@@ -757,7 +918,7 @@ uint32_t GBALoad8(struct ARMCore* cpu, uint32_t address, int* cycleCounter) {
+@@ -757,7 +925,7 @@ uint32_t GBALoad8(struct ARMCore* cpu, uint32_t address, int* cycleCounter) {
  }
  
  #define STORE_EWRAM \
@@ -946,7 +1066,7 @@ index 45cf666..bf79126 100644
  	wait += waitstatesRegion[GBA_REGION_EWRAM];
  
  #define STORE_IWRAM \
-@@ -830,6 +991,9 @@ void GBAStore32(struct ARMCore* cpu, uint32_t address, int32_t value, int* cycle
+@@ -830,6 +998,9 @@ void GBAStore32(struct ARMCore* cpu, uint32_t address, int32_t value, int* cycle
  	char* waitstatesRegion = memory->waitstatesNonseq32;
  
  	switch (address >> BASE_OFFSET) {
@@ -956,7 +1076,7 @@ index 45cf666..bf79126 100644
  	case GBA_REGION_EWRAM:
  		STORE_EWRAM;
  		break;
-@@ -881,8 +1045,11 @@ void GBAStore16(struct ARMCore* cpu, uint32_t address, int16_t value, int* cycle
+@@ -881,8 +1052,11 @@ void GBAStore16(struct ARMCore* cpu, uint32_t address, int16_t value, int* cycle
  	int16_t oldValue;
  
  	switch (address >> BASE_OFFSET) {
@@ -969,7 +1089,7 @@ index 45cf666..bf79126 100644
  		wait = memory->waitstatesNonseq16[GBA_REGION_EWRAM];
  		break;
  	case GBA_REGION_IWRAM:
-@@ -1026,8 +1193,11 @@ void GBAStore8(struct ARMCore* cpu, uint32_t address, int8_t value, int* cycleCo
+@@ -1026,8 +1200,11 @@ void GBAStore8(struct ARMCore* cpu, uint32_t address, int8_t value, int* cycleCo
  	uint16_t oldValue;
  
  	switch (address >> BASE_OFFSET) {
@@ -982,7 +1102,7 @@ index 45cf666..bf79126 100644
  		wait = memory->waitstatesNonseq16[GBA_REGION_EWRAM];
  		break;
  	case GBA_REGION_IWRAM:
-@@ -1224,8 +1394,8 @@ void GBAPatch32(struct ARMCore* cpu, uint32_t address, int32_t value, int32_t* o
+@@ -1224,8 +1401,8 @@ void GBAPatch32(struct ARMCore* cpu, uint32_t address, int32_t value, int32_t* o
  
  	switch (address >> BASE_OFFSET) {
  	case GBA_REGION_EWRAM:
@@ -993,7 +1113,7 @@ index 45cf666..bf79126 100644
  		break;
  	case GBA_REGION_IWRAM:
  		LOAD_32(oldValue, address & (GBA_SIZE_IWRAM - 4), memory->iwram);
-@@ -1298,8 +1468,8 @@ void GBAPatch16(struct ARMCore* cpu, uint32_t address, int16_t value, int16_t* o
+@@ -1298,8 +1475,8 @@ void GBAPatch16(struct ARMCore* cpu, uint32_t address, int16_t value, int16_t* o
  
  	switch (address >> BASE_OFFSET) {
  	case GBA_REGION_EWRAM:
@@ -1004,7 +1124,7 @@ index 45cf666..bf79126 100644
  		break;
  	case GBA_REGION_IWRAM:
  		LOAD_16(oldValue, address & (GBA_SIZE_IWRAM - 2), memory->iwram);
-@@ -1380,8 +1550,8 @@ void GBAPatch8(struct ARMCore* cpu, uint32_t address, int8_t value, int8_t* old)
+@@ -1380,8 +1557,8 @@ void GBAPatch8(struct ARMCore* cpu, uint32_t address, int8_t value, int8_t* old)
  
  	switch (address >> BASE_OFFSET) {
  	case GBA_REGION_EWRAM:
@@ -1015,7 +1135,7 @@ index 45cf666..bf79126 100644
  		break;
  	case GBA_REGION_IWRAM:
  		oldValue = ((int8_t*) memory->iwram)[address & (GBA_SIZE_IWRAM - 1)];
-@@ -1508,6 +1678,9 @@ uint32_t GBALoadMultiple(struct ARMCore* cpu, uint32_t address, int mask, enum L
+@@ -1508,6 +1685,9 @@ uint32_t GBALoadMultiple(struct ARMCore* cpu, uint32_t address, int mask, enum L
  	int wait = memory->waitstatesSeq32[region] - memory->waitstatesNonseq32[region];
  
  	switch (region) {
@@ -1025,7 +1145,7 @@ index 45cf666..bf79126 100644
  	case GBA_REGION_BIOS:
  		LDM_LOOP(LOAD_BIOS);
  		break;
-@@ -1630,6 +1803,9 @@ uint32_t GBAStoreMultiple(struct ARMCore* cpu, uint32_t address, int mask, enum
+@@ -1630,6 +1810,9 @@ uint32_t GBAStoreMultiple(struct ARMCore* cpu, uint32_t address, int mask, enum
  	int wait = memory->waitstatesSeq32[region] - memory->waitstatesNonseq32[region];
  
  	switch (region) {
@@ -1036,18 +1156,19 @@ index 45cf666..bf79126 100644
  		STM_LOOP(STORE_EWRAM);
  		break;
 diff --git a/src/gba/renderers/common.c b/src/gba/renderers/common.c
-index e801892..7e24db1 100644
+index e801892..20b1f23 100644
 --- a/src/gba/renderers/common.c
 +++ b/src/gba/renderers/common.c
-@@ -8,9 +8,14 @@
+@@ -8,9 +8,15 @@
  #include <mgba/gba/interface.h>
  
  int GBAVideoRendererCleanOAM(struct GBAObj* oam, struct GBAVideoRendererSprite* sprites, int offsetY) {
-+	return GBAVideoRendererCleanOAMEx(oam, NULL, 0, 128, sprites, offsetY);
++	return GBAVideoRendererCleanOAMEx(oam, NULL, 0, 128, sprites, offsetY, GBA_VIDEO_HORIZONTAL_PIXELS);
 +}
 +
 +// Pokimon extended OAM: reads entries start..end-1 of oam, tagging each with its attribute byte
-+int GBAVideoRendererCleanOAMEx(struct GBAObj* oam, const uint8_t* attr, int start, int end, struct GBAVideoRendererSprite* sprites, int offsetY) {
++// visibleX: sprites starting at or right of it are off screen (Pokimon v6: 280 when they draw in the side areas of a wide frame)
++int GBAVideoRendererCleanOAMEx(struct GBAObj* oam, const uint8_t* attr, int start, int end, struct GBAVideoRendererSprite* sprites, int offsetY, int visibleX) {
  	int i;
  	int oamMax = 0;
 -	for (i = 0; i < 128; ++i) {
@@ -1055,7 +1176,36 @@ index e801892..7e24db1 100644
  		struct GBAObj obj;
  		LOAD_16LE(obj.a, 0, &oam[i].a);
  		LOAD_16LE(obj.b, 0, &oam[i].b);
-@@ -52,6 +57,7 @@ int GBAVideoRendererCleanOAM(struct GBAObj* oam, struct GBAVideoRendererSprite*
+@@ -20,6 +26,10 @@ int GBAVideoRendererCleanOAM(struct GBAObj* oam, struct GBAVideoRendererSprite*
+ 			int height = GBAVideoObjSizes[GBAObjAttributesAGetShape(obj.a) * 4 + GBAObjAttributesBGetSize(obj.b)][1];
+ 			int32_t x = (uint32_t) GBAObjAttributesBGetX(obj.b) << 23;
+ 			x >>= 23;
++			if (visibleX > GBA_VIDEO_HORIZONTAL_PIXELS && x < 0 && x + 512 < visibleX) {
++				// Pokimon v6: 256..visibleX-1 is the right side area of a wide frame, not off the left
++				x += 512;
++			}
+ 			int cycles;
+ 			if (GBAObjAttributesAIsTransformed(obj.a)) {
+ 				height <<= GBAObjAttributesAGetDoubleSize(obj.a);
+@@ -31,7 +41,7 @@ int GBAVideoRendererCleanOAM(struct GBAObj* oam, struct GBAVideoRendererSprite*
+ 			} else {
+ 				cycles = width - 2;
+ 				if (x < 0) {
+-					if (x + width < 0) {
++					if (x + width < GBA_VIDEO_HORIZONTAL_PIXELS - visibleX) { // the left side area is as wide as the right one
+ 						continue;
+ 					}
+ 					cycles += x >> 1;
+@@ -40,7 +50,7 @@ int GBAVideoRendererCleanOAM(struct GBAObj* oam, struct GBAVideoRendererSprite*
+ 			if (GBAObjAttributesAGetY(obj.a) >= GBA_VIDEO_VERTICAL_PIXELS && GBAObjAttributesAGetY(obj.a) + height < VIDEO_VERTICAL_TOTAL_PIXELS) {
+ 				continue;
+ 			}
+-			if (GBAObjAttributesBGetX(obj.b) >= GBA_VIDEO_HORIZONTAL_PIXELS && GBAObjAttributesBGetX(obj.b) + width < 512) {
++			if (x >= visibleX || x + width < GBA_VIDEO_HORIZONTAL_PIXELS - visibleX) {
+ 				continue;
+ 			}
+ 			int y = GBAObjAttributesAGetY(obj.a) + offsetY;
+@@ -52,6 +62,7 @@ int GBAVideoRendererCleanOAM(struct GBAObj* oam, struct GBAVideoRendererSprite*
  			sprites[oamMax].cycles = cycles;
  			sprites[oamMax].obj = obj;
  			sprites[oamMax].index = i;
@@ -1064,13 +1214,65 @@ index e801892..7e24db1 100644
  		}
  	}
 diff --git a/src/gba/renderers/software-mode0.c b/src/gba/renderers/software-mode0.c
-index 4aada17..5e316b8 100644
+index 4aada17..3f7807a 100644
 --- a/src/gba/renderers/software-mode0.c
 +++ b/src/gba/renderers/software-mode0.c
-@@ -523,6 +523,16 @@ void GBAVideoSoftwareRendererDrawBackgroundMode0(struct GBAVideoSoftwareRenderer
+@@ -13,7 +13,12 @@
+ 		xBase += (localX & 0x100) << 5; \
+ 	} \
+ 	screenBase = yBase + (xBase >> 3); \
+-	LOAD_16(mapData, screenBase << 1, vram); \
++	if (UNLIKELY(wideMap && (localX & 0x100))) { \
++		/* Pokimon v6: the right half of a wide map is in extended memory */ \
++		LOAD_16LE(mapData, (((inY & 0xF8) << 2) + ((localX & 0xF8) >> 3)) << 1, wideMap); \
++	} else { \
++		LOAD_16(mapData, screenBase << 1, vram); \
++	} \
+ 
+ #define DRAW_BACKGROUND_MODE_0_TILE_SUFFIX_16(BLEND, OBJWIN) \
+ 	paletteData = GBA_TEXT_MAP_PALETTE(mapData) << 4; \
+@@ -416,7 +421,7 @@
+ 	if (background->mosaic && GBAMosaicControlGetBgH(renderer->mosaic)) { \
+ 		int mosaicH = GBAMosaicControlGetBgH(renderer->mosaic) + 1; \
+ 		int x; \
+-		int mosaicWait = (mosaicH - outX + GBA_VIDEO_HORIZONTAL_PIXELS * mosaicH) % mosaicH; \
++		int mosaicWait = (mosaicH - (outX - renderer->pkxMargin) + GBA_VIDEO_HORIZONTAL_PIXELS * mosaicH) % mosaicH; \
+ 		int carryData = 0; \
+ 		paletteData = 0; /* Quiets compiler warning */ \
+ 		DRAW_BACKGROUND_MODE_0_MOSAIC_ ## BPP (BLEND, OBJWIN) \
+@@ -455,7 +460,7 @@
+ 	/*! TODO: Make sure these lines can be removed */ \
+ 	/*!*/ pixel = &renderer->row[outX]; \
+ 	outX += (tileEnd - tileX) * 8; \
+-	/*!*/ if (VIDEO_CHECKS &&  UNLIKELY(outX > GBA_VIDEO_HORIZONTAL_PIXELS)) { \
++	/*!*/ if (VIDEO_CHECKS &&  UNLIKELY(outX > GBA_PKX_WIDE_PIXELS)) { \
+ 	/*!*/	mLOG(GBA_VIDEO, FATAL, "Out of bounds background draw would occur!"); \
+ 	/*!*/	return; \
+ 	/*!*/ } \
+@@ -478,13 +483,13 @@
+ 	if (VIDEO_CHECKS && UNLIKELY(&renderer->row[outX] != pixel)) { \
+ 		mLOG(GBA_VIDEO, FATAL, "Background draw ended in the wrong place! Diff: %" PRIXPTR, &renderer->row[outX] - pixel); \
+ 	} \
+-	if (VIDEO_CHECKS && UNLIKELY(outX > GBA_VIDEO_HORIZONTAL_PIXELS)) { \
++	if (VIDEO_CHECKS && UNLIKELY(outX > GBA_PKX_WIDE_PIXELS)) { \
+ 		mLOG(GBA_VIDEO, FATAL, "Out of bounds background draw occurred!"); \
+ 		return; \
+ 	}
+ 
+ void GBAVideoSoftwareRendererDrawBackgroundMode0(struct GBAVideoSoftwareRenderer* renderer, struct GBAVideoSoftwareBackground* background, int y) {
+-	int inX = (renderer->start + background->x - background->offsetX) & 0x1FF;
++	int inX = (renderer->start - renderer->pkxMargin + background->x - background->offsetX) & 0x1FF;
+ 	int length = renderer->end - renderer->start;
+ 	if (background->mosaic) {
+ 		int mosaicV = GBAMosaicControlGetBgV(renderer->mosaic) + 1;
+@@ -523,6 +528,20 @@ void GBAVideoSoftwareRendererDrawBackgroundMode0(struct GBAVideoSoftwareRenderer
  		}
  	}
  	PREPARE_OBJWIN;
++	const uint16_t* wideMap = NULL;
++	if (renderer->d.pkx && !(background->size & 1) && (renderer->d.pkx->wideMapLayers >> background->index) & 1) {
++		wideMap = renderer->d.pkx->wideMaps[background->index];
++	}
 +	if (renderer->d.pkx) {
 +		// Pokimon v5: this layer may use an extended background palette bank
 +		unsigned bank = (renderer->d.pkx->bgPaletteBanks >> (background->index * 2)) & 3;
@@ -1085,12 +1287,19 @@ index 4aada17..5e316b8 100644
  	int outX = renderer->start;
  
 diff --git a/src/gba/renderers/software-obj.c b/src/gba/renderers/software-obj.c
-index 186db38..7db9970 100644
+index 186db38..b8fa80e 100644
 --- a/src/gba/renderers/software-obj.c
 +++ b/src/gba/renderers/software-obj.c
-@@ -165,6 +165,11 @@ int GBAVideoSoftwareRendererPreprocessSprite(struct GBAVideoSoftwareRenderer* re
+@@ -163,8 +163,17 @@ int GBAVideoSoftwareRendererPreprocessSprite(struct GBAVideoSoftwareRenderer* re
+ 	}
+ 	int32_t x = (uint32_t) GBAObjAttributesBGetX(sprite->b) << 23;
  	x >>= 23;
- 	x += renderer->objOffsetX;
+-	x += renderer->objOffsetX;
++	if ((renderer->pkxWideLayers & GBA_PKX_WIDE_OBJ) && x < 0 && x + 512 < GBA_VIDEO_HORIZONTAL_PIXELS + renderer->pkxMargin) {
++		// Pokimon v6: sprites at 256..279 are in the right side area of a wide frame, not off the left
++		x += 512;
++	}
++	x += renderer->objOffsetX + renderer->pkxMargin;
  	uint16_t* vramBase = &renderer->d.vram[BASE_TILE >> 1];
 +	unsigned tileBank = GBAPKXObjAttrGetTileBank(renderer->currentPKXAttr);
 +	if (tileBank && renderer->d.pkx) {
@@ -1100,7 +1309,7 @@ index 186db38..7db9970 100644
  	unsigned align = GBAObjAttributesAIs256Color(sprite->a) && !GBARegisterDISPCNTIsObjCharacterMapping(renderer->dispcnt);
  	unsigned charBase = (GBAObjAttributesCGetTile(sprite->c) & ~align) * 0x20;
  	unsigned maskLo = GBARegisterDISPCNTIsObjCharacterMapping(renderer->dispcnt) ? 0x7FFE : 0x3FE;
-@@ -192,15 +197,18 @@ int GBAVideoSoftwareRendererPreprocessSprite(struct GBAVideoSoftwareRenderer* re
+@@ -192,15 +201,18 @@ int GBAVideoSoftwareRendererPreprocessSprite(struct GBAVideoSoftwareRenderer* re
  		}
  	}
  
@@ -1121,7 +1330,7 @@ index 186db38..7db9970 100644
  			palette = &renderer->highlightVariantPalette[0x100];
  		}
  		if (GBAWindowControlIsBlendEnable(renderer->objwin.packed)) {
-@@ -216,6 +224,7 @@ int GBAVideoSoftwareRendererPreprocessSprite(struct GBAVideoSoftwareRenderer* re
+@@ -216,6 +228,7 @@ int GBAVideoSoftwareRendererPreprocessSprite(struct GBAVideoSoftwareRenderer* re
  		int totalWidth = width << GBAObjAttributesAGetDoubleSize(sprite->a);
  		int totalHeight = height << GBAObjAttributesAGetDoubleSize(sprite->a);
  		struct GBAOAMMatrix mat;
@@ -1129,7 +1338,7 @@ index 186db38..7db9970 100644
  		LOAD_16(mat.a, 0, &renderer->d.oam->mat[GBAObjAttributesBGetMatIndex(sprite->b)].a);
  		LOAD_16(mat.b, 0, &renderer->d.oam->mat[GBAObjAttributesBGetMatIndex(sprite->b)].b);
  		LOAD_16(mat.c, 0, &renderer->d.oam->mat[GBAObjAttributesBGetMatIndex(sprite->b)].c);
-@@ -283,18 +292,18 @@ int GBAVideoSoftwareRendererPreprocessSprite(struct GBAVideoSoftwareRenderer* re
+@@ -283,18 +296,18 @@ int GBAVideoSoftwareRendererPreprocessSprite(struct GBAVideoSoftwareRenderer* re
  		}
  
  		if (!GBAObjAttributesAIs256Color(sprite->a)) {
@@ -1151,7 +1360,7 @@ index 186db38..7db9970 100644
  				SPRITE_TRANSFORMED_LOOP(16, NORMAL_OBJWIN);
  			} else {
  				SPRITE_TRANSFORMED_LOOP(16, NORMAL);
-@@ -340,18 +349,18 @@ int GBAVideoSoftwareRendererPreprocessSprite(struct GBAVideoSoftwareRenderer* re
+@@ -340,18 +353,18 @@ int GBAVideoSoftwareRendererPreprocessSprite(struct GBAVideoSoftwareRenderer* re
  			xOffset = -1;
  		}
  		if (!GBAObjAttributesAIs256Color(sprite->a)) {
@@ -1174,7 +1383,7 @@ index 186db38..7db9970 100644
  			} else {
  				SPRITE_NORMAL_LOOP(16, NORMAL);
 diff --git a/src/gba/renderers/software-private.h b/src/gba/renderers/software-private.h
-index 4f7e9f8..dd98fc0 100644
+index 4f7e9f8..d1a4781 100644
 --- a/src/gba/renderers/software-private.h
 +++ b/src/gba/renderers/software-private.h
 @@ -92,7 +92,7 @@ static inline void _compositeNoBlendNoObjwin(struct GBAVideoSoftwareRenderer* re
@@ -1222,11 +1431,285 @@ index 4f7e9f8..dd98fc0 100644
  	if (renderer->d.highlightAmount && background->highlight) {                                   \
  		objwinPalette = renderer->highlightPalette;                                               \
  	}                                                                                             \
+@@ -171,8 +173,8 @@ static inline void _compositeNoBlendNoObjwin(struct GBAVideoSoftwareRenderer* re
+ 	}
+ 
+ #define BACKGROUND_BITMAP_INIT                                                                                        \
+-	int32_t x = background->sx + (renderer->start - 1) * background->dx;                                              \
+-	int32_t y = background->sy + (renderer->start - 1) * background->dy;                                              \
++	int32_t x = background->sx + (renderer->start - renderer->pkxMargin - 1) * background->dx;                        \
++	int32_t y = background->sy + (renderer->start - renderer->pkxMargin - 1) * background->dy;                        \
+ 	int mosaicH = 0;                                                                                                  \
+ 	int mosaicWait = 0;                                                                                               \
+ 	int32_t localX;                                                                                                   \
+@@ -180,8 +182,9 @@ static inline void _compositeNoBlendNoObjwin(struct GBAVideoSoftwareRenderer* re
+ 	if (background->mosaic) {                                                                                         \
+ 		int mosaicV = GBAMosaicControlGetBgV(renderer->mosaic) + 1;                                                   \
+ 		mosaicH = GBAMosaicControlGetBgH(renderer->mosaic) + 1;                                                       \
+-		mosaicWait = (mosaicH - renderer->start + GBA_VIDEO_HORIZONTAL_PIXELS * mosaicH) % mosaicH;                   \
+-		int32_t startX = renderer->start - (renderer->start % mosaicH);                                               \
++		int pkxStart = renderer->start - renderer->pkxMargin;                                                         \
++		mosaicWait = (mosaicH - pkxStart + GBA_VIDEO_HORIZONTAL_PIXELS * mosaicH) % mosaicH;                          \
++		int32_t startX = pkxStart - (pkxStart % mosaicH);                                                             \
+ 		--mosaicH;                                                                                                    \
+ 		localX = -(inY % mosaicV) * background->dmx;                                                                  \
+ 		localY = -(inY % mosaicV) * background->dmy;                                                                  \
 diff --git a/src/gba/renderers/video-software.c b/src/gba/renderers/video-software.c
-index c5bc37b..9943832 100644
+index c5bc37b..1c779aa 100644
 --- a/src/gba/renderers/video-software.c
 +++ b/src/gba/renderers/video-software.c
-@@ -1016,12 +1016,53 @@ void GBAVideoSoftwareRendererPostprocessBuffer(struct GBAVideoSoftwareRenderer*
+@@ -48,7 +48,12 @@ static void _updatePalettes(struct GBAVideoSoftwareRenderer* renderer);
+ static void _updateFlags(struct GBAVideoSoftwareRenderer* renderer, struct GBAVideoSoftwareBackground* bg);
+ 
+ static void _breakWindow(struct GBAVideoSoftwareRenderer* softwareRenderer, struct WindowN* win);
+-static void _breakWindowInner(struct GBAVideoSoftwareRenderer* softwareRenderer, struct WindowN* win);
++static void _breakWindowInner(struct GBAVideoSoftwareRenderer* softwareRenderer, int start, int end, struct WindowControl control);
++
++// Pokimon v6: columns drawn per line, 320 on a wide frame
++static int _pkxFrameWidth(const struct GBAVideoSoftwareRenderer* renderer) {
++	return renderer->d.pkxWidth > GBA_VIDEO_HORIZONTAL_PIXELS ? GBA_PKX_WIDE_PIXELS : GBA_VIDEO_HORIZONTAL_PIXELS;
++}
+ 
+ void GBAVideoSoftwareRendererCreate(struct GBAVideoSoftwareRenderer* renderer) {
+ 	memset(renderer, 0, sizeof(*renderer));
+@@ -99,7 +104,7 @@ static void GBAVideoSoftwareRendererInit(struct GBAVideoRenderer* renderer) {
+ 	for (y = 0; y < GBA_VIDEO_VERTICAL_PIXELS; ++y) {
+ 		mColor* row = &softwareRenderer->outputBuffer[softwareRenderer->outputBufferStride * y];
+ 		int x;
+-		for (x = 0; x < GBA_VIDEO_HORIZONTAL_PIXELS; ++x) {
++		for (x = 0; x < _pkxFrameWidth(softwareRenderer); ++x) {
+ 			row[x] = M_COLOR_WHITE;
+ 		}
+ 	}
+@@ -141,6 +146,10 @@ static void GBAVideoSoftwareRendererReset(struct GBAVideoRenderer* renderer) {
+ 
+ 	softwareRenderer->objOffsetX = 0;
+ 	softwareRenderer->objOffsetY = 0;
++	softwareRenderer->pkxFrameWidth = _pkxFrameWidth(softwareRenderer);
++	softwareRenderer->pkxMargin = (softwareRenderer->pkxFrameWidth - GBA_VIDEO_HORIZONTAL_PIXELS) / 2;
++	softwareRenderer->pkxWideLayers = 0;
++	softwareRenderer->pkxLastWide = 0xFF;
+ 
+ 	memset(softwareRenderer->scanlineDirty, 0xFFFFFFFF, sizeof(softwareRenderer->scanlineDirty));
+ 	memset(softwareRenderer->cache, 0, sizeof(softwareRenderer->cache));
+@@ -443,41 +452,53 @@ static void GBAVideoSoftwareRendererWritePalette(struct GBAVideoRenderer* render
+ 	memset(softwareRenderer->scanlineDirty, 0xFFFFFFFF, sizeof(softwareRenderer->scanlineDirty));
+ }
+ 
++// Pokimon v6: a window's GBA x coordinate as a column of the frame. Windows that reach an edge
++// of the GBA screen reach the edge of a wide frame too.
++static int _pkxWindowX(const struct GBAVideoSoftwareRenderer* renderer, int x) {
++	if (x <= 0) {
++		return 0;
++	}
++	if (x >= GBA_VIDEO_HORIZONTAL_PIXELS) {
++		return renderer->pkxFrameWidth;
++	}
++	return x + renderer->pkxMargin;
++}
++
+ static void _breakWindow(struct GBAVideoSoftwareRenderer* softwareRenderer, struct WindowN* win) {
+-	if (win->h.end > GBA_VIDEO_HORIZONTAL_PIXELS || win->h.end < win->h.start) {
+-		struct WindowN splits[2] = { *win, *win };
+-		splits[0].h.start = 0;
+-		splits[1].h.end = GBA_VIDEO_HORIZONTAL_PIXELS;
+-		_breakWindowInner(softwareRenderer, &splits[0]);
+-		_breakWindowInner(softwareRenderer, &splits[1]);
++	int start = win->h.start;
++	int end = win->h.end;
++	struct WindowControl control = win->control;
++	if (end > GBA_VIDEO_HORIZONTAL_PIXELS || end < start) {
++		_breakWindowInner(softwareRenderer, 0, _pkxWindowX(softwareRenderer, end), control);
++		_breakWindowInner(softwareRenderer, _pkxWindowX(softwareRenderer, start), softwareRenderer->pkxFrameWidth, control);
+ 	} else {
+-		_breakWindowInner(softwareRenderer, win);
++		_breakWindowInner(softwareRenderer, _pkxWindowX(softwareRenderer, start), _pkxWindowX(softwareRenderer, end), control);
+ 	}
+ }
+ 
+-static void _breakWindowInner(struct GBAVideoSoftwareRenderer* softwareRenderer, struct WindowN* win) {
++static void _breakWindowInner(struct GBAVideoSoftwareRenderer* softwareRenderer, int start, int end, struct WindowControl control) {
+ 	int activeWindow;
+ 	int startX = 0;
+-	if (win->h.end > 0) {
++	if (end > 0) {
+ 		for (activeWindow = 0; activeWindow < softwareRenderer->nWindows; ++activeWindow) {
+-			if (win->h.start < softwareRenderer->windows[activeWindow].endX) {
++			if (start < softwareRenderer->windows[activeWindow].endX) {
+ 				// Insert a window before the end of the active window
+ 				struct Window oldWindow = softwareRenderer->windows[activeWindow];
+-				if (win->h.start > startX) {
++				if (start > startX) {
+ 					// And after the start of the active window
+ 					int nextWindow = softwareRenderer->nWindows;
+ 					++softwareRenderer->nWindows;
+ 					for (; nextWindow > activeWindow; --nextWindow) {
+ 						softwareRenderer->windows[nextWindow] = softwareRenderer->windows[nextWindow - 1];
+ 					}
+-					softwareRenderer->windows[activeWindow].endX = win->h.start;
++					softwareRenderer->windows[activeWindow].endX = start;
+ 					++activeWindow;
+ 				}
+-				softwareRenderer->windows[activeWindow].control = win->control;
+-				softwareRenderer->windows[activeWindow].endX = win->h.end;
+-				if (win->h.end >= oldWindow.endX) {
++				softwareRenderer->windows[activeWindow].control = control;
++				softwareRenderer->windows[activeWindow].endX = end;
++				if (end >= oldWindow.endX) {
+ 					// Trim off extra windows we've overwritten
+-					for (++activeWindow; softwareRenderer->nWindows > activeWindow + 1 && win->h.end >= softwareRenderer->windows[activeWindow].endX; ++activeWindow) {
++					for (++activeWindow; softwareRenderer->nWindows > activeWindow + 1 && end >= softwareRenderer->windows[activeWindow].endX; ++activeWindow) {
+ 						if (VIDEO_CHECKS && activeWindow >= MAX_WINDOW) {
+ 							mLOG(GBA_VIDEO, FATAL, "Out of bounds window write will occur");
+ 							return;
+@@ -567,6 +588,25 @@ static void GBAVideoSoftwareRendererDrawScanline(struct GBAVideoRenderer* render
+ 		softwareRenderer->nextY = y + 1;
+ 	}
+ 
++	// Pokimon v6: frame width, and which layers draw in the side areas of a wide frame
++	struct GBAPKXVideo* pkx = softwareRenderer->d.pkx;
++	softwareRenderer->pkxFrameWidth = _pkxFrameWidth(softwareRenderer);
++	softwareRenderer->pkxMargin = (softwareRenderer->pkxFrameWidth - GBA_VIDEO_HORIZONTAL_PIXELS) / 2;
++	softwareRenderer->pkxWideLayers = pkx && softwareRenderer->pkxMargin ? pkx->wideLayers : 0;
++	if (softwareRenderer->pkxWideLayers != softwareRenderer->pkxLastWide) {
++		softwareRenderer->pkxLastWide = softwareRenderer->pkxWideLayers;
++		softwareRenderer->oamDirty = true;
++		memset(softwareRenderer->scanlineDirty, 0xFFFFFFFF, sizeof(softwareRenderer->scanlineDirty));
++	}
++	if (pkx && pkx->wideMapDirty) {
++		pkx->wideMapDirty = false;
++		softwareRenderer->bg[0].yCache = -1;
++		softwareRenderer->bg[1].yCache = -1;
++		softwareRenderer->bg[2].yCache = -1;
++		softwareRenderer->bg[3].yCache = -1;
++		memset(softwareRenderer->scanlineDirty, 0xFFFFFFFF, sizeof(softwareRenderer->scanlineDirty));
++	}
++
+ 	bool dirty = softwareRenderer->scanlineDirty[y >> 5] & (1U << (y & 0x1F));
+ 	if (memcmp(softwareRenderer->nextIo, softwareRenderer->cache[y].io, sizeof(softwareRenderer->nextIo))) {
+ 		memcpy(softwareRenderer->cache[y].io, softwareRenderer->nextIo, sizeof(softwareRenderer->nextIo));
+@@ -613,7 +653,7 @@ static void GBAVideoSoftwareRendererDrawScanline(struct GBAVideoRenderer* render
+ 	mColor* row = &softwareRenderer->outputBuffer[softwareRenderer->outputBufferStride * y];
+ 	if (GBARegisterDISPCNTIsForcedBlank(softwareRenderer->dispcnt)) {
+ 		int x;
+-		for (x = 0; x < GBA_VIDEO_HORIZONTAL_PIXELS; ++x) {
++		for (x = 0; x < softwareRenderer->pkxFrameWidth; ++x) {
+ 			row[x] = M_COLOR_WHITE;
+ 		}
+ 		return;
+@@ -705,8 +745,17 @@ static void GBAVideoSoftwareRendererDrawScanline(struct GBAVideoRenderer* render
+ 	}
+ 
+ 	int x;
++	int frameWidth = softwareRenderer->pkxFrameWidth;
++	if (softwareRenderer->pkxMargin && !softwareRenderer->pkxWideLayers) {
++		// A screen that isn't made for widescreen: plain black bars on both sides
++		int margin = softwareRenderer->pkxMargin;
++		for (x = 0; x < margin; ++x) {
++			softwareRenderer->row[x] = 0;
++			softwareRenderer->row[frameWidth - 1 - x] = 0;
++		}
++	}
+ 	if (softwareRenderer->stereo) {
+-		for (x = 0; x < GBA_VIDEO_HORIZONTAL_PIXELS; x += 4) {
++		for (x = 0; x < frameWidth; x += 4) {
+ 			row[x] = softwareRenderer->row[x] & (M_COLOR_RED | M_COLOR_BLUE);
+ 			row[x] |= softwareRenderer->row[x + 1] & M_COLOR_GREEN;
+ 			row[x + 1] = softwareRenderer->row[x + 1] & (M_COLOR_RED | M_COLOR_BLUE);
+@@ -719,14 +768,14 @@ static void GBAVideoSoftwareRendererDrawScanline(struct GBAVideoRenderer* render
+ 		}
+ 	} else {
+ #ifdef COLOR_16_BIT
+-		for (x = 0; x < GBA_VIDEO_HORIZONTAL_PIXELS; x += 4) {
++		for (x = 0; x < frameWidth; x += 4) {
+ 			row[x] = softwareRenderer->row[x];
+ 			row[x + 1] = softwareRenderer->row[x + 1];
+ 			row[x + 2] = softwareRenderer->row[x + 2];
+ 			row[x + 3] = softwareRenderer->row[x + 3];
+ 		}
+ #else
+-		memcpy(row, softwareRenderer->row, GBA_VIDEO_HORIZONTAL_PIXELS * sizeof(*row));
++		memcpy(row, softwareRenderer->row, frameWidth * sizeof(*row));
+ #endif
+ 	}
+ }
+@@ -784,7 +833,7 @@ static void GBAVideoSoftwareRendererPutPixels(struct GBAVideoRenderer* renderer,
+ 	const mColor* colorPixels = pixels;
+ 	unsigned i;
+ 	for (i = 0; i < GBA_VIDEO_VERTICAL_PIXELS; ++i) {
+-		memmove(&softwareRenderer->outputBuffer[softwareRenderer->outputBufferStride * i], &colorPixels[stride * i], GBA_VIDEO_HORIZONTAL_PIXELS * BYTES_PER_PIXEL);
++		memmove(&softwareRenderer->outputBuffer[softwareRenderer->outputBufferStride * i], &colorPixels[stride * i], softwareRenderer->pkxFrameWidth * BYTES_PER_PIXEL);
+ 	}
+ }
+ 
+@@ -891,16 +940,56 @@ void GBAVideoSoftwareRendererStepWindow(struct GBAVideoSoftwareRenderer* softwar
+ 	}
+ }
+ 
++// Pokimon v6: on a wide frame only the layers the game turned on (GBA_REG_PKX_WIDE) draw in the
++// side areas; the rest of the screen stays exactly as wide as a GBA's.
++static void _pkxSplitWindowAt(struct GBAVideoSoftwareRenderer* renderer, int x) {
++	int start = 0;
++	int w;
++	for (w = 0; w < renderer->nWindows; ++w) {
++		int end = renderer->windows[w].endX;
++		if (x > start && x < end) {
++			if (renderer->nWindows >= MAX_WINDOW) {
++				return;
++			}
++			memmove(&renderer->windows[w + 1], &renderer->windows[w], (renderer->nWindows - w) * sizeof(renderer->windows[0]));
++			renderer->windows[w].endX = x;
++			++renderer->nWindows;
++			return;
++		}
++		start = end;
++	}
++}
++
++static void _pkxMaskSideAreas(struct GBAVideoSoftwareRenderer* renderer) {
++	int margin = renderer->pkxMargin;
++	if (!margin) {
++		return;
++	}
++	int right = renderer->pkxFrameWidth - margin;
++	_pkxSplitWindowAt(renderer, margin);
++	_pkxSplitWindowAt(renderer, right);
++	unsigned keep = 0x20 | (renderer->pkxWideLayers & 0x1F); // blending, and the wide layers
++	int start = 0;
++	int w;
++	for (w = 0; w < renderer->nWindows; ++w) {
++		int end = renderer->windows[w].endX;
++		if (end <= margin || start >= right) {
++			renderer->windows[w].control.packed &= keep;
++		}
++		start = end;
++	}
++}
++
+ void GBAVideoSoftwareRendererPreprocessBuffer(struct GBAVideoSoftwareRenderer* softwareRenderer) {
+ 	int x;
+-	for (x = 0; x < GBA_VIDEO_HORIZONTAL_PIXELS; x += 4) {
++	for (x = 0; x < softwareRenderer->pkxFrameWidth; x += 4) {
+ 		softwareRenderer->spriteLayer[x] = FLAG_UNWRITTEN;
+ 		softwareRenderer->spriteLayer[x + 1] = FLAG_UNWRITTEN;
+ 		softwareRenderer->spriteLayer[x + 2] = FLAG_UNWRITTEN;
+ 		softwareRenderer->spriteLayer[x + 3] = FLAG_UNWRITTEN;
+ 	}
+ 
+-	softwareRenderer->windows[0].endX = GBA_VIDEO_HORIZONTAL_PIXELS;
++	softwareRenderer->windows[0].endX = softwareRenderer->pkxFrameWidth;
+ 	softwareRenderer->nWindows = 1;
+ 	if (GBARegisterDISPCNTIsWin0Enable(softwareRenderer->dispcnt) || GBARegisterDISPCNTIsWin1Enable(softwareRenderer->dispcnt) || GBARegisterDISPCNTIsObjwinEnable(softwareRenderer->dispcnt)) {
+ 		softwareRenderer->windows[0].control = softwareRenderer->winout;
+@@ -913,6 +1002,7 @@ void GBAVideoSoftwareRendererPreprocessBuffer(struct GBAVideoSoftwareRenderer* s
+ 	} else {
+ 		softwareRenderer->windows[0].control.packed = 0xFF;
+ 	}
++	_pkxMaskSideAreas(softwareRenderer);
+ 
+ 	GBAVideoSoftwareRendererUpdateDISPCNT(softwareRenderer);
+ 
+@@ -1016,12 +1106,54 @@ void GBAVideoSoftwareRendererPostprocessBuffer(struct GBAVideoSoftwareRenderer*
  	}
  }
  
@@ -1270,8 +1753,9 @@ index c5bc37b..9943832 100644
 -			renderer->oamMax = GBAVideoRendererCleanOAM(renderer->d.oam->obj, renderer->sprites, renderer->objOffsetY);
 +			if (pkxObj) {
 +				// Entries 0..127 stay in the normal OAM; 128..511 come from the extended OAM
-+				int count = GBAVideoRendererCleanOAMEx(renderer->d.oam->obj, pkx->attr, 0, 128, renderer->sprites, renderer->objOffsetY);
-+				count += GBAVideoRendererCleanOAMEx(pkx->oam, pkx->attr, 128, GBA_PKX_OAM_ENTRIES, &renderer->sprites[count], renderer->objOffsetY);
++				int visible = GBA_VIDEO_HORIZONTAL_PIXELS + ((renderer->pkxWideLayers & GBA_PKX_WIDE_OBJ) ? renderer->pkxMargin : 0);
++				int count = GBAVideoRendererCleanOAMEx(renderer->d.oam->obj, pkx->attr, 0, 128, renderer->sprites, renderer->objOffsetY, visible);
++				count += GBAVideoRendererCleanOAMEx(pkx->oam, pkx->attr, 128, GBA_PKX_OAM_ENTRIES, &renderer->sprites[count], renderer->objOffsetY, visible);
 +				renderer->oamMax = count;
 +				pkx->oamDirty = false;
 +			} else {
@@ -1281,7 +1765,7 @@ index c5bc37b..9943832 100644
  			renderer->oamDirty = false;
  		}
  		int mosaicV = GBAMosaicControlGetObjV(renderer->mosaic) + 1;
-@@ -1034,7 +1075,7 @@ int GBAVideoSoftwareRendererPreprocessSpriteLayer(struct GBAVideoSoftwareRendere
+@@ -1034,7 +1166,7 @@ int GBAVideoSoftwareRendererPreprocessSpriteLayer(struct GBAVideoSoftwareRendere
  			renderer->end = 0;
  			renderer->spriteCyclesRemaining -= 2 * (sprite->index - lastIndex);
  			lastIndex = sprite->index;
@@ -1290,7 +1774,7 @@ index c5bc37b..9943832 100644
  				break;
  			}
  			if (y < sprite->y || y >= sprite->endY) {
-@@ -1058,6 +1099,7 @@ int GBAVideoSoftwareRendererPreprocessSpriteLayer(struct GBAVideoSoftwareRendere
+@@ -1058,6 +1190,7 @@ int GBAVideoSoftwareRendererPreprocessSpriteLayer(struct GBAVideoSoftwareRendere
  					continue;
  				}
  
@@ -1298,7 +1782,7 @@ index c5bc37b..9943832 100644
  				int drawn = GBAVideoSoftwareRendererPreprocessSprite(renderer, &sprite->obj, sprite->index, localY);
  				spriteLayers |= drawn << GBAObjAttributesCGetPriority(sprite->obj.c);
  			}
-@@ -1070,22 +1112,22 @@ int GBAVideoSoftwareRendererPreprocessSpriteLayer(struct GBAVideoSoftwareRendere
+@@ -1070,22 +1203,22 @@ int GBAVideoSoftwareRendererPreprocessSpriteLayer(struct GBAVideoSoftwareRendere
  static void _updatePalettes(struct GBAVideoSoftwareRenderer* renderer) {
  	int i;
  	if (renderer->blendEffect == BLEND_BRIGHTEN) {
@@ -1511,20 +1995,22 @@ index 28f072e..61a5e18 100644
  	video->renderer->reset(video->renderer);
  	renderer->writeVideoRegister(renderer, GBA_REG_DISPCNT, video->p->memory.io[GBA_REG(DISPCNT)]);
 diff --git a/src/platform/qt/ConfigController.cpp b/src/platform/qt/ConfigController.cpp
-index 67d3f27..dd1d958 100644
+index 67d3f27..cd59766 100644
 --- a/src/platform/qt/ConfigController.cpp
 +++ b/src/platform/qt/ConfigController.cpp
-@@ -156,6 +156,8 @@ ConfigController::ConfigController(QObject* parent)
+@@ -156,6 +156,10 @@ ConfigController::ConfigController(QObject* parent)
  	mCoreConfigSetDefaultIntValue(&m_config, "gb.colors", GB_COLORS_CGB);
  #endif
  	mCoreConfigSetDefaultIntValue(&m_config, "preload", true);
 +	// Pokimon: fast forward at 3x with sped-up sound by default (unbounded drops the sound)
 +	mCoreConfigSetDefaultValue(&m_config, "fastForwardRatio", "3");
++	// Pokimon: widescreen on by default (Audio/Video > Widescreen)
++	mCoreConfigSetDefaultIntValue(&m_config, "pkxWidescreen", 1);
  	mCoreConfigMap(&m_config, &m_opts);
  
  	mSubParserGraphicsInit(&m_subparsers[0], &m_graphicsOpts);
 diff --git a/src/platform/qt/Window.cpp b/src/platform/qt/Window.cpp
-index d6ff102..bb60841 100644
+index d6ff102..0f90891 100644
 --- a/src/platform/qt/Window.cpp
 +++ b/src/platform/qt/Window.cpp
 @@ -1504,7 +1504,7 @@ void Window::setupMenu(QMenuBar* menubar) {
@@ -1536,6 +2022,42 @@ index d6ff102..bb60841 100644
  	m_actions.addSeparator("fastForwardSpeed");
  	for (int i = 2; i < 11; ++i) {
  		ffspeed->addValue(tr("%0x").arg(i), i, &m_actions, "fastForwardSpeed");
+@@ -1653,6 +1653,11 @@ void Window::setupMenu(QMenuBar* menubar) {
+ 	}, this);
+ 	m_config->updateOption("lockAspectRatio");
+ 
++	// Pokimon: widescreen (extended hardware v6). The frame size is picked when a game starts.
++	ConfigOption* widescreen = m_config->addOption("pkxWidescreen");
++	widescreen->addBoolean(tr("Widescreen (from the next game start)"), &m_actions, "av");
++	m_config->updateOption("pkxWidescreen");
++
+ 	ConfigOption* lockIntegerScaling = m_config->addOption("lockIntegerScaling");
+ 	lockIntegerScaling->addBoolean(tr("Force integer scaling"), &m_actions, "av");
+ 	lockIntegerScaling->connect([this](const QVariant& value) {
+diff --git a/src/platform/sdl/main.c b/src/platform/sdl/main.c
+index 91f22bd..e04ad5e 100644
+--- a/src/platform/sdl/main.c
++++ b/src/platform/sdl/main.c
+@@ -115,8 +115,19 @@ int main(int argc, char** argv) {
+ 	mArgumentsApply(&args, &subparser, 1, &renderer.core->config);
+ 
+ 	mCoreConfigSetDefaultIntValue(&renderer.core->config, "logToStdout", true);
++	// Pokimon: widescreen on unless turned off (-C pkxWidescreen=0)
++	mCoreConfigSetDefaultIntValue(&renderer.core->config, "pkxWidescreen", 1);
+ 	mCoreConfigLoadDefaults(&renderer.core->config, &opts);
+ 	mCoreLoadConfig(renderer.core);
++	{
++		// Widescreen frames are wider: size the window and the video buffer for them
++		unsigned width, height;
++		renderer.core->baseVideoSize(renderer.core, &width, &height);
++		if (width != renderer.width) {
++			renderer.core->opts.width = renderer.core->opts.width * width / renderer.width;
++			renderer.width = width;
++		}
++	}
+ 	mStandardLoggerInit(&_logger);
+ 	mStandardLoggerConfig(&_logger, &renderer.core->config);
+ 	mLogSetDefaultLogger(&_logger.d);
 diff --git a/src/platform/sdl/sdl-events.c b/src/platform/sdl/sdl-events.c
 index 92941d9..c3dc37c 100644
 --- a/src/platform/sdl/sdl-events.c

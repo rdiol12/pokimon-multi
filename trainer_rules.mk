@@ -3,6 +3,7 @@
 
 AUTO_GEN_TARGETS += src/data/trainers.h
 AUTO_GEN_TARGETS += src/data/area_trainers.h
+AUTO_GEN_TARGETS += src/data/solmara_trainers.h
 AUTO_GEN_TARGETS += src/data/trainers_frlg.h
 AUTO_GEN_TARGETS += src/data/battle_partners.h
 AUTO_GEN_TARGETS += test/battle/trainer_control.h

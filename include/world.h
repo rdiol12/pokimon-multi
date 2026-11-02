@@ -102,6 +102,7 @@ void ShinyChain_OnWildBattleEnd(void);
 
 // A two-line notice at the top of the screen (world_achievements.c).
 void World_ShowToast(const u8 *title, const u8 *text);
+bool32 World_IsToastBusy(void);
 
 // Timing meter minigame (world_meter.c).
 void TimingMeter_Start(u8 rounds, u8 zoneTiles, u8 speed);

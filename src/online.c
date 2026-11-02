@@ -1,4 +1,5 @@
 #include "global.h"
+#include "research.h"
 #include "coins.h"
 #include "event_data.h"
 #include "event_object_movement.h"
@@ -790,6 +791,20 @@ void Online_PollStatusSoon(void)
         sOnline.statusTimer = STATUS_INTERVAL - 10;
 }
 
+// A new map: ask for its status (the ecosystem's, src/online_eco.c) once the
+// server has heard where the player is.
+static void CheckMapChange(void)
+{
+    static EWRAM_DATA u16 sLastMap = 0;
+    u16 map = (gSaveBlock1Ptr->location.mapGroup << 8) | gSaveBlock1Ptr->location.mapNum;
+
+    if (map == sLastMap)
+        return;
+    sLastMap = map;
+    if (sOnline.statusTimer < STATUS_INTERVAL - 90)
+        sOnline.statusTimer = STATUS_INTERVAL - 90;
+}
+
 // Called every overworld frame. Returns TRUE if it started a script.
 bool32 Online_OverworldUpdate(void)
 {
@@ -803,6 +818,7 @@ bool32 Online_OverworldUpdate(void)
         sOnline.statusTimer = STATUS_INTERVAL - 60;
         return FALSE;
     }
+    CheckMapChange();
     if (sOnline.background)
         PollBackground();
     // Only while no script runs: a script may be reading the last answer.
@@ -841,6 +857,7 @@ void Online_OnWildBattleStart(void)
     u16 species;
     s32 args[4];
 
+    Research_OnWildBattleStart();
     if (gIsFishingEncounter)
         Online_TournamentBite();
     species = GetMonData(&gParties[B_TRAINER_OPPONENT_A][0], MON_DATA_SPECIES);

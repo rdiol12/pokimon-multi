@@ -27,6 +27,7 @@ struct ObjectEvent;
 // Object event local ids used for other players on the overworld (above the
 // map's own objects, which stay below OBJECT_EVENT_TEMPLATES_COUNT).
 #define LOCALID_NETPLAY_PLAYER_START 70
+#define NETPLAY_SOLO_NAME_LENGTH 12
 #define LOCALID_NETPLAY_PLAYER_END   (LOCALID_NETPLAY_PLAYER_START + NETPLAY_MAX_REMOTES - 1)
 
 enum NetplayBridgeState
@@ -312,7 +313,11 @@ struct NetplayMailbox
     /*0x5E0*/ struct NetplayBattleReport battleReport; // written by the host of a PvP battle
     /*0x63C*/ struct NetplayWatch watch;
     /*0x700*/ struct NetplayRemotePlayer moreRemotes[NETPLAY_MAX_REMOTES - NETPLAY_MAILBOX_REMOTES];
-}; // size 0x840
+    // A battle against a gym leader, the Elite Four or the Champion others may
+    // watch (docs/hoenn_multi.md): battleReport.filler[0] is 1 while one is
+    // on, and this is the opponent's name (game charset, EOS-terminated).
+    /*0x840*/ u8 soloOpponent[NETPLAY_SOLO_NAME_LENGTH];
+}; // size 0x84C
 
 extern struct NetplayMailbox gNetplayMailbox;
 
@@ -327,6 +332,7 @@ void Netplay_Init(void);
 void Netplay_Update(void);
 bool32 Netplay_OverworldUpdate(void);
 bool32 Netplay_IsNetplayObjectEvent(const struct ObjectEvent *objectEvent);
+void Netplay_WatchFromScript(void);
 u32 Netplay_GetPeerTrainerLook(void);
 const u8 *Netplay_GetTalkScript(u8 objectEventId);
 bool32 Netplay_InSession(void);

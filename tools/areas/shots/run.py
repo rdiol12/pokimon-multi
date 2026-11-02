@@ -33,13 +33,15 @@ def main():
     scenario = sys.argv[1]
     names = sorted(set(re.findall(r'\b(FLAG_\w+)', open(scenario).read())))
     c = constants(names)
-    world.SYMBOLS += ['gSaveBlock3Ptr', 'gObjectEvents', 'gPlayerAvatar', 'gLifeShowcase']
+    world.SYMBOLS += ['gSaveBlock3Ptr', 'gObjectEvents', 'gPlayerAvatar', 'gLifeShowcase', 'gSaveBlockExt']
     world.HELPERS += '\nFLAG = {\n' + ''.join(f'    {n} = {c[n]},\n' for n in names) + '}\n' + f'''
--- Sets or clears a flag (area flags live in SaveBlock3).
+-- Sets or clears a flag (area flags live in SaveBlock3, Solmara's in SaveBlockExt).
 function Driver.flag(name, on)
     local id = FLAG[name] or name
     local addr
-    if id >= 0x6000 then
+    if id >= 0x7000 then
+        addr = Driver.SYM.gSaveBlockExt + {c['SaveExtSolmaraFlags']} + (id - 0x7000) // 8
+    elseif id >= 0x6000 then
         addr = E.read32(Driver.SYM.gSaveBlock3Ptr) + {c['SaveBlock3Areas']} + (id - 0x6000) // 8
     else
         addr = E.read32(Driver.SYM.gSaveBlock1Ptr) + {c['SaveBlock1Flags']} + id // 8

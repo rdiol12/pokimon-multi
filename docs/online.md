@@ -338,6 +338,14 @@ Server: `server/online_hide.py` (games in memory, table
 talents), `data/scripts/online/hide.inc`; the racing and hide-and-seek
 timer window is `src/online_hud.c`.
 
+## Wildlife report and research leaders
+
+HUB → **WILDLIFE REPORT** is the living ecosystem's window: how many of each
+species are left in this area, what migrated or fled here, and every
+migration going on (see [ecosystem.md](ecosystem.md)). HUB → **RESEARCH
+LEADERS** ranks players by how many species' research they completed (see
+[research.md](research.md)).
+
 ## How it talks to the server
 
 These features use the Online Plaza's request channel (`NpxRpc_*` in

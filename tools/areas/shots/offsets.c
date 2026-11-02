@@ -1,6 +1,7 @@
 // Compiled by tools/areas/shots/run.py to learn struct offsets for the Lua driver.
 #include "global.h"
 #include "life.h"
+#include "save_ext.h"
 const int kSaveBlock1Flags = offsetof(struct SaveBlock1, flags);
 const int kSaveBlock3Areas = offsetof(struct SaveBlock3, areas);
 const int kSaveBlock3Size = sizeof(struct SaveBlock3);
@@ -8,3 +9,4 @@ const int kObjectEventSize = sizeof(struct ObjectEvent);
 const int kObjectEventCoords = offsetof(struct ObjectEvent, currentCoords);
 const int kPlayerAvatarObjectId = offsetof(struct PlayerAvatar, objectEventId);
 const int kLifeShowcaseSeason = offsetof(struct LifeShowcase, season);
+const int kSaveExtSolmaraFlags = offsetof(struct SaveBlockExt, solmara.flags);

@@ -7,6 +7,7 @@
 #include "malloc.h"
 #include "menu.h"
 #include "decompress.h"
+#include "widescreen.h"
 
 #define DISPCNT_ALL_BG_AND_MODE_BITS    (DISPCNT_BG_ALL_ON | 0x7)
 
@@ -57,6 +58,7 @@ void ResetBgs(void)
     sGpuBgConfigs.bgVisibilityAndMode = 0;
     SetTextModeAndHideBgs();
     ResetExtBgPalettes();
+    Widescreen_Reset();
 }
 
 static void SetBgModeInternal(u32 bgMode)
@@ -881,6 +883,8 @@ void CopyBgTilemapBufferToVram(u32 bg)
             break;
         }
         LoadBgVram(bg, sGpuBgConfigs2[bg].tilemap, sizeToLoad, 0, 2);
+        if (Widescreen_IsBgWideMap(bg))
+            Widescreen_CopyRightHalf(bg, sGpuBgConfigs2[bg].tilemap);
     }
 }
 

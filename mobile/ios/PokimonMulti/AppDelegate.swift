@@ -12,10 +12,17 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.mixWithOthers])
         try? AVAudioSession.sharedInstance().setActive(true)
 
+        // Notifications for online play: checks the server in the background (Notifier)
+        Notifier.shared.registerRefresh()
+
         let window = UIWindow(frame: UIScreen.main.bounds)
         window.rootViewController = GameViewController()
         window.makeKeyAndVisible()
         self.window = window
         return true
+    }
+
+    func applicationDidEnterBackground(_ application: UIApplication) {
+        Notifier.shared.scheduleRefresh()
     }
 }

@@ -1420,6 +1420,14 @@ static void RegionMap_InitializeStateBasedOnSSTidalLocation(void)
     sRegionMap->cursorPosY = gRegionMapEntries[sRegionMap->mapSecId].y + y + MAPCURSOR_Y_MIN;
 }
 
+static u8 GetMapsecType(mapsec_u16_t mapSecId);
+
+// Whether this is a town or city the player can fly to (they've been there).
+bool32 RegionMap_CanFlyToMapsec(u32 mapSecId)
+{
+    return GetMapsecType(mapSecId) == MAPSECTYPE_CITY_CANFLY;
+}
+
 static u8 GetMapsecType(mapsec_u16_t mapSecId)
 {
     switch (mapSecId)

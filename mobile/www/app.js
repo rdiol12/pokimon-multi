@@ -186,6 +186,62 @@ async function importSave(file) {
     location.reload();
 }
 
+// ---------------------------------------------------------------- settings
+
+// Settings live with the save in the app's storage; read once at start.
+const prefs = {
+    widescreen: true,
+    // Phone notifications for online play (docs/notifications.md)
+    notify: { on: true, trade: true, friend: true, tour: true, fishing: false },
+};
+
+async function loadPrefs() {
+    const saved = await storage.get('prefs').catch(() => null);
+    const notify = { ...prefs.notify, ...(saved?.notify || {}) };
+    Object.assign(prefs, saved || {}, { notify });
+}
+
+// The apps' native code shows the notifications, also while the page isn't
+// running, so it keeps its own copy of these settings.
+function pushNotifySettings() {
+    const settings = { ...prefs.notify };
+    if (globalThis.PokimonNative?.setNotifySettings) {
+        globalThis.PokimonNative.setNotifySettings(JSON.stringify(settings));
+    } else {
+        globalThis.webkit?.messageHandlers?.pokimonNotify?.postMessage(settings);
+    }
+}
+
+function setupNotifyDialog() {
+    const dialog = $('#notify');
+    const boxes = [...dialog.querySelectorAll('input[data-kind]')];
+    const show = () => {
+        for (const box of boxes) box.checked = !!prefs.notify[box.dataset.kind];
+        dialog.dataset.off = String(!prefs.notify.on);
+    };
+    for (const box of boxes) {
+        box.addEventListener('change', async () => {
+            await setPref('notify', { ...prefs.notify, [box.dataset.kind]: box.checked });
+            pushNotifySettings();
+            show();
+        });
+    }
+    dialog.addEventListener('click', (e) => {
+        if (e.target.closest('[data-action="close"]')) dialog.close();
+    });
+    return () => { show(); dialog.showModal(); };
+}
+
+async function setPref(key, value) {
+    prefs[key] = value;
+    await storage.set('prefs', { ...prefs });
+}
+
+// Widescreen: the overworld fills a 320x160 screen. On unless turned off.
+function widescreenOn() {
+    return prefs.widescreen !== false;
+}
+
 // ---------------------------------------------------------------- game
 
 async function startGame(game) {
@@ -194,7 +250,10 @@ async function startGame(game) {
     const mod = await loadCore('vendor/');
     emu = new Emulator(mod);
     globalThis.pokimon = { emu }; // for debugging from the console
-    emu.boot(game);
+    await loadPrefs();
+    const wide = widescreenOn();
+    emu.boot(game, { wide });
+    $('#screen').classList.toggle('wide', wide);
     const sram = await storage.get('sram');
     if (sram) {
         emu.putSave(sram);
@@ -261,12 +320,23 @@ async function startGame(game) {
         ff.setAttribute('aria-pressed', String(emu.speed > 1));
     });
     const menu = $('#menu');
+    $('#widescreen-state').textContent = widescreenOn() ? 'on' : 'off';
+    pushNotifySettings();
+    const openNotify = setupNotifyDialog();
     $('#about').textContent = `Version ${build.version}. mGBA (MPL-2.0) and Lua (wasmoon, MIT) inside.`;
     $('#menu-open').addEventListener('click', () => { release(); persistSave(true); menu.showModal(); });
     menu.addEventListener('click', async (e) => {
         const action = e.target.closest('[data-action]')?.dataset.action;
         if (action === 'close') menu.close();
         if (action === 'export') exportSave();
+        if (action === 'notify') { menu.close(); openNotify(); }
+        if (action === 'widescreen') {
+            const on = !widescreenOn();
+            if (await ask(`Turn widescreen ${on ? 'on' : 'off'}? The game restarts, so save in the game first.`)) {
+                await setPref('widescreen', on);
+                location.reload();
+            }
+        }
         if (action === 'reset' && await ask('Restart the game? Unsaved progress is lost.')) {
             emu.reset();
             menu.close();

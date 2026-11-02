@@ -169,10 +169,14 @@ def install(server, ext_obj):
     import online_coopfish
     import online_doubles
     import online_duo
+    import online_eco
+    import online_research
+    import rovers
     import online_fishing
     import online_goals
     import online_guilds
     import online_hide
+    import online_hoenn
     import online_mentors
     import online_pageant
     import online_pquests
@@ -189,8 +193,14 @@ def install(server, ext_obj):
     online_teams.install(server)
     online_guilds.install(server)
     online_hide.install(server)
-    return Online(server, ext_obj, [online_goals, online_sightings, online_web, online_fishing, online_coopfish,
+    rovers.ECO = online_eco
+    import alive
+
+    online = Online(server, ext_obj, [online_goals, online_sightings, online_web, online_fishing, online_coopfish,
                                        online_shops, online_pageant, online_duo,
                                        online_mentors, online_pquests,
                                        online_betting, online_doubles, online_teams, online_guilds, online_racing,
-                                       online_hide, guide_social])
+                                       online_hide, guide_social, online_eco, online_research,
+                                       online_hoenn])
+    alive.install(online)  # announcements go in the news too
+    return online

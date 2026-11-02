@@ -168,11 +168,15 @@ SootopolisCity_Gym_1F_EventScript_RightGymStatue::
 
 SootopolisCity_Gym_1F_EventScript_GymStatueCertified::
 	msgbox SootopolisCity_Gym_1F_Text_GymStatueCertified, MSGBOX_DEFAULT
+	setvar VAR_0x8005, 7
+	call HoennMulti_EventScript_GymStatue
 	releaseall
 	end
 
 SootopolisCity_Gym_1F_EventScript_GymStatue::
 	msgbox SootopolisCity_Gym_1F_Text_GymStatue, MSGBOX_DEFAULT
+	setvar VAR_0x8005, 7
+	call HoennMulti_EventScript_GymStatue
 	releaseall
 	end
 

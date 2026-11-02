@@ -46,6 +46,7 @@ final class NetBridge {
         tcp.connectionTimeout = 8
         let conn = NWConnection(host: NWEndpoint.Host(host), port: nwPort, using: NWParameters(tls: nil, tcp: tcp))
         connections[id] = conn
+        queue.async { self.endpoints[id] = (host, port); self.lineBuffers[id] = "" }
         conn.stateUpdateHandler = { [weak self] state in
             guard let self = self else { return }
             switch state {
@@ -69,6 +70,7 @@ final class NetBridge {
             guard let self = self else { return }
             if let data = data, !data.isEmpty {
                 self.call("PokimonNet.data(\(id),'\(data.base64EncodedString())')")
+                self.scanLines(id: id, conn: conn, data: data)
             }
             if done || error != nil {
                 conn.cancel()
@@ -76,6 +78,27 @@ final class NetBridge {
             }
             self.receive(id: id, conn: conn)
         }
+    }
+
+    /// Notifications ride on the game connection (Notifier). Only this queue touches lineBuffers.
+    private var lineBuffers: [Int: String] = [:]
+    private var endpoints: [Int: (String, UInt16)] = [:]
+
+    private func scanLines(id: Int, conn: NWConnection, data: Data) {
+        guard let text = String(data: data, encoding: .isoLatin1) else { return }
+        var buffer = (lineBuffers[id] ?? "") + text
+        while let newline = buffer.firstIndex(of: "\n") {
+            let line = String(buffer[..<newline])
+            buffer.removeSubrange(...newline)
+            if line.hasPrefix("WELCOME ") {
+                if let hello = Notifier.shared.helloLine() {
+                    conn.send(content: hello.data(using: .isoLatin1), completion: .contentProcessed { _ in })
+                }
+            } else if line.hasPrefix("NOTE"), let endpoint = endpoints[id] {
+                DispatchQueue.main.async { Notifier.shared.serverLine(line, host: endpoint.0, port: endpoint.1) }
+            }
+        }
+        lineBuffers[id] = buffer.count > 4096 ? "" : buffer
     }
 
     private func finish(id: Int, reason: String) {

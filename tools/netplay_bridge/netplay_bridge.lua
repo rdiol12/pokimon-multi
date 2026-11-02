@@ -55,6 +55,8 @@ local MAX_LIVE = 5
 local LIVE_SIZE = 20
 local SIDE_SIZE = 12
 local OFF_TEXT = 0x1C -- in a battle report
+local OFF_SOLO_OPPONENT = 0x840
+local SOLO_NAME_LENGTH = 12
 local BATTLE_TEXT_LENGTH = 64
 local MARKET_PAGE_SIZE = 5
 local MARKET_LISTING_SIZE = 16
@@ -677,14 +679,34 @@ function Bridge:sendBattleReport()
     local seq = self:r8(OFF_REPORT)
     if seq == self.reportSeq then return end
     self.reportSeq = seq
-    if not self.session then return end
+    -- A solo battle (a gym leader, the Elite Four or the Champion) others
+    -- may watch: reported with session 0 (docs/hoenn_multi.md).
+    local sid = self.session
+    if not sid then
+        if self:r8(OFF_REPORT + 1) == 1 then
+            if not self.solo then
+                local bytes = {}
+                for i = 0, SOLO_NAME_LENGTH - 1 do bytes[#bytes + 1] = self:r8(OFF_SOLO_OPPONENT + i) end
+                self.solo = textToAscii(bytes)
+                self.reportText = nil
+                self.net.send("SOLO " .. (self.solo ~= "" and self.solo or "TRAINER"))
+            end
+            sid = 0
+        else
+            if self.solo then
+                self.solo = nil
+                self.net.send("SOLO END")
+            end
+            return
+        end
+    end
     local fields = {}
     for side = 0, 1 do
         local off = OFF_REPORT + 4 + side * SIDE_SIZE
         fields[#fields + 1] = string.format("%d %d %d %d %d %d", self:r16(off), self:r8(off + 2),
             self:r16(off + 4), self:r16(off + 6), self:r8(off + 3), self:r8(off + 8))
     end
-    self.net.send("BSTATE " .. self.session .. " " .. table.concat(fields, " "))
+    self.net.send("BSTATE " .. sid .. " " .. table.concat(fields, " "))
     local bytes = {}
     for i = 0, BATTLE_TEXT_LENGTH - 1 do bytes[#bytes + 1] = self:r8(OFF_REPORT + OFF_TEXT + i) end
     local text = textToAscii(bytes)
@@ -695,7 +717,7 @@ function Bridge:sendBattleReport()
     end
     if text ~= self.reportText and text ~= "" then
         self.reportText = text
-        self.net.send("BTEXT " .. self.session .. " " .. text)
+        self.net.send("BTEXT " .. sid .. " " .. text)
     end
 end
 

@@ -81,11 +81,15 @@ RustboroCity_Gym_EventScript_RightGymStatue::
 
 RustboroCity_Gym_EventScript_GymStatueCertified::
 	msgbox RustboroCity_Gym_Text_GymStatueCertified, MSGBOX_DEFAULT
+	setvar VAR_0x8005, 0
+	call HoennMulti_EventScript_GymStatue
 	releaseall
 	end
 
 RustboroCity_Gym_EventScript_GymStatue::
 	msgbox RustboroCity_Gym_Text_GymStatue, MSGBOX_DEFAULT
+	setvar VAR_0x8005, 0
+	call HoennMulti_EventScript_GymStatue
 	releaseall
 	end
 

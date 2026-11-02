@@ -21,6 +21,7 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
         let proxy = WeakMessageProxy(self)
         config.userContentController.add(proxy, name: "pokimonNet")
         config.userContentController.add(proxy, name: "pokimonFiles")
+        config.userContentController.add(proxy, name: "pokimonNotify")
 
         web = WKWebView(frame: .zero, configuration: config)
         web.navigationDelegate = self
@@ -52,6 +53,8 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
         switch message.name {
         case "pokimonNet":
             net.handle(body)
+        case "pokimonNotify":
+            Notifier.shared.setSettings(body)
         case "pokimonFiles":
             if let name = body["name"] as? String, let data = (body["data"] as? String).flatMap({ Data(base64Encoded: $0) }) {
                 share(name: name, data: data)

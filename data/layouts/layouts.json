@@ -664,7 +664,7 @@
     {
       "id": "LAYOUT_POKEMON_CENTER_1F",
       "name": "PokemonCenter_1F_Layout",
-      "width": 14,
+      "width": 18,
       "height": 9,
       "primary_tileset": "gTileset_Building",
       "secondary_tileset": "gTileset_PokemonCenter",
@@ -9855,6 +9855,266 @@
       "secondary_tileset": "gTileset_BattleFrontierOutsideWest",
       "border_filepath": "data/layouts/LaurelCity/border.bin",
       "blockdata_filepath": "data/layouts/LaurelCity/map.bin"
+    },
+    {
+      "id": "LAYOUT_PORT_SOLACE",
+      "name": "PortSolace_Layout",
+      "width": 44,
+      "height": 38,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Dewford",
+      "border_filepath": "data/layouts/PortSolace/border.bin",
+      "blockdata_filepath": "data/layouts/PortSolace/map.bin"
+    },
+    {
+      "id": "LAYOUT_GEARHOLT",
+      "name": "Gearholt_Layout",
+      "width": 40,
+      "height": 34,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Mauville",
+      "border_filepath": "data/layouts/Gearholt/border.bin",
+      "blockdata_filepath": "data/layouts/Gearholt/map.bin"
+    },
+    {
+      "id": "LAYOUT_ASHCOMBE",
+      "name": "Ashcombe_Layout",
+      "width": 40,
+      "height": 34,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Lavaridge",
+      "border_filepath": "data/layouts/Ashcombe/border.bin",
+      "blockdata_filepath": "data/layouts/Ashcombe/map.bin"
+    },
+    {
+      "id": "LAYOUT_SILKWOOD",
+      "name": "Silkwood_Layout",
+      "width": 40,
+      "height": 34,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Fortree",
+      "border_filepath": "data/layouts/Silkwood/border.bin",
+      "blockdata_filepath": "data/layouts/Silkwood/map.bin"
+    },
+    {
+      "id": "LAYOUT_ROSEMEAD",
+      "name": "Rosemead_Layout",
+      "width": 40,
+      "height": 34,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Petalburg",
+      "border_filepath": "data/layouts/Rosemead/border.bin",
+      "blockdata_filepath": "data/layouts/Rosemead/map.bin"
+    },
+    {
+      "id": "LAYOUT_DUSKMERE",
+      "name": "Duskmere_Layout",
+      "width": 40,
+      "height": 34,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Lilycove",
+      "border_filepath": "data/layouts/Duskmere/border.bin",
+      "blockdata_filepath": "data/layouts/Duskmere/map.bin"
+    },
+    {
+      "id": "LAYOUT_FROSTHOLM",
+      "name": "Frostholm_Layout",
+      "width": 40,
+      "height": 34,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Frost",
+      "border_filepath": "data/layouts/Frostholm/border.bin",
+      "blockdata_filepath": "data/layouts/Frostholm/map.bin"
+    },
+    {
+      "id": "LAYOUT_DRAKESPIRE",
+      "name": "Drakespire_Layout",
+      "width": 40,
+      "height": 34,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Rustboro",
+      "border_filepath": "data/layouts/Drakespire/border.bin",
+      "blockdata_filepath": "data/layouts/Drakespire/map.bin"
+    },
+    {
+      "id": "LAYOUT_ROUTE201",
+      "name": "Route201_Layout",
+      "width": 64,
+      "height": 26,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Petalburg",
+      "border_filepath": "data/layouts/Route201/border.bin",
+      "blockdata_filepath": "data/layouts/Route201/map.bin"
+    },
+    {
+      "id": "LAYOUT_ROUTE202",
+      "name": "Route202_Layout",
+      "width": 26,
+      "height": 64,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Mauville",
+      "border_filepath": "data/layouts/Route202/border.bin",
+      "blockdata_filepath": "data/layouts/Route202/map.bin"
+    },
+    {
+      "id": "LAYOUT_ROUTE203",
+      "name": "Route203_Layout",
+      "width": 26,
+      "height": 64,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Lavaridge",
+      "border_filepath": "data/layouts/Route203/border.bin",
+      "blockdata_filepath": "data/layouts/Route203/map.bin"
+    },
+    {
+      "id": "LAYOUT_ROUTE204",
+      "name": "Route204_Layout",
+      "width": 64,
+      "height": 26,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Fortree",
+      "border_filepath": "data/layouts/Route204/border.bin",
+      "blockdata_filepath": "data/layouts/Route204/map.bin"
+    },
+    {
+      "id": "LAYOUT_ROUTE205",
+      "name": "Route205_Layout",
+      "width": 64,
+      "height": 26,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Fallarbor",
+      "border_filepath": "data/layouts/Route205/border.bin",
+      "blockdata_filepath": "data/layouts/Route205/map.bin"
+    },
+    {
+      "id": "LAYOUT_ROUTE206",
+      "name": "Route206_Layout",
+      "width": 26,
+      "height": 64,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Frost",
+      "border_filepath": "data/layouts/Route206/border.bin",
+      "blockdata_filepath": "data/layouts/Route206/map.bin"
+    },
+    {
+      "id": "LAYOUT_ROUTE207",
+      "name": "Route207_Layout",
+      "width": 26,
+      "height": 64,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Rustboro",
+      "border_filepath": "data/layouts/Route207/border.bin",
+      "blockdata_filepath": "data/layouts/Route207/map.bin"
+    },
+    {
+      "id": "LAYOUT_ROUTE208",
+      "name": "Route208_Layout",
+      "width": 64,
+      "height": 26,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Petalburg",
+      "border_filepath": "data/layouts/Route208/border.bin",
+      "blockdata_filepath": "data/layouts/Route208/map.bin"
+    },
+    {
+      "id": "LAYOUT_PORT_SOLACE_GYM",
+      "name": "PortSolace_Gym_Layout",
+      "width": 22,
+      "height": 20,
+      "primary_tileset": "gTileset_Building",
+      "secondary_tileset": "gTileset_SootopolisGym",
+      "border_filepath": "data/layouts/PortSolace_Gym/border.bin",
+      "blockdata_filepath": "data/layouts/PortSolace_Gym/map.bin"
+    },
+    {
+      "id": "LAYOUT_GEARHOLT_GYM",
+      "name": "Gearholt_Gym_Layout",
+      "width": 22,
+      "height": 20,
+      "primary_tileset": "gTileset_Building",
+      "secondary_tileset": "gTileset_MauvilleGym",
+      "border_filepath": "data/layouts/Gearholt_Gym/border.bin",
+      "blockdata_filepath": "data/layouts/Gearholt_Gym/map.bin"
+    },
+    {
+      "id": "LAYOUT_ASHCOMBE_GYM",
+      "name": "Ashcombe_Gym_Layout",
+      "width": 22,
+      "height": 20,
+      "primary_tileset": "gTileset_Building",
+      "secondary_tileset": "gTileset_LavaridgeGym",
+      "border_filepath": "data/layouts/Ashcombe_Gym/border.bin",
+      "blockdata_filepath": "data/layouts/Ashcombe_Gym/map.bin"
+    },
+    {
+      "id": "LAYOUT_SILKWOOD_GYM",
+      "name": "Silkwood_Gym_Layout",
+      "width": 22,
+      "height": 20,
+      "primary_tileset": "gTileset_Building",
+      "secondary_tileset": "gTileset_FortreeGym",
+      "border_filepath": "data/layouts/Silkwood_Gym/border.bin",
+      "blockdata_filepath": "data/layouts/Silkwood_Gym/map.bin"
+    },
+    {
+      "id": "LAYOUT_ROSEMEAD_GYM",
+      "name": "Rosemead_Gym_Layout",
+      "width": 22,
+      "height": 20,
+      "primary_tileset": "gTileset_Building",
+      "secondary_tileset": "gTileset_RustboroGym",
+      "border_filepath": "data/layouts/Rosemead_Gym/border.bin",
+      "blockdata_filepath": "data/layouts/Rosemead_Gym/map.bin"
+    },
+    {
+      "id": "LAYOUT_DUSKMERE_GYM",
+      "name": "Duskmere_Gym_Layout",
+      "width": 22,
+      "height": 20,
+      "primary_tileset": "gTileset_Building",
+      "secondary_tileset": "gTileset_DewfordGym",
+      "border_filepath": "data/layouts/Duskmere_Gym/border.bin",
+      "blockdata_filepath": "data/layouts/Duskmere_Gym/map.bin"
+    },
+    {
+      "id": "LAYOUT_FROSTHOLM_GYM",
+      "name": "Frostholm_Gym_Layout",
+      "width": 22,
+      "height": 20,
+      "primary_tileset": "gTileset_Building",
+      "secondary_tileset": "gTileset_SootopolisGym",
+      "border_filepath": "data/layouts/Frostholm_Gym/border.bin",
+      "blockdata_filepath": "data/layouts/Frostholm_Gym/map.bin"
+    },
+    {
+      "id": "LAYOUT_DRAKESPIRE_GYM",
+      "name": "Drakespire_Gym_Layout",
+      "width": 22,
+      "height": 20,
+      "primary_tileset": "gTileset_Building",
+      "secondary_tileset": "gTileset_MossdeepGym",
+      "border_filepath": "data/layouts/Drakespire_Gym/border.bin",
+      "blockdata_filepath": "data/layouts/Drakespire_Gym/map.bin"
+    },
+    {
+      "id": "LAYOUT_SOLMARA_VICTORY_ROAD",
+      "name": "SolmaraVictoryRoad_Layout",
+      "width": 40,
+      "height": 44,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Cave",
+      "border_filepath": "data/layouts/SolmaraVictoryRoad/border.bin",
+      "blockdata_filepath": "data/layouts/SolmaraVictoryRoad/map.bin"
+    },
+    {
+      "id": "LAYOUT_SOLMARA_LEAGUE",
+      "name": "SolmaraLeague_Layout",
+      "width": 30,
+      "height": 34,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_EverGrande",
+      "border_filepath": "data/layouts/SolmaraLeague/border.bin",
+      "blockdata_filepath": "data/layouts/SolmaraLeague/map.bin"
     }
   ]
 }

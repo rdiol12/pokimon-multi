@@ -217,6 +217,13 @@ void World_ShowToast(const u8 *title, const u8 *text)
     sToastPending = TRUE;
 }
 
+// A toast or banner is waiting or on screen (src/research.c queues its own
+// behind it).
+bool32 World_IsToastBusy(void)
+{
+    return sToastPending || sPendingBanners != 0 || FuncIsActiveTask(Task_Banner);
+}
+
 #undef tTimer
 #undef tWindowId
 #undef tSpriteId

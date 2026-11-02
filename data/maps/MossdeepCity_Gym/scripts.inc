@@ -302,11 +302,15 @@ MossdeepCity_Gym_EventScript_RightGymStatue::
 
 MossdeepCity_Gym_EventScript_GymStatueCertified::
 	msgbox MossdeepCity_Gym_Text_GymStatueCertified, MSGBOX_DEFAULT
+	setvar VAR_0x8005, 6
+	call HoennMulti_EventScript_GymStatue
 	releaseall
 	end
 
 MossdeepCity_Gym_EventScript_GymStatue::
 	msgbox MossdeepCity_Gym_Text_GymStatue, MSGBOX_DEFAULT
+	setvar VAR_0x8005, 6
+	call HoennMulti_EventScript_GymStatue
 	releaseall
 	end
 

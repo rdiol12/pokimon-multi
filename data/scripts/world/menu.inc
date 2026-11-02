@@ -15,6 +15,7 @@ World_EventScript_Menu::
 	dynmultipush World_Text_MenuPhoto, WORLD_MENU_PHOTO
 	dynmultipush World_Text_MenuAdventure, WORLD_MENU_ADVENTURE
 	dynmultipush World_Text_MenuPastimes, WORLD_MENU_PASTIMES
+	dynmultipush World_Text_MenuResearch, WORLD_MENU_RESEARCH
 	dynmultipush World_Text_MenuClose, WORLD_MENU_CLOSE
 	dynmultistack 0, 0, FALSE, 6, FALSE, WORLD_MENU_GUIDE, DYN_MULTICHOICE_CB_NONE
 	switch VAR_RESULT
@@ -31,6 +32,12 @@ World_EventScript_Menu::
 	case WORLD_MENU_BOARDS, World_EventScript_Boards
 	case WORLD_MENU_HUNT, World_EventScript_Hunt
 	case WORLD_MENU_PHOTO, World_EventScript_Photo
+	case WORLD_MENU_RESEARCH, World_EventScript_Research
+	releaseall
+	end
+
+World_EventScript_Research::
+	callnative Research_ShowScreen, waitstate=1
 	releaseall
 	end
 
@@ -170,6 +177,9 @@ World_Text_MenuHunt:
 	.string "SAFARI HUNT$"
 World_Text_MenuPastimes:
 	.string "PASTIMES$"
+World_Text_MenuResearch:
+	.string "RESEARCH$"
+
 World_Text_MenuClose:
 	.string "CLOSE$"
 

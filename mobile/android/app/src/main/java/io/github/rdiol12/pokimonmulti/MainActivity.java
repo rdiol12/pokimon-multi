@@ -35,6 +35,7 @@ public class MainActivity extends Activity {
     static final String ORIGIN = "https://appassets.androidplatform.net";
     private static final int PICK_FILE = 1;
     private static final int CREATE_FILE = 2;
+    private static final int ASK_NOTIFY = 3;
     private static final Map<String, String> MIME = new HashMap<>();
 
     static {
@@ -100,6 +101,7 @@ public class MainActivity extends Activity {
                 return true;
             }
         });
+        Notifier.schedule(this);
         if (state != null) web.restoreState(state);
         else web.loadUrl(ORIGIN + "/index.html");
     }
@@ -190,13 +192,23 @@ public class MainActivity extends Activity {
     protected void onPause() {
         // The page saves the game when it is hidden; this hides it.
         web.onPause();
+        Notifier.foreground = false;
         super.onPause();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        Notifier.foreground = true;
         web.onResume();
+    }
+
+    /** Android 13+ asks before an app may notify; done once, the first time online. */
+    void askNotificationPermission() {
+        if (android.os.Build.VERSION.SDK_INT >= 33
+                && checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[] { android.Manifest.permission.POST_NOTIFICATIONS }, ASK_NOTIFY);
+        }
     }
 
     @Override

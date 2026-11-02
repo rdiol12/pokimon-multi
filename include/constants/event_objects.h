@@ -430,6 +430,8 @@ enum
     // The Market Hall and Auction House keepers (tools/markets/)
     OBJ_EVENT_GFX_MARKET_MASTER,
     OBJ_EVENT_GFX_AUCTIONEER,
+    // A snow drift the player pushes through (src/alive_weather.c)
+    OBJ_EVENT_GFX_SNOW_DRIFT,
     NUM_OBJ_EVENT_GFX,
 };
 
