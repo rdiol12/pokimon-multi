@@ -1,7 +1,7 @@
 #include "global.h"
-#include "npc_names.h"
 #include "alive.h"
 #include "injury.h"
+#include "npc_names.h"
 #include "battle_setup.h"
 #include "bike.h"
 #include "coord_event_weather.h"
