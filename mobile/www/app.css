@@ -103,10 +103,17 @@ html, body {
     background: #000;
     border-radius: 6px;
 }
-/* Widescreen (menu > Widescreen): the overworld is 320x160 */
+/* Widescreen (menu > Widescreen): the core draws 320x160. The picture keeps
+   the size it has in the normal mode (--nw is the normal width) and grows
+   sideways only into spare room, up to 2:1; where there is none (a phone held
+   upright) the side areas are cropped instead of shrinking everything. */
 #screen.wide {
-    max-width: calc((100vh - 330px) * 2);
-    aspect-ratio: 2 / 1;
+    --nw: min(100vw - 12px, (100vh - 330px) * 1.5);
+    width: min(100vw - 12px, var(--nw) * 4 / 3);
+    height: calc(var(--nw) / 1.5);
+    max-width: none;
+    aspect-ratio: auto;
+    object-fit: cover;
 }
 
 /* ------------------------------------------------------------ pad */
@@ -163,7 +170,10 @@ html, body {
     .screen-wrap { position: absolute; inset: 0; align-items: center; pointer-events: none; }
     /* Leave each side room for the D-pad or the A/B buttons. */
     #screen { width: min(calc(100vw - 2 * 196px - var(--safe-left) - var(--safe-right)), calc((100vh - var(--safe-top) - var(--safe-bottom)) * 1.5)); max-width: none; }
-    #screen.wide { width: min(calc(100vw - 2 * 196px - var(--safe-left) - var(--safe-right)), calc((100vh - var(--safe-top) - var(--safe-bottom)) * 2)); }
+    #screen.wide {
+        --nw: min(100vw - 2 * 196px - var(--safe-left) - var(--safe-right), (100vh - var(--safe-top) - var(--safe-bottom)) * 1.5);
+        width: min(100vw - 2 * 196px - var(--safe-left) - var(--safe-right), var(--nw) * 4 / 3);
+    }
     /* Absolutely placed, so the safe areas (the Dynamic Island / notch side)
        are added here rather than inherited from #game's padding. */
     .pad {
