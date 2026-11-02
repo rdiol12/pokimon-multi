@@ -187,6 +187,39 @@ The spot is the server's copy of the hider's position (the POS lines);
 the quest the player took is in the status, so the game checks the spot
 itself.
 
+## Player-hosted events
+
+![TEST1 opens PLAYER EVENTS and the events board, hosts a catch hunt for Zigzagoon with $1000 and 5 Rare Candies; TEST2 hears of it, joins, catches a Zigzagoon and collects the prize; TEST1 hears who won; a running tournament's bracket](images/online-player-events.png)
+
+Players run events for each other with a prize they put up themselves
+(`server/online_hevents.py`, `data/scripts/online/hevents.inc`). HUB →
+PLAYER EVENTS:
+
+- **EVENTS BOARD**: every hunt and tournament on now, with its host, prize
+  and time left. The player's own events are in red.
+- **JOIN AN EVENT**: pick one to see the details and join. A tournament
+  that's under way shows its bracket instead.
+- **HOST AN EVENT**: a **CATCH HUNT** (pick one of 24 Hoenn Pokémon; the
+  first player who joined and then catches one wins) or a **TOURNAMENT**
+  (4 or 8 players), how long it runs (30 minutes to a day), and the prize:
+  money, items from the bag (1, 5 or all of one kind), or both. Everyone
+  online hears of a new event. One event per host at a time.
+- **MY EVENTS**: what the player hosts and is in, and who they battle next.
+  A host can call an event off while nobody has joined it.
+
+The prize is held in escrow: the game takes it when the event is posted,
+and the server keeps it until the event ends. The winner, or the host if
+nobody won (a hunt where nobody caught the Pokémon in time, a tournament
+with fewer than two players at the close of sign-ups), collects it the
+next time they open PLAYER EVENTS; they get a notice when it's waiting.
+
+Tournaments reuse the community cups' bracket (`bracket_order` in
+`server/community_tournament.py`): seeded by ladder rating, byes to the
+top seeds, and a match is any ordinary online battle between the two
+players. A tournament starts when it's full or when sign-ups close. A
+round lasts a day (`NETPLAY_HEVENT_ROUND_SECONDS`); a match nobody played
+by then goes to the higher seed.
+
 ## Spectator betting
 
 ![Gary and Mia battle: both games hear of it, TEST1 bets 100 COINS on Gary and TEST2 50 on Mia, Gary wins, TEST1 collects 650 COINS, the best bettors board](images/online-betting.png)

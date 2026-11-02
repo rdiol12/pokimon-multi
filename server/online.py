@@ -175,6 +175,7 @@ def install(server, ext_obj):
     import online_fishing
     import online_goals
     import online_guilds
+    import online_hevents
     import online_hide
     import online_hoenn
     import online_mentors
@@ -193,6 +194,7 @@ def install(server, ext_obj):
     online_teams.install(server)
     online_guilds.install(server)
     online_hide.install(server)
+    online_hevents.install(server)
     rovers.ECO = online_eco
     import alive
 
@@ -201,6 +203,6 @@ def install(server, ext_obj):
                                        online_mentors, online_pquests,
                                        online_betting, online_doubles, online_teams, online_guilds, online_racing,
                                        online_hide, guide_social, online_eco, online_research,
-                                       online_hoenn])
+                                       online_hoenn, online_hevents])
     alive.install(online)  # announcements go in the news too
     return online
