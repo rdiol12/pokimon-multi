@@ -7395,6 +7395,62 @@ const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_SnowDrift = {
     .images = sPicTable_SnowDrift,
 };
 
+// The Stormwild (src/stormwild.c): a beacon, unlit and lit, and a supply
+// cache, in the field ability palette (tools/stormwild/draw_sprites.py).
+const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_StormBeacon = {
+    .tileTag = TAG_NONE,
+    .paletteTag = OBJ_EVENT_PAL_TAG_FIELD_ABILITY,
+    .reflectionPaletteTag = OBJ_EVENT_PAL_TAG_NONE,
+    .size = 256,
+    .width = 16,
+    .height = 32,
+    .paletteSlot = PALSLOT_NPC_1,
+    .shadowSize = SHADOW_SIZE_S,
+    .inanimate = TRUE,
+    .compressed = FALSE,
+    .tracks = TRACKS_NONE,
+    .oam = &gObjectEventBaseOam_16x32,
+    .subspriteTables = sOamTables_16x32,
+    .anims = sAnimTable_Inanimate,
+    .images = sPicTable_StormBeacon,
+};
+
+const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_StormBeaconOn = {
+    .tileTag = TAG_NONE,
+    .paletteTag = OBJ_EVENT_PAL_TAG_FIELD_ABILITY,
+    .reflectionPaletteTag = OBJ_EVENT_PAL_TAG_NONE,
+    .size = 256,
+    .width = 16,
+    .height = 32,
+    .paletteSlot = PALSLOT_NPC_1,
+    .shadowSize = SHADOW_SIZE_S,
+    .inanimate = TRUE,
+    .compressed = FALSE,
+    .tracks = TRACKS_NONE,
+    .oam = &gObjectEventBaseOam_16x32,
+    .subspriteTables = sOamTables_16x32,
+    .anims = sAnimTable_Inanimate,
+    .images = sPicTable_StormBeaconOn,
+};
+
+const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_StormCache = {
+    .tileTag = TAG_NONE,
+    .paletteTag = OBJ_EVENT_PAL_TAG_FIELD_ABILITY,
+    .reflectionPaletteTag = OBJ_EVENT_PAL_TAG_NONE,
+    .size = 128,
+    .width = 16,
+    .height = 16,
+    .paletteSlot = PALSLOT_NPC_1,
+    .shadowSize = SHADOW_SIZE_S,
+    .inanimate = TRUE,
+    .compressed = FALSE,
+    .tracks = TRACKS_NONE,
+    .oam = &gObjectEventBaseOam_16x16,
+    .subspriteTables = sOamTables_16x16,
+    .anims = sAnimTable_Inanimate,
+    .images = sPicTable_StormCache,
+};
+
 // The Market Hall and Auction House keepers (tools/markets/): the fat man's
 // and the gentleman's frames in their own colours (graphics/markets/).
 

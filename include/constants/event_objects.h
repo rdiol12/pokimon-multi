@@ -432,6 +432,10 @@ enum
     OBJ_EVENT_GFX_AUCTIONEER,
     // A snow drift the player pushes through (src/alive_weather.c)
     OBJ_EVENT_GFX_SNOW_DRIFT,
+    // The Stormwild's beacons and supply caches (src/stormwild.c)
+    OBJ_EVENT_GFX_STORM_BEACON,
+    OBJ_EVENT_GFX_STORM_BEACON_ON,
+    OBJ_EVENT_GFX_STORM_CACHE,
     NUM_OBJ_EVENT_GFX,
 };
 

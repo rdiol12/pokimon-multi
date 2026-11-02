@@ -133,7 +133,16 @@
 #define ONL_REQ_HEVENT_ITEM   114 // VAR_0x8005: item, VAR_0x8006: how many
 #define ONL_REQ_HEVENT_CHECK  115
 #define ONL_REQ_HEVENT_POST   116
-#define ONL_REQ_COUNT         117
+// The Stormwild (src/stormwild.c, server/online_xrun.py). 101-116 are the
+// player-hosted events' (another branch).
+#define ONL_REQ_XRUN_JOIN     117 // VAR_0x8005: how many Pokémon go in
+#define ONL_REQ_XRUN_GO       118
+#define ONL_REQ_XRUN_LOOT     119 // VAR_0x8005: the cache
+#define ONL_REQ_XRUN_ROB      120
+#define ONL_REQ_XRUN_OUT      121 // VAR_0x8005: the beacon
+#define ONL_REQ_XRUN_FAIL     122
+#define ONL_REQ_XRUN_BOARD    123
+#define ONL_REQ_COUNT         124
 
 // The hub's rows (VAR_RESULT of its menu).
 #define ONLINE_HUB_GOALS    0

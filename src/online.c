@@ -1,5 +1,6 @@
 #include "global.h"
 #include "research.h"
+#include "stormwild.h"
 #include "coins.h"
 #include "event_data.h"
 #include "event_object_movement.h"
@@ -808,7 +809,7 @@ static void CheckMapChange(void)
 // Called every overworld frame. Returns TRUE if it started a script.
 bool32 Online_OverworldUpdate(void)
 {
-    if (Online_RaceUpdate() || Online_HideUpdate())
+    if (Online_RaceUpdate() || Online_HideUpdate() || Stormwild_Update())
         return TRUE;
     if (!IsOnline())
     {
@@ -858,6 +859,7 @@ void Online_OnWildBattleStart(void)
     s32 args[4];
 
     Research_OnWildBattleStart();
+    Stormwild_OnWildBattleStart();
     if (gIsFishingEncounter)
         Online_TournamentBite();
     species = GetMonData(&gParties[B_TRAINER_OPPONENT_A][0], MON_DATA_SPECIES);
@@ -887,6 +889,7 @@ void Online_OnCatch(void)
     args[3] = gSaveBlock1Ptr->location.mapNum;
     args[4] = sWild.fished && sWild.species == gBattleResults.caughtMonSpecies;
     Online_Report("CATCH", ARRAY_COUNT(args), args);
+    Stormwild_OnCatch();
     if (args[4])
     {
         args[1] = Records_SizeOf(sWild.species, sWild.personality);
