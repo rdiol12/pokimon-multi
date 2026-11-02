@@ -20,6 +20,13 @@ Ten towns and cities grew a new district with a square where players meet:
 | Lavaridge Town | 14 rows south (20x34) | Lavaridge Hot Square, below the cliff |
 | Fortree City | 14 rows south (40x34) | Fortree Clearing, the one open place on the ground |
 | Rustboro City | 16 rows in the south (40x76) | Rustboro Stone Park, between the city and Route 104 |
+| Pacifidlog Town | 8 rows south (20x48) | Pacifidlog Raft Square, a big new raft at the end of the log bridge that used to stop at the water; the rocks on the south edge moved down |
+
+Pacifidlog only had the bottom edges of rafts (the houses sit on their top
+edges), so the raft square's top edge, its corners and the steps up from
+the log bridge are six new metatiles at the end of the Pacifidlog tileset:
+the bottom pieces turned upside down, made from the same 8x8 tiles, so no
+new pixel art was needed (`pacifidlog_metatiles()` in `squares.py`).
 
 ## Rest stops
 

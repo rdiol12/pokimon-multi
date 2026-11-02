@@ -20,6 +20,7 @@ local TOWNS = {
     { "route111", MAPS.MAP_ROUTE111, 44, 77, 41, 74 },
     { "route117", MAPS.MAP_ROUTE117, 34, 26, 27, 22 },
     { "route123", MAPS.MAP_ROUTE123, 75, 26, 67, 22 },
+    { "pacifidlog", MAPS.MAP_PACIFIDLOG_TOWN, 8, 32, 4, 30 },
 }
 
 D.run(function()

@@ -53,6 +53,8 @@ def style(kind):
     elif kind == 'lilycove':
         st = Style('gTileset_General', 'gTileset_Lilycove', ['LAYOUT_ROUTE121', 'LAYOUT_ROUTE122', 'LAYOUT_ROUTE123'],
                    wall_classes={'T': TREES}, colors=True)
+    elif kind == 'pacifidlog':
+        st = Style('gTileset_General', 'gTileset_Pacifidlog', ['LAYOUT_PACIFIDLOG_TOWN'])
     elif kind == 'rustboro':
         st = Style('gTileset_General', 'gTileset_Rustboro', ['LAYOUT_RUSTBORO_CITY', 'LAYOUT_ROUTE104',
                    'LAYOUT_ROUTE116'], wall_classes={'T': TREES}, colors=True)
@@ -779,6 +781,90 @@ def route123():
         'The matchmaker finds you a battle or trade.'
 
 
+PAC_DIR = f'{ROOT}/data/tilesets/secondary/pacifidlog'
+PAC_BASE = 203   # Game Freak's Pacifidlog metatiles; ours follow
+
+
+def pacifidlog_metatiles():
+    """Raft top edges: Pacifidlog only has rafts' bottom edges (the houses
+    sit on their top), so the top pieces are the bottom ones turned upside
+    down, made from the same 8x8 tiles. Returns {name: metatile id}."""
+    import numpy as np
+    mt = np.fromfile(f'{PAC_DIR}/metatiles.bin', '<u2').reshape(-1, 8)
+    at = np.fromfile(f'{PAC_DIR}/metatile_attributes.bin', '<u2')
+    mt, at = mt[:PAC_BASE].copy(), at[:PAC_BASE].copy()
+    def vflip(m):
+        e = mt[m - 0x200]
+        out = []
+        for layer in (e[:4], e[4:]):
+            t = [int(v) for v in layer]
+            if layer is e[:4]:
+                out += [int(v) for v in mt[0x221 - 0x200][:4]]   # open water under it, no shadow
+            else:
+                out += [v ^ 0x800 if v else 0 for v in (t[2], t[3], t[0], t[1])]
+        return out, int(at[m - 0x200])
+    new = {'top_left': 0x228, 'top': 0x229, 'top_right': 0x22C, 'left2': 0x220, 'right2': 0x224, 'steps': 0x22A}
+    ids, rows, attrs = {}, [], []
+    for i, (name, src) in enumerate(new.items()):
+        e, a = vflip(src)
+        ids[name] = 0x200 + PAC_BASE + i
+        rows.append(e)
+        attrs.append(a)
+    np.concatenate([mt, np.array(rows, '<u2')]).astype('<u2').tofile(f'{PAC_DIR}/metatiles.bin')
+    np.concatenate([at, np.array(attrs, '<u2')]).astype('<u2').tofile(f'{PAC_DIR}/metatile_attributes.bin')
+    return ids
+
+
+def pacifidlog():
+    """A raft square south of the town, at the end of the log bridge that
+    used to stop at the water. The rocks along the south edge move 8 rows
+    down to make room."""
+    ids = pacifidlog_metatiles()
+    e = Extension('PacifidlogTown', style('pacifidlog'), down=8, fill='~')
+    a, W, H = e.area, e.w, e.h
+    s = Square('Pacifidlog', 'Pacifidlog Town', e)
+    e.copy_old(0, 31, 20, 9, 0, 39)
+    WATER, DECK, LAND = 0x170 | (1 << 12), 3 << 12, 1 << 12
+    for y in range(31, 39):
+        for x in range(W):
+            a.fixed[(x, y)] = WATER
+    x0, x1, y0, y1 = 3, 15, 29, 37    # raft: x0..x1-1, y0..y1-1
+    for y in range(y0, y1):
+        for x in range(x0, x1):
+            edge_l, edge_r = x == x0, x == x1 - 1
+            if y == y0:
+                m, z = (ids['top_left'] if edge_l else ids['top_right'] if edge_r else ids['top']), LAND
+            elif y == y0 + 1:
+                m, z = (ids['left2'] if edge_l else ids['right2'] if edge_r else 0x221), DECK
+            elif y == y1 - 2:
+                m, z = (0x220 if edge_l else 0x224 if edge_r else 0x221), DECK
+            elif y == y1 - 1:
+                m, z = (0x228 if edge_l else 0x22C if edge_r else 0x229), LAND
+            else:
+                m, z = (0x218 if edge_l else 0x21C if edge_r else 0x221), DECK
+            a.fixed[(x, y)] = m | z
+    a.fixed[(8, y0)] = ids['steps'] | DECK     # the log bridge comes down here
+    for x, y in ((16, 30), (17, 30), (16, 39), (17, 39)):   # the rock the move cut in half
+        a.fixed[(x, y)] = WATER
+    s.rect = (x0, y0 + 1, x1 - x0, y1 - y0 - 2)
+    s.board(4, 30)
+    a.fixed[(4, 30)] = 0x003 | (1 << 10)
+    s.guide(6, 31, 'OBJ_EVENT_GFX_SWIMMER_F_LAND')
+    s.matchmaker(11, 31, 'OBJ_EVENT_GFX_SAILOR')
+    s.local(13, 34, 'OBJ_EVENT_GFX_OLD_MAN',
+            'When I was a boy, the whole town was\\n'
+            'one raft, tied to the backs of Corsola.\\p'
+            'Now we\'ve built a new one, just for\\n'
+            'trainers to gather on. Isn\'t it fine?', move='MOVEMENT_TYPE_FACE_LEFT')
+    s.local(9, 34, 'OBJ_EVENT_GFX_TUBER_M_LAND',
+            'You can surf here from anywhere in\\n'
+            'Hoenn, and everyone does!', move='MOVEMENT_TYPE_WANDER_AROUND', n=2, rx=2, ry=1)
+    s.hidden(4, 35, 'ITEM_HEART_SCALE')
+    return e, s, 'PACIFIDLOG RAFT SQUARE\\nThe town that floats together.\\p'\
+        'The guide has the HUB and PLAZA. The\\n'\
+        'matchmaker finds you a battle or trade.'
+
+
 # name: (map folder, hidden item flag number, builder). Never renumber flags.
 TOWNS = {
     'littleroot': ('LittlerootTown', 0, littleroot),
@@ -796,6 +882,7 @@ TOWNS = {
     'route111': ('Route111', 11, route111),
     'route117': ('Route117', 12, route117),
     'route123': ('Route123', 13, route123),
+    'pacifidlog': ('PacifidlogTown', 14, pacifidlog),
 }
 
 

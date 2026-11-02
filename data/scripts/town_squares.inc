@@ -461,3 +461,38 @@ Square_Route123_Text_Local1:
 	.string "The Berry Master's garden is just up\n"
 	.string "the road. I come here to rest after.\p"
 	.string "Picking berries is hard work!$"
+
+@ Pacifidlog Town square (tools/map_upgrade/squares.py)
+Square_Pacifidlog_EventScript_Board::
+	msgbox Square_Pacifidlog_Text_Board, MSGBOX_SIGN
+	end
+
+Square_Pacifidlog_EventScript_Guide::
+	goto Square_EventScript_Guide
+
+Square_Pacifidlog_EventScript_Matchmaker::
+	goto HoennMulti_EventScript_QuickMatchDesk
+
+Square_Pacifidlog_EventScript_Local1::
+	msgbox Square_Pacifidlog_Text_Local1, MSGBOX_NPC
+	end
+
+Square_Pacifidlog_EventScript_Local2::
+	msgbox Square_Pacifidlog_Text_Local2, MSGBOX_NPC
+	end
+
+Square_Pacifidlog_Text_Board:
+	.string "PACIFIDLOG RAFT SQUARE\n"
+	.string "The town that floats together.\p"
+	.string "The guide has the HUB and PLAZA. The\n"
+	.string "matchmaker finds you a battle or trade.$"
+
+Square_Pacifidlog_Text_Local1:
+	.string "When I was a boy, the whole town was\n"
+	.string "one raft, tied to the backs of Corsola.\p"
+	.string "Now we've built a new one, just for\n"
+	.string "trainers to gather on. Isn't it fine?$"
+
+Square_Pacifidlog_Text_Local2:
+	.string "You can surf here from anywhere in\n"
+	.string "Hoenn, and everyone does!$"
