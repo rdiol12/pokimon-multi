@@ -37,6 +37,8 @@ struct WorldBoardRow
     /*0x0C*/ u32 extra;
 }; // size 0x10
 
+struct SharedMapMailbox;
+
 struct WorldMailbox
 {
     /*0x000*/ char magic[8]; // "PKMNWLD1"
@@ -70,7 +72,9 @@ struct WorldMailbox
     /*0x33C*/ u32 moreRemoteTrainerLooks[NETPLAY_MAX_REMOTES - NETPLAY_MAILBOX_REMOTES];
     /*0x37C*/ u8 followerInjury; // this player's follower's scar and lost parts (INJURY_LOOKS_*), sent with the look
     /*0x37D*/ u8 remoteFollowerInjuries[NETPLAY_MAX_REMOTES]; // by slot 0-23
-}; // size 0x395
+    /*0x395*/ u8 pad[3];
+    /*0x398*/ struct SharedMapMailbox *shared; // shared wild spawns and channels (include/shared_map.h)
+}; // size 0x39C
 
 extern struct WorldMailbox gWorldMailbox;
 

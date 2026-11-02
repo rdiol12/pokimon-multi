@@ -162,6 +162,93 @@ function tests.hunt_and_photo()
     eq(sent[3], "PHOTOEND 0 9", "photo end")
 end
 
+-- Shared wild spawns and channels (NetplayShared, docs/shared_map.md).
+local SHR = 0x02021000
+local function withShared()
+    local bridge, mem, net = online()
+    mem.write32(WLD + 0x398, SHR)
+    mem.write32(SHR, 0x4E4D4B50)
+    mem.write32(SHR + 4, 0x31524853)
+    mem.write8(SHR + 0x08, 1)
+    bridge:onFrame()
+    net.take()
+    return bridge, mem, net
+end
+
+function tests.shares_own_spawns_and_shows_others()
+    local bridge, mem, net = withShared()
+    -- One of ours: uid 5, a Zigzagoon (0x4000 + 263) Lv 3 at 10,11 facing down.
+    mem.write16(SHR + 0x28, 5)
+    mem.write16(SHR + 0x2A, 0x4000 + 263)
+    mem.write16(SHR + 0x2C, 10)
+    mem.write16(SHR + 0x2E, 11)
+    mem.write8(SHR + 0x30, 3)
+    mem.write8(SHR + 0x32, 1)
+    bridge:onFrame()
+    assert(has(net.take(), "WSPAWN 5 16647 3 0 10 11 1"), "own spawn sent")
+    bridge:onFrame()
+    eq(#net.take(), 0, "nothing new to send")
+    -- Someone else's on our map, then someone battles ours.
+    net.push("WILD 7 2 16647 4 1 12 11 2 0 9 0 -")
+    net.push("WILD 3 5 16647 3 0 10 11 1 0 9 1 Misty")
+    bridge:onFrame()
+    eq(mem.read16(SHR + 0x58), 7, "remote owner")
+    eq(mem.read16(SHR + 0x5A), 2, "remote uid")
+    eq(mem.read8(SHR + 0x63), 1, "remote flags (rare)")
+    eq(mem.read8(SHR + 0x67), 9, "remote map num")
+    eq(mem.read8(SHR + 0x28 + 11), 1, "ours is claimed")
+    eq(mem.read8(SHR + 0x178), 0xC7, "by Misty") -- "M"
+    -- A claim of our own, answered.
+    mem.write8(SHR + 0x0A, 1)
+    mem.write16(SHR + 0x0C, 7)
+    mem.write16(SHR + 0x0E, 2)
+    mem.write8(SHR + 0x09, 1)
+    bridge:onFrame()
+    assert(has(net.take(), "WCLAIM 7 2"), "claim sent")
+    net.push("WCLAIMED 7 2 taken Brock")
+    bridge:onFrame()
+    eq(mem.read8(SHR + 0x11), 1, "claim answered")
+    eq(mem.read8(SHR + 0x12), 2, "taken")
+    -- Gone: the slot empties.
+    net.push("WILDGONE 7 2")
+    bridge:onFrame()
+    eq(mem.read16(SHR + 0x58), 0, "remote gone")
+    -- Ours leaves the map.
+    mem.write16(SHR + 0x28, 0)
+    bridge:onFrame()
+    assert(has(net.take(), "WGONE 5"), "own spawn gone")
+end
+
+function tests.channel_list_and_moves()
+    local bridge, mem, net = withShared()
+    net.push("CHANNEL 2 2")
+    bridge:onFrame()
+    eq(mem.read8(SHR + 0x13), 2, "channel")
+    eq(mem.read8(SHR + 0x14), 2, "count")
+    eq(mem.read8(SHR + 0x15), 1, "channel seq")
+    mem.write8(SHR + 0x0A, 3)
+    mem.write8(SHR + 0x09, 1)
+    bridge:onFrame()
+    assert(has(net.take(), "CHAN"), "list asked")
+    net.push("CHANROW 1 25 1 Misty")
+    net.push("CHANROW 2 3 0 -")
+    net.push("CHANEND 2 2")
+    bridge:onFrame()
+    eq(mem.read8(SHR + 0x17), 2, "two rows")
+    eq(mem.read8(SHR + 0x118 + 1), 25, "players in channel 1")
+    eq(mem.read8(SHR + 0x118 + 2), 1, "a friend there")
+    eq(mem.read8(SHR + 0x16), 1, "list seq")
+    mem.write8(SHR + 0x0A, 4)
+    mem.write8(SHR + 0x0B, 1)
+    mem.write8(SHR + 0x09, 2)
+    bridge:onFrame()
+    assert(has(net.take(), "CHAN JOIN 1"), "join sent")
+    net.push("CHANFULL 1")
+    bridge:onFrame()
+    eq(mem.read8(SHR + 0x21), 2, "full")
+    eq(mem.read8(SHR + 0x16), 2, "list seq again")
+end
+
 local failed, count = 0, 0
 local names = {}
 for name in pairs(tests) do table.insert(names, name) end

@@ -1,4 +1,5 @@
 #include "global.h"
+#include "shared_map.h"
 #include "alive.h"
 #include "injury.h"
 #include "battle_setup.h"
@@ -428,6 +429,8 @@ static const u8 *GetInteractedObjectEventScript(struct MapPosition *position, u8
         script = GetOverworlWildEncounterScript(objectEventId);
     else if (gObjectEvents[objectEventId].localId == OBJ_EVENT_ID_FOLLOWER)
         script = EventScript_Follower;
+    else if (SharedMap_IsRemoteSpawn(&gObjectEvents[objectEventId]))
+        script = SharedMap_EventScript_Remote;
     else if (Netplay_IsNetplayObjectEvent(&gObjectEvents[objectEventId]))
         script = Netplay_GetTalkScript(objectEventId);
     else if (LifePhoto_IsPhotoMon(&gObjectEvents[objectEventId]))

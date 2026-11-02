@@ -104,6 +104,13 @@ struct SpritePalette GetOWESpawnDespawnAnimFldEffPalette(enum SpawnDespawnTypeOW
 u32 RemoveOldestGeneratedOWE(void);
 bool32 CanRemoveObjectForOWEMovement(struct ObjectEvent *objectEvent);
 
+// Shared wild spawns (src/shared_map.c).
+struct ObjectEvent *OWE_GetGeneratedInSlot(u32 slot);
+u32 OWE_GetLevel(const struct ObjectEvent *owe);
+bool32 OWE_IsSpecialCategory(const struct ObjectEvent *owe);
+void OWE_SetHeld(struct ObjectEvent *owe, bool32 held, bool32 keepNoDespawn);
+u32 OWE_GetSpeciesRate(enum Species species, bool32 water);
+
 extern const u8 InteractWithOverworldWildEncounter[];
 
 #endif // GUARD_WILD_ENCOUNTER_OW_H

@@ -8,6 +8,7 @@
 #include "netplay_menu.h"
 #include "online.h"
 #include "script.h"
+#include "shared_map.h"
 #include "sound.h"
 #include "task.h"
 #include "window.h"
@@ -24,10 +25,11 @@ const struct NetplayMenuEntry gNetplayOnlineMenu[] =
     {COMPOUND_STRING("HUB"),     Online_OpenHubFromMenu},
     {COMPOUND_STRING("COMMUNITY"), ShowCommunityMenu},
     {COMPOUND_STRING("AUCTION"), LifeAuction_OpenFromMenu},
+    {COMPOUND_STRING("CHANNEL"), ShowSharedMapChannels},
     {NULL, NULL},
 };
 
-#define MAX_ENTRIES 8
+#define MAX_ENTRIES 9
 
 #define tWindowId data[0]
 #define tCount    data[1]
