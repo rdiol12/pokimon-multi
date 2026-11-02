@@ -43,6 +43,20 @@ rocks:
 Each has a notice board, a keeper who lets the party rest (heals it, like a
 Pokémon Center), the matchmaker, a local and a hidden berry or item.
 
+## Meeting spots in the new areas and Solmara
+
+The new areas and Solmara were drawn with wide paths from the start, and
+the audit found nothing cramped there (Mt. Frostcrown's one-tile strip is
+the sled run, which is meant to be narrow). What they lacked was a place to
+meet: every town of theirs (Cobblerock, Ember Springs, Hollowmere, Laurel
+City, Mirage Oasis, Nimbus City, Snowdrift Village, Sunfair Carnival,
+Wonderwild Park, and Solmara's Port Solace, Gearholt, Ashcombe, Silkwood,
+Rosemead, Duskmere, Frostholm and Drakespire) now has the square guide and
+the matchmaker side by side on its most open ground near the middle of town.
+`tools/map_upgrade/meeting_spots.py` picks the spot (a 6x4 patch reachable
+from the town's first door, clear of everything else) and adds the two;
+run it again after regenerating one of those towns.
+
 ## What every square has
 
 Every square has:
@@ -86,4 +100,4 @@ new ground (`EXCLUDE` in `squares.py`).
 Map upgrade flags (`MAPUP_FLAG(n)`) use a block of Solmara's extended-save
 flag space that Solmara doesn't use (ids 0x7600 up).
 
-Screenshots: `python3 tools/areas/shots/run.py tools/map_upgrade/shots/squares.lua OUT 300000`.
+Screenshots: `python3 tools/areas/shots/run.py tools/map_upgrade/shots/squares.lua OUT 450000` and `.../meeting_spots.lua OUT 300000`. `tools/map_upgrade/overlay.py MAP_ID out.png` draws a map with the audit's findings on it.

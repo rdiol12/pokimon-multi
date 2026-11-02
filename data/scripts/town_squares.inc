@@ -32,6 +32,14 @@ Square_Text_GuideOffline:
 	.string "Choose JOIN ONLINE on the title screen\n"
 	.string "and I can show you the HUB and PLAZA.$"
 
+@ Meeting spots in the new areas' and Solmara's towns
+@ (tools/map_upgrade/meeting_spots.py).
+Square_EventScript_AreaGuide::
+	goto Square_EventScript_Guide
+
+Square_EventScript_AreaMatchmaker::
+	goto HoennMulti_EventScript_QuickMatchDesk
+
 @ Rest stops on the long routes: a keeper who lets the party rest.
 Square_EventScript_Healer::
 	lock
