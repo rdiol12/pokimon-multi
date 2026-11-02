@@ -41,6 +41,7 @@ Online_EventScript_Hub::
 	dynmultipush Online_Text_HubResearch, ONLINE_HUB_RESEARCH
 	dynmultipush Online_Text_HubRecords, ONLINE_HUB_RECORDS
 	dynmultipush Online_Text_HubTeamUp, ONLINE_HUB_TEAMUP
+	dynmultipush Online_Text_HubHostedEvents, ONLINE_HUB_HEVENTS
 	dynmultipush Online_Text_HubClose, ONLINE_HUB_CLOSE
 	dynmultistack 0, 0, FALSE, 6, FALSE, 0, DYN_MULTICHOICE_CB_NONE
 	switch VAR_RESULT
@@ -63,6 +64,7 @@ Online_EventScript_Hub::
 	case ONLINE_HUB_RESEARCH, Online_EventScript_ResearchLeaders
 	case ONLINE_HUB_RECORDS, HoennMulti_EventScript_HubRecords
 	case ONLINE_HUB_TEAMUP, HoennMulti_EventScript_TeamUp
+	case ONLINE_HUB_HEVENTS, Online_EventScript_HostedEvents
 	releaseall
 	end
 
@@ -151,6 +153,9 @@ Online_Text_HubRecords:
 Online_Text_HubTeamUp:
 	.string "TEAM UP$"
 
+Online_Text_HubHostedEvents:
+	.string "PLAYER EVENTS$"
+
 Online_Text_HubClose:
 	.string "CLOSE$"
 
@@ -164,6 +169,7 @@ Online_Text_HubClose:
 	.include "data/scripts/online/duo.inc"
 	.include "data/scripts/online/mentors.inc"
 	.include "data/scripts/online/pquests.inc"
+	.include "data/scripts/online/hevents.inc"
 	.include "data/scripts/online/betting.inc"
 	.include "data/scripts/online/teams.inc"
 	.include "data/scripts/online/guilds.inc"
