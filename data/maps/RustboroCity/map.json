@@ -270,6 +270,58 @@
       "trainer_sight_or_berry_tree_id": "0",
       "script": "RustboroCity_EventScript_CobblerockGuide",
       "flag": "0"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_SCIENTIST_1",
+      "x": 24,
+      "y": 60,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_FACE_DOWN",
+      "movement_range_x": 0,
+      "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE",
+      "trainer_sight_or_berry_tree_id": "0",
+      "script": "Square_Rustboro_EventScript_Guide",
+      "flag": "0"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_COOLTRAINER_F",
+      "x": 31,
+      "y": 60,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_FACE_DOWN",
+      "movement_range_x": 0,
+      "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE",
+      "trainer_sight_or_berry_tree_id": "0",
+      "script": "Square_Rustboro_EventScript_Matchmaker",
+      "flag": "0"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_SCHOOL_KID_M",
+      "x": 33,
+      "y": 66,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_FACE_LEFT",
+      "movement_range_x": 0,
+      "movement_range_y": 0,
+      "trainer_type": "TRAINER_TYPE_NONE",
+      "trainer_sight_or_berry_tree_id": "0",
+      "script": "Square_Rustboro_EventScript_Local1",
+      "flag": "0"
+    },
+    {
+      "graphics_id": "OBJ_EVENT_GFX_MAN_2",
+      "x": 26,
+      "y": 66,
+      "elevation": 3,
+      "movement_type": "MOVEMENT_TYPE_WANDER_AROUND",
+      "movement_range_x": 2,
+      "movement_range_y": 1,
+      "trainer_type": "TRAINER_TYPE_NONE",
+      "trainer_sight_or_berry_tree_id": "0",
+      "script": "Square_Rustboro_EventScript_Local2",
+      "flag": "0"
     }
   ],
   "warp_events": [
@@ -629,6 +681,22 @@
       "elevation": 3,
       "player_facing_dir": "BG_EVENT_PLAYER_FACING_ANY",
       "script": "RustboroCity_EventScript_CuttersHouseSign"
+    },
+    {
+      "type": "sign",
+      "x": 21,
+      "y": 59,
+      "elevation": 0,
+      "player_facing_dir": "BG_EVENT_PLAYER_FACING_ANY",
+      "script": "Square_Rustboro_EventScript_Board"
+    },
+    {
+      "type": "hidden_item",
+      "x": 5,
+      "y": 68,
+      "elevation": 3,
+      "item": "ITEM_HARD_STONE",
+      "flag": "FLAG_SQUARE_RUSTBORO_HIDDEN"
     }
   ]
 }
