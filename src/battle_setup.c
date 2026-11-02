@@ -1,4 +1,5 @@
 #include "global.h"
+#include "npc_names.h"
 #include "hoenn_multi.h"
 #include "solmara.h"
 #include "world.h"
@@ -1882,6 +1883,8 @@ static const u8 *ReturnEmptyStringIfNull(const u8 *string)
 
 static const u8 *GetIntroSpeechOfApproachingTrainer(void)
 {
+    // The trainer who spotted the player: their own name in the name box.
+    NpcNames_OnTalk(gApproachingTrainers[gApproachingTrainerId].objectEventId);
     if (gApproachingTrainerId == 0)
     {
         if (OW_NAME_BOX_NPC_TRAINER)

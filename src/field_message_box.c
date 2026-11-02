@@ -1,4 +1,5 @@
 #include "global.h"
+#include "npc_names.h"
 #include "menu.h"
 #include "string_util.h"
 #include "task.h"
@@ -130,6 +131,7 @@ bool8 ShowFieldMessageFromBuffer(void)
 static void ExpandStringAndStartDrawFieldMessage(const u8 *str, bool32 allowSkippingDelayWithButtonPress)
 {
     StringExpandPlaceholders(gStringVar4, str);
+    NpcNames_ApplyToMessage(str);
     TrySpawnNamebox(gStringVar4, NAME_BOX_BASE_TILE_NUM);
     AddTextPrinterForMessage(allowSkippingDelayWithButtonPress);
     CreateTask_DrawFieldMessage();

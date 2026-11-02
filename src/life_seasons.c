@@ -1,4 +1,5 @@
 #include "global.h"
+#include "habitat.h"
 #include "event_data.h"
 #include "field_weather.h"
 #include "fieldmap.h"
@@ -243,6 +244,7 @@ enum Species Seasons_ModifyWildSpecies(enum Species species, u8 level)
 {
     const struct SeasonMon *mons, *mon;
     u32 count, roll;
+    enum Species visitor;
 
     if (!IsMapTypeOutdoors(gMapHeader.mapType) || Random() % 100 >= SEASON_SWAP_PERCENT)
         return species;
@@ -253,7 +255,9 @@ enum Species Seasons_ModifyWildSpecies(enum Species species, u8 level)
         mon = &mons[count - 2 + (Random() & 1)];
     else
         mon = &mons[Random() % (count - 2)];
-    if (mon->level != 0 && level >= mon->level)
-        return mon->species[1];
-    return mon->species[0];
+    visitor = (mon->level != 0 && level >= mon->level) ? mon->species[1] : mon->species[0];
+    // Only where it has a home (src/habitat.c).
+    if (!Habitat_VisitorFits(visitor))
+        return species;
+    return visitor;
 }

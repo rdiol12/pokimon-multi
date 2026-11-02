@@ -2,6 +2,7 @@
 #include "shared_map.h"
 #include "alive.h"
 #include "injury.h"
+#include "npc_names.h"
 #include "battle_setup.h"
 #include "bike.h"
 #include "coord_event_weather.h"
@@ -447,6 +448,8 @@ static const u8 *GetInteractedObjectEventScript(struct MapPosition *position, u8
         script = Alive_GetTalkScript(&gObjectEvents[objectEventId], GetObjectEventScriptPointerByObjectEventId(objectEventId));
 
     script = GetRamScript(gSpecialVar_LastTalked, script);
+    if (script != NULL)
+        NpcNames_OnTalk(objectEventId); // their name above what they say
     return script;
 }
 

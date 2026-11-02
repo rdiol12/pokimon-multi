@@ -252,6 +252,12 @@ ALL_TEACHING_TYPES_JSON := $(LEARNSET_HELPERS_BUILD_DIR)/all_teaching_types.json
 WILD_ENCOUNTERS_TOOL_DIR := $(TOOLS_DIR)/wild_encounters
 AUTO_GEN_TARGETS += $(DATA_SRC_SUBDIR)/wild_encounters.h
 
+# npc_names.h (everyone's own name) is made from the maps.
+AUTO_GEN_TARGETS += $(DATA_SRC_SUBDIR)/npc_names.h
+$(DATA_SRC_SUBDIR)/npc_names.h: $(wildcard data/maps/*/map.json) $(wildcard data/maps/*/scripts.inc) $(wildcard $(DATA_SRC_SUBDIR)/*.party) data/maps/map_groups.json $(TOOLS_DIR)/npc_names/make_names.py
+	python3 $(TOOLS_DIR)/npc_names/make_names.py
+$(C_BUILDDIR)/npc_names.o: c_dep += $(DATA_SRC_SUBDIR)/npc_names.h
+
 MISC_TOOL_DIR := $(TOOLS_DIR)/misc
 AUTO_GEN_TARGETS +=  $(INCLUDE_DIRS)/constants/script_commands.h
 
