@@ -401,7 +401,8 @@ static bool32 InGrass(s16 x, s16 y)
     u32 behavior = MapGridGetMetatileBehaviorAt(x, y);
     if (gMapHeader.mapType == MAP_TYPE_UNDERGROUND)
         return TRUE;
-    return MetatileBehavior_IsTallGrass(behavior) || MetatileBehavior_IsLongGrass(behavior);
+    return MetatileBehavior_IsTallGrass(behavior) || MetatileBehavior_IsLongGrass(behavior)
+        || MetatileBehavior_IsLandWildEncounter(behavior);
 }
 
 // A free tile somewhere on screen, at least minDist steps from the player.
@@ -417,7 +418,9 @@ static bool32 FindSpot(s16 *outX, s16 *outY, u32 minDist, bool32 wantGrass)
         u32 d = abs(x - player->currentCoords.x) + abs(y - player->currentCoords.y);
         if (d < minDist || !CanStandAt(x, y, TRUE))
             continue;
-        if (wantGrass && tries < 45 && !InGrass(x, y))
+        // A wild Pokémon only comes out of its own grass (or cave floor),
+        // never a path or a town square.
+        if (wantGrass && !InGrass(x, y))
             continue;
         *outX = x;
         *outY = y;
@@ -1626,13 +1629,14 @@ static void StartWild(u32 i, bool32 forceCatch)
 
     if (t == NULL || !PickWild(&a->wildSpecies, &a->wildLevel))
         return;
+    // The wild Pokémon jumps out of the grass next to the rover.
     for (k = 0; k < 4; k++)
     {
         dir = (t->facingDirection + k - 1) % 4 + 1;
         x = t->currentCoords.x;
         y = t->currentCoords.y;
         Step(&x, &y, dir);
-        if (CanStandAt(x, y, TRUE))
+        if (CanStandAt(x, y, TRUE) && InGrass(x, y))
             break;
     }
     if (k == 4)

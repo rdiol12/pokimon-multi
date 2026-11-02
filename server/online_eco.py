@@ -87,6 +87,33 @@ def home_species(key):
     return [w[0] for w in m["wild"]] if m else []
 
 
+# The routes around Littleroot only ever have their own Pokémon (as in
+# src/habitat.c).
+STARTING_AREA = {"MAP_ROUTE101", "MAP_ROUTE102", "MAP_ROUTE103", "MAP_ROUTE104", "MAP_PETALBURG_WOODS"}
+
+
+def species_types(species):
+    import community_fusion
+    info = community_fusion.data()["species"].get(species)
+    return set(info["types"]) if info else set()
+
+
+def fits(species, key):
+    """Whether `species` has a home on map `key`: it lives there, or shares a
+    type with something that does (never in the starting area). The game
+    checks the same before it shows a visitor (src/habitat.c)."""
+    m = WORLD.get(key)
+    if not m or not m["wild"]:
+        return False
+    natives = home_species(key)
+    if species in natives:
+        return True
+    if m.get("id") in STARTING_AREA:
+        return False
+    mine = species_types(species)
+    return any(mine & species_types(n) for n in natives)
+
+
 def linked_wild(key, depth=3):
     """The nearest maps (through towns, up to `depth` steps) with wild
     Pokémon of the same kind (grass or cave)."""
@@ -160,7 +187,7 @@ def plan_migrations(day, count=None):
             break
         src = rng.choice(sources)
         dst = rng.choice(linked_wild(src))
-        candidates = [sp for sp in home_species(src) if sp not in home_species(dst)]
+        candidates = [sp for sp in home_species(src) if sp not in home_species(dst) and fits(sp, dst)]
         if not candidates or src in used or dst in used:
             continue
         out.append((rng.choice(candidates), src, dst))
@@ -195,6 +222,9 @@ def thin(ctx, key, species, cost, who):
     if any(m[0] == "flee" and m[1] == species for m in active_moves(db, now, src=key)):
         return
     links = linked_wild(key)
+    if not links:
+        return
+    links = [k for k in links if fits(species, k)]
     if not links:
         return
     dst = links[(species + int(now // 3600)) % len(links)]

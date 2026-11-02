@@ -1,4 +1,5 @@
 #include "global.h"
+#include "habitat.h"
 #include "online.h"
 #include "random.h"
 #include "wild_encounter.h"
@@ -90,7 +91,8 @@ enum Species Eco_ModifyWildSpecies(enum Species species)
     {
         s32 sp, rate;
         ReadPair(Online_Status("ECO", field), &sp, &rate);
-        if (sp > 0 && sp < NUM_SPECIES && Random() % 100 < (u32)rate)
+        // Only where it has a home (src/habitat.c).
+        if (sp > 0 && sp < NUM_SPECIES && Random() % 100 < (u32)rate && Habitat_VisitorFits(sp))
             return sp;
     }
     return species;
