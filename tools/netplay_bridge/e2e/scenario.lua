@@ -217,6 +217,14 @@ D.run(function()
     -- the overworld; B backs out of any submenu.
     D.waitFor("the overworld after the battle", 20000, D.inOverworld, function(i)
         if i % 40 ~= 0 then return end
+        if INSTANCE == 1 and not D.inBattle() then
+            -- In the party menu or bag: only back out, then restart the cycle.
+            -- Running the cycle here could loop forever: the fade back from
+            -- the party menu swallows RIGHT, so A picks POKéMON again.
+            D.press(K.B, 0)
+            step = 0
+            return
+        end
         step = step + 1
         if INSTANCE == 1 then
             local cycle = { K.B, K.B, K.RIGHT, K.DOWN, K.A }
