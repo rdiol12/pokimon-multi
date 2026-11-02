@@ -57,6 +57,7 @@ struct ObjectEvent;
 bool32 Rovers_OverworldUpdate(void);
 void Rovers_OnMapTransition(void);
 const u8 *Rovers_GetTalkScript(struct ObjectEvent *objectEvent);
+const u8 *Rovers_SpeakerName(struct ObjectEvent *obj);
 bool32 Rovers_IsRoverObject(struct ObjectEvent *objectEvent);
 bool32 Rovers_IsWatching(void);
 bool32 Rovers_IsTrading(void);

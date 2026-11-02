@@ -1,4 +1,5 @@
 #include "global.h"
+#include "npc_names.h"
 #include "alive.h"
 #include "script.h"
 #include "event_data.h"
@@ -301,6 +302,7 @@ bool8 ScriptContext_RunScript(void)
     if (!RunScriptCommand(&sGlobalScriptContext))
     {
         sGlobalScriptContextStatus = CONTEXT_SHUTDOWN;
+        NpcNames_OnScriptEnd();
         UnlockPlayerFieldControls();
         return FALSE;
     }

@@ -2552,6 +2552,21 @@ const u8 *Rovers_GetTalkScript(struct ObjectEvent *obj)
     return Rovers_EventScript_Talk;
 }
 
+// A rover's own name, for the name box (src/npc_names.c).
+const u8 *Rovers_SpeakerName(struct ObjectEvent *obj)
+{
+    s32 i;
+
+    if (!obj->active || !OnRoverMap() || !Rovers_IsRoverObject(obj))
+        return NULL;
+    if (obj->localId < LOCALID_ROVER_TRAINER || obj->localId >= LOCALID_ROVER_TRAINER + ROVERS_MAX_HERE)
+        return NULL;
+    i = ActorOfObject(obj);
+    if (i < 0)
+        return NULL;
+    return Cast(&sRovers.actors[i])->name;
+}
+
 // VAR_RESULT: 0 wandering, 1 in a duel (watchable), 2 busy (catching),
 // 3 exploring with the player, 4 fighting a wild Pokémon (watchable).
 void Rovers_BufferTalk(void)
