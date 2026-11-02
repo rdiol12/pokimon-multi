@@ -7,6 +7,7 @@ import { storage, keepData } from './storage.js';
 import { Emulator, loadCore } from './emulator.js';
 import { attachControls } from './controls.js';
 import { startBridge } from './bridge.js';
+import { net } from './net.js';
 
 const $ = (sel) => document.querySelector(sel);
 const SAVE_EVERY_MS = 3000;
@@ -288,6 +289,10 @@ async function startGame(game) {
         el.className = 'status ' + STATUS_CLASS[s];
         el.querySelector('span').textContent = STATUS_TEXT[s];
     }, 500);
+    // Tapping the status says where the game connects and why it is offline.
+    $('#status').addEventListener('click', () => {
+        toast(bridge ? net.describe() : 'Online play could not start in this app.', 6000);
+    });
 
     // Phones suspend apps in the background: save first, and pause.
     const pause = () => { release(); persistSave(true); emu.stop(); emu.suspendAudio(); };
