@@ -32,6 +32,39 @@ Square_Text_GuideOffline:
 	.string "Choose JOIN ONLINE on the title screen\n"
 	.string "and I can show you the HUB and PLAZA.$"
 
+@ Rest stops on the long routes: a keeper who lets the party rest.
+Square_EventScript_Healer::
+	lock
+	faceplayer
+	msgbox Square_Text_HealerAsk, MSGBOX_YESNO
+	goto_if_eq VAR_RESULT, NO, Square_EventScript_HealerNo
+	closemessage
+	fadescreen FADE_TO_BLACK
+	special HealPlayerParty
+	playfanfare MUS_HEAL
+	waitfanfare
+	fadescreen FADE_FROM_BLACK
+	msgbox Square_Text_HealerDone, MSGBOX_DEFAULT
+	release
+	end
+
+Square_EventScript_HealerNo:
+	msgbox Square_Text_HealerNo, MSGBOX_DEFAULT
+	release
+	end
+
+Square_Text_HealerAsk:
+	.string "Welcome to the rest stop! It's a long\n"
+	.string "road, and your POKéMON look tired.\p"
+	.string "Would you like them to rest a while?$"
+
+Square_Text_HealerDone:
+	.string "There! Everyone is rested and ready.\n"
+	.string "Safe travels, and good battles!$"
+
+Square_Text_HealerNo:
+	.string "Come back any time you need a rest.$"
+
 Square_Text_Hub:
 	.string "ONLINE HUB$"
 
@@ -322,3 +355,109 @@ Square_Rustboro_Text_Local2:
 	.string "Devon makes the newest gadgets for\n"
 	.string "trainers who play together online.\p"
 	.string "I test them out right here!$"
+
+@ Route 102 square (tools/map_upgrade/squares.py)
+Square_Route102_EventScript_Board::
+	msgbox Square_Route102_Text_Board, MSGBOX_SIGN
+	end
+
+Square_Route102_EventScript_Guide::
+	goto Square_EventScript_Guide
+
+Square_Route102_EventScript_Matchmaker::
+	goto HoennMulti_EventScript_QuickMatchDesk
+
+Square_Route102_EventScript_Local1::
+	msgbox Square_Route102_Text_Local1, MSGBOX_NPC
+	end
+
+Square_Route102_Text_Board:
+	.string "ROUTE 102 REST STOP\n"
+	.string "Rest, meet and battle.\p"
+	.string "The keeper lets your POKéMON rest.\n"
+	.string "The matchmaker finds you a battle or trade.$"
+
+Square_Route102_Text_Local1:
+	.string "I battle everyone who passes by on\n"
+	.string "their way to Petalburg.\p"
+	.string "Then I rest up here and do it again!$"
+
+@ Route 111 square (tools/map_upgrade/squares.py)
+Square_Route111_EventScript_Board::
+	msgbox Square_Route111_Text_Board, MSGBOX_SIGN
+	end
+
+Square_Route111_EventScript_Guide::
+	goto Square_EventScript_Guide
+
+Square_Route111_EventScript_Matchmaker::
+	goto HoennMulti_EventScript_QuickMatchDesk
+
+Square_Route111_EventScript_Local1::
+	msgbox Square_Route111_Text_Local1, MSGBOX_NPC
+	end
+
+Square_Route111_Text_Board:
+	.string "DESERT REST CAMP\n"
+	.string "Shelter from the sandstorm.\p"
+	.string "The keeper lets your POKéMON rest.\n"
+	.string "The matchmaker finds you a battle or trade.$"
+
+Square_Route111_Text_Local1:
+	.string "The sandstorm stops at these rocks.\n"
+	.string "It's the only calm spot in the desert!\p"
+	.string "Trainers wait here for the wind to\n"
+	.string "die down, and battle while they wait.$"
+
+@ Route 117 square (tools/map_upgrade/squares.py)
+Square_Route117_EventScript_Board::
+	msgbox Square_Route117_Text_Board, MSGBOX_SIGN
+	end
+
+Square_Route117_EventScript_Guide::
+	goto Square_EventScript_Guide
+
+Square_Route117_EventScript_Matchmaker::
+	goto HoennMulti_EventScript_QuickMatchDesk
+
+Square_Route117_EventScript_Local1::
+	msgbox Square_Route117_Text_Local1, MSGBOX_NPC
+	end
+
+Square_Route117_Text_Board:
+	.string "ROUTE 117 REST STOP\n"
+	.string "Between Verdanturf and Mauville.\p"
+	.string "The keeper lets your POKéMON rest.\n"
+	.string "The matchmaker finds you a battle or trade.$"
+
+Square_Route117_Text_Local1:
+	.string "The Day Care up the road raises\n"
+	.string "POKéMON for trainers from all over.\p"
+	.string "Sometimes they meet up right here to\n"
+	.string "swap stories about their EGGS.$"
+
+@ Route 123 square (tools/map_upgrade/squares.py)
+Square_Route123_EventScript_Board::
+	msgbox Square_Route123_Text_Board, MSGBOX_SIGN
+	end
+
+Square_Route123_EventScript_Guide::
+	goto Square_EventScript_Guide
+
+Square_Route123_EventScript_Matchmaker::
+	goto HoennMulti_EventScript_QuickMatchDesk
+
+Square_Route123_EventScript_Local1::
+	msgbox Square_Route123_Text_Local1, MSGBOX_NPC
+	end
+
+Square_Route123_Text_Board:
+	.string "ROUTE 123 REST STOP\n"
+	.string "The last rest before Mt. Pyre.\p"
+	.string "The keeper lets your POKéMON rest.\n"
+	.string "The matchmaker finds you a battle or trade.$"
+
+Square_Route123_Text_Local1:
+	.string "The Berry Master's garden is just up\n"
+	.string "the road. I come here to rest after.\p"
+	.string "Picking berries is hard work!$"

@@ -21,6 +21,23 @@ Ten towns and cities grew a new district with a square where players meet:
 | Fortree City | 14 rows south (40x34) | Fortree Clearing, the one open place on the ground |
 | Rustboro City | 16 rows in the south (40x76) | Rustboro Stone Park, between the city and Route 104 |
 
+## Rest stops
+
+Four routes grew a rest stop beside the road, through a gap in the trees or
+rocks:
+
+| Route | Grew | Rest stop |
+| --- | --- | --- |
+| Route 102 | 12 rows south (50x32) | a clearing with a pond |
+| Route 111 | 10 columns east (50x140) | the Desert Rest Camp, a grassy hollow out of the sandstorm (both Route 111 layouts, with and without the Mirage Tower) |
+| Route 117 | 12 rows south (60x32) | a paved square by a pond, near the Day Care |
+| Route 123 | 12 rows south (140x32) | a clearing below the Berry Master's road |
+
+Each has a notice board, a keeper who lets the party rest (heals it, like a
+Pokémon Center), the matchmaker, a local and a hidden berry or item.
+
+## What every square has
+
 Every square has:
 
 - a **guide** who opens the ONLINE HUB or the PLAZA (offline she says how to

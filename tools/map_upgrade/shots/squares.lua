@@ -16,6 +16,10 @@ local TOWNS = {
     { "lavaridge", MAPS.MAP_LAVARIDGE_TOWN, 10, 26, 4, 22 },
     { "fortree", MAPS.MAP_FORTREE_CITY, 22, 27, 14, 23 },
     { "rustboro", MAPS.MAP_RUSTBORO_CITY, 28, 64, 21, 59 },
+    { "route102", MAPS.MAP_ROUTE102, 25, 26, 19, 22 },
+    { "route111", MAPS.MAP_ROUTE111, 44, 77, 41, 74 },
+    { "route117", MAPS.MAP_ROUTE117, 34, 26, 27, 22 },
+    { "route123", MAPS.MAP_ROUTE123, 75, 26, 67, 22 },
 }
 
 D.run(function()
@@ -45,4 +49,14 @@ D.run(function()
     D.talk(K.UP, "21-matchmaker", 2)
     D.press(K.A, 40)
     D.press(K.B, 40)
+    -- a rest stop keeper heals the party
+    D.scene(12, MAPS.MAP_ROUTE102, 21, 24)
+    D.wait(300)
+    D.talk(K.UP, "22-keeper", 2)
+    D.press(K.A, 30)
+    D.wait(30)
+    D.shot("23-keeper-yes")
+    D.press(K.A, 300)
+    D.shot("24-keeper-done")
+    D.press(K.A, 40)
 end)
