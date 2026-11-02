@@ -155,6 +155,7 @@ Online_Text_HubClose:
 	.string "CLOSE$"
 
 	.include "data/scripts/online/goals.inc"
+	.include "data/scripts/online/stormwild.inc"
 	.include "data/scripts/online/sightings.inc"
 	.include "data/scripts/online/hoenn.inc"
 	.include "data/scripts/online/fishing.inc"

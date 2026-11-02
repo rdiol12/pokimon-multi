@@ -10115,6 +10115,16 @@
       "secondary_tileset": "gTileset_EverGrande",
       "border_filepath": "data/layouts/SolmaraLeague/border.bin",
       "blockdata_filepath": "data/layouts/SolmaraLeague/map.bin"
+    },
+    {
+      "id": "LAYOUT_STORMWILD",
+      "name": "Stormwild_Layout",
+      "width": 64,
+      "height": 64,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Rustboro",
+      "border_filepath": "data/layouts/Stormwild/border.bin",
+      "blockdata_filepath": "data/layouts/Stormwild/map.bin"
     }
   ]
 }

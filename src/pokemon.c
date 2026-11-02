@@ -1,5 +1,6 @@
 #include "global.h"
 #include "research.h"
+#include "stormwild.h"
 #include "world.h"
 #include "malloc.h"
 #include "mechanics.h"
@@ -904,6 +905,7 @@ bool32 ComputePlayerShinyOdds(u32 personality, u32 value)
     totalRerolls += ShinyChain_ExtraRolls();
     totalRerolls += TrainerLevel_ShinyRolls();
     totalRerolls += Research_ShinyRolls();
+    totalRerolls += Stormwild_ShinyRolls();
 
     while (GET_SHINY_VALUE(value, personality) >= SHINY_ODDS && totalRerolls > 0)
     {

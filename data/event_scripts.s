@@ -382,6 +382,7 @@ gStdScripts_End::
 	.include "data/maps/StarfallIsle_Hotel/scripts.inc"
 	.include "data/maps/OnlineGuildHall/scripts.inc"
 	.include "data/maps/AmberwoodHollow/scripts.inc"
+	.include "data/maps/Stormwild/scripts.inc"
 	.include "data/scripts/areas/solmara_flight.inc"
 	.include "data/scripts/areas/solmara_ship.inc"
 	.include "data/maps/SolmaraShip_Lounge/scripts.inc"

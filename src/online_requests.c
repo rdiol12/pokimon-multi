@@ -1,6 +1,7 @@
 #include "global.h"
 #include "online.h"
 #include "hoenn_multi.h"
+#include "stormwild.h"
 
 // Every request the sixth-batch features make (Online_Request, VAR_0x8004).
 // The server routes each by its first word to a module in server/online_*.py.
@@ -107,4 +108,11 @@ const struct OnlineRequest gOnlineRequests[ONL_REQ_COUNT] =
     [ONL_REQ_HTEAM_NO]   = {"TEAMUP NO"},
     [ONL_REQ_HTEAM_GET]  = {"TEAMUP GET", .after = HoennMulti_StoreTeam},
     [ONL_REQ_HTEAM_END]  = {"TEAMUP END", .after = HoennMulti_DropTeam},
+    [ONL_REQ_XRUN_JOIN]  = {"XRUN JOIN", 1},
+    [ONL_REQ_XRUN_GO]    = {"XRUN GO"},
+    [ONL_REQ_XRUN_LOOT]  = {"XRUN LOOT", 1},
+    [ONL_REQ_XRUN_ROB]   = {"XRUN ROB", .build = Stormwild_AddRobbed, .after = Stormwild_AfterRob},
+    [ONL_REQ_XRUN_OUT]   = {"XRUN OUT", 1, .build = Stormwild_AddHaul},
+    [ONL_REQ_XRUN_FAIL]  = {"XRUN FAIL"},
+    [ONL_REQ_XRUN_BOARD] = {"XRUN BOARD"},
 };
