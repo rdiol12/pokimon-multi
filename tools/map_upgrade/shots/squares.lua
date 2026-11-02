@@ -15,6 +15,7 @@ local TOWNS = {
     { "fallarbor", MAPS.MAP_FALLARBOR_TOWN, 10, 26, 4, 22 },
     { "lavaridge", MAPS.MAP_LAVARIDGE_TOWN, 10, 26, 4, 22 },
     { "fortree", MAPS.MAP_FORTREE_CITY, 22, 27, 14, 23 },
+    { "rustboro", MAPS.MAP_RUSTBORO_CITY, 28, 64, 21, 59 },
 }
 
 D.run(function()

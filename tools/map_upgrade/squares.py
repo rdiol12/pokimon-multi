@@ -44,6 +44,9 @@ def style(kind):
     elif kind == 'mauville':
         st = Style('gTileset_General', 'gTileset_Mauville', ['LAYOUT_MAUVILLE_CITY', 'LAYOUT_VERDANTURF_TOWN',
                    'LAYOUT_ROUTE110', 'LAYOUT_ROUTE117', 'LAYOUT_ROUTE118'], wall_classes={'T': TREES}, colors=True)
+    elif kind == 'rustboro':
+        st = Style('gTileset_General', 'gTileset_Rustboro', ['LAYOUT_RUSTBORO_CITY', 'LAYOUT_ROUTE104',
+                   'LAYOUT_ROUTE116'], wall_classes={'T': TREES}, colors=True)
     elif kind == 'fallarbor':
         st = Style('gTileset_General', 'gTileset_Fallarbor', ['LAYOUT_FALLARBOR_TOWN', 'LAYOUT_ROUTE113',
                    'LAYOUT_ROUTE114', 'LAYOUT_ROUTE115'], wall_classes={'T': TREES}, colors=True)
@@ -57,6 +60,7 @@ def style(kind):
 EXCLUDE = {
     'volcanic': {0x018, 0x271, 0x2EE, 0x073},
     'mauville': {0x298, 0x299, 0x29A, 0x37D, 0x280, 0x2E5, 0x2FE, 0x2E6, 0x293, 0x294, 0x29B, 0x29C, 0x133, 0x35E, 0x37E, 0x2A3, 0x2A4},
+    'rustboro': {0x0C6, 0x0C7, 0x016, 0x017, 0x00E, 0x00F, 0x206},
     'fallarbor': {0x28B, 0x20E, 0x060, 0x241, 0x3EB, 0x3AB},
     'jungle': set(),
 }
@@ -541,6 +545,41 @@ def mauville():
         'matchmaker finds you a battle or trade.'
 
 
+def rustboro():
+    """Rustboro's square is a park between the city and Route 104: the
+    city's south edge (the trees and the road out) moves 16 rows down."""
+    e = Extension('RustboroCity', style('rustboro'), down=16, fill='g')
+    a, W, H = e.area, e.w, e.h
+    s = Square('Rustboro', 'Rustboro City', e)
+    e.copy_old(0, 55, 40, 5, 0, H - 5, c=None)
+    e.move_old_events(0, 55, 40, 5, 0, 16)
+    e.reopen(0, 55, 40, 16, 'g')
+    border(a, 0, 55, W, H - 5, sides='lr', t=3)
+    a.rect(3, 55, 8, 3, 'T')
+    a.rect(20, 55, 17, 3, 'T')
+    a.rect(12, 55, 8, 16, '.')
+    s.plaza(21, 60, 14, 8, '.')
+    a.rect(20, 62, 1, 3, '.')
+    a.rect(4, 61, 6, 6, 'T')
+    a.snap_trees(ground='g')
+    flowers(a, 0x004, 12, 3, 58, 37, 70, seed=11)
+    s.board(21, 59)
+    s.guide(24, 60, 'OBJ_EVENT_GFX_SCIENTIST_1')
+    s.matchmaker(31, 60, 'OBJ_EVENT_GFX_COOLTRAINER_F')
+    s.local(33, 66, 'OBJ_EVENT_GFX_SCHOOL_KID_M',
+            'The Trainer\'s School teaches the\\n'
+            'basics, but this park is where you\\l'
+            'really learn: battling real people!', move='MOVEMENT_TYPE_FACE_LEFT')
+    s.local(26, 66, 'OBJ_EVENT_GFX_MAN_2',
+            'Devon makes the newest gadgets for\\n'
+            'trainers who play together online.\\p'
+            'I test them out right here!', move='MOVEMENT_TYPE_WANDER_AROUND', n=2, rx=2, ry=1)
+    s.hidden(5, 68, 'ITEM_HARD_STONE')
+    return e, s, 'RUSTBORO STONE PARK\\nWhere trainers meet in the city.\\p'\
+        'The guide has the HUB and PLAZA. The\\n'\
+        'matchmaker finds you a battle or trade.'
+
+
 # name: (map folder, hidden item flag number, builder). Never renumber flags.
 TOWNS = {
     'littleroot': ('LittlerootTown', 0, littleroot),
@@ -553,10 +592,15 @@ TOWNS = {
     'lavaridge': ('LavaridgeTown', 6, lavaridge),
     'fortree': ('FortreeCity', 7, fortree),
     'mauville': ('MauvilleCity', 8, mauville),
+    'rustboro': ('RustboroCity', 9, rustboro),
 }
 
 
 def main():
+    # set iteration order feeds the synthesiser's tie-breaks: pin it so reruns
+    # draw the same tiles
+    if os.environ.get('PYTHONHASHSEED') != '0':
+        os.execve(sys.executable, [sys.executable] + sys.argv, {**os.environ, 'PYTHONHASHSEED': '0'})
     args = sys.argv[1:]
     preview = None
     if '--preview' in args:

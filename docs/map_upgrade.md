@@ -6,7 +6,7 @@ battle. This upgrade grows the towns and keeps a tool for checking every map.
 
 ## Town squares
 
-Nine towns grew a new district with a square where players meet:
+Ten towns and cities grew a new district with a square where players meet:
 
 | Town | Grew | Square |
 | --- | --- | --- |
@@ -19,6 +19,7 @@ Nine towns grew a new district with a square where players meet:
 | Fallarbor Town | 14 rows south (20x34) | Fallarbor Ash Square, a sunken yard in the ash |
 | Lavaridge Town | 14 rows south (20x34) | Lavaridge Hot Square, below the cliff |
 | Fortree City | 14 rows south (40x34) | Fortree Clearing, the one open place on the ground |
+| Rustboro City | 16 rows in the south (40x76) | Rustboro Stone Park, between the city and Route 104 |
 
 Every square has:
 
@@ -32,9 +33,9 @@ Every square has:
 
 Towns only grew south or east, so nothing already in them moved (warps,
 people, fly spots, the pastimes' and living world's spots all keep their
-coordinates). Mauville is the exception: its bottom two rows, where Route
-110's road comes in, moved 16 rows down together with the item ball on them,
-and the new district fills the gap.
+coordinates). Mauville and Rustboro are the exceptions: their south edge, where the road
+to Route 110 / Route 104 comes in, moved 16 rows down (with Mauville's item
+ball), and the new district fills the gap.
 
 The new ground is drawn by the area synthesiser (`tools/areas/synth.py`),
 which learns from Game Freak's own maps with the same tileset, so tree lines,
@@ -48,7 +49,7 @@ new ground (`EXCLUDE` in `squares.py`).
   every old metatile, lets the synthesiser draw the new ground and the seam,
   and (when growing left or up) shifts the map's events and both sides of its
   connections.
-- `tools/map_upgrade/squares.py`: the nine squares. The first run saves each
+- `tools/map_upgrade/squares.py`: the squares (it pins PYTHONHASHSEED so reruns draw the same tiles). The first run saves each
   town's original layout and map.json in `tools/map_upgrade/orig/`; every run
   starts from those, so a rerun puts back the saved map.json (redo any later
   hand edits there). It checks that every new person, sign and hidden item can

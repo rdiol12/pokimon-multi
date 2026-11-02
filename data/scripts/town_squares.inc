@@ -287,3 +287,38 @@ Square_Fortree_Text_Local1:
 	.string "ground is the only place big enough\l"
 	.string "for a crowd!\p"
 	.string "Winona flies over to watch sometimes.$"
+
+@ Rustboro City square (tools/map_upgrade/squares.py)
+Square_Rustboro_EventScript_Board::
+	msgbox Square_Rustboro_Text_Board, MSGBOX_SIGN
+	end
+
+Square_Rustboro_EventScript_Guide::
+	goto Square_EventScript_Guide
+
+Square_Rustboro_EventScript_Matchmaker::
+	goto HoennMulti_EventScript_QuickMatchDesk
+
+Square_Rustboro_EventScript_Local1::
+	msgbox Square_Rustboro_Text_Local1, MSGBOX_NPC
+	end
+
+Square_Rustboro_EventScript_Local2::
+	msgbox Square_Rustboro_Text_Local2, MSGBOX_NPC
+	end
+
+Square_Rustboro_Text_Board:
+	.string "RUSTBORO STONE PARK\n"
+	.string "Where trainers meet in the city.\p"
+	.string "The guide has the HUB and PLAZA. The\n"
+	.string "matchmaker finds you a battle or trade.$"
+
+Square_Rustboro_Text_Local1:
+	.string "The Trainer's School teaches the\n"
+	.string "basics, but this park is where you\l"
+	.string "really learn: battling real people!$"
+
+Square_Rustboro_Text_Local2:
+	.string "Devon makes the newest gadgets for\n"
+	.string "trainers who play together online.\p"
+	.string "I test them out right here!$"

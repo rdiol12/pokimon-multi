@@ -38,7 +38,7 @@
       "id": "LAYOUT_RUSTBORO_CITY",
       "name": "RustboroCity_Layout",
       "width": 40,
-      "height": 60,
+      "height": 76,
       "primary_tileset": "gTileset_General",
       "secondary_tileset": "gTileset_Rustboro",
       "border_filepath": "data/layouts/RustboroCity/border.bin",
