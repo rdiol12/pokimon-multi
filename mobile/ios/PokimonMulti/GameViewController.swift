@@ -42,6 +42,20 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
         super.viewDidLoad()
         web.load(URLRequest(url: URL(string: "\(Self.scheme)://game/index.html")!))
         UIApplication.shared.isIdleTimerDisabled = true
+        // iOS may have closed the page while the app was in the background
+        // without telling us; it then shows a frozen picture. Reload at once
+        // (the page comes back at its resume point, www/app.js).
+        NotificationCenter.default.addObserver(self, selector: #selector(willEnterForeground),
+                                               name: UIApplication.willEnterForegroundNotification, object: nil)
+    }
+
+    @objc private func willEnterForeground() {
+        web.evaluateJavaScript("1") { [weak self] result, error in
+            if result == nil || error != nil {
+                self?.net.closeAll()
+                self?.web.reload()
+            }
+        }
     }
 
     override var prefersStatusBarHidden: Bool { true }
