@@ -379,10 +379,20 @@ class Server:
         player.tid = int(tid) & 0xFFFF
         player.send(f"WELCOME {player.id}")
 
+    def place(self, player, map_key):
+        """The room `player` goes to on `map_key`. server/shared_map.py adds
+        map channels on top of room_of."""
+        return self.room_of(player, map_key)
+
     def cmd_pos(self, player, group, num, x, y, facing, elevation, gfx):
         new_map = (int(group), int(num))
-        new_room = self.room_of(player, new_map)
+        new_room = self.place(player, new_map)
         player.pos = (int(x), int(y), int(facing), int(elevation), int(gfx))
+        self.relocate(player, new_map, new_room)
+
+    def relocate(self, player, new_map, new_room):
+        """Puts `player` (at player.pos) in `new_room` of `new_map`, and tells
+        everyone who now sees them, or no longer does."""
         old_map, old_room = player.map, player.room
         player.map, player.room = new_map, new_room
         if (old_map, old_room) != (new_map, new_room):
@@ -665,6 +675,11 @@ world.install(Server)
 import community  # noqa: E402
 
 community.install(Server)
+
+# Shared wild spawns and map channels: server/shared_map.py.
+import shared_map  # noqa: E402
+
+shared_map.install(Server)
 
 # Phone notifications (trade offers, friends online, tournaments): server/notify.py.
 import notify  # noqa: E402

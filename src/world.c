@@ -1,4 +1,5 @@
 #include "global.h"
+#include "shared_map.h"
 #include "guide.h"
 #include "adventure.h"
 #include "pastime.h"
@@ -54,6 +55,7 @@ void World_OnMapTransition(void)
     DayNight_UpdateFlags();
     RoamingWeather_ApplyToCurrentMap();
     Alive_OnMapTransition();
+    SharedMap_OnMapTransition();
 }
 
 static void RunShowcase(void)
@@ -132,6 +134,7 @@ bool32 World_OverworldUpdate(void)
     Legends_Update();
     House_Update();
     WorldOnline_Update();
+    SharedMap_OverworldUpdate();
     Achievements_Update();
     Adventure_Update();
     Mechanics_Update();
@@ -172,6 +175,7 @@ enum Species World_ModifyWildSpecies(enum Species species, u8 level)
 // Back from a wild battle, before the field reloads.
 void World_OnWildBattleEnd(void)
 {
+    SharedMap_OnWildBattleEnd();
     // The enemy party may already be cleared; gBattleResults isn't.
     if (gBattleOutcome == B_OUTCOME_CAUGHT)
     {
