@@ -72,7 +72,7 @@ html, body {
     gap: 8px;
     padding: 6px 10px;
 }
-.status { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); margin-right: auto; }
+.status { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); margin-right: auto; cursor: pointer; }
 .status i { width: 9px; height: 9px; border-radius: 50%; background: #666; }
 .status.online i { background: var(--emerald); box-shadow: 0 0 6px var(--emerald); }
 .status.connecting i { background: #e0b030; }
