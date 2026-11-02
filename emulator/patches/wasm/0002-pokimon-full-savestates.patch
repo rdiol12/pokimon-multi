@@ -1,0 +1,70 @@
+diff --git a/scripts/shim/mgba_shim.c b/scripts/shim/mgba_shim.c
+index 60d3cee..7db15e4 100644
+--- a/scripts/shim/mgba_shim.c
++++ b/scripts/shim/mgba_shim.c
+@@ -14,6 +14,7 @@
+ #include <mgba/core/core.h>
+ #include <mgba/core/config.h>
+ #include <mgba/core/log.h>
++#include <mgba/core/serialize.h>
+ #include <mgba-util/audio-buffer.h>
+ #include <mgba-util/image.h>
+ #include <mgba-util/vfs.h>
+@@ -384,6 +385,57 @@ EXPORT int mgbawasm_state_load(const void* in) {
+ 	return core->loadState(core, in) ? 1 : 0;
+ }
+ 
++/*
++ * Pokimon: full savestates, with the extra data the plain ones leave out
++ * (extended EWRAM, extended video, RTC). The phone app keeps one when it goes
++ * to the background, so it can come back there if the phone closes it.
++ * mgbawasm_state_full_save returns the byte count and parks the bytes, read
++ * through mgbawasm_state_full_ptr, until the next call.
++ */
++static void* fullState = NULL;
++
++EXPORT int mgbawasm_state_full_save(void) {
++	free(fullState);
++	fullState = NULL;
++	if (!core) {
++		return 0;
++	}
++	struct VFile* vf = VFileMemChunk(NULL, 0);
++	if (!vf) {
++		return 0;
++	}
++	int size = 0;
++	if (mCoreSaveStateNamed(core, vf, SAVESTATE_RTC)) {
++		size = (int) vf->size(vf);
++		fullState = malloc(size);
++		vf->seek(vf, 0, SEEK_SET);
++		if (!fullState || vf->read(vf, fullState, size) != size) {
++			free(fullState);
++			fullState = NULL;
++			size = 0;
++		}
++	}
++	vf->close(vf);
++	return size;
++}
++
++EXPORT void* mgbawasm_state_full_ptr(void) {
++	return fullState;
++}
++
++EXPORT int mgbawasm_state_full_load(const void* data, int bytes) {
++	if (!core || !data || bytes <= 0) {
++		return 0;
++	}
++	struct VFile* vf = VFileFromConstMemory(data, bytes);
++	if (!vf) {
++		return 0;
++	}
++	int ok = mCoreLoadStateNamed(core, vf, SAVESTATE_RTC) ? 1 : 0;
++	vf->close(vf);
++	return ok;
++}
++
+ /* ------------------------------------------------------------------- SRAM */
+ 
+ /**
