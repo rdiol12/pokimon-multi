@@ -22,7 +22,6 @@
 #include "online.h"
 #include "field_ability.h"
 #include "research.h"
-#include "pokedex.h"
 
 extern const u8 World_EventScript_Menu[];
 
@@ -47,7 +46,6 @@ struct WorldShowcase
     u8 ripen;     // 1: the Route 102 Oran Berry tree is ready to pick
     u8 storm;     // 1: pick the hour the thunderstorm is over the map, 2: any rain
     u8 surf;      // 1: giveSpecies knows Surf (arriving on water starts you surfing)
-    u8 dex;       // 1: the player has the National Pokédex, with giveSpecies caught
 };
 
 EWRAM_DATA struct WorldShowcase gWorldShowcase = {0};
@@ -101,15 +99,6 @@ static void RunShowcase(void)
             GiveCapturedMonToPlayer(&mon);
         }
         CalculatePlayerPartyCount();
-        if (gWorldShowcase.dex)
-        {
-            u32 nat = SpeciesToNationalPokedexNum(gWorldShowcase.giveSpecies);
-            FlagSet(FLAG_SYS_POKEDEX_GET);
-            EnableNationalPokedex();
-            GetSetPokedexFlag(nat, FLAG_SET_SEEN);
-            GetSetPokedexFlag(nat, FLAG_SET_CAUGHT);
-            gWorldShowcase.dex = FALSE;
-        }
         gWorldShowcase.giveSpecies = SPECIES_NONE;
         gWorldShowcase.surf = FALSE;
     }

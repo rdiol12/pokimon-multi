@@ -2,7 +2,7 @@
 
 from ext import text
 
-COMPLETE = 1028  # NATIONAL_DEX_COUNT in the game
+COMPLETE = 1025  # NATIONAL_DEX_COUNT in the game
 
 
 def setup(db):

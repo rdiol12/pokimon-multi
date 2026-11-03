@@ -122,7 +122,6 @@ function Driver.scene(hour, map, x, y, extra)
     E.write8(s + 16, extra.ripen and 1 or 0)
     E.write8(s + 17, extra.storm == "thunder" and 1 or extra.storm == "rain" and 2 or 0)
     E.write8(s + 18, extra.surf and 1 or 0)
-    E.write8(s + 19, extra.dex and 1 or 0)
     E.write8(s, 1)
     -- B closes whatever message is still open, so the warp can run.
     Driver.waitFor("the warp", 900, function() return E.read8(s) == 0 end, function(i)

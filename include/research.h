@@ -11,11 +11,6 @@
 // research ranks with bigger rewards. Opened from the R menu (RESEARCH).
 
 #define RESEARCH_SPECIES (NATIONAL_DEX_COUNT + 1) // by national dex number
-// The first 1026 entries (dex numbers 0-1025) were saved before brand-new
-// Pokémon got dex numbers, so that array keeps its size and new numbers go in
-// SaveBlockExt.researchMore (room for RESEARCH_MORE_SPECIES of them).
-#define RESEARCH_SAVED_SPECIES 1026
-#define RESEARCH_MORE_SPECIES 64
 #define RESEARCH_COMPLETE 10                     // the research level that completes a species
 
 #define RESEARCH_FLAG_BIG      (1 << 0) // caught one at least 115% of the usual size
@@ -38,12 +33,7 @@ struct ResearchSave
     u16 completed; // species completed
     u8 rank;       // research ranks whose reward was given
     u8 filler;
-    struct ResearchEntry entries[RESEARCH_SAVED_SPECIES];
-};
-
-struct ResearchSaveMore
-{
-    struct ResearchEntry entries[RESEARCH_MORE_SPECIES];
+    struct ResearchEntry entries[RESEARCH_SPECIES];
 };
 
 // Hooks.

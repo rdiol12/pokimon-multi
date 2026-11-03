@@ -61,7 +61,6 @@ struct SaveBlockExt
     struct SolmaraSaveData solmara; // Solmara, the second region (docs/solmara.md)
     struct AliveSave alive; // the living world (src/alive*.c)
     struct StormwildSave stormwild; // the extraction run (src/stormwild.c)
-    struct ResearchSaveMore researchMore; // research for dex numbers past 1025 (include/research.h)
 };
 
 extern struct SaveBlockExt gSaveBlockExt;

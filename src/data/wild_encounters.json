@@ -41423,17 +41423,17 @@
               {
                 "min_level": 44,
                 "max_level": 48,
-                "species": "SPECIES_LUMEDUSA"
-              },
-              {
-                "min_level": 44,
-                "max_level": 48,
                 "species": "SPECIES_FINIZEN"
               },
               {
-                "min_level": 48,
-                "max_level": 52,
-                "species": "SPECIES_AURELLUMA"
+                "min_level": 46,
+                "max_level": 50,
+                "species": "SPECIES_WAILMER"
+              },
+              {
+                "min_level": 46,
+                "max_level": 50,
+                "species": "SPECIES_MANTYKE"
               },
               {
                 "min_level": 48,
@@ -41451,9 +41451,9 @@
                 "species": "SPECIES_MAGIKARP"
               },
               {
-                "min_level": 28,
-                "max_level": 34,
-                "species": "SPECIES_JELLUME"
+                "min_level": 44,
+                "max_level": 48,
+                "species": "SPECIES_KRABBY"
               },
               {
                 "min_level": 30,
