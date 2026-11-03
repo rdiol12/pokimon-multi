@@ -28,7 +28,8 @@ e2e = os.path.join(root, "tools", "netplay_bridge", "e2e")
 SYMBOLS = ["gNetplayMailbox", "gMain", "gParties", "gPartiesCount", "CB2_Overworld", "BattleMainCB2", "sLockFieldControls",
            "gLink", "gLinkStatus", "gReceivedRemoteLinkPlayers", "gLinkCallback", "gReadyToCloseLink",
            "gBattleMons", "gSaveBlock1Ptr", "gSaveBlock2Ptr", "gWorldShowcase", "gObjectEvents",
-           "gSpecialVar_Result", "gWorldMailbox", "gWorldTimingMeter", "gAliveShowcase"]
+           "gSpecialVar_Result", "gWorldMailbox", "gWorldTimingMeter", "gAliveShowcase",
+           "gSharedMapMailbox", "gSharedMapShowcase"]
 
 HELPERS = """
 function Driver.read8(addr) return E.read8(addr) end
@@ -184,7 +185,10 @@ def main():
     for d in dirs:
         open(os.path.join(d, "driver.lua"), "w").write(prelude + open(scenario).read())
     env, server = dict(os.environ), None
-    if players > 1:
+    if players > 1 and os.environ.get("SHOTS_SERVER_PORT"):
+        # The caller runs the server (tools/shared_map/shots.py).
+        env["NETPLAY_PORT"] = os.environ["SHOTS_SERVER_PORT"]
+    elif players > 1:
         with socket.socket() as s:
             s.bind(("127.0.0.1", 0))
             port = s.getsockname()[1]

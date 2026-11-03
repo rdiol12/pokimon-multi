@@ -1,4 +1,5 @@
 #include "global.h"
+#include "shared_map.h"
 #include "trainer_look.h"
 #include "netplay.h"
 #include "hoenn_multi.h"
@@ -3272,7 +3273,7 @@ static void ReportSoloBattle(void)
 {
     struct NetplayBattleReport *report = &gNetplayMailbox.battleReport;
     bool32 on = IsOnline() && gMain.inBattle && gBattleMons[0].species != SPECIES_NONE
-             && HoennMulti_IsWatchableBattle();
+             && (HoennMulti_IsWatchableBattle() || SharedMap_IsWatchableBattle());
 
     if (!on)
     {
@@ -3285,7 +3286,10 @@ static void ReportSoloBattle(void)
     }
     if (report->filler[0] == 0)
     {
-        HoennMulti_GetWatchableOpponent(gNetplayMailbox.soloOpponent);
+        if (SharedMap_IsWatchableBattle())
+            SharedMap_GetWatchableOpponent(gNetplayMailbox.soloOpponent);
+        else
+            HoennMulti_GetWatchableOpponent(gNetplayMailbox.soloOpponent);
         memset(report->sides, 0, sizeof(report->sides));
         report->text[0] = EOS;
         report->filler[0] = 1;

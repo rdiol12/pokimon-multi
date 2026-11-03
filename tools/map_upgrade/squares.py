@@ -1,0 +1,940 @@
+"""Town squares: every small Hoenn town grows a new district on a free edge
+(south or east, so no old coordinate moves) with a paved square where
+players meet. Each square has a guide (online HUB and PLAZA), a matchmaker
+(the QUICK MATCH desk's battle/trade finder), a notice board, a local with
+something to say, and a hidden item.
+
+    python3 tools/map_upgrade/squares.py                       # rebuilds every square
+    python3 tools/map_upgrade/squares.py --preview DIR [TOWN ...]  # and saves pictures
+
+The first run saves each town's original layout and map.json under
+tools/map_upgrade/orig/; later runs start from those, so the tool can be
+rerun after tweaking a town. A rerun also puts back the saved map.json, so
+redo (or move into orig/) any later hand edits to a grown town's map.json.
+"""
+import json, os, shutil, sys
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+sys.path.insert(0, os.path.join(HERE, '..', 'areas'))
+from extend import Extension, ROOT, write_json
+from synth import Style
+from styles import town, jungle, volcanic, TREES, PLAZA, POND
+from tiles import layouts
+
+ORIG = f'{HERE}/orig'
+# maps that swap in another layout of the same size later in the story: it
+# grows the same way (the new ground is shared, the old part stays its own)
+ALT_LAYOUTS = {'Route111': ['LAYOUT_ROUTE111_NO_MIRAGE_TOWER']}
+SCRIPTS = f'{ROOT}/data/scripts/town_squares.inc'
+FLAGS_H = f'{ROOT}/include/constants/map_upgrade.h'
+TAG = 'Square_'   # every event the tool adds has a script starting with this
+
+_styles = {}
+
+
+def style(kind):
+    if kind in _styles:
+        return _styles[kind]
+    if kind == 'town':
+        st = town()
+    elif kind == 'jungle':
+        st = jungle()
+    elif kind == 'volcanic':
+        st = volcanic()
+    elif kind == 'dewford':
+        st = Style('gTileset_General', 'gTileset_Dewford', ['LAYOUT_DEWFORD_TOWN', 'LAYOUT_ROUTE105',
+                   'LAYOUT_ROUTE106', 'LAYOUT_ROUTE107'], wall_classes={'T': TREES}, colors=True)
+    elif kind == 'mauville':
+        st = Style('gTileset_General', 'gTileset_Mauville', ['LAYOUT_MAUVILLE_CITY', 'LAYOUT_VERDANTURF_TOWN',
+                   'LAYOUT_ROUTE110', 'LAYOUT_ROUTE117', 'LAYOUT_ROUTE118'], wall_classes={'T': TREES}, colors=True)
+    elif kind == 'desert':
+        st = Style('gTileset_General', 'gTileset_Mauville', ['LAYOUT_ROUTE111', 'LAYOUT_ROUTE110', 'LAYOUT_MAUVILLE_CITY'],
+                   wall_classes={'T': TREES}, colors=True)
+    elif kind == 'lilycove':
+        st = Style('gTileset_General', 'gTileset_Lilycove', ['LAYOUT_ROUTE121', 'LAYOUT_ROUTE122', 'LAYOUT_ROUTE123'],
+                   wall_classes={'T': TREES}, colors=True)
+    elif kind == 'pacifidlog':
+        st = Style('gTileset_General', 'gTileset_Pacifidlog', ['LAYOUT_PACIFIDLOG_TOWN'])
+    elif kind == 'rustboro':
+        st = Style('gTileset_General', 'gTileset_Rustboro', ['LAYOUT_RUSTBORO_CITY', 'LAYOUT_ROUTE104',
+                   'LAYOUT_ROUTE116'], wall_classes={'T': TREES}, colors=True)
+    elif kind == 'fallarbor':
+        st = Style('gTileset_General', 'gTileset_Fallarbor', ['LAYOUT_FALLARBOR_TOWN', 'LAYOUT_ROUTE113',
+                   'LAYOUT_ROUTE114', 'LAYOUT_ROUTE115'], wall_classes={'T': TREES}, colors=True)
+    st.exclude = set(st.exclude) | EXCLUDE.get(kind, set())
+    _styles[kind] = st
+    return st
+
+
+# metatiles the synthesiser may not use in the new ground (ladders, water
+# corners and other one-off pieces that look wrong out of place)
+EXCLUDE = {
+    'volcanic': {0x018, 0x271, 0x2EE, 0x073},
+    'mauville': {0x298, 0x299, 0x29A, 0x37D, 0x280, 0x2E5, 0x2FE, 0x2E6, 0x293, 0x294, 0x29B, 0x29C, 0x133, 0x35E, 0x37E, 0x2A3, 0x2A4},
+    'rustboro': {0x0C6, 0x0C7, 0x016, 0x017, 0x00E, 0x00F, 0x206},
+    'fallarbor': {0x28B, 0x20E, 0x060, 0x241, 0x3EB, 0x3AB},
+    'jungle': set(),
+}
+
+
+# ------------------------------------------------------------------ originals
+def originals(folder):
+    """(layout blockdata path, map.json path) restored from the saved originals."""
+    m = json.load(open(f'{ROOT}/data/maps/{folder}/map.json'))
+    lay = layouts()[m['layout']]
+    d = f'{ORIG}/{folder}'
+    if not os.path.exists(d):
+        os.makedirs(d)
+        shutil.copy(f"{ROOT}/{lay['blockdata_filepath']}", f'{d}/map.bin')
+        shutil.copy(f'{ROOT}/data/maps/{folder}/map.json', f'{d}/map.json')
+        json.dump({'width': lay['width'], 'height': lay['height']}, open(f'{d}/size.json', 'w'))
+    return d
+
+
+def restore(folder):
+    d = originals(folder)
+    m = json.load(open(f'{ROOT}/data/maps/{folder}/map.json'))
+    size = json.load(open(f'{d}/size.json'))
+    lay_json = f'{ROOT}/data/layouts/layouts.json'
+    data = json.load(open(lay_json))
+    for l in data['layouts']:
+        if l.get('id') == m['layout']:
+            l['width'], l['height'] = size['width'], size['height']
+            shutil.copy(f'{d}/map.bin', f"{ROOT}/{l['blockdata_filepath']}")
+        if l.get('id') in ALT_LAYOUTS.get(folder, []):
+            l['width'], l['height'] = size['width'], size['height']
+            shutil.copy(f"{d}/{l['id']}.bin", f"{ROOT}/{l['blockdata_filepath']}")
+    write_json(lay_json, data)
+    shutil.copy(f'{d}/map.json', f'{ROOT}/data/maps/{folder}/map.json')
+
+
+# ------------------------------------------------------------------ helpers
+def flowers(a, metatile, n, x0, y0, x1, y1, ground='g', seed=1, clump=3):
+    """Area.scatter for any ground class."""
+    import random
+    r = random.Random(seed)
+    def ok(x, y):
+        return all(0 <= x + dx < a.w and 0 <= y + dy < a.h and a.grid[y + dy][x + dx] == ground
+                   and (x + dx, y + dy) not in a.fixed for dx in (-1, 0, 1) for dy in (-1, 0, 1))
+    placed = tries = 0
+    while placed < n and tries < n * 80:
+        tries += 1
+        x, y = r.randrange(x0, x1), r.randrange(y0, y1)
+        if ok(x, y):
+            for _ in range(clump):
+                if ok(x, y):
+                    a.tile(x, y, metatile, collision=0)
+                    placed += 1
+                x, y = x + r.choice((-1, 0, 1)), y + r.choice((-1, 0, 1))
+
+
+class Square:
+    """Collects one town's square: its scripts and texts."""
+    def __init__(self, key, town_name, ext):
+        self.key, self.town, self.ext = key, town_name, ext
+        self.texts = []
+        self.replace = {}   # bad metatile -> good one, applied to new cells after synthesis
+
+    def finish(self, b):
+        e = self.ext
+        for y in range(e.h):
+            for x in range(e.w):
+                ox, oy = x - e.dx, y - e.dy
+                if 0 <= ox < e.ow and 0 <= oy < e.oh and (x, y) in e.area.fixed:
+                    continue
+                m = int(b[y, x]) & 0x3FF
+                if m in self.replace:
+                    good = self.replace[m]
+                    b[y, x] = good if good > 0x3FF else good | (int(e.style.elev[good].most_common(1)[0][0]))
+        return b
+
+    def plaza(self, x, y, w, h, c=None):
+        """The open square. c: the town's own path class (sand paths in the
+        small towns); without it, General's paved plaza."""
+        self.ext.area.rect(x, y, w, h, c or 'P')
+        self.rect = (x, y, w, h)
+
+    def centre(self, metatile=0x004, ring=True):
+        """A flower bed (2x2) in the middle of the square."""
+        x, y, w, h = self.rect
+        cx, cy = x + w // 2 - 1, y + h // 2 - 1
+        for dy in (0, 1):
+            for dx in (0, 1):
+                self.ext.area.tile(cx + dx, cy + dy, metatile, collision=0, c='g')
+
+    def board(self, x, y):
+        self.ext.area.tile(x, y, 0x003, collision=1, c='#')
+        self.ext.sign(x, y, f'{TAG}{self.key}_EventScript_Board')
+
+    def guide(self, x, y, gfx='OBJ_EVENT_GFX_WOMAN_2', move='MOVEMENT_TYPE_FACE_DOWN'):
+        self.ext.obj(gfx, x, y, f'{TAG}{self.key}_EventScript_Guide', move)
+
+    def healer(self, x, y, gfx='OBJ_EVENT_GFX_WOMAN_4', move='MOVEMENT_TYPE_FACE_DOWN'):
+        self.ext.obj(gfx, x, y, 'Square_EventScript_Healer', move)
+
+    def matchmaker(self, x, y, gfx='OBJ_EVENT_GFX_COOLTRAINER_M', move='MOVEMENT_TYPE_FACE_DOWN'):
+        self.ext.obj(gfx, x, y, f'{TAG}{self.key}_EventScript_Matchmaker', move)
+
+    def local(self, x, y, gfx, text, move='MOVEMENT_TYPE_FACE_DOWN', n=1, rx=0, ry=0):
+        self.ext.obj(gfx, x, y, f'{TAG}{self.key}_EventScript_Local{n}', move, rx=rx, ry=ry)
+        self.texts.append((n, text))
+
+    def hidden(self, x, y, item):
+        self.ext.hidden(x, y, item, f'FLAG_SQUARE_{self.key.upper()}_HIDDEN')
+
+    def script(self, board_text):
+        k = self.key
+        out = [f'@ {self.town} square (tools/map_upgrade/squares.py)',
+               f'{TAG}{k}_EventScript_Board::',
+               f'\tmsgbox {TAG}{k}_Text_Board, MSGBOX_SIGN',
+               '\tend', '',
+               f'{TAG}{k}_EventScript_Guide::',
+               '\tgoto Square_EventScript_Guide', '',
+               f'{TAG}{k}_EventScript_Matchmaker::',
+               '\tgoto HoennMulti_EventScript_QuickMatchDesk', '']
+        for n, _ in self.texts:
+            out += [f'{TAG}{k}_EventScript_Local{n}::', f'\tmsgbox {TAG}{k}_Text_Local{n}, MSGBOX_NPC', '\tend', '']
+        out += [f'{TAG}{k}_Text_Board:', *string(board_text), '']
+        for n, t in self.texts:
+            out += [f'{TAG}{k}_Text_Local{n}:', *string(t), '']
+        return '\n'.join(out)
+
+
+def write_alts(folder, e, b):
+    import numpy as np
+    d = f'{ORIG}/{folder}'
+    lay_json = f'{ROOT}/data/layouts/layouts.json'
+    data = json.load(open(lay_json))
+    for alt in ALT_LAYOUTS.get(folder, []):
+        old = np.fromfile(f'{d}/{alt}.bin', '<u2').reshape(e.oh, e.ow)
+        out = b.copy()
+        for (x, y), v in e.area.fixed.items():
+            ox, oy = x - e.dx, y - e.dy
+            if 0 <= ox < e.ow and 0 <= oy < e.oh and v == int(e.old[oy, ox]):
+                out[y, x] = old[oy, ox]
+        for l in data['layouts']:
+            if l.get('id') == alt:
+                l['width'], l['height'] = e.w, e.h
+                out.astype('<u2').tofile(f"{ROOT}/{l['blockdata_filepath']}")
+    write_json(lay_json, data)
+
+
+def check_reachable(e, b):
+    """Every new person, sign and hidden item must be reachable on foot from
+    the town's first warp (collision, elevation and water respected)."""
+    from collections import deque
+    water = {0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x50, 0x51, 0x52, 0x53}
+    def beh(x, y):
+        return e.style.pair.attr(int(b[y, x]) & 0x3FF) & 0xFF
+    from mapdata import behaviours
+    jumps = {v for k, v in behaviours().items() if k.startswith('MB_JUMP_')}
+    def ok(x, y):
+        if not (0 <= x < e.w and 0 <= y < e.h) or beh(x, y) in water:
+            return False
+        return not (int(b[y, x]) >> 10) & 3 or beh(x, y) in jumps  # ledges: you can jump down them
+    def flood(start):
+        seen, q = {start}, deque([start])
+        while q:
+            x, y = q.popleft()
+            z = int(b[y, x]) >> 12
+            for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                n = (x + dx, y + dy)
+                if n in seen or not ok(*n):
+                    continue
+                nz = int(b[n[1], n[0]]) >> 12
+                if z and nz and z != 15 and nz != 15 and z != nz:
+                    continue
+                seen.add(n)
+                q.append(n)
+        return seen
+    if e.map.get('warp_events'):
+        w = e.map['warp_events'][0]
+        seen = flood((w['x'] + e.dx, w['y'] + e.dy + 1))
+    else:  # a route: the biggest area reachable from its edges
+        edge = [(x, 0) for x in range(e.ow)] + [(0, y) for y in range(e.oh)] + \
+               [(x, e.oh - 1) for x in range(e.ow)] + [(e.ow - 1, y) for y in range(e.oh)]
+        seen = set()
+        for x, y in edge:
+            c = (x + e.dx, y + e.dy)
+            if ok(*c) and c not in seen:
+                f = flood(c)
+                if len(f) > len(seen):
+                    seen = f
+    bad = []
+    for o in e.new_objects:
+        if not any((o['x'] + dx, o['y'] + dy) in seen for dx, dy in ((0, 1), (0, -1), (1, 0), (-1, 0))):
+            bad.append(('person', o['x'], o['y']))
+    for g in e.new_bgs:
+        if g['type'] == 'hidden_item' and (g['x'], g['y']) not in seen:
+            bad.append(('hidden item', g['x'], g['y']))
+        if g['type'] == 'sign' and (g['x'], g['y'] + 1) not in seen:
+            bad.append(('sign', g['x'], g['y']))
+    return bad
+
+
+def string(text):
+    """Text with \\n / \\l / \\p already in it -> .string lines."""
+    parts, cur = [], ''
+    for ch in text:
+        cur += ch
+    lines = []
+    chunk = ''
+    i = 0
+    while i < len(text):
+        if text[i] == '\\' and i + 1 < len(text) and text[i + 1] in 'nlp':
+            chunk += text[i:i + 2]
+            lines.append(chunk)
+            chunk = ''
+            i += 2
+            continue
+        chunk += text[i]
+        i += 1
+    lines.append(chunk + '$')
+    return [f'\t.string "{l}"' for l in lines]
+
+
+COMMON = r'''@ Shared by every town square.
+Square_EventScript_Guide::
+	lock
+	faceplayer
+	callnative HoennMulti_IsOnline
+	goto_if_eq VAR_RESULT, FALSE, Square_EventScript_GuideOffline
+	message Square_Text_GuideWelcome
+	waitmessage
+	dynmultipush Square_Text_Hub, 0
+	dynmultipush Square_Text_Plaza, 1
+	dynmultipush Online_Text_HubClose, 2
+	dynmultistack 0, 0, FALSE, 3, FALSE, 0, DYN_MULTICHOICE_CB_NONE
+	closemessage
+	release
+	goto_if_eq VAR_RESULT, 0, Online_EventScript_Hub
+	goto_if_eq VAR_RESULT, 1, NetplayExt_EventScript_Plaza
+	end
+
+Square_EventScript_GuideOffline:
+	msgbox Square_Text_GuideOffline, MSGBOX_DEFAULT
+	release
+	end
+
+Square_Text_GuideWelcome:
+	.string "Welcome to the square! Trainers from\n"
+	.string "all over meet up here.\p"
+	.string "What would you like to see?$"
+
+Square_Text_GuideOffline:
+	.string "Welcome to the square! Trainers from\n"
+	.string "all over meet up here.\p"
+	.string "Choose JOIN ONLINE on the title screen\n"
+	.string "and I can show you the HUB and PLAZA.$"
+
+@ Meeting spots in the new areas' and Solmara's towns
+@ (tools/map_upgrade/meeting_spots.py).
+Square_EventScript_AreaGuide::
+	goto Square_EventScript_Guide
+
+Square_EventScript_AreaMatchmaker::
+	goto HoennMulti_EventScript_QuickMatchDesk
+
+@ Rest stops on the long routes: a keeper who lets the party rest.
+Square_EventScript_Healer::
+	lock
+	faceplayer
+	msgbox Square_Text_HealerAsk, MSGBOX_YESNO
+	goto_if_eq VAR_RESULT, NO, Square_EventScript_HealerNo
+	closemessage
+	fadescreen FADE_TO_BLACK
+	special HealPlayerParty
+	playfanfare MUS_HEAL
+	waitfanfare
+	fadescreen FADE_FROM_BLACK
+	msgbox Square_Text_HealerDone, MSGBOX_DEFAULT
+	release
+	end
+
+Square_EventScript_HealerNo:
+	msgbox Square_Text_HealerNo, MSGBOX_DEFAULT
+	release
+	end
+
+Square_Text_HealerAsk:
+	.string "Welcome to the rest stop! It's a long\n"
+	.string "road, and your POKéMON look tired.\p"
+	.string "Would you like them to rest a while?$"
+
+Square_Text_HealerDone:
+	.string "There! Everyone is rested and ready.\n"
+	.string "Safe travels, and good battles!$"
+
+Square_Text_HealerNo:
+	.string "Come back any time you need a rest.$"
+
+Square_Text_Hub:
+	.string "ONLINE HUB$"
+
+Square_Text_Plaza:
+	.string "PLAZA$"
+'''
+
+
+# ------------------------------------------------------------------ towns
+def littleroot():
+    e = Extension('LittlerootTown', style('town'), down=18, fill='g')
+    a, W, H = e.area, e.w, e.h
+    s = Square('Littleroot', 'Littleroot Town', e)
+    e.reopen(2, 18, 14, 2, 'g')
+    a.rect(0, 20, 2, H - 20, 'T')
+    a.rect(W - 2, 20, 2, H - 20, 'T')
+    a.rect(0, H - 2, W, 2, 'T')
+    a.rect(2, 32, 4, 4, 'T')
+    a.rect(14, 22, 4, 2, 'T')
+    s.plaza(5, 24, 10, 6, 's')
+    s.centre()
+    a.ellipse(14.5, 33, 3.2, 2.2, 'W')
+    a.autotile3('W', POND)
+    a.snap_trees(ground='g')
+    a.autotile3('P', PLAZA)
+    flowers(a, 0x004, 14, 2, 20, 18, 36, seed=4)
+    s.board(5, 23)
+    s.guide(8, 24)
+    s.matchmaker(11, 24, move='MOVEMENT_TYPE_FACE_DOWN')
+    s.local(7, 31, 'OBJ_EVENT_GFX_LITTLE_GIRL',
+            'Mom says trainers from far away come\\n'
+            'all the way here just to battle!\\p'
+            'I want to be one of them someday.', move='MOVEMENT_TYPE_WANDER_AROUND', rx=2, ry=1)
+    s.hidden(17, 35, 'ITEM_POTION')
+    return e, s, 'LITTLEROOT GREEN\\nWhere every journey starts.\\p'\
+        'Meet trainers from all over Hoenn.\\n'\
+        'The guide has the HUB, the matchmaker\\l'\
+        'finds you a battle or a trade.'
+
+
+
+def border(a, x0, y0, x1, y1, c='T', t=2, sides='lrb'):
+    """Tree (or rock) walls t thick on the given sides of the box x0..x1, y0..y1 (exclusive)."""
+    if 'l' in sides: a.rect(x0, y0, t, y1 - y0, c)
+    if 'r' in sides: a.rect(x1 - t, y0, t, y1 - y0, c)
+    if 't' in sides: a.rect(x0, y0, x1 - x0, t, c)
+    if 'b' in sides: a.rect(x0, y1 - t, x1 - x0, t, c)
+
+
+def oldale():
+    e = Extension('OldaleTown', style('town'), right=16, fill='g')
+    a, W, H = e.area, e.w, e.h
+    s = Square('Oldale', 'Oldale Town', e)
+    border(a, 20, 0, W, H, sides='trb')
+    a.rect(20, 0, 2, 7, 'T')
+    a.rect(20, 13, 2, 7, 'T')
+    a.rect(28, 2, 4, 3, 'T')
+    a.rect(30, 14, 4, 4, 'T')
+    s.plaza(23, 6, 10, 7, 's')
+    s.centre()
+    a.snap_trees(ground='g')
+    a.autotile3('P', PLAZA)
+    flowers(a, 0x004, 14, 20, 2, 34, 18, seed=5)
+    s.board(23, 5)
+    s.guide(26, 6, 'OBJ_EVENT_GFX_WOMAN_1')
+    s.matchmaker(29, 6, 'OBJ_EVENT_GFX_COOLTRAINER_F')
+    s.local(24, 15, 'OBJ_EVENT_GFX_OLD_MAN',
+            'When I was young, Oldale was just a\\n'
+            'stop on the way to somewhere else.\\p'
+            'Now trainers camp out on this square\\n'
+            'all night, trading stories.', move='MOVEMENT_TYPE_FACE_UP')
+    s.hidden(33, 3, 'ITEM_ANTIDOTE')
+    return e, s, 'OLDALE SQUARE\\nWhere all paths cross.\\p'\
+        'The guide has the HUB and PLAZA. The\\n'\
+        'matchmaker finds you a battle or trade.'
+
+
+def petalburg():
+    e = Extension('PetalburgCity', style('town'), down=16, fill='g')
+    a, W, H = e.area, e.w, e.h
+    s = Square('Petalburg', 'Petalburg City', e)
+    e.reopen(14, 27, 6, 3, 'g')
+    a.rect(15, 26, 3, 4, 's')
+    border(a, 0, 30, W, H)
+    a.rect(2, 30, 3, 4, 'T')
+    a.rect(24, 30, 4, 4, 'T')
+    a.rect(15, 30, 3, 3, 's')
+    s.plaza(9, 33, 14, 7, 's')
+    s.centre()
+    a.ellipse(5.5, 40, 3.5, 2.5, 'W')
+    a.autotile3('W', POND)
+    a.snap_trees(ground='g')
+    a.autotile3('P', PLAZA)
+    flowers(a, 0x004, 14, 2, 30, 28, 44, seed=6)
+    s.board(14, 32)
+    s.guide(11, 33, 'OBJ_EVENT_GFX_WOMAN_5')
+    s.matchmaker(20, 33, 'OBJ_EVENT_GFX_BLACK_BELT')
+    s.local(25, 40, 'OBJ_EVENT_GFX_FISHERMAN',
+            'Norman runs a tight gym, but out here\\n'
+            'anyone can battle anyone.\\p'
+            'I come to watch. Best seat in town!', move='MOVEMENT_TYPE_FACE_LEFT')
+    s.hidden(26, 43, 'ITEM_SUPER_POTION')
+    return e, s, 'PETALBURG PLAZA\\nA city of balance.\\p'\
+        'Meet trainers from all over Hoenn.\\n'\
+        'The guide has the HUB, the matchmaker\\l'\
+        'finds you a battle or a trade.'
+
+
+def dewford():
+    e = Extension('DewfordTown', style('dewford'), down=14, fill='s')
+    a, W, H = e.area, e.w, e.h
+    s = Square('Dewford', 'Dewford Town', e)
+    e.reopen(3, 19, 11, 1, 's')
+    border(a, 0, 20, W, H, sides='lr')
+    a.rect(0, H - 4, W, 4, '~')
+    s.plaza(5, 23, 10, 5, 's')
+    a.snap_trees(ground='s')
+    a.autotile3('P', PLAZA)
+    s.board(5, 22)
+    s.guide(8, 23, 'OBJ_EVENT_GFX_FISHERMAN')
+    s.matchmaker(11, 23, 'OBJ_EVENT_GFX_SAILOR')
+    s.local(14, 28, 'OBJ_EVENT_GFX_TUBER_F',
+            'Boats bring trainers from every port\\n'
+            'to battle on this beach!\\p'
+            'Brawly says it\'s the best training a\\n'
+            'surfer could ask for.', move='MOVEMENT_TYPE_WANDER_AROUND', rx=2, ry=1)
+    s.hidden(3, 28, 'ITEM_SHELL_BELL' if False else 'ITEM_PEARL')
+    return e, s, 'DEWFORD BEACH SQUARE\\nWaves, sand and battles.\\p'\
+        'The guide has the HUB and PLAZA. The\\n'\
+        'matchmaker finds you a battle or trade.'
+
+
+def verdanturf():
+    e = Extension('VerdanturfTown', style('mauville'), down=14, fill='g')
+    a, W, H = e.area, e.w, e.h
+    s = Square('Verdanturf', 'Verdanturf Town', e)
+    e.reopen(3, 18, 4, 2, 'g')
+    border(a, 0, 20, W, H)
+    a.rect(13, 20, 5, 2, 'T')
+    s.plaza(4, 23, 12, 5)
+    a.snap_trees(ground='g')
+    a.autotile3('P', PLAZA)
+    flowers(a, 0x004, 10, 2, 20, 18, 32, seed=7)
+    s.board(4, 22)
+    s.guide(7, 23, 'OBJ_EVENT_GFX_WOMAN_2')
+    s.matchmaker(12, 23, 'OBJ_EVENT_GFX_MAN_3')
+    s.local(15, 29, 'OBJ_EVENT_GFX_GIRL_2',
+            'The air here is so clean that sick\\n'
+            'Pokémon come to rest.\\p'
+            'Gentle battles are good for them too,\\n'
+            'Wally told me so!', move='MOVEMENT_TYPE_FACE_LEFT')
+    s.hidden(2, 29, 'ITEM_HEAL_POWDER')
+    return e, s, 'VERDANTURF MEADOW\\nFresh air for every trainer.\\p'\
+        'The guide has the HUB and PLAZA. The\\n'\
+        'matchmaker finds you a battle or trade.'
+
+
+def fallarbor():
+    e = Extension('FallarborTown', style('fallarbor'), down=14, fill='r')
+    a, W, H = e.area, e.w, e.h
+    s = Square('Fallarbor', 'Fallarbor Town', e)
+    border(a, 0, 20, W, H, c='#')
+    a.rect(14, 20, 6, 3, '#')
+    a.rect(0, 20, 4, 3, '#')
+    s.plaza(4, 23, 12, 5, 's')
+    s.centre()
+    a.autotile3('P', PLAZA)
+    s.board(4, 22)
+    s.guide(7, 23, 'OBJ_EVENT_GFX_PICNICKER')
+    s.matchmaker(12, 23, 'OBJ_EVENT_GFX_HIKER')
+    s.local(14, 29, 'OBJ_EVENT_GFX_SCIENTIST_1',
+            'Professor Cozmo says ash falls here\\n'
+            'like snow.\\p'
+            'Trainers sweep the square every\\n'
+            'morning before the battles start!', move='MOVEMENT_TYPE_FACE_LEFT')
+    s.replace = {0x36B: 0x279, 0x36E: 0x279, 0x2A0: 0x26B, 0x2A1: 0x26C, 0x050: 0x270, 0x243: 0x270}
+    s.hidden(3, 30, 'ITEM_SOFT_SAND')
+    return e, s, 'FALLARBOR ASH SQUARE\\nWhere the ash meets the crowd.\\p'\
+        'The guide has the HUB and PLAZA. The\\n'\
+        'matchmaker finds you a battle or trade.'
+
+
+def lavaridge():
+    e = Extension('LavaridgeTown', style('volcanic'), down=14, fill='g')
+    a, W, H = e.area, e.w, e.h
+    s = Square('Lavaridge', 'Lavaridge Town', e)
+    e.reopen(7, 18, 6, 2, 'g')
+    border(a, 0, 20, W, H, c='#')
+    e.copy_old(0, 4, 2, 12, 0, 20, c='#')
+    e.copy_old(0, 18, 20, 2, 0, H - 2, c='#')
+    s.plaza(4, 23, 12, 5, 's')
+    s.centre()
+    a.autotile3('P', PLAZA)
+    s.board(4, 22)
+    s.guide(7, 23, 'OBJ_EVENT_GFX_EXPERT_F')
+    s.matchmaker(12, 23, 'OBJ_EVENT_GFX_COOLTRAINER_M')
+    s.local(15, 29, 'OBJ_EVENT_GFX_OLD_WOMAN',
+            'After a soak in the hot sand, there\\n'
+            'is nothing like a good battle.\\p'
+            'Flannery always says the heat brings\\n'
+            'out a trainer\'s fire!', move='MOVEMENT_TYPE_FACE_LEFT')
+    s.replace = {0x2AA: 0x001}
+    s.hidden(3, 29, 'ITEM_CHARCOAL')
+    return e, s, 'LAVARIDGE HOT SQUARE\\nWarm sand, warm hearts.\\p'\
+        'The guide has the HUB and PLAZA. The\\n'\
+        'matchmaker finds you a battle or trade.'
+
+
+def fortree():
+    e = Extension('FortreeCity', style('jungle'), down=14, fill='.')
+    a, W, H = e.area, e.w, e.h
+    s = Square('Fortree', 'Fortree City', e)
+    border(a, 0, 20, W, H, c='T', t=4)
+    a.rect(4, 20, 26, 3, 'T')
+    a.rect(37, 20, 3, 3, 'T')
+    s.plaza(14, 24, 16, 6, '.')
+    a.snap_trees()
+    a.autotile3('P', PLAZA)
+    s.board(14, 23)
+    s.guide(18, 24, 'OBJ_EVENT_GFX_BIRD_KEEPER' if False else 'OBJ_EVENT_GFX_WOMAN_4')
+    s.matchmaker(25, 24, 'OBJ_EVENT_GFX_CAMPER')
+    s.local(9, 27, 'OBJ_EVENT_GFX_BOY_2',
+            'Everyone lives up in the trees, so the\\n'
+            'ground is the only place big enough\\l'
+            'for a crowd!\\p'
+            'Winona flies over to watch sometimes.', move='MOVEMENT_TYPE_FACE_RIGHT')
+    s.hidden(33, 29, 'ITEM_SHARP_BEAK')
+    return e, s, 'FORTREE CLEARING\\nThe one place on the ground.\\p'\
+        'The guide has the HUB and PLAZA. The\\n'\
+        'matchmaker finds you a battle or trade.'
+
+
+def mauville():
+    """Mauville is the crossroads of Hoenn, so its square goes in the middle:
+    the city's south edge (and Route 110's road) moves 16 rows down and a
+    new district fills the gap."""
+    e = Extension('MauvilleCity', style('mauville'), down=16, fill='g')
+    a, W, H = e.area, e.w, e.h
+    s = Square('Mauville', 'Mauville City', e)
+    e.copy_old(0, 18, 40, 2, 0, H - 2, c=None)
+    e.move_old_events(0, 18, 40, 2, 0, 16)
+    e.reopen(0, 18, 40, 2, 'g')
+    a.rect(0, 18, 14, 16, 'T')
+    a.rect(14, 18, 1, 16, 'T')
+    a.rect(15, 18, 3, 16, '.')
+    a.rect(34, 18, 6, 16, '~')
+    a.rect(32, 18, 2, 16, 'T')
+    a.rect(18, 32, 14, 2, 'T')
+    a.rect(2, 22, 8, 6, 'g')
+    a.rect(9, 24, 6, 2, 'g')
+    s.plaza(19, 21, 12, 9)
+    a.rect(18, 24, 1, 3, '.')
+    a.snap_trees(ground='g')
+    a.autotile3('P', PLAZA)
+    flowers(a, 0x004, 8, 2, 20, 12, 30, seed=9)
+    s.board(19, 20)
+    s.guide(22, 21, 'OBJ_EVENT_GFX_WOMAN_2')
+    s.matchmaker(27, 21, 'OBJ_EVENT_GFX_COOLTRAINER_M')
+    s.local(30, 28, 'OBJ_EVENT_GFX_CYCLING_TRIATHLETE_M',
+            'Cycling Road, Route 111, Route 117...\\n'
+            'every road in Hoenn runs into Mauville.\\p'
+            'So this is where everyone meets up!', move='MOVEMENT_TYPE_FACE_LEFT')
+    s.local(21, 28, 'OBJ_EVENT_GFX_SCHOOL_KID_M',
+            'Wattson\'s gym is right up the road.\\n'
+            'Trainers warm up here before they go.', move='MOVEMENT_TYPE_WANDER_AROUND', n=2, rx=2, ry=1)
+    s.hidden(5, 25, 'ITEM_CELL_BATTERY')
+    return e, s, 'MAUVILLE CROSSROADS SQUARE\\nAll of Hoenn passes through.\\p'\
+        'The guide has the HUB and PLAZA. The\\n'\
+        'matchmaker finds you a battle or trade.'
+
+
+def rustboro():
+    """Rustboro's square is a park between the city and Route 104: the
+    city's south edge (the trees and the road out) moves 16 rows down."""
+    e = Extension('RustboroCity', style('rustboro'), down=16, fill='g')
+    a, W, H = e.area, e.w, e.h
+    s = Square('Rustboro', 'Rustboro City', e)
+    e.copy_old(0, 55, 40, 5, 0, H - 5, c=None)
+    e.move_old_events(0, 55, 40, 5, 0, 16)
+    e.reopen(0, 55, 40, 16, 'g')
+    border(a, 0, 55, W, H - 5, sides='lr', t=3)
+    a.rect(3, 55, 8, 3, 'T')
+    a.rect(20, 55, 17, 3, 'T')
+    a.rect(12, 55, 8, 16, '.')
+    s.plaza(21, 60, 14, 8, '.')
+    a.rect(20, 62, 1, 3, '.')
+    a.rect(4, 61, 6, 6, 'T')
+    a.snap_trees(ground='g')
+    flowers(a, 0x004, 12, 3, 58, 37, 70, seed=11)
+    s.board(21, 59)
+    s.guide(24, 60, 'OBJ_EVENT_GFX_SCIENTIST_1')
+    s.matchmaker(31, 60, 'OBJ_EVENT_GFX_COOLTRAINER_F')
+    s.local(33, 66, 'OBJ_EVENT_GFX_SCHOOL_KID_M',
+            'The Trainer\'s School teaches the\\n'
+            'basics, but this park is where you\\l'
+            'really learn: battling real people!', move='MOVEMENT_TYPE_FACE_LEFT')
+    s.local(26, 66, 'OBJ_EVENT_GFX_MAN_2',
+            'Devon makes the newest gadgets for\\n'
+            'trainers who play together online.\\p'
+            'I test them out right here!', move='MOVEMENT_TYPE_WANDER_AROUND', n=2, rx=2, ry=1)
+    s.hidden(5, 68, 'ITEM_HARD_STONE')
+    return e, s, 'RUSTBORO STONE PARK\\nWhere trainers meet in the city.\\p'\
+        'The guide has the HUB and PLAZA. The\\n'\
+        'matchmaker finds you a battle or trade.'
+
+
+def rest_common(s, x, y, w):
+    """A rest stop's people along the top of its clearing: board, keeper
+    (heals), matchmaker."""
+    s.board(x, y - 1)
+    s.healer(x + 2, y)
+    s.matchmaker(x + w - 3, y)
+
+
+def route102():
+    e = Extension('Route102', style('town'), down=12, fill='g')
+    a, W, H = e.area, e.w, e.h
+    s = Square('Route102', 'Route 102', e)
+    e.reopen(24, 18, 8, 2)
+    a.rect(24, 18, 8, 2, 'g')
+    border(a, 0, 20, W, H, sides='lrb')
+    a.rect(0, 20, 22, 3, 'T')
+    a.rect(34, 20, 16, 3, 'T')
+    a.rect(2, 23, 8, 5, 'T')
+    a.rect(40, 23, 8, 5, '"')
+    s.plaza(18, 23, 14, 5, 's')
+    a.ellipse(13.5, 25.5, 3, 2, 'W')
+    a.autotile3('W', POND)
+    a.snap_trees(ground='g')
+    flowers(a, 0x004, 8, 2, 20, 48, 30, seed=12)
+    rest_common(s, 19, 23, 13)
+    s.local(30, 27, 'OBJ_EVENT_GFX_YOUNGSTER',
+            'I battle everyone who passes by on\\n'
+            'their way to Petalburg.\\p'
+            'Then I rest up here and do it again!', move='MOVEMENT_TYPE_FACE_LEFT')
+    s.hidden(45, 27, 'ITEM_ORAN_BERRY')
+    return e, s, 'ROUTE 102 REST STOP\\nRest, meet and battle.\\p'\
+        'The keeper lets your POKéMON rest.\\n'\
+        'The matchmaker finds you a battle or trade.'
+
+
+def route111():
+    """A desert camp east of Route 111's sand, through a gap in the cliffs."""
+    e = Extension('Route111', style('desert'), right=10, fill='s')
+    a, W, H = e.area, e.w, e.h
+    s = Square('Route111', 'Route 111', e)
+    e.reopen(36, 74, 4, 6)
+    a.rect(36, 74, 4, 6, 's')
+    a.rect(40, 0, 10, 73, '#')
+    a.rect(40, 81, 10, H - 81, '#')
+    a.rect(48, 73, 2, 8, '#')
+    s.plaza(41, 75, 7, 4, 'g')
+    s.board(41, 74)
+    s.healer(43, 75)
+    s.matchmaker(46, 75)
+    s.local(47, 79, 'OBJ_EVENT_GFX_HIKER',
+            'The sandstorm stops at these rocks.\\n'
+            'It\'s the only calm spot in the desert!\\p'
+            'Trainers wait here for the wind to\\n'
+            'die down, and battle while they wait.', move='MOVEMENT_TYPE_FACE_LEFT')
+    s.hidden(41, 79, 'ITEM_STARDUST')
+    return e, s, 'DESERT REST CAMP\\nShelter from the sandstorm.\\p'\
+        'The keeper lets your POKéMON rest.\\n'\
+        'The matchmaker finds you a battle or trade.'
+
+
+def route117():
+    e = Extension('Route117', style('mauville'), down=12, fill='g')
+    a, W, H = e.area, e.w, e.h
+    s = Square('Route117', 'Route 117', e)
+    e.reopen(32, 18, 4, 2)
+    a.rect(32, 18, 4, 2, 'g')
+    border(a, 0, 20, W, H, sides='lrb')
+    a.rect(0, 20, 30, 3, 'T')
+    a.rect(38, 20, 22, 3, 'T')
+    a.rect(4, 23, 10, 5, 'T')
+    s.plaza(26, 23, 16, 5)
+    a.autotile3('P', PLAZA)
+    a.ellipse(48.5, 25.5, 3.5, 2, 'W')
+    a.autotile3('W', POND)
+    a.snap_trees(ground='g')
+    flowers(a, 0x004, 10, 2, 20, 58, 30, seed=13)
+    rest_common(s, 27, 23, 15)
+    s.local(18, 26, 'OBJ_EVENT_GFX_OLD_WOMAN',
+            'The Day Care up the road raises\\n'
+            'POKéMON for trainers from all over.\\p'
+            'Sometimes they meet up right here to\\n'
+            'swap stories about their EGGS.', move='MOVEMENT_TYPE_FACE_RIGHT')
+    s.hidden(55, 27, 'ITEM_PECHA_BERRY')
+    return e, s, 'ROUTE 117 REST STOP\\nBetween Verdanturf and Mauville.\\p'\
+        'The keeper lets your POKéMON rest.\\n'\
+        'The matchmaker finds you a battle or trade.'
+
+
+def route123():
+    e = Extension('Route123', style('lilycove'), down=12, fill='g')
+    a, W, H = e.area, e.w, e.h
+    s = Square('Route123', 'Route 123', e)
+    e.reopen(72, 18, 8, 2)
+    a.rect(72, 18, 8, 2, 'g')
+    border(a, 0, 20, W, H, sides='lrb')
+    a.rect(0, 20, 64, 3, 'T')
+    a.rect(88, 20, 52, 3, 'T')
+    a.rect(2, 23, 54, 7, 'T')
+    a.rect(100, 23, 38, 7, 'T')
+    s.plaza(66, 23, 18, 5, 's')
+    a.ellipse(92, 26, 4, 2, 'W')
+    a.autotile3('W', POND)
+    a.snap_trees(ground='g')
+    flowers(a, 0x004, 10, 56, 20, 100, 30, seed=14)
+    rest_common(s, 67, 23, 17)
+    s.local(60, 26, 'OBJ_EVENT_GFX_POKEFAN_M',
+            'The Berry Master\'s garden is just up\\n'
+            'the road. I come here to rest after.\\p'
+            'Picking berries is hard work!', move='MOVEMENT_TYPE_FACE_RIGHT')
+    s.hidden(58, 28, 'ITEM_SITRUS_BERRY')
+    return e, s, 'ROUTE 123 REST STOP\\nThe last rest before Mt. Pyre.\\p'\
+        'The keeper lets your POKéMON rest.\\n'\
+        'The matchmaker finds you a battle or trade.'
+
+
+PAC_DIR = f'{ROOT}/data/tilesets/secondary/pacifidlog'
+PAC_BASE = 203   # Game Freak's Pacifidlog metatiles; ours follow
+
+
+def pacifidlog_metatiles():
+    """Raft top edges: Pacifidlog only has rafts' bottom edges (the houses
+    sit on their top), so the top pieces are the bottom ones turned upside
+    down, made from the same 8x8 tiles. Returns {name: metatile id}."""
+    import numpy as np
+    mt = np.fromfile(f'{PAC_DIR}/metatiles.bin', '<u2').reshape(-1, 8)
+    at = np.fromfile(f'{PAC_DIR}/metatile_attributes.bin', '<u2')
+    mt, at = mt[:PAC_BASE].copy(), at[:PAC_BASE].copy()
+    def vflip(m):
+        e = mt[m - 0x200]
+        out = []
+        for layer in (e[:4], e[4:]):
+            t = [int(v) for v in layer]
+            if layer is e[:4]:
+                out += [int(v) for v in mt[0x221 - 0x200][:4]]   # open water under it, no shadow
+            else:
+                out += [v ^ 0x800 if v else 0 for v in (t[2], t[3], t[0], t[1])]
+        return out, int(at[m - 0x200])
+    new = {'top_left': 0x228, 'top': 0x229, 'top_right': 0x22C, 'left2': 0x220, 'right2': 0x224, 'steps': 0x22A}
+    ids, rows, attrs = {}, [], []
+    for i, (name, src) in enumerate(new.items()):
+        e, a = vflip(src)
+        ids[name] = 0x200 + PAC_BASE + i
+        rows.append(e)
+        attrs.append(a)
+    np.concatenate([mt, np.array(rows, '<u2')]).astype('<u2').tofile(f'{PAC_DIR}/metatiles.bin')
+    np.concatenate([at, np.array(attrs, '<u2')]).astype('<u2').tofile(f'{PAC_DIR}/metatile_attributes.bin')
+    return ids
+
+
+def pacifidlog():
+    """A raft square south of the town, at the end of the log bridge that
+    used to stop at the water. The rocks along the south edge move 8 rows
+    down to make room."""
+    ids = pacifidlog_metatiles()
+    e = Extension('PacifidlogTown', style('pacifidlog'), down=8, fill='~')
+    a, W, H = e.area, e.w, e.h
+    s = Square('Pacifidlog', 'Pacifidlog Town', e)
+    e.copy_old(0, 31, 20, 9, 0, 39)
+    WATER, DECK, LAND = 0x170 | (1 << 12), 3 << 12, 1 << 12
+    for y in range(31, 39):
+        for x in range(W):
+            a.fixed[(x, y)] = WATER
+    x0, x1, y0, y1 = 3, 15, 29, 37    # raft: x0..x1-1, y0..y1-1
+    for y in range(y0, y1):
+        for x in range(x0, x1):
+            edge_l, edge_r = x == x0, x == x1 - 1
+            if y == y0:
+                m, z = (ids['top_left'] if edge_l else ids['top_right'] if edge_r else ids['top']), LAND
+            elif y == y0 + 1:
+                m, z = (ids['left2'] if edge_l else ids['right2'] if edge_r else 0x221), DECK
+            elif y == y1 - 2:
+                m, z = (0x220 if edge_l else 0x224 if edge_r else 0x221), DECK
+            elif y == y1 - 1:
+                m, z = (0x228 if edge_l else 0x22C if edge_r else 0x229), LAND
+            else:
+                m, z = (0x218 if edge_l else 0x21C if edge_r else 0x221), DECK
+            a.fixed[(x, y)] = m | z
+    a.fixed[(8, y0)] = ids['steps'] | DECK     # the log bridge comes down here
+    for x, y in ((16, 30), (17, 30), (16, 39), (17, 39)):   # the rock the move cut in half
+        a.fixed[(x, y)] = WATER
+    s.rect = (x0, y0 + 1, x1 - x0, y1 - y0 - 2)
+    s.board(4, 30)
+    a.fixed[(4, 30)] = 0x003 | (1 << 10)
+    s.guide(6, 31, 'OBJ_EVENT_GFX_SWIMMER_F_LAND')
+    s.matchmaker(11, 31, 'OBJ_EVENT_GFX_SAILOR')
+    s.local(13, 34, 'OBJ_EVENT_GFX_OLD_MAN',
+            'When I was a boy, the whole town was\\n'
+            'one raft, tied to the backs of Corsola.\\p'
+            'Now we\'ve built a new one, just for\\n'
+            'trainers to gather on. Isn\'t it fine?', move='MOVEMENT_TYPE_FACE_LEFT')
+    s.local(9, 34, 'OBJ_EVENT_GFX_TUBER_M_LAND',
+            'You can surf here from anywhere in\\n'
+            'Hoenn, and everyone does!', move='MOVEMENT_TYPE_WANDER_AROUND', n=2, rx=2, ry=1)
+    s.hidden(4, 35, 'ITEM_HEART_SCALE')
+    return e, s, 'PACIFIDLOG RAFT SQUARE\\nThe town that floats together.\\p'\
+        'The guide has the HUB and PLAZA. The\\n'\
+        'matchmaker finds you a battle or trade.'
+
+
+# name: (map folder, hidden item flag number, builder). Never renumber flags.
+TOWNS = {
+    'littleroot': ('LittlerootTown', 0, littleroot),
+    'oldale': ('OldaleTown', 1, oldale),
+    'petalburg': ('PetalburgCity', 2, petalburg),
+    'dewford': ('DewfordTown', 3, dewford),
+    'verdanturf': ('VerdanturfTown', 4, verdanturf),
+    'mauville': {0x298, 0x299, 0x29A, 0x37D, 0x280, 0x2E5, 0x2FE, 0x2E6, 0x293, 0x294, 0x29B, 0x29C, 0x133, 0x35E, 0x37E, 0x2A3, 0x2A4},
+    'fallarbor': ('FallarborTown', 5, fallarbor),
+    'lavaridge': ('LavaridgeTown', 6, lavaridge),
+    'fortree': ('FortreeCity', 7, fortree),
+    'mauville': ('MauvilleCity', 8, mauville),
+    'rustboro': ('RustboroCity', 9, rustboro),
+    'route102': ('Route102', 10, route102),
+    'route111': ('Route111', 11, route111),
+    'route117': ('Route117', 12, route117),
+    'route123': ('Route123', 13, route123),
+    'pacifidlog': ('PacifidlogTown', 14, pacifidlog),
+}
+
+
+def main():
+    # set iteration order feeds the synthesiser's tie-breaks: pin it so reruns
+    # draw the same tiles
+    if os.environ.get('PYTHONHASHSEED') != '0':
+        os.execve(sys.executable, [sys.executable] + sys.argv, {**os.environ, 'PYTHONHASHSEED': '0'})
+    args = sys.argv[1:]
+    preview = None
+    if '--preview' in args:
+        preview = args[args.index('--preview') + 1]
+        del args[args.index('--preview'):args.index('--preview') + 2]
+        os.makedirs(preview, exist_ok=True)
+    names = args or list(TOWNS)
+    scripts, flags = [COMMON], []
+    # every grown map goes back to its original first: the synthesiser
+    # learns from these layouts too (Route 102 teaches the small towns)
+    for folder, _, _ in TOWNS.values():
+        restore(folder)
+    for name, (folder, flag_no, build) in TOWNS.items():
+        e, s, board = build()
+        b = s.finish(e.blocks())
+        bad = check_reachable(e, b)
+        if bad:
+            print(f'{folder}: can\'t reach {bad}')
+        e.write(b)
+        write_alts(folder, e, b)
+        if preview and name in names:
+            e.preview(f'{preview}/{name}.png', b)
+        print(f'{folder}: {e.ow}x{e.oh} -> {e.w}x{e.h}')
+        scripts.append(s.script(board))
+        flags.append((s.key, flag_no))
+    open(SCRIPTS, 'w').write('\n'.join(scripts))
+    with open(FLAGS_H, 'w') as f:
+        f.write('#ifndef GUARD_CONSTANTS_MAP_UPGRADE_H\n#define GUARD_CONSTANTS_MAP_UPGRADE_H\n\n'
+                '// Map upgrade flags (tools/map_upgrade, docs/map_upgrade.md). They live in the\n'
+                "// extended save, in a block of Solmara's flag space that Solmara doesn't use.\n"
+                '#define MAPUP_FLAGS_START  (SOLMARA_FLAGS_START + 1536)\n'
+                '#define MAPUP_FLAG(n)      (MAPUP_FLAGS_START + (n))\n\n')
+        for k, n in flags:
+            f.write(f'#define FLAG_SQUARE_{k.upper()}_HIDDEN MAPUP_FLAG({n})\n')
+        f.write('\n#endif // GUARD_CONSTANTS_MAP_UPGRADE_H\n')
+
+
+if __name__ == '__main__':
+    main()

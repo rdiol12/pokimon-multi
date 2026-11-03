@@ -72,7 +72,7 @@ qt)
 wasm)
     source_tree
     fetch "$WASM_REPO" "$WASM_COMMIT" "$OUT/wasm"
-    # Our changes to its shim (patches/wasm): widescreen frames
+    # Our changes to its shim (patches/wasm): widescreen frames, full savestates
     for p in "$HERE"/patches/wasm/*.patch; do
         git -C "$OUT/wasm" apply --whitespace=nowarn "$p"
     done

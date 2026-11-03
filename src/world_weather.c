@@ -1,4 +1,5 @@
 #include "global.h"
+#include "habitat.h"
 #include "event_data.h"
 #include "field_weather.h"
 #include "main.h"
@@ -248,9 +249,12 @@ enum Species RoamingWeather_ModifyWildSpecies(enum Species species, u8 level)
     for (i = 2; i > 0; i--)
     {
         if (mon->species[i] != SPECIES_NONE && level >= mon->level[i])
-            return mon->species[i];
+            break;
     }
-    return mon->species[0];
+    // Only where it has a home (src/habitat.c).
+    if (!Habitat_VisitorFits(mon->species[i]))
+        return species;
+    return mon->species[i];
 }
 
 // Puts the map under the rainstorm, sandstorm and snow squall into

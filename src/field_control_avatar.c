@@ -1,6 +1,8 @@
 #include "global.h"
+#include "shared_map.h"
 #include "alive.h"
 #include "injury.h"
+#include "npc_names.h"
 #include "battle_setup.h"
 #include "bike.h"
 #include "coord_event_weather.h"
@@ -428,6 +430,8 @@ static const u8 *GetInteractedObjectEventScript(struct MapPosition *position, u8
         script = GetOverworlWildEncounterScript(objectEventId);
     else if (gObjectEvents[objectEventId].localId == OBJ_EVENT_ID_FOLLOWER)
         script = EventScript_Follower;
+    else if (SharedMap_IsRemoteSpawn(&gObjectEvents[objectEventId]))
+        script = SharedMap_EventScript_Remote;
     else if (Netplay_IsNetplayObjectEvent(&gObjectEvents[objectEventId]))
         script = Netplay_GetTalkScript(objectEventId);
     else if (LifePhoto_IsPhotoMon(&gObjectEvents[objectEventId]))
@@ -444,6 +448,8 @@ static const u8 *GetInteractedObjectEventScript(struct MapPosition *position, u8
         script = Alive_GetTalkScript(&gObjectEvents[objectEventId], GetObjectEventScriptPointerByObjectEventId(objectEventId));
 
     script = GetRamScript(gSpecialVar_LastTalked, script);
+    if (script != NULL)
+        NpcNames_OnTalk(objectEventId); // their name above what they say
     return script;
 }
 

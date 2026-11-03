@@ -127,6 +127,9 @@ extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_FieldGenera
 extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_FieldGeneratorOn;
 extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_FieldDigSpot;
 extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_SnowDrift;
+extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_StormBeacon;
+extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_StormBeaconOn;
+extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_StormCache;
 extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_MarketMaster;
 extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_Auctioneer;
 extern const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_MagmaMemberF;
@@ -813,6 +816,9 @@ const struct ObjectEventGraphicsInfo *const gObjectEventGraphicsInfoPointers[NUM
     [OBJ_EVENT_GFX_FIELD_GENERATOR_ON] =      &gObjectEventGraphicsInfo_FieldGeneratorOn,
     [OBJ_EVENT_GFX_FIELD_DIG_SPOT] =          &gObjectEventGraphicsInfo_FieldDigSpot,
     [OBJ_EVENT_GFX_SNOW_DRIFT] =              &gObjectEventGraphicsInfo_SnowDrift,
+    [OBJ_EVENT_GFX_STORM_BEACON] =            &gObjectEventGraphicsInfo_StormBeacon,
+    [OBJ_EVENT_GFX_STORM_BEACON_ON] =         &gObjectEventGraphicsInfo_StormBeaconOn,
+    [OBJ_EVENT_GFX_STORM_CACHE] =             &gObjectEventGraphicsInfo_StormCache,
     [OBJ_EVENT_GFX_MARKET_MASTER] =           &gObjectEventGraphicsInfo_MarketMaster,
     [OBJ_EVENT_GFX_AUCTIONEER] =              &gObjectEventGraphicsInfo_Auctioneer,
 };

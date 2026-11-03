@@ -20,6 +20,8 @@ class Connection {
 const connections = new Map();
 let nextId = 1;
 let current = null;
+// The last connection attempt, so the app can say why it is offline.
+const last = { host: '', port: 0, reason: '' };
 
 // Called by the apps' native code.
 globalThis.PokimonNet = {
@@ -27,6 +29,7 @@ globalThis.PokimonNet = {
         const c = connections.get(id);
         if (!c) return;
         c.open = true;
+        if (c === current) last.reason = '';
         for (const line of c.outbox) transport().send(id, line);
         c.outbox = [];
     },
@@ -38,6 +41,7 @@ globalThis.PokimonNet = {
         const c = connections.get(id);
         if (c) {
             c.closed = true;
+            if (c === current) last.reason = reason || (c.open ? 'connection lost' : 'could not connect');
             if (reason) console.log(`netplay: connection closed (${reason})`);
         }
     },
@@ -88,10 +92,14 @@ export const net = {
         c.id = nextId++;
         connections.set(c.id, c);
         current = c;
+        last.host = String(host);
+        last.port = Number(port);
+        last.reason = '';
         try {
             transport().connect(c.id, String(host), Number(port));
         } catch (e) {
             console.log('netplay: cannot connect: ' + e);
+            last.reason = String(e);
             connections.delete(c.id);
             current = null;
             return false;
@@ -122,6 +130,16 @@ export const net = {
         current = null;
         connections.delete(c.id);
         try { transport().close(c.id); } catch { /* already gone */ }
+    },
+    // One line for the player: where the game connects and, when it is
+    // down, why.
+    describe() {
+        if (!last.host) return 'Not connecting yet. Pick JOIN ONLINE on the title menu.';
+        const where = `${last.host}:${last.port}`;
+        const st = net.status();
+        if (st === 'online') return `Online: ${where}`;
+        if (st === 'connecting') return `Connecting to ${where}…`;
+        return `Cannot reach ${where}${last.reason ? ` (${last.reason})` : ''}. It keeps retrying.`;
     },
     status() {
         if (!current) return 'offline';

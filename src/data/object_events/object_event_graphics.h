@@ -400,6 +400,9 @@ const u32 gObjectEventPic_FieldGenerator[] = INCGFX_U32("graphics/field_ability/
 const u32 gObjectEventPic_FieldGeneratorOn[] = INCGFX_U32("graphics/field_ability/generator_on.png", ".4bpp", "-mwidth 2 -mheight 2");
 const u32 gObjectEventPic_FieldDigSpot[] = INCGFX_U32("graphics/field_ability/dig_spot.png", ".4bpp", "-mwidth 2 -mheight 2");
 const u32 gObjectEventPic_SnowDrift[] = INCGFX_U32("graphics/alive/snow_drift.png", ".4bpp", "-mwidth 2 -mheight 2");
+const u32 gObjectEventPic_StormBeacon[] = INCGFX_U32("graphics/stormwild/beacon_off.png", ".4bpp", "-mwidth 2 -mheight 4");
+const u32 gObjectEventPic_StormBeaconOn[] = INCGFX_U32("graphics/stormwild/beacon_on.png", ".4bpp", "-mwidth 2 -mheight 4");
+const u32 gObjectEventPic_StormCache[] = INCGFX_U32("graphics/stormwild/cache.png", ".4bpp", "-mwidth 2 -mheight 2");
 
 #if OW_FOLLOWERS_POKEBALLS
 const u32 gObjectEventPic_MasterBall[] = INCGFX_U32("graphics/object_events/pics/misc/ball_master.png", ".4bpp", "-mwidth 2 -mheight 4");

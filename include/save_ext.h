@@ -20,6 +20,7 @@
 #include "research.h"
 #include "solmara.h"
 #include "alive_save.h"
+#include "stormwild.h"
 
 // The towns' quest boards when playing offline (src/rovers.c): today's
 // rampaging Pokémon the player cleared and the reward not yet collected.
@@ -59,6 +60,7 @@ struct SaveBlockExt
     u8 visitedMaps[HOENN_MULTI_MAP_GROUPS][HOENN_MULTI_MAPS_PER_GROUP / 8]; // friend travel (src/hoenn_multi.c)
     struct SolmaraSaveData solmara; // Solmara, the second region (docs/solmara.md)
     struct AliveSave alive; // the living world (src/alive*.c)
+    struct StormwildSave stormwild; // the extraction run (src/stormwild.c)
 };
 
 extern struct SaveBlockExt gSaveBlockExt;

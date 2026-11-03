@@ -1,0 +1,109 @@
+#!/usr/bin/env python3
+"""Draws the Stormwild's object sprites (graphics/stormwild/) in the field
+ability palette (graphics/field_ability/field_ability.pal): the extraction
+beacon, unlit and lit (16x32), and a supply cache (16x16).
+
+    python3 tools/stormwild/draw_sprites.py
+"""
+import os
+from PIL import Image
+
+ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
+PAL_SRC = os.path.join(ROOT, "graphics", "field_ability", "generator_off.png")
+OUT = os.path.join(ROOT, "graphics", "stormwild")
+
+# Palette indices (field_ability.pal).
+KEY = {'.': 0, 'W': 1, 'b': 2, 'B': 3, 'N': 4, 'r': 5, 'c': 6, 'y': 7, 'o': 8,
+       'l': 9, 'g': 10, 'd': 11, 's': 12, 'k': 13, 'K': 14, 'O': 15}
+
+BEACON_TOP = """
+......NNNN......
+....NNlllgNN....
+...NllWllggdN...
+...NddddddddN...
+....NgddddgN....
+....N{0}{0}{1}{1}{1}{2}N....
+....N{0}{1}{1}{3}{1}{2}N....
+....N{1}{1}{3}{3}{3}{2}N....
+....N{1}{1}{1}{3}{1}{2}N....
+....N{2}{1}{1}{1}{2}{2}N....
+....NgddddgN....
+...NllllggggN...
+...NddddddddN...
+.....NlsgdN.....
+.....NlsgdN.....
+.....NlsgdN.....
+.....NlsgdN.....
+.....NrrrrN.....
+.....NlsgdN.....
+.....NlsgdN.....
+.....NlsgdN.....
+.....NrrrrN.....
+.....NlsgdN.....
+.....NlsgdN.....
+....NNlsgdNN....
+...NllllgggdN...
+..NlllllgggddN..
+..NglllggggddN..
+.NggggggggdddN..
+.NddddddddddddN.
+..NNNNNNNNNNNN..
+................
+"""
+# glass: unlit (cold blue), lit (warm light)
+UNLIT = dict(zip("0123", "bBsB"))
+LIT = dict(zip("0123", "WyoW"))
+GLOW = {4: (2, 13), 5: (1, 14), 6: (2, 13), 7: (1, 14), 8: (2, 13)}
+
+CACHE = """
+................
+................
+...OOOOOOOOOO...
+..OkkkkkkkkkkO..
+..OcckkkkkkkKO..
+..OOOOOOOOOOOO..
+..OkkdllldkkKO..
+..OkkdyoydkkKO..
+..OkKdoyodkKKO..
+..OkkdyoydkkKO..
+..OkkdllldkKKO..
+..OKKKKKKKKKKO..
+..OOOOOOOOOOOO..
+...OKO....OKO...
+................
+................
+"""
+
+
+def grid(text, fill):
+    rows = [r for r in text.strip("\n").split("\n")]
+    out = []
+    for r in rows:
+        r = r.format(*[fill.get(str(i), "?") for i in range(4)]) if fill else r
+        out.append(r)
+    return out
+
+
+def save(rows, name, extra=None):
+    w, h = len(rows[0]), len(rows)
+    src = Image.open(PAL_SRC)
+    im = Image.new("P", (w, h))
+    im.putpalette(src.getpalette())
+    for y, r in enumerate(rows):
+        assert len(r) == w, (name, y, r)
+        for x, ch in enumerate(r):
+            im.putpixel((x, y), KEY[ch])
+    for (x, y), ch in (extra or {}).items():
+        im.putpixel((x, y), KEY[ch])
+    im.info["transparency"] = 0
+    im.save(os.path.join(OUT, name), transparency=0)
+
+
+os.makedirs(OUT, exist_ok=True)
+save(grid(BEACON_TOP, UNLIT), "beacon_off.png")
+glow = {}
+for y, xs in GLOW.items():
+    for x in xs:
+        glow[(x, y)] = 'y' if y % 2 == 0 else 'c'
+save(grid(BEACON_TOP, LIT), "beacon_on.png", glow)
+save(grid(CACHE, None), "cache.png")

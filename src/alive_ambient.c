@@ -1,4 +1,5 @@
 #include "global.h"
+#include "habitat.h"
 #include "alive.h"
 #include "overworld.h"
 #include "trig.h"
@@ -74,17 +75,17 @@ static bool32 WaterOnScreen(void)
     return FALSE;
 }
 
+// A bird that lives here (or on a route next to this town), so a town
+// never gets birds from another region (src/habitat.c).
 static u16 CritterSpecies(bool32 coast)
 {
-    static const u16 sLand[] = {SPECIES_TAILLOW, SPECIES_TAILLOW, SPECIES_PIDGEY, SPECIES_STARLY, SPECIES_PIDOVE};
-    static const u16 sMountain[] = {SPECIES_SWABLU, SPECIES_TAILLOW};
+    u16 species = Habitat_PickNativeOfType(TYPE_FLYING, Alive_IsNight(), coast);
+
+    if (species != SPECIES_NONE)
+        return species;
     if (Alive_IsNight())
-        return SPECIES_HOOTHOOT;
-    if (coast)
-        return SPECIES_WINGULL;
-    if (gMapHeader.weather == WEATHER_VOLCANIC_ASH)
-        return sMountain[Random() % ARRAY_COUNT(sMountain)];
-    return sLand[Random() % ARRAY_COUNT(sLand)];
+        return SPECIES_NONE; // no night birds around here
+    return coast ? SPECIES_WINGULL : SPECIES_TAILLOW;
 }
 
 static void SpawnCritters(void)
@@ -102,9 +103,10 @@ static void SpawnCritters(void)
     for (i = 0; i < count && i < FISH_SLOT; i++)
     {
         s16 x, y;
-        if (!Alive_RoomForObjects(1) || !Alive_FindSpotOnScreen(4, &x, &y))
+        u16 species = CritterSpecies(coast);
+        if (species == SPECIES_NONE || !Alive_RoomForObjects(1) || !Alive_FindSpotOnScreen(4, &x, &y))
             break;
-        if (Alive_Spawn(LOCALID_ALIVE_CRITTER + i, Alive_MonGfx(CritterSpecies(coast)), x, y, Random() % 4 + 1) >= OBJECT_EVENTS_COUNT)
+        if (Alive_Spawn(LOCALID_ALIVE_CRITTER + i, Alive_MonGfx(species), x, y, Random() % 4 + 1) >= OBJECT_EVENTS_COUNT)
             break;
         sAmbient.state[i] = CRITTER_IDLE;
         sAmbient.timer[i] = Random() % 60;
@@ -262,10 +264,10 @@ static void SpriteCB_Flyover(struct Sprite *sprite)
 
 static void StartFlyover(void)
 {
-    static const u16 sDay[] = {SPECIES_WINGULL, SPECIES_PELIPPER, SPECIES_SWELLOW, SPECIES_TAILLOW, SPECIES_SKARMORY,
-                               SPECIES_ALTARIA, SPECIES_TROPIUS, SPECIES_BEAUTIFLY, SPECIES_MASQUERAIN};
-    static const u16 sNight[] = {SPECIES_ZUBAT, SPECIES_GOLBAT, SPECIES_HOOTHOOT, SPECIES_NOCTOWL, SPECIES_MURKROW};
-    u16 species = Alive_IsNight() ? sNight[Random() % ARRAY_COUNT(sNight)] : sDay[Random() % ARRAY_COUNT(sDay)];
+    // Only a flier that lives here (src/habitat.c).
+    u16 species = Habitat_PickNativeOfType(TYPE_FLYING, Alive_IsNight(), FALSE);
+    if (species == SPECIES_NONE)
+        return;
     bool32 east = Random() & 1;
     s16 y = 24 + Random() % 40;
     u8 spriteId = CreateObjectGraphicsSprite(Alive_MonGfx(species), SpriteCB_Flyover, east ? -32 : DISPLAY_WIDTH + 32, y, 0);

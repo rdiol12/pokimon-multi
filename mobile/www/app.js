@@ -7,6 +7,7 @@ import { storage, keepData } from './storage.js';
 import { Emulator, loadCore } from './emulator.js';
 import { attachControls } from './controls.js';
 import { startBridge } from './bridge.js';
+import { net } from './net.js';
 
 const $ = (sel) => document.querySelector(sel);
 const SAVE_EVERY_MS = 3000;
@@ -182,9 +183,42 @@ async function importSave(file) {
     const bytes = await readFile(file);
     if (bytes.length < 0x8000) return toast('That is not a GBA save file');
     if (!(await ask('Replace your current save with this file? The game restarts.'))) return;
+    await dropResumePoint();
     await storage.set('sram', bytes);
     location.reload();
 }
+
+// When the app goes to the background it keeps a savestate, so if the phone
+// closes it to free memory (iOS often does), it comes back where it was
+// instead of on the title screen. It only counts with the same game,
+// screen mode and battery save it was taken with.
+// Taken right away (iOS gives a page little time once it is hidden), with the
+// battery save written in the same moment.
+let gameCrc = 0;
+function keepResumePoint(wide) {
+    if (!emu) return;
+    const sram = emu.getSave();
+    const state = emu.saveState();
+    if (sram) {
+        lastSaveCrc = crc32(sram);
+        storage.set('sram', sram);
+    }
+    if (!state) return;
+    storage.set('resume', { gameCrc, wide, sramCrc: sram ? crc32(sram) : 0, state })
+        .catch((e) => console.warn('could not keep a resume point', e));
+}
+
+async function loadResumePoint(wide, sram) {
+    const point = await storage.get('resume').catch(() => null);
+    if (!point) return false;
+    const fits = point.gameCrc === gameCrc && point.wide === wide
+        && point.sramCrc === (sram ? crc32(sram) : 0);
+    if (fits && emu.loadState(point.state)) return true;
+    await dropResumePoint();
+    return false;
+}
+
+const dropResumePoint = () => storage.remove('resume').catch(() => {});
 
 // ---------------------------------------------------------------- settings
 
@@ -259,6 +293,8 @@ async function startGame(game) {
         emu.putSave(sram);
         lastSaveCrc = crc32(sram);
     }
+    gameCrc = await storage.get('gameCrc');
+    if (await loadResumePoint(wide, sram)) toast('Back where you left off');
     emu.attachCanvas($('#screen'));
     let muted = false; // the sound button's mute, set before any tap handler reads it
     await emu.startAudio('audio-worklet.js');
@@ -288,12 +324,24 @@ async function startGame(game) {
         el.className = 'status ' + STATUS_CLASS[s];
         el.querySelector('span').textContent = STATUS_TEXT[s];
     }, 500);
+    // Tapping the status says where the game connects and why it is offline.
+    $('#status').addEventListener('click', () => {
+        toast(bridge ? net.describe() : 'Online play could not start in this app.', 6000);
+    });
 
     // Phones suspend apps in the background: save first, and pause.
-    const pause = () => { release(); persistSave(true); emu.stop(); emu.suspendAudio(); };
+    let paused = false;
+    const pause = () => {
+        release();
+        emu.stop();
+        emu.suspendAudio();
+        if (paused) return;
+        paused = true;
+        keepResumePoint(wide);
+    };
     document.addEventListener('visibilitychange', () => {
         if (document.hidden) pause();
-        else { emu.start(); if (!muted) emu.resumeAudio(); }
+        else { paused = false; emu.start(); if (!muted) emu.resumeAudio(); }
     });
     window.addEventListener('pagehide', pause);
 
@@ -334,11 +382,13 @@ async function startGame(game) {
             const on = !widescreenOn();
             if (await ask(`Turn widescreen ${on ? 'on' : 'off'}? The game restarts, so save in the game first.`)) {
                 await setPref('widescreen', on);
+                await dropResumePoint();
                 location.reload();
             }
         }
         if (action === 'reset' && await ask('Restart the game? Unsaved progress is lost.')) {
             emu.reset();
+            dropResumePoint();
             menu.close();
         }
         if (action === 'change-rom' && await ask('Pick a different ROM? Your save stays.')) {
@@ -346,6 +396,7 @@ async function startGame(game) {
             await storage.remove('gameCrc');
             await storage.remove('rom');
             await storage.remove('patch');
+            await dropResumePoint();
             location.reload();
         }
     });

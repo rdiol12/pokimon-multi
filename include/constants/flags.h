@@ -2452,5 +2452,6 @@
 #include "constants/areas.h"
 // Solmara's flags live in the extended save (constants/solmara.h).
 #include "constants/solmara.h"
+#include "constants/map_upgrade.h"
 
 #endif // GUARD_CONSTANTS_FLAGS_H

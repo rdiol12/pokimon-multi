@@ -1,5 +1,6 @@
 #include "global.h"
 #include "alive.h"
+#include "shared_map.h"
 #include "wild_encounter_ow.h"
 #include "battle_setup.h"
 #include "battle_main.h"
@@ -265,6 +266,13 @@ void UpdateOverworldWildEncounter(void)
         sOWESpawnCountdown--;
         return;
     }
+
+    // Online, other players' Pokémon nearby count too (src/shared_map.c).
+    if (SharedMap_HoldLocalSpawns())
+    {
+        SetMinimumOWESpawnTimer();
+        return;
+    }
     
     struct ObjectEvent* player = &gObjectEvents[gPlayerAvatar.objectEventId];
     // Don't spawn if player is mid step.
@@ -333,6 +341,8 @@ void UpdateOverworldWildEncounter(void)
     ObjectEventTurn(owe, gStandardDirections[Random() & 3]);
     SetNewOWESpawnCountdown();
     Alive_WildOnSpawned(owe, x, y);
+    if (OW_SHINY(owe))
+        gSharedMapShowcase.shinyNext = FALSE;
 }
 
 bool32 IsOverworldWildEncounter(struct ObjectEvent *owe, enum TypeOWE oweType)
@@ -863,6 +873,8 @@ static void SetSpeciesInfoForOWE(struct InfoOWE *info, u32 x, u32 y)
         info->speciesId = GetUnownSpeciesId(personality);
 
     info->isShiny = ComputePlayerShinyOdds(personality, READ_OTID_FROM_SAVE);
+    if (gSharedMapShowcase.shinyNext)
+        info->isShiny = TRUE; // a screenshot scene asked for one (tools/shared_map/spawns.lua)
     if (GetGenderFromSpeciesAndPersonality(info->speciesId, personality) == MON_FEMALE)
         info->isFemale = TRUE;
     else
@@ -1798,3 +1810,73 @@ bool32 CanRemoveObjectForOWEMovement(struct ObjectEvent *objectEvent)
 #undef sOverworldEncounterLevel
 #undef sOverworldEncounterAge
 #undef sOverworldEncounterCategory
+
+// Shared wild spawns (src/shared_map.c) ----------------------------------------
+
+struct ObjectEvent *OWE_GetGeneratedInSlot(u32 slot)
+{
+    u32 objectEventId;
+
+    if (slot >= OWE_SPAWNS_MAX)
+        return NULL;
+    objectEventId = GetObjectEventIdByLocalId(GetLocalIdByOWESpawnSlot(slot));
+    if (objectEventId >= OBJECT_EVENTS_COUNT || !IsOverworldWildEncounter(&gObjectEvents[objectEventId], OWE_GENERATED))
+        return NULL;
+    return &gObjectEvents[objectEventId];
+}
+
+u32 OWE_GetLevel(const struct ObjectEvent *owe)
+{
+    return owe->trainerRange_berryTreeId & ~(1 << 7);
+}
+
+// A roamer, a swarm or a Feebas.
+bool32 OWE_IsSpecialCategory(const struct ObjectEvent *owe)
+{
+    return GetOWECategory(owe) < OWE_CATEGORY_WILD;
+}
+
+// Someone else is battling it: it stays put and doesn't despawn.
+void OWE_SetHeld(struct ObjectEvent *owe, bool32 held, bool32 keepNoDespawn)
+{
+    if (held)
+    {
+        owe->trainerRange_berryTreeId |= (1 << 7);
+        SetTrainerMovementType(owe, owe->facingDirection == DIR_NORTH ? MOVEMENT_TYPE_FACE_UP
+                                  : owe->facingDirection == DIR_WEST ? MOVEMENT_TYPE_FACE_LEFT
+                                  : owe->facingDirection == DIR_EAST ? MOVEMENT_TYPE_FACE_RIGHT : MOVEMENT_TYPE_FACE_DOWN);
+    }
+    else
+    {
+        if (!keepNoDespawn)
+            owe->trainerRange_berryTreeId &= ~(1 << 7);
+        SetTrainerMovementType(owe, OWE_GetMovementTypeFromSpecies(OW_SPECIES(owe)));
+    }
+}
+
+// How often the map's table turns up `species`, in percent (land or water).
+u32 OWE_GetSpeciesRate(enum Species species, bool32 water)
+{
+    static const u8 sLandRates[] = {20, 20, 10, 10, 10, 10, 5, 5, 4, 4, 1, 1};
+    static const u8 sWaterRates[] = {60, 30, 5, 4, 1};
+    u32 headerId = GetCurrentMapWildMonHeaderId();
+    const struct WildPokemonInfo *info;
+    enum WildPokemonArea area = water ? WILD_AREA_WATER : WILD_AREA_LAND;
+    u32 i, count, rate = 0;
+
+    if (headerId == HEADER_NONE)
+        return 100;
+    if (water)
+        info = gWildMonHeaders[headerId].encounterTypes[GetTimeOfDayForEncounters(headerId, area)].waterMonsInfo;
+    else
+        info = gWildMonHeaders[headerId].encounterTypes[GetTimeOfDayForEncounters(headerId, area)].landMonsInfo;
+    if (info == NULL)
+        return 100;
+    count = water ? ARRAY_COUNT(sWaterRates) : ARRAY_COUNT(sLandRates);
+    for (i = 0; i < count; i++)
+    {
+        if (info->wildPokemon[i].species == species)
+            rate += water ? sWaterRates[i] : sLandRates[i];
+    }
+    return rate;
+}

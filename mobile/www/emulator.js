@@ -170,6 +170,28 @@ export class Emulator {
         mod._free(ptr);
     }
 
+    // A savestate of the whole machine (with our emulator's extended RAM and
+    // video, which plain mGBA states leave out), or null.
+    saveState() {
+        const mod = this.mod;
+        if (!mod._mgbawasm_state_full_save) return null; // an older core
+        const size = mod._mgbawasm_state_full_save();
+        const ptr = size ? mod._mgbawasm_state_full_ptr() : 0;
+        return ptr ? mod.HEAPU8.slice(ptr, ptr + size) : null;
+    }
+
+    loadState(bytes) {
+        const mod = this.mod;
+        if (!bytes?.length || !mod._mgbawasm_state_full_load) return false;
+        const ptr = mod._malloc(bytes.length);
+        try {
+            mod.HEAPU8.set(bytes, ptr);
+            return !!mod._mgbawasm_state_full_load(ptr, bytes.length);
+        } finally {
+            mod._free(ptr);
+        }
+    }
+
     reset() {
         this.mod._mgbawasm_reset();
         this.frame = 0;

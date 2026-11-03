@@ -116,7 +116,33 @@
 #define ONL_REQ_HTEAM_NO      98
 #define ONL_REQ_HTEAM_GET     99
 #define ONL_REQ_HTEAM_END     100
-#define ONL_REQ_COUNT         101
+// Player-hosted events (server/online_hevents.py, data/scripts/online/hevents.inc).
+#define ONL_REQ_HEVENT_VIEW   101 // pays out prizes and refunds; VAR_0x800B 1 if there were any
+#define ONL_REQ_HEVENT_BOARD  102
+#define ONL_REQ_HEVENT_LIST   103
+#define ONL_REQ_HEVENT_SHOW   104 // the event picked from HEVENT_LIST; VAR_0x800B is HEVENT_*
+#define ONL_REQ_HEVENT_JOIN   105 // the same
+#define ONL_REQ_HEVENT_LEAVE  106 // the same
+#define ONL_REQ_HEVENT_MINE   107 // VAR_0x800B 1 if the player's own event can be called off
+#define ONL_REQ_HEVENT_CANCEL 108
+#define ONL_REQ_HEVENT_NEW    109 // VAR_0x8005: HEVENT_KIND_*
+#define ONL_REQ_HEVENT_TARGET 110 // the species picked
+#define ONL_REQ_HEVENT_SIZE   111 // the size picked
+#define ONL_REQ_HEVENT_TIME   112 // the length picked
+#define ONL_REQ_HEVENT_MONEY  113 // the amount picked
+#define ONL_REQ_HEVENT_ITEM   114 // VAR_0x8005: item, VAR_0x8006: how many
+#define ONL_REQ_HEVENT_CHECK  115
+#define ONL_REQ_HEVENT_POST   116
+// The Stormwild (src/stormwild.c, server/online_xrun.py). 101-116 are the
+// player-hosted events' (another branch).
+#define ONL_REQ_XRUN_JOIN     117 // VAR_0x8005: how many Pokémon go in
+#define ONL_REQ_XRUN_GO       118
+#define ONL_REQ_XRUN_LOOT     119 // VAR_0x8005: the cache
+#define ONL_REQ_XRUN_ROB      120
+#define ONL_REQ_XRUN_OUT      121 // VAR_0x8005: the beacon
+#define ONL_REQ_XRUN_FAIL     122
+#define ONL_REQ_XRUN_BOARD    123
+#define ONL_REQ_COUNT         124
 
 // The hub's rows (VAR_RESULT of its menu).
 #define ONLINE_HUB_GOALS    0
@@ -138,6 +164,7 @@
 #define ONLINE_HUB_RESEARCH 16
 #define ONLINE_HUB_RECORDS  17
 #define ONLINE_HUB_TEAMUP   18
+#define ONLINE_HUB_HEVENTS  19
 #define ONLINE_HUB_CLOSE    127
 
 // VAR_0x800B of the co-op fishing requests.
@@ -169,6 +196,14 @@
 #define GUILD_NONE   0
 #define GUILD_MEMBER 1
 #define GUILD_LEADER 2
+
+// Player-hosted events: VAR_0x8005 of HEVENT_NEW, VAR_0x800B of HEVENT_SHOW.
+#define HEVENT_KIND_HUNT 0
+#define HEVENT_KIND_CUP  1
+#define HEVENT_CAN_JOIN  0
+#define HEVENT_JOINED    1
+#define HEVENT_OWN       2
+#define HEVENT_BRACKET   3 // a cup under way: the data rows are its bracket
 
 // VAR_0x800B of QM_JOIN.
 #define QM_WAITING 0 // on the list now

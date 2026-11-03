@@ -82,6 +82,11 @@ new features add a row there):
 
   ![The live battle list, watching a battle, and its end](images/netplay-watch.png)
 
+- **CHANNEL**: the channels of a busy map (more than 25 players), and who
+  is in each; A moves you to another one. Wild Pokémon are shared by
+  everyone in a channel, and the first to battle one claims it. See
+  [shared_map.md](shared_map.md).
+
 **Co-op battles:** talk to another player → *Co-op battle*. If they accept,
 the two of you team up in a double battle (three Pokémon each) against two
 Battle Frontier trainers, picked from the session id so both games agree.

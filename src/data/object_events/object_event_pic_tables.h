@@ -374,6 +374,18 @@ static const struct SpriteFrameImage sPicTable_SnowDrift[] = {
     obj_frame_tiles(gObjectEventPic_SnowDrift),
 };
 
+static const struct SpriteFrameImage sPicTable_StormBeacon[] = {
+    obj_frame_tiles(gObjectEventPic_StormBeacon),
+};
+
+static const struct SpriteFrameImage sPicTable_StormBeaconOn[] = {
+    obj_frame_tiles(gObjectEventPic_StormBeaconOn),
+};
+
+static const struct SpriteFrameImage sPicTable_StormCache[] = {
+    obj_frame_tiles(gObjectEventPic_StormCache),
+};
+
 static const struct SpriteFrameImage sPicTable_FieldDigSpot[] = {
     obj_frame_tiles(gObjectEventPic_FieldDigSpot),
 };

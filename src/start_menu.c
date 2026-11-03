@@ -352,8 +352,9 @@ static void BuildNormalStartMenu(void)
 
     AddStartMenuAction(MENU_ACTION_PLAYER);
     AddStartMenuAction(MENU_ACTION_STYLE);
-    if (Netplay_HasJoined())
-        AddStartMenuAction(MENU_ACTION_ONLINE);
+    // Always offered: picking it also goes online if JOIN ONLINE wasn't
+    // picked on the title menu (a new game has no JOIN ONLINE there).
+    AddStartMenuAction(MENU_ACTION_ONLINE);
     AddStartMenuAction(MENU_ACTION_SAVE);
     AddStartMenuAction(MENU_ACTION_OPTION);
     // The window fits eight entries; B closes the menu too.
@@ -849,6 +850,7 @@ static bool8 StartMenuOnlineCallback(void)
 {
     RemoveExtraStartMenuWindows();
     HideStartMenuDebug();
+    Netplay_JoinOnline();
     ShowNetplayOnlineMenu();
     return TRUE;
 }

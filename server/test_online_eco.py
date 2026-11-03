@@ -22,6 +22,22 @@ ROUTE102 = MAPS["ROUTE102"]
 ROUTE102_KEY = f"{ROUTE102[0]}.{ROUTE102[1]}"
 
 
+class HabitatTest(unittest.TestCase):
+    def test_visitors_need_a_home(self):
+        r101 = next(k for k, m in online_eco.WORLD.items() if m.get("id") == "MAP_ROUTE101")
+        # The starting area keeps its own Pokémon only.
+        for sp in online_eco.home_species(r101):
+            self.assertTrue(online_eco.fits(sp, r101))
+        self.assertFalse(online_eco.fits(SPECIES["LOTAD"], r101))
+        # Elsewhere a visitor must share a type with a native.
+        r110 = next(k for k, m in online_eco.WORLD.items() if m.get("id") == "MAP_ROUTE110")
+        self.assertFalse(online_eco.fits(SPECIES["SNOM"], r110))
+        for day in range(20000, 20030):
+            for species, src, dst in online_eco.plan_migrations(day):
+                self.assertTrue(online_eco.fits(species, dst))
+                self.assertNotEqual(online_eco.WORLD[dst].get("id"), "MAP_ROUTE101")
+
+
 class EcoTest(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
         self.now = 20_000 * 86400 + 3600
