@@ -108,6 +108,8 @@ struct ResearchState
 
 static EWRAM_EXT_DATA struct ResearchState sResearch;
 
+STATIC_ASSERT(RESEARCH_SPECIES <= RESEARCH_SAVED_SPECIES + RESEARCH_MORE_SPECIES, ResearchMoreTooSmall);
+
 static struct ResearchSave *Save(void)
 {
     return &gSaveBlockExt.research;
@@ -117,6 +119,8 @@ static struct ResearchEntry *Entry(u32 nat)
 {
     if (nat == 0 || nat >= RESEARCH_SPECIES)
         return NULL;
+    if (nat >= RESEARCH_SAVED_SPECIES)
+        return &gSaveBlockExt.researchMore.entries[nat - RESEARCH_SAVED_SPECIES];
     return &Save()->entries[nat];
 }
 
