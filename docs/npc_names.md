@@ -64,3 +64,21 @@ Wailmer, Mantyke, Lanturn, Mantine, Sharpedo, Lapras, Luvdisc and Corsola.
 The server's map data (`server/data/rovers_world.json.gz`) is regenerated
 with `tools/rovers/make_rover_world.py` so the living NPC trainers and the
 ecosystem know the new Pokémon. Check in game with `tools/wild_more/tally.lua`.
+
+## Every real Pokémon in the wild
+
+`tools/wild_more/add_real.py` makes every real Pokémon family catchable,
+except legendaries, mythicals, Ultra Beasts and Paradox Pokémon. Before it
+ran, 158 families had no wild spot (all the starters, Pidgey, Scyther,
+Pachirisu, Dreepy and more). Each family now lives in two places that suit
+it. Fire types go to volcanoes, Ghost and Dark types come out at night, Ice
+types go to frozen caves, Water types are found surfing or fishing, Fighting
+types go to caves and mountains, and so on. The family member depends on the
+area's level, so a level 45 route has Charizard and a level 16 one has
+Charmander. It only takes slots that repeated a species already on the table,
+so every Pokémon that lived there before still does. Where a fitting place
+was full, the place got a daytime table: a copy of its usual one, with the
+rarer half given to the newcomers. Its usual Pokémon are still there in the
+morning, evening and night. The starting routes are not changed.
+
+Screens: `python3 tools/world_shots/run.py tools/wild_more/real_shots.lua <out> 1500000`.
