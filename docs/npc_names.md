@@ -50,3 +50,17 @@ Route 102 were outsiders; after, none of 120.
 
 Screenshot runs: `tools/npc_names/shots.lua` (names) and
 `tools/npc_names/wild_tally.lua`, both through `tools/world_shots/run.py`.
+
+## More Pokémon in the wild
+
+`tools/wild_more/add_more.py` gave 105 of Hoenn's route, cave and sea tables
+more kinds of Pokémon (477 kinds in all before, 848 after). Every table keeps
+what it had: the common slots are untouched, and the rare slots that only
+repeated a Pokémon already on the table now hold a new one that fits the
+place and its levels (Gen 1 to 9). The starting routes only got Pokémon from
+Hoenn itself (Taillow, Nincada, Whismur, Seedot, Surskit, Shroomish). The sea
+routes, which only had Tentacool, Wingull and Pelipper, now have Chinchou,
+Wailmer, Mantyke, Lanturn, Mantine, Sharpedo, Lapras, Luvdisc and Corsola.
+The server's map data (`server/data/rovers_world.json.gz`) is regenerated
+with `tools/rovers/make_rover_world.py` so the living NPC trainers and the
+ecosystem know the new Pokémon. Check in game with `tools/wild_more/tally.lua`.
